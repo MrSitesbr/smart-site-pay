@@ -8,7 +8,7 @@ const TestimonialsSection = () => {
     tag: "QUEM TRABALHA AQUI RECOMENDA",
     title: 'Depoimentos de quem vive a <span class="text-primary">experiência.</span>',
     testimonials: [
-      { name: "Juliana R.", role: "Advogada", text: "O Coworking Kennedy me ajudou a atender meus clientes com mais profissionalismo. Ambiente impecável.", avatar: "https://i.pravatar.cc/120?img=47" },
+      { name: "Juliana R.", role: "Advogada", text: "O Coworking 013 me ajudou a atender meus clientes com mais profissionalismo. Ambiente impecável.", avatar: "https://i.pravatar.cc/120?img=47" },
       { name: "Carlos M.", role: "Contador", text: "Ambiente excelente, internet rápida e localização perfeita. Recomendo para qualquer profissional.", avatar: "https://i.pravatar.cc/120?img=12" },
       { name: "Renato S.", role: "Representante", text: "As salas de reunião fazem toda a diferença nas minhas apresentações.", avatar: "https://i.pravatar.cc/120?img=33" },
     ]

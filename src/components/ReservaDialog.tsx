@@ -101,7 +101,7 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
       if (error) throw error;
 
       const ambLabel = AMBIENTES.find((a) => a.value === effective.ambiente)?.label;
-      const msg = `Olá! Acabei de fazer uma reserva no Coworking Kennedy:\n\n*${ambLabel}*\nData: ${effective.data}\nHorário: ${effective.hora_inicio} às ${effective.hora_fim}\nTipo: ${effective.tipo === "hora" ? "Por hora" : "Diária"}\n\n*Meus dados:*\nNome: ${form.nome}\nEmail: ${form.email}\nTelefone: ${form.telefone}\n${form.observacoes ? "Obs: " + form.observacoes : ""}\n\nAguardo a confirmação 🙏`;
+      const msg = `Olá! Acabei de fazer uma reserva no Coworking 013:\n\n*${ambLabel}*\nData: ${effective.data}\nHorário: ${effective.hora_inicio} às ${effective.hora_fim}\nTipo: ${effective.tipo === "hora" ? "Por hora" : "Diária"}\n\n*Meus dados:*\nNome: ${form.nome}\nEmail: ${form.email}\nTelefone: ${form.telefone}\n${form.observacoes ? "Obs: " + form.observacoes : ""}\n\nAguardo a confirmação 🙏`;
       const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
       window.open(url, "_blank");
       toast({ title: "Reserva criada!", description: "Estamos te redirecionando ao WhatsApp para confirmação." });

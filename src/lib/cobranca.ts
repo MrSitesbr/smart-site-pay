@@ -1,6 +1,6 @@
 // Helpers para gerar link de cobrança via WhatsApp (PIX)
-export const PIX_KEY = "coworkingkennedy@gmail.com";
-export const PIX_TITULAR = "Coworking Kennedy";
+export const PIX_KEY = "contato@coworking013.com.br";
+export const PIX_TITULAR = "Coworking 013";
 
 const RATES: Record<string, { hora: number; diaria: number }> = {
   estacao: { hora: 20, diaria: 65 },
@@ -64,7 +64,7 @@ export function montarMensagemCobranca({ nome, valor, descricao, vencimento }: C
     `Apos o pagamento, envie o comprovante por aqui, por favor.`,
     `Qualquer duvida, estamos a disposicao!`,
     ``,
-    `-- Coworking Kennedy`,
+    `-- Coworking 013`,
   ].filter(Boolean).join("\n");
 }
 
