@@ -10,17 +10,17 @@ const IdealParaSection = () => {
     tag: "FEITO PARA VOCÊ",
     title: 'Ideal para profissionais que <span class="text-secondary">não param.</span>',
     features: [
-      { icon: "FileText", title: "Salas Privativas", desc: "Atendimento com privacidade total" },
-      { icon: "Users", title: "Salas de Reunião", desc: "Estrutura completa para encontros" },
-      { icon: "Briefcase", title: "Estações de Trabalho", desc: "Flexibilidade para o seu dia a dia" },
-      { icon: "Network", title: "Ambiente Completo", desc: "Internet rápida, café e convivência" },
+      { icon: "FileText", title: "Salas Privativas", desc: "Escritórios e Consultórios" },
+      { icon: "Users", title: "Salas de Reunião", desc: "Auditório e Salas de Encontro" },
+      { icon: "Briefcase", title: "Estações de Trabalho", desc: "Flexibilidade no Compartilhado" },
+      { icon: "Network", title: "Endereço Virtual", desc: "Domicílio Fiscal e Comercial" },
     ],
     benefits_tag: "AMBIENTES QUE TRANSFORMAM",
     benefits_title: 'Espaços pensados para gerar <span class="text-primary">foco, conforto</span> e <span class="text-secondary">resultados</span> reais.',
     benefits_list: [
       "Internet de alta velocidade 500MB",
       "Ambientes climatizados",
-      "Salas para atendimento e reuniões",
+      "Consultórios e Escritórios Mobiliados",
       "Estrutura completa",
       "Localização estratégica",
     ]

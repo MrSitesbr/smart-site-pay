@@ -12,7 +12,8 @@ const PricingSection = () => {
     plans_individual: [
       { name: "Day Pass", price: "R$ 70", period: "/dia", features: ["Cadeira rotativa", "Internet 500mb", "Café e água", "Ambiente climatizado"], highlight: false },
       { name: "Coworking", price: "R$ 550", period: "/mês", features: ["Uso ilimitado", "Locker individual", "Endereço comercial", "Desconto salas reunião"], highlight: true },
-      { name: "Sala Privativa", price: "A partir de R$ 1.500", period: "/mês", features: ["Sala exclusiva", "Móveis inclusos", "Chave da sala", "24/7 access option"], highlight: false },
+      { name: "Endereço Virtual", price: "R$ 150", period: "/mês", features: ["Domicílio fiscal", "Gestão de correspondência", "Divulgação de endereço", "Atendimento telefônico opcional"], highlight: false },
+      { name: "Sala Privativa", price: "A partir de R$ 1.500", period: "/mês", features: ["Sala exclusiva", "Móveis inclusos", "Chave da sala", "Ar condicionado individual"], highlight: false },
     ]
   });
 
@@ -37,7 +38,7 @@ const PricingSection = () => {
           <p className="text-muted-foreground text-lg">{content.subtitle}</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {content.plans_individual.map((plan: any, i: number) => (
             <div key={i} className={`bg-white rounded-[2rem] p-8 border-2 transition-all ${plan.highlight ? 'border-brand-orange shadow-xl scale-105 relative z-10' : 'border-transparent shadow-sm hover:shadow-md'}`}>
               {plan.highlight && (
