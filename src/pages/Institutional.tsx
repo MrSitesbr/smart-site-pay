@@ -12,14 +12,14 @@ const Institutional = () => {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h1 className="text-4xl md:text-5xl font-heading font-black text-brand-blue-dark mb-6">
-                  Institucional
+                <h1 className="text-4xl md:text-6xl font-heading font-black text-brand-blue-dark mb-6 leading-tight">
+                  Sempre em constante <span className="text-orange-500">evolução</span>
                 </h1>
                 <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                  O CoWorking 013 nasceu da visão de transformar a forma como as pessoas trabalham na Praia Grande. Localizado estrategicamente na Vila Tupi, oferecemos uma infraestrutura completa e moderna para profissionais que buscam networking, produtividade e credibilidade.
+                  Localizado estrategicamente na Praia Grande, o CoWorking 013 é muito mais do que um espaço de trabalho. Somos um ecossistema projetado para impulsionar o seu sucesso.
                 </p>
                 <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                  Nossa missão é proporcionar um ambiente colaborativo onde empresas e empreendedores possam crescer e prosperar, eliminando as preocupações com gestão de escritório e permitindo o foco total no que realmente importa: o seu negócio.
+                  Oferecemos infraestrutura de alto padrão, tecnologia de ponta e um ambiente que respira inovação. Seja você um profissional liberal ou uma empresa em expansão, aqui você encontra o suporte necessário para focar no que realmente importa: seus resultados.
                 </p>
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl h-[500px]">
