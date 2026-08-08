@@ -1,4 +1,4 @@
-import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard } from "lucide-react";
+import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
 
@@ -67,10 +67,16 @@ const Footer = () => {
                   <li key={j}>
                     {(l as any).route ? (
                       <Link to={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors inline-flex items-center gap-1.5">
-                        <LayoutDashboard className="w-3.5 h-3.5" /> {l.label}
+                        {l.label === "Painel do cliente" || l.label === "Admin" ? (
+                          <LayoutDashboard className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        )}
+                        {l.label}
                       </Link>
                     ) : (
-                      <a href={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors">
+                      <a href={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors inline-flex items-center gap-1.5">
+                        <ChevronRight className="w-3.5 h-3.5" />
                         {l.label}
                       </a>
                     )}
