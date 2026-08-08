@@ -18,7 +18,7 @@ export default function AdminUnidades() {
   async function fetchUnidades() {
     const { data } = await supabase.from('unidades' as any).select('*');
     setUnidades(data || [
-      { id: '1', nome: 'Sede Kennedy', endereco: 'Av. Pres. Kennedy, 2191', status: 'Ativo', espaços: 4 }
+      { id: '1', nome: 'Unidade Tupi', endereco: 'Av. Pres. Kennedy, 5214', status: 'Ativo', espaços: 6 }
     ]);
   }
 
