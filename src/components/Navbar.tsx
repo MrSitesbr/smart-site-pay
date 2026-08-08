@@ -38,10 +38,10 @@ const Navbar = () => {
         <a href="#home" className="flex items-center gap-2 group">
           <img src={logoIcon.url} alt="Logo" className="h-10 w-auto object-contain" />
           <div className="flex flex-col leading-[0.8] items-start">
-            <span className="text-[14px] font-heading font-medium tracking-tight text-orange-500">
-              Coworking
+            <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
+              CoWorking
             </span>
-            <h1 className={`text-3xl font-heading font-semibold transition-colors ${
+            <h1 className={`text-3xl font-heading font-extrabold transition-colors ${
               scrolled ? "text-black" : "text-white"
             } -mt-1`}>
               013
