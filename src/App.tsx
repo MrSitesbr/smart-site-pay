@@ -11,6 +11,12 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import AuthAdmin from "./pages/AuthAdmin";
 import NotFound from "./pages/NotFound";
+import Institutional from "./pages/Institutional";
+import Ambientes from "./pages/Ambientes";
+import EscritorioPrivativo from "./pages/EscritorioPrivativo";
+import AuditorioModular from "./pages/AuditorioModular";
+import ConsultorioPrivativo from "./pages/ConsultorioPrivativo";
+import EnderecoVirtual from "./pages/EnderecoVirtual";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +28,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/institucional" element={<Institutional />} />
+          <Route path="/ambientes" element={<Ambientes />} />
+          <Route path="/escritorio-privativo" element={<EscritorioPrivativo />} />
+          <Route path="/auditorio-modular" element={<AuditorioModular />} />
+          <Route path="/consultorio-privativo" element={<ConsultorioPrivativo />} />
+          <Route path="/endereco-virtual" element={<EnderecoVirtual />} />
           <Route path="/reservar" element={<Reservar />} />
           <Route path="/contratar" element={<Contratar />} />
           <Route path="/painel" element={<Painel />} />
