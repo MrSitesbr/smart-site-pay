@@ -84,10 +84,10 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-bold mb-4">Informações</h4>
             <ul className="space-y-3 text-sm text-white/70">
-              <li>(13) 9.9744-0130</li>
+              <li>(13) 99744-0130</li>
               <li>contato@coworking013.com.br</li>
-              <li>Av. Presidente Kennedy, 5214<br />Vila Tupi - Praia Grande - SP</li>
-              <li>Seg-Sex: 09h às 17h</li>
+              <li>Av. Pres. Kennedy, 5214<br />Vila Tupi - Praia Grande - SP</li>
+              <li>Seg-Sex: 09h às 18h</li>
             </ul>
           </div>
         </div>
