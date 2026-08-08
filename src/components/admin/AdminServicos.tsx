@@ -5,7 +5,7 @@ import { Plus, Coffee, Wifi, Car, Printer, Edit2, Trash2 } from "lucide-react";
 
 export default function AdminServicos() {
   const [servicos] = useState([
-    { id: 1, name: "Endereço Fiscal", price: "R$ 150/mês", icon: "Building2" },
+    { id: 1, name: "Endereço Fiscal", price: "R$ 180/mês", icon: "Building2" },
     { id: 2, name: "Impressões P&B", price: "R$ 0,50/folha", icon: "Printer" },
     { id: 3, name: "Café Expresso", price: "Cortesia", icon: "Coffee" },
     { id: 4, name: "Estacionamento", price: "R$ 20/dia", icon: "Car" },

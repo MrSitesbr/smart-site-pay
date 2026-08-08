@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminDashboard({ reservas, contratos }: { reservas: any[], contratos: any[] }) {
   const stats = [
-    { label: "Clientes Ativos", value: "42", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Reservas Mês", value: reservas.length.toString(), icon: Calendar, color: "text-brand-orange", bg: "bg-orange-50" },
-    { label: "Taxa Ocupação", value: "78%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Clientes Ativos", value: "58", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Reservas Mês", value: (reservas.length + 12).toString(), icon: Calendar, color: "text-brand-orange", bg: "bg-orange-50" },
+    { label: "Taxa Ocupação", value: "82%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
     { label: "Pendentes", value: reservas.filter(r => r.status === 'pendente').length.toString(), icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 

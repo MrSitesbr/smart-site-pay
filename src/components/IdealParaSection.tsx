@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { FileText, Users, Briefcase, Network, CheckCircle2, Wifi } from "lucide-react";
-import salaPrivativa from "@/assets/sala-privativa.jpg";
-import coworkingArea from "@/assets/coworking-area.jpg";
-import salaReuniao2 from "@/assets/sala-reuniao-2.jpg";
+import salaPrivativa from "@/assets/escritorio-cow013.png.asset.json";
+import coworkingArea from "@/assets/auditorio-cow013.png.asset.json";
+import salaReuniao2 from "@/assets/consultorio-cow013.png.asset.json";
 import { getPageContent } from "@/lib/cms";
 
 const IdealParaSection = () => {
@@ -80,13 +80,13 @@ const IdealParaSection = () => {
         <div className="grid lg:grid-cols-12 gap-4">
           <div className="lg:col-span-7 grid grid-cols-2 gap-4">
             <div className="rounded-2xl overflow-hidden aspect-square">
-              <img src={salaPrivativa} alt="Espaço" className="w-full h-full object-cover" />
+              <img src={salaPrivativa.url} alt="Sala Privativa" className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden aspect-square">
-              <img src={coworkingArea} alt="Espaço" className="w-full h-full object-cover" />
+              <img src={coworkingArea.url} alt="Coworking" className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden aspect-[2/1] col-span-2">
-              <img src={salaReuniao2} alt="Espaço" className="w-full h-full object-cover" />
+              <img src={salaReuniao2.url} alt="Sala de Reunião" className="w-full h-full object-cover" />
             </div>
           </div>
 

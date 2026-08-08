@@ -36,7 +36,7 @@ const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-in-up">
             <span className="inline-block text-secondary font-heading font-bold text-sm tracking-widest mb-6">
-              COWORKING KENNEDY · PRAIA GRANDE - SP
+              COWORKING 013 · PRAIA GRANDE - SP
             </span>
             <h1 className="font-heading font-black text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-white mb-6" dangerouslySetInnerHTML={{ __html: content.title }} />
             <p className="text-lg text-white/70 mb-8 max-w-lg leading-relaxed">{content.subtitle}</p>

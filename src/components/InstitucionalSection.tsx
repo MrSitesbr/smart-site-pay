@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { MapPin, Building2, Navigation, Store } from "lucide-react";
-import predio from "@/assets/predio-coworking.jpg";
+import sabrina from "@/assets/sabrina-cow013.png.asset.json";
 import { getPageContent } from "@/lib/cms";
 
 const InstitucionalSection = () => {
   const [content, setContent] = useState({
     title: 'Localização que aproxima você de mais oportunidades',
-    description: 'Estamos no Edifício Comercial Duarte, um endereço comercial de destaque na Av. Presidente Kennedy, 2191 — fácil acesso e ótima visibilidade para o seu negócio.',
+    description: 'Estamos localizados na Av. Presidente Kennedy, 5214 — fácil acesso e ótima visibilidade para o seu negócio na Vila Tupi.',
     location_tag: 'Praia Grande - SP',
     features: [
       { icon: "Navigation", title: "Fácil acesso e mobilidade" },
@@ -44,7 +44,7 @@ const InstitucionalSection = () => {
           <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-secondary/30 blur-3xl pointer-events-none" />
           <div className="grid lg:grid-cols-2 items-stretch">
             <div className="relative h-80 lg:h-96">
-              <img src={predio} alt="Local" className="w-full h-full object-cover" />
+              <img src={sabrina.url} alt="Sabrina - Coworking 013" className="w-full h-full object-cover" />
               <div className="hidden lg:block absolute top-0 right-0 h-full w-24 bg-brand-blue-dark" style={{ clipPath: "ellipse(100% 60% at 100% 50%)" }} />
             </div>
             <div className="relative p-8 lg:p-14">
