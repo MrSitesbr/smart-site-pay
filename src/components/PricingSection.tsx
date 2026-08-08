@@ -10,10 +10,10 @@ const PricingSection = () => {
     title: 'Planos que se adaptam ao <span class="text-primary">seu crescimento.</span>',
     subtitle: 'Escolha a melhor opção para você ou para sua equipe. Sem burocracia, sem fiador, apenas foco no seu trabalho.',
     plans_individual: [
-      { name: "Day Pass", price: "R$ 70", period: "/dia", features: ["Cadeira rotativa", "Internet 500mb", "Café e água", "Ambiente climatizado"], highlight: false },
-      { name: "Coworking", price: "R$ 550", period: "/mês", features: ["Uso ilimitado", "Locker individual", "Endereço comercial", "Desconto salas reunião"], highlight: true },
-      { name: "Endereço Virtual", price: "R$ 150", period: "/mês", features: ["Domicílio fiscal", "Gestão de correspondência", "Divulgação de endereço", "Atendimento telefônico opcional"], highlight: false },
-      { name: "Sala Privativa", price: "A partir de R$ 1.500", period: "/mês", features: ["Sala exclusiva", "Móveis inclusos", "Chave da sala", "Ar condicionado individual"], highlight: false },
+      { name: "Endereço Fiscal", price: "R$ 150", period: "/mês", features: ["Gestão de correspondência", "Divulgação de endereço", "Uso em materiais impressos", "Recebimento de encomendas"], highlight: false },
+      { name: "Day Pass", price: "R$ 70", period: "/dia", features: ["Estação de trabalho rotativa", "Internet 500MB Fibra", "Café e Água inclusos", "Ambiente climatizado"], highlight: false },
+      { name: "Estação Fixa", price: "R$ 550", period: "/mês", features: ["Mesa exclusiva 24/7", "Locker individual", "Endereço comercial incluso", "Descontos em salas de reunião"], highlight: true },
+      { name: "Sala Privativa", price: "Sob consulta", period: "", features: ["Espaço exclusivo para equipes", "Mobiliário completo", "Limpeza e manutenção", "Toda infraestrutura inclusa"], highlight: false },
     ]
   });
 

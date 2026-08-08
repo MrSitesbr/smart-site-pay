@@ -84,7 +84,7 @@ const Navbar = () => {
             }`}
           >
             <Phone className="w-4 h-4 text-primary" />
-            (13) 9.9744-0130
+            (13) 99744-0130
           </a>
           <Button onClick={() => setReservaOpen(true)} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
             <Calendar className="w-4 h-4 mr-2" />

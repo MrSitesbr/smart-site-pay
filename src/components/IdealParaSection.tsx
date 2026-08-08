@@ -8,15 +8,15 @@ import { getPageContent } from "@/lib/cms";
 const IdealParaSection = () => {
   const [content, setContent] = useState({
     tag: "FEITO PARA VOCÊ",
-    title: 'Ideal para profissionais que <span class="text-secondary">não param.</span>',
+    title: 'Soluções sob medida para <span class="text-secondary">você e seu time.</span>',
     features: [
-      { icon: "FileText", title: "Salas Privativas", desc: "Escritórios e Consultórios" },
-      { icon: "Users", title: "Salas de Reunião", desc: "Auditório e Salas de Encontro" },
-      { icon: "Briefcase", title: "Estações de Trabalho", desc: "Flexibilidade no Compartilhado" },
-      { icon: "Network", title: "Endereço Virtual", desc: "Domicílio Fiscal e Comercial" },
+      { icon: "FileText", title: "Salas Privativas", desc: "Privacidade total para sua equipe" },
+      { icon: "Users", title: "Sala de Reunião", desc: "Equipada para seus encontros" },
+      { icon: "Briefcase", title: "Coworking", desc: "Estações de trabalho produtivas" },
+      { icon: "Network", title: "Endereço Fiscal", desc: "Credibilidade para seu negócio" },
     ],
-    benefits_tag: "AMBIENTES QUE TRANSFORMAM",
-    benefits_title: 'Espaços pensados para gerar <span class="text-primary">foco, conforto</span> e <span class="text-secondary">resultados</span> reais.',
+    benefits_tag: "INFRAESTRUTURA COMPLETA",
+    benefits_title: 'Tudo pronto para você <span class="text-primary">focar no que importa</span>: seu resultado.',
     benefits_list: [
       "Internet de alta velocidade 500MB",
       "Ambientes climatizados",
