@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Phone, Calendar, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo-cow013.png.asset.json";
+import logo from "@/assets/logo-cow013-v2.png.asset.json";
 import ReservaDialog from "@/components/ReservaDialog";
 
 
@@ -36,7 +36,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <a href="#home" className="flex items-center gap-3">
-          <img src={logo.url} alt="Coworking 013" className="w-11 h-11 object-contain" />
+          <img src={logo.url} alt="Coworking 013" className="h-10 lg:h-12 w-auto object-contain" />
         </a>
 
         <div className="hidden lg:flex items-center gap-8">
@@ -68,13 +68,13 @@ const Navbar = () => {
 
         <div className="hidden lg:flex items-center gap-3">
           <a
-            href="tel:13992037957"
+            href="tel:13997440130"
             className={`flex items-center gap-2 text-sm font-medium ${
               scrolled ? "text-foreground" : "text-white"
             }`}
           >
             <Phone className="w-4 h-4 text-primary" />
-            (13) 9.9203-7957
+            (13) 9.9744-0130
           </a>
           <Button onClick={() => setReservaOpen(true)} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
             <Calendar className="w-4 h-4 mr-2" />

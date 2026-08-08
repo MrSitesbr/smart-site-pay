@@ -1,6 +1,6 @@
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/logo-cow013.png.asset.json";
+import logo from "@/assets/logo-cow013-v2.png.asset.json";
 
 const Footer = () => {
   const cols = [
@@ -34,7 +34,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo.url} alt="Coworking 013" className="w-11 h-11 object-contain" />
+              <img src={logo.url} alt="Coworking 013" className="h-12 w-auto object-contain" />
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
               O seu espaço de trabalho e networking na Praia Grande.
