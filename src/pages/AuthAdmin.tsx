@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import logo from "@/assets/logo-cow013-v2.png.asset.json";
+import logo from "@/assets/logo-coworking013.png.asset.json";
 
 export default function AuthAdmin() {
   const navigate = useNavigate();
