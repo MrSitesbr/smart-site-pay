@@ -30,11 +30,11 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-white animate-fade-in-up">
-            <h1 className="font-heading font-black text-5xl md:text-7xl leading-tight mb-6">
-              MUDE SUA <span className="text-secondary">ROTINA</span> DE TRABALHO
+            <h1 className="font-heading font-black text-5xl md:text-7xl leading-tight mb-6 tracking-tighter">
+              MUDE SUA <span className="text-secondary">ROTINA</span> <br />DE TRABALHO
             </h1>
-            <p className="text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
-              Descubra quanto você pode economizar e otimizar o seu negócio agora mesmo. Comece já!
+            <p className="text-xl text-white/90 mb-8 max-w-xl leading-relaxed">
+              O espaço que seu negócio merece, com a flexibilidade que você precisa. Descubra como podemos transformar sua produtividade.
             </p>
             <div className="flex items-center gap-4 text-secondary font-heading font-bold uppercase tracking-widest text-sm">
               <span className="w-12 h-[2px] bg-secondary" />

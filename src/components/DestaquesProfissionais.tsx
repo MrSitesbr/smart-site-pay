@@ -5,44 +5,44 @@ const DestaquesProfissionais = () => {
     { 
       icon: Stethoscope, 
       title: "Saúde", 
-      desc: "Consultórios preparados para profissionais que valorizam o bem-estar dos pacientes.",
-      bg: "bg-blue-50",
+      desc: "Consultórios modernos e equipados, prontos para receber seus pacientes com total conforto e biossegurança.",
+      bg: "bg-blue-50/50",
       iconColor: "text-blue-600"
     },
     { 
       icon: Scale, 
-      title: "Advocacia", 
-      desc: "Privacidade e credibilidade para atendimentos jurídicos e reuniões estratégicas.",
-      bg: "bg-amber-50",
-      iconColor: "text-amber-600"
+      title: "Jurídico", 
+      desc: "Privacidade absoluta e ambiente corporativo de alto nível para reuniões com clientes e parceiros.",
+      bg: "bg-slate-50/50",
+      iconColor: "text-slate-700"
     },
     { 
       icon: HardHat, 
       title: "Engenharia", 
-      desc: "Infraestrutura completa para projetos, orçamentos e reuniões técnicas.",
-      bg: "bg-orange-50",
+      desc: "Espaço ideal para desenvolvimento de projetos, reuniões de equipe e gestão de obras com agilidade.",
+      bg: "bg-orange-50/50",
       iconColor: "text-orange-600"
     },
     { 
-      icon: Briefcase, 
-      title: "Contabilidade", 
-      desc: "O endereço fiscal e comercial que sua empresa contábil precisa para crescer.",
-      bg: "bg-emerald-50",
-      iconColor: "text-emerald-600"
-    },
-    { 
-      icon: Palette, 
-      title: "Arquitetura", 
-      desc: "Espaço criativo e funcional para apresentações de projetos e atendimento a clientes.",
-      bg: "bg-purple-50",
-      iconColor: "text-purple-600"
+      icon: Cpu, 
+      title: "Tecnologia", 
+      desc: "Conectividade ultra veloz e ambiente focado em produtividade para desenvolvedores e startups.",
+      bg: "bg-indigo-50/50",
+      iconColor: "text-indigo-600"
     },
     { 
       icon: Megaphone, 
       title: "Marketing", 
-      desc: "Ambiente dinâmico para agências e profissionais liberais da área de comunicação.",
-      bg: "bg-rose-50",
-      iconColor: "text-rose-600"
+      desc: "Ambiente criativo e dinâmico para agências e profissionais que buscam inovação constante.",
+      bg: "bg-pink-50/50",
+      iconColor: "text-pink-600"
+    },
+    { 
+      icon: Briefcase, 
+      title: "Consultoria", 
+      desc: "Toda a estrutura necessária para atender seus clientes com profissionalismo e eficiência.",
+      bg: "bg-emerald-50/50",
+      iconColor: "text-emerald-600"
     },
   ];
 

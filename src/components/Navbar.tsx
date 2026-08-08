@@ -12,7 +12,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -22,7 +22,7 @@ const Navbar = () => {
     { label: "Institucional", href: "/institucional", route: true },
     { label: "Ambientes", href: "/ambientes", route: true },
     { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
-    { label: "Contato", href: "#contato" },
+    { label: "Contato", href: "/#contato" },
     { label: "Área do Cliente", href: "/painel", route: true },
   ];
 
@@ -35,7 +35,7 @@ const Navbar = () => {
       }`}
     >
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
-        <a href="#home" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center gap-2 group relative z-10">
           <img src={logoIcon.url} alt="Logo" className="h-10 w-auto object-contain" />
           <div className="flex flex-col leading-[0.8] items-start">
             <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
@@ -47,7 +47,7 @@ const Navbar = () => {
               013
             </h1>
           </div>
-        </a>
+        </Link>
 
         <div className="hidden lg:flex items-center gap-8">
           {links.map((link) =>
