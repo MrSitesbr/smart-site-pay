@@ -35,11 +35,11 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img src={logoIcon.url} alt="Logo" className="h-8 w-auto object-contain" />
-              <div className="flex flex-col leading-none">
-                <small className="text-[10px] font-heading font-medium tracking-wider uppercase text-white">
-                  CoWorking
-                </small>
-                <h1 className="text-2xl font-heading font-black text-orange-500 mt-[-2px]">
+              <div className="flex flex-col leading-[0.8] items-start">
+                <span className="text-[14px] font-heading font-light tracking-tight text-orange-500">
+                  Coworking
+                </span>
+                <h1 className="text-3xl font-heading font-black text-white -mt-1">
                   013
                 </h1>
               </div>
