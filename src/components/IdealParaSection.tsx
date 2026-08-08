@@ -73,16 +73,19 @@ const IdealParaSection = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {content.services.map((service, i) => (
-            <Link key={i} to={service.href} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+            <Link key={i} to={service.href} className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
               <div className="relative h-64 overflow-hidden">
                 <img src={service.image} alt={service.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                   <span className="text-white font-bold flex items-center gap-2">Ver Detalhes <ArrowRight className="w-4 h-4" /></span>
                 </div>
               </div>
-              <div className="p-8">
-                <h3 className="font-heading font-bold text-2xl text-brand-blue-dark mb-3">{service.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{service.desc}</p>
+              <div className="p-8 flex flex-col flex-grow">
+                <h3 className="font-heading font-bold text-2xl text-brand-blue-dark mb-3 group-hover:text-orange-500 transition-colors">{service.title}</h3>
+                <p className="text-muted-foreground leading-relaxed mb-6 flex-grow">{service.desc}</p>
+                <div className="flex items-center text-orange-500 font-bold text-sm uppercase tracking-wider gap-2">
+                  Saber mais <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </div>
               </div>
             </Link>
           ))}

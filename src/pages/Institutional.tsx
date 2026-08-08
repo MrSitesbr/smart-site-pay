@@ -22,8 +22,9 @@ const Institutional = () => {
                   Oferecemos infraestrutura de alto padrão, tecnologia de ponta e um ambiente que respira inovação. Seja você um profissional liberal ou uma empresa em expansão, aqui você encontra o suporte necessário para focar no que realmente importa: seus resultados.
                 </p>
               </div>
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl h-[500px]">
-                <img src={sabrina.url} alt="Nossa Unidade" className="w-full h-full object-cover" />
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[600px] border-8 border-white group">
+                <img src={sabrina.url} alt="Sabrina - CoWorking 013" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
               </div>
             </div>
           </div>
