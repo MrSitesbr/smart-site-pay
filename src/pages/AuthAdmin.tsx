@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import logo from "@/assets/logo-coworking013.png.asset.json";
+import logoIcon from "@/assets/logo-icon.png.asset.json";
 
 export default function AuthAdmin() {
   const navigate = useNavigate();
@@ -86,8 +86,13 @@ export default function AuthAdmin() {
           <ArrowLeft className="w-3 h-3" /> Voltar ao site
         </Link>
         
-        <div className="flex flex-col items-center gap-4 mb-8">
-          <img src={logo.url} alt="Coworking 013" className="h-16 w-auto object-contain" />
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <div className="flex items-center gap-2">
+            <img src={logoIcon.url} alt="Logo" className="h-12 w-auto object-contain" />
+            <span className="text-2xl font-heading font-bold text-white">
+              CoWorking <span className="text-orange-500">013</span>
+            </span>
+          </div>
           <div className="text-center">
             <h1 className="font-heading font-black text-2xl text-white">Painel Admin</h1>
             <p className="text-orange-500 text-xs font-bold uppercase tracking-widest">Acesso Restrito</p>
