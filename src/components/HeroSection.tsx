@@ -8,8 +8,8 @@ import { getPageContent } from "@/lib/cms";
 const HeroSection = () => {
   const [reservaOpen, setReservaOpen] = useState(false);
   const [content, setContent] = useState({
-    title: 'Tudo que você precisa para <span class="text-primary">escalar</span> <span class="text-secondary">o seu negócio.</span>',
-    subtitle: 'Salas privativas, salas de reunião e estações de trabalho em um ambiente moderno, confortável e com toda estrutura que o seu negócio precisa para crescer.',
+    title: 'Seu novo escritório em <span class="text-secondary">Praia Grande</span> está aqui.',
+    subtitle: 'Infraestrutura completa, networking e localização privilegiada na Vila Tupi. O espaço ideal para sua empresa ou carreira decolar.',
     cta_primary: 'Reservar',
     cta_secondary: 'Conheça o espaço'
   });
