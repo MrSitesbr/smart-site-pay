@@ -35,9 +35,14 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <img src={logoIcon.url} alt="Logo" className="h-8 w-auto object-contain" />
-              <span className="text-xl font-heading font-bold text-white">
-                CoWorking <span className="text-orange-500">013</span>
-              </span>
+              <div className="flex flex-col leading-none">
+                <small className="text-[10px] font-heading font-medium tracking-wider uppercase text-white">
+                  CoWorking
+                </small>
+                <h1 className="text-2xl font-heading font-black text-orange-500 mt-[-2px]">
+                  013
+                </h1>
+              </div>
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
               O seu espaço de trabalho e networking na Praia Grande.

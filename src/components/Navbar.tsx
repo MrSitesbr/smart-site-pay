@@ -37,11 +37,16 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <a href="#home" className="flex items-center gap-2 group">
           <img src={logoIcon.url} alt="Logo" className="h-10 w-auto object-contain" />
-          <span className={`text-xl font-heading font-bold transition-colors ${
-            scrolled ? "text-black" : "text-white"
-          }`}>
-            CoWorking <span className="text-orange-500">013</span>
-          </span>
+          <div className="flex flex-col leading-none">
+            <small className={`text-[10px] font-heading font-medium tracking-wider uppercase transition-colors ${
+              scrolled ? "text-black" : "text-white"
+            }`}>
+              CoWorking
+            </small>
+            <h1 className="text-2xl font-heading font-black text-orange-500 mt-[-2px]">
+              013
+            </h1>
+          </div>
         </a>
 
         <div className="hidden lg:flex items-center gap-8">
