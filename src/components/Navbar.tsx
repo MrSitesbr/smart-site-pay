@@ -18,10 +18,10 @@ const Navbar = () => {
   }, []);
 
   const links = [
-    { label: "Início", href: "#home" },
-    { label: "Benefícios", href: "#beneficios" },
-    { label: "Especialidades", href: "#especialidades" },
-    { label: "Institucional", href: "#institucional" },
+    { label: "Início", href: "/", route: true },
+    { label: "Institucional", href: "/institucional", route: true },
+    { label: "Ambientes", href: "/ambientes", route: true },
+    { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
     { label: "Contato", href: "#contato" },
     { label: "Área do Cliente", href: "/painel", route: true },
   ];
