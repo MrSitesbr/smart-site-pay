@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import escritorioImg from "@/assets/escritorio-cow013.png.asset.json";
 
 const EscritorioPrivativo = () => {
   return (
@@ -16,32 +17,34 @@ const EscritorioPrivativo = () => {
                 <h1 className="text-4xl md:text-5xl font-heading font-black text-brand-blue-dark mb-6">
                   Escritório Privativo
                 </h1>
-                <p className="text-lg text-muted-foreground mb-6">
-                  Espaço exclusivo para trabalhar com privacidade, personalização e credibilidade. Ideal para empresas e empreendedores que buscam um ambiente profissional e reservado.
+                <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                  Espaço exclusivo para trabalhar com privacidade, personalização e credibilidade. Ideal para empresas e empreendedores que buscam um ambiente profissional e reservado na Praia Grande.
                 </p>
                 <div className="space-y-4 mb-8">
                   {[
                     "Mobiliário ergonômico completo",
                     "Ar-condicionado individual",
                     "Acesso 24/7 (conforme plano)",
-                    "Endereço comercial e fiscal",
-                    "Limpeza e manutenção inclusas",
-                    "Internet de alta velocidade"
+                    "Endereço comercial e fiscal incluso",
+                    "Limpeza e manutenção diária",
+                    "Internet de alta velocidade (Fibra)",
+                    "Serviço de recepção e copa"
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-brand-orange/10 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-brand-orange" />
+                      <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-orange-500" />
                       </div>
                       <span className="text-muted-foreground">{item}</span>
                     </div>
                   ))}
                 </div>
-                <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold py-6 px-8 rounded-full text-lg">
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-6 px-8 rounded-full text-lg transition-all transform hover:scale-105">
                   Solicitar Cotação
                 </Button>
               </div>
-              <div className="rounded-2xl overflow-hidden shadow-xl aspect-video">
-                <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200" alt="Escritório Privativo" className="w-full h-full object-cover" />
+              <div className="rounded-3xl overflow-hidden shadow-2xl aspect-video relative group">
+                <img src={escritorioImg.url} alt="Escritório Privativo" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
               </div>
             </div>
           </div>

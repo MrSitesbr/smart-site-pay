@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Wifi, Zap, Lock, MapPin, Coffee, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
+import escritorioImg from "@/assets/escritorio-cow013.png.asset.json";
+import auditorioImg from "@/assets/auditorio-cow013.png.asset.json";
+import consultorioImg from "@/assets/consultorio-cow013.png.asset.json";
 
 const IdealParaSection = () => {
   const [content, setContent] = useState({
@@ -12,13 +15,13 @@ const IdealParaSection = () => {
         title: "Salas Privativas", 
         desc: "Escritórios exclusivos para sua empresa ou equipe, com total privacidade.",
         href: "/escritorio-privativo",
-        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800"
+        image: escritorioImg.url
       },
       { 
         title: "Sala de Reunião", 
         desc: "Ambiente profissional para receber clientes e realizar fechamentos importantes.",
         href: "/auditorio-modular",
-        image: "https://images.unsplash.com/photo-1431540015161-0bf868a2d407?auto=format&fit=crop&q=80&w=800"
+        image: auditorioImg.url
       },
       { 
         title: "Coworking", 
@@ -36,13 +39,13 @@ const IdealParaSection = () => {
         title: "Consultórios", 
         desc: "Salas equipadas para profissionais da saúde e bem-estar.",
         href: "/consultorio-privativo",
-        image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800"
+        image: consultorioImg.url
       },
       { 
         title: "Auditório", 
         desc: "Espaço modular para cursos, palestras e treinamentos corporativos.",
         href: "/auditorio-modular",
-        image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=800"
+        image: auditorioImg.url
       },
     ]
   });

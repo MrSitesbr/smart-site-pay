@@ -22,7 +22,7 @@ const Navbar = () => {
     { label: "Institucional", href: "/institucional", route: true },
     { label: "Ambientes", href: "/ambientes", route: true },
     { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
-    { label: "Contato", href: "#contato" },
+    { label: "Contato", href: "/#contato" },
     { label: "Área do Cliente", href: "/painel", route: true },
   ];
 
