@@ -21,7 +21,7 @@ const PaymentModal = ({ open, onOpenChange, planName, price, type }: PaymentModa
   const [success, setSuccess] = useState(false);
   const [cardForm, setCardForm] = useState({ number: "", name: "", expiry: "", cvv: "" });
 
-  const pixCode = "00020126580014br.gov.bcb.pix0136cwkennedy-coworking-praia-grande5204000053039865802BR5925COWORKING KENNEDY LTDA6012PRAIA GRANDE62070503***6304";
+  const pixCode = "00020126580014br.gov.bcb.pix0136coworking013-praia-grande5204000053039865802BR5925COWORKING 013 LTDA6012PRAIA GRANDE62070503***6304";
 
   const formatCardNumber = (val: string) => {
     const digits = val.replace(/\D/g, "").slice(0, 16);

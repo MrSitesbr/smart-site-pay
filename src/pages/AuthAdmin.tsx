@@ -96,7 +96,7 @@ export default function AuthAdmin() {
         </div>
 
         <p className="text-sm text-slate-400 mb-8 border-l-2 border-orange-500 pl-4 py-1 italic">
-          Área exclusiva para gestão do CoWorking Kennedy.
+          Área exclusiva para gestão do Coworking 013.
         </p>
 
         <form onSubmit={submit} className="space-y-5">
@@ -108,7 +108,7 @@ export default function AuthAdmin() {
               onChange={(e) => setEmail(e.target.value)} 
               required 
               className="bg-slate-800 border-slate-700 text-white focus:border-orange-500 focus:ring-orange-500"
-              placeholder="admin@coworkingkennedy.com"
+              placeholder="admin@coworking013.com.br"
             />
           </div>
 
@@ -152,7 +152,7 @@ export default function AuthAdmin() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-800 flex flex-col items-center gap-2">
-          <p className="text-[10px] text-slate-500 uppercase tracking-tighter">Powered by CoWorking Kennedy Security</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-tighter">Powered by Coworking 013 Security</p>
         </div>
       </Card>
     </div>

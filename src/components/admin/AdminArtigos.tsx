@@ -6,7 +6,7 @@ import { Plus, Search, Filter, MoreVertical, Edit2, Eye, Trash2 } from "lucide-r
 export default function AdminArtigos() {
   const [artigos] = useState([
     { id: 1, title: "Como o coworking pode acelerar seu networking", author: "Walter Lima", date: "15/05/2026", status: "Publicado" },
-    { id: 2, title: "5 vantagens de ter um endereço fiscal na Praia Grande", author: "Equipe Kennedy", date: "10/05/2026", status: "Publicado" },
+    { id: 2, title: "5 vantagens de ter um endereço fiscal na Praia Grande", author: "Equipe 013", date: "10/05/2026", status: "Publicado" },
     { id: 3, title: "O futuro do trabalho híbrido no litoral", author: "Walter Lima", date: "02/05/2026", status: "Rascunho" },
   ]);
 

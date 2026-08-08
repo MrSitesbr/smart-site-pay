@@ -175,7 +175,7 @@ export default function Contratar() {
         <div className="relative rounded-3xl overflow-hidden mb-8 shadow-xl ring-1 ring-border">
           <img
             src={AMBIENTE_IMG[ambiente]}
-            alt={`Foto do ambiente ${AMBIENTE_LABEL[ambiente]} — Coworking Kennedy`}
+            alt={`Foto do ambiente ${AMBIENTE_LABEL[ambiente]} — Coworking 013`}
             className="w-full h-56 md:h-72 object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark/95 via-brand-blue-dark/50 to-transparent" />
