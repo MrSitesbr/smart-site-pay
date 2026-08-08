@@ -51,15 +51,14 @@ const Navbar = () => {
 
         <div className="hidden lg:flex items-center gap-8">
           {links.map((link) =>
-            (link as any).route ? (
+            link.route ? (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                  scrolled ? "text-foreground hover:text-primary" : "text-white hover:text-primary"
+                className={`text-sm font-medium transition-colors ${
+                  scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
                 }`}
               >
-                <LayoutDashboard className="w-4 h-4" />
                 {link.label}
               </Link>
             ) : (
@@ -67,7 +66,7 @@ const Navbar = () => {
                 key={link.href}
                 href={link.href}
                 className={`text-sm font-medium transition-colors ${
-                  scrolled ? "text-foreground hover:text-primary" : "text-white hover:text-primary"
+                  scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
                 }`}
               >
                 {link.label}
@@ -104,14 +103,13 @@ const Navbar = () => {
       {isOpen && (
         <div className="lg:hidden bg-background border-t border-border px-4 pb-4">
           {links.map((link) =>
-            (link as any).route ? (
+            link.route ? (
               <Link
                 key={link.href}
                 to={link.href}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-1.5 py-3 text-sm font-medium text-foreground hover:text-primary"
+                className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
               >
-                <LayoutDashboard className="w-4 h-4" />
                 {link.label}
               </Link>
             ) : (
@@ -119,7 +117,7 @@ const Navbar = () => {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className="block py-3 text-sm font-medium text-foreground hover:text-primary"
+                className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
               >
                 {link.label}
               </a>
