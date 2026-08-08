@@ -11,7 +11,7 @@ const DestaquesProfissionais = () => {
   ];
 
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section id="especialidades" className="py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-20">
           <span className="text-secondary font-heading font-bold text-sm tracking-widest uppercase mb-4 inline-block">Especialidades</span>

@@ -19,8 +19,8 @@ const Navbar = () => {
 
   const links = [
     { label: "Início", href: "#home" },
-    { label: "Soluções", href: "#solucoes" },
-    { label: "Planos", href: "#planos" },
+    { label: "Benefícios", href: "#beneficios" },
+    { label: "Especialidades", href: "#especialidades" },
     { label: "Institucional", href: "#institucional" },
     { label: "Contato", href: "#contato" },
     { label: "Área do Cliente", href: "/painel", route: true },
