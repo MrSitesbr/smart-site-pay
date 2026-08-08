@@ -1,4 +1,4 @@
-import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard } from "lucide-react";
+import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
 
@@ -7,23 +7,22 @@ const Footer = () => {
     {
       title: "Navegação",
       links: [
-        { label: "Início", href: "#home" },
-        { label: "Soluções", href: "#solucoes" },
-        { label: "Planos", href: "#planos" },
-        { label: "Institucional", href: "#institucional" },
+        { label: "Início", href: "/", route: true },
+        { label: "Institucional", href: "/institucional", route: true },
+        { label: "Ambientes", href: "/ambientes", route: true },
         { label: "Contato", href: "#contato" },
         { label: "Painel do cliente", href: "/painel", route: true },
         { label: "Admin", href: "/auth-admin", route: true },
       ],
     },
     {
-      title: "Soluções",
+      title: "Serviços",
       links: [
-        { label: "Salas Privativas", href: "#solucoes" },
-        { label: "Sala de Reunião", href: "#solucoes" },
-        { label: "Estações de Trabalho", href: "#solucoes" },
-        { label: "Endereço Comercial", href: "#solucoes" },
-        { label: "Virtual Office", href: "#solucoes" },
+        { label: "Salas Privativas", href: "/escritorio-privativo", route: true },
+        { label: "Sala de Reunião", href: "/auditorio-modular", route: true },
+        { label: "Auditório Modular", href: "/auditorio-modular", route: true },
+        { label: "Consultório Privativo", href: "/consultorio-privativo", route: true },
+        { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
       ],
     },
   ];
@@ -68,10 +67,16 @@ const Footer = () => {
                   <li key={j}>
                     {(l as any).route ? (
                       <Link to={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors inline-flex items-center gap-1.5">
-                        <LayoutDashboard className="w-3.5 h-3.5" /> {l.label}
+                        {l.label === "Painel do cliente" || l.label === "Admin" ? (
+                          <LayoutDashboard className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        )}
+                        {l.label}
                       </Link>
                     ) : (
-                      <a href={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors">
+                      <a href={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors inline-flex items-center gap-1.5">
+                        <ChevronRight className="w-3.5 h-3.5" />
                         {l.label}
                       </a>
                     )}
