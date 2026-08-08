@@ -35,10 +35,6 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <img src={logo.url} alt="Coworking 013" className="w-11 h-11 object-contain" />
-              <div>
-                <span className="block text-xs font-semibold text-primary leading-none">CoWorking</span>
-                <span className="block font-heading font-black text-lg leading-none -mt-0.5">013</span>
-              </div>
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
               O seu espaço de trabalho e networking na Praia Grande.
