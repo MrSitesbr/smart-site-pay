@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Phone, Calendar, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo-coworking.png";
+import logo from "@/assets/logo-cow013.png.asset.json";
 import ReservaDialog from "@/components/ReservaDialog";
 
 
@@ -36,11 +36,11 @@ const Navbar = () => {
     >
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <a href="#home" className="flex items-center gap-3">
-          <img src={logo} alt="Coworking Kennedy" className="w-11 h-11 object-contain" />
+          <img src={logo.url} alt="Coworking 013" className="w-11 h-11 object-contain" />
           <div className="hidden sm:block">
             <span className="block text-xs font-body font-semibold text-primary leading-none">CoWorking</span>
             <span className={`block font-heading font-black text-lg leading-none -mt-0.5 ${scrolled ? "text-foreground" : "text-white"}`}>
-              Kennedy
+              013
             </span>
           </div>
         </a>

@@ -11,13 +11,13 @@ const ContactSection = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "planos", message: "" });
   const [content, setContent] = useState({
     cta_title: 'Pronto para levar seu negócio para outro nível?',
-    cta_subtitle: 'Agende uma visita e conheça de perto o que o Coworking Kennedy pode fazer por você.',
+    cta_subtitle: 'Agende uma visita e conheça de perto o que o Coworking 013 pode fazer por você.',
     cta_button: 'Agendar Visita Agora',
     title: 'Tire dúvidas ou agende uma visita.',
     contact_items: [
-      { icon: "Phone", title: "Telefone", value: "(13) 9.9203-7957", href: "tel:13992037957" },
-      { icon: "Mail", title: "E-mail", value: "contato@cwkennedy.com.br", href: "mailto:contato@cwkennedy.com.br" },
-      { icon: "MapPin", title: "Endereço", value: "Av. Presidente Kennedy, 2191 - Praia Grande - SP", href: "" },
+      { icon: "Phone", title: "Telefone", value: "(13) 9.9744-0130", href: "tel:13997440130" },
+      { icon: "Mail", title: "E-mail", value: "contato@coworking013.com.br", href: "mailto:contato@coworking013.com.br" },
+      { icon: "MapPin", title: "Endereço", value: "Av. Presidente Kennedy, 5214 - Praia Grande - SP", href: "" },
       { icon: "Clock", title: "Horário", value: "Seg a Sex: 09h às 17h", href: "" },
     ]
   });

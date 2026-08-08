@@ -1,6 +1,6 @@
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/logo-coworking.png";
+import logo from "@/assets/logo-cow013.png.asset.json";
 
 const Footer = () => {
   const cols = [
@@ -34,14 +34,14 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="Coworking Kennedy" className="w-11 h-11 object-contain" />
+              <img src={logo.url} alt="Coworking 013" className="w-11 h-11 object-contain" />
               <div>
                 <span className="block text-xs font-semibold text-primary leading-none">CoWorking</span>
-                <span className="block font-heading font-black text-lg leading-none -mt-0.5">Kennedy</span>
+                <span className="block font-heading font-black text-lg leading-none -mt-0.5">013</span>
               </div>
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
-              Espaço de trabalho flexível e moderno em Praia Grande.
+              O seu espaço de trabalho e networking na Praia Grande.
             </p>
             <div className="flex gap-3">
               {[Instagram, MessageCircle, Youtube, Linkedin].map((Icon, i) => (
@@ -80,16 +80,16 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-bold mb-4">Informações</h4>
             <ul className="space-y-3 text-sm text-white/70">
-              <li>(13) 9.9203-7957</li>
-              <li>contato@cwkennedy.com.br</li>
-              <li>Av. Presidente Kennedy, 2191<br />Guilhermina - Praia Grande - SP</li>
+              <li>(13) 9.9744-0130</li>
+              <li>contato@coworking013.com.br</li>
+              <li>Av. Presidente Kennedy, 5214<br />Vila Tupi - Praia Grande - SP</li>
               <li>Seg-Sex: 09h às 17h</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} Coworking Kennedy. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} Coworking 013. Todos os direitos reservados.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-secondary">Política de Privacidade</a>
             <a href="#" className="hover:text-secondary">Termos de Uso</a>
