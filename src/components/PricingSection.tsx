@@ -10,9 +10,9 @@ const PricingSection = () => {
     title: 'Planos que se adaptam ao <span class="text-primary">seu crescimento.</span>',
     subtitle: 'Escolha a melhor opção para você ou para sua equipe. Sem burocracia, sem fiador, apenas foco no seu trabalho.',
     plans_individual: [
-      { name: "Day Pass", price: "R$ 60", period: "/dia", features: ["Cadeira rotativa", "Internet 500mb", "Café e água", "Ambiente climatizado"], highlight: false },
-      { name: "Coworking", price: "R$ 499", period: "/mês", features: ["Uso ilimitado", "Locker individual", "Endereço comercial", "Desconto salas reunião"], highlight: true },
-      { name: "Sala Privativa", price: "R$ 1.200", period: "/mês", features: ["Sala exclusiva", "Móveis inclusos", "Chave da sala", "24/7 access option"], highlight: false },
+      { name: "Day Pass", price: "R$ 70", period: "/dia", features: ["Cadeira rotativa", "Internet 500mb", "Café e água", "Ambiente climatizado"], highlight: false },
+      { name: "Coworking", price: "R$ 550", period: "/mês", features: ["Uso ilimitado", "Locker individual", "Endereço comercial", "Desconto salas reunião"], highlight: true },
+      { name: "Sala Privativa", price: "A partir de R$ 1.500", period: "/mês", features: ["Sala exclusiva", "Móveis inclusos", "Chave da sala", "24/7 access option"], highlight: false },
     ]
   });
 
