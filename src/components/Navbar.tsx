@@ -36,7 +36,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <a href="#home" className="flex items-center gap-3">
-          <img src={logo.url} alt="Coworking 013" className="h-10 lg:h-12 w-auto object-contain" />
+          <img src={logo.url} alt="Coworking 013" className="h-14 lg:h-16 w-auto object-contain" />
         </a>
 
         <div className="hidden lg:flex items-center gap-8">
