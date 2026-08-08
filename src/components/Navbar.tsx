@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Phone, Calendar, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo-cow013-v2.png.asset.json";
+import logo from "@/assets/logo-coworking013.png.asset.json";
 import ReservaDialog from "@/components/ReservaDialog";
 
 

@@ -1,6 +1,6 @@
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/logo-cow013-v2.png.asset.json";
+import logo from "@/assets/logo-coworking013.png.asset.json";
 
 const Footer = () => {
   const cols = [
