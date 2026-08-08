@@ -1,6 +1,6 @@
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/logo-coworking013.png.asset.json";
+import logoIcon from "@/assets/logo-icon.png.asset.json";
 
 const Footer = () => {
   const cols = [
@@ -33,8 +33,11 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <img src={logo.url} alt="Coworking 013" className="h-10 w-auto object-contain" />
+            <div className="flex items-center gap-2 mb-4">
+              <img src={logoIcon.url} alt="Logo" className="h-8 w-auto object-contain" />
+              <span className="text-xl font-heading font-bold text-white">
+                CoWorking <span className="text-orange-500">013</span>
+              </span>
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
               O seu espaço de trabalho e networking na Praia Grande.
