@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save } from "lucide-react";
+import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save, Settings } from "lucide-react";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClientes from "@/components/admin/AdminClientes";
 import AdminFinanceiro from "@/components/admin/AdminFinanceiro";
@@ -24,6 +24,7 @@ import AdminFuncionarios from "@/components/admin/AdminFuncionarios";
 import AdminVisitantes from "@/components/admin/AdminVisitantes";
 import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
+import AdminSettings from "@/components/admin/AdminSettings";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
 
@@ -233,6 +234,7 @@ export default function Admin() {
     { title: "Serviços", icon: FileText, id: "servicos" },
     { title: "Unidades", icon: Building2, id: "unidades" },
     { title: "Páginas", icon: FileText, id: "paginas" },
+    { title: "Configurações", icon: Settings, id: "configuracoes" },
   ];
 
   return (
@@ -334,7 +336,39 @@ export default function Admin() {
                           <SelectContent>
                             <SelectItem value="pendente">Pendente</SelectItem>
                             <SelectItem value="confirmada">Confirmada</SelectItem>
-                            <SelectItem value="realizada">Realizada</SelectItem>
+                             <SelectItem value="realizada">Realizada</SelectItem>
+                             <SelectItem value="cancelada">Cancelada</SelectItem>
+                           </SelectContent>
+                         </Select>
+                         <div className="flex gap-1">
+                           <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-brand-blue-dark" onClick={() => syncGoogle("reserva", r.id)} title="Sincronizar Google">
+                             <RefreshCw className="w-4 h-4" />
+                           </Button>
+                           <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => deleteReserva(r)} title="Excluir">
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                         </div>
+                       </div>
+                     </div>
+                   </Card>
+                 ))}
+               </div>
+             )}
+             {activeTab === "clientes_corp" && <AdminClientesCorp />}
+             {activeTab === "funcionarios" && <AdminFuncionarios />}
+             {activeTab === "visitantes" && <AdminVisitantes />}
+             {activeTab === "locacao_fixa" && <AdminLocacaoFixa />}
+             {activeTab === "clientes" && <AdminClientes />}
+             {activeTab === "planos_horas" && <AdminPlanosHoras />}
+             {activeTab === "financeiro" && <AdminFinanceiro />}
+             {activeTab === "erp" && <AdminERP />}
+             {activeTab === "woba" && <AdminWobaRepasses />}
+             {activeTab === "artigos" && <AdminArtigos />}
+             {activeTab === "servicos" && <AdminServicos />}
+             {activeTab === "unidades" && <AdminUnidades />}
+             {activeTab === "paginas" && <AdminPaginas />}
+             {activeTab === "configuracoes" && <AdminSettings />}
+           </main>
                             <SelectItem value="cancelada">Cancelada</SelectItem>
                           </SelectContent>
                         </Select>
