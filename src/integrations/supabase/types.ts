@@ -498,19 +498,25 @@ export type Database = {
       unidades: {
         Row: {
           created_at: string
+          descricao: string | null
           endereco: string | null
+          foto_url: string | null
           id: string
           nome: string
         }
         Insert: {
           created_at?: string
+          descricao?: string | null
           endereco?: string | null
+          foto_url?: string | null
           id?: string
           nome: string
         }
         Update: {
           created_at?: string
+          descricao?: string | null
           endereco?: string | null
+          foto_url?: string | null
           id?: string
           nome?: string
         }
