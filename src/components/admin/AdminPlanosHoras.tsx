@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +16,8 @@ import {
 } from "@/components/ui/dialog";
 
 export default function AdminPlanosHoras() {
+  const navigate = useNavigate();
   const [planos, setPlanos] = useState<any[]>([]);
-  const [editingPlano, setEditingPlano] = useState<any>(null);
   const [unidades, setUnidades] = useState<any[]>([]);
   const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
 
@@ -33,30 +34,6 @@ export default function AdminPlanosHoras() {
   // Filtragem (embora a tabela 'planos' não tenha unidade_id, adicionamos o filtro UI para consistência se no futuro tiver)
   const filteredPlanos = planos;
 
-  async function savePlano() {
-    if (!editingPlano.nome || !editingPlano.preco || !editingPlano.quantidade_horas) {
-      return toast.error("Preencha todos os campos obrigatórios");
-    }
-
-    const payload = {
-      nome: editingPlano.nome,
-      preco: parseFloat(editingPlano.preco),
-      quantidade_horas: parseInt(editingPlano.quantidade_horas),
-      validade_dias: editingPlano.validade_dias ? parseInt(editingPlano.validade_dias) : null
-    };
-
-    const { error } = editingPlano.id 
-      ? await supabase.from('planos').update(payload).eq('id', editingPlano.id)
-      : await supabase.from('planos').insert([payload]);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Plano salvo!");
-      setEditingPlano(null);
-      fetchPlanos();
-    }
-  }
 
   async function deletePlano(id: string) {
     if (!confirm("Tem certeza que deseja excluir este plano?")) return;
@@ -90,7 +67,7 @@ export default function AdminPlanosHoras() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={() => setEditingPlano({ nome: '', preco: '', quantidade_horas: '', validade_dias: '30' })} className="bg-brand-orange text-white">
+          <Button onClick={() => navigate("/admin/planos/novo")} className="bg-brand-orange text-white">
             <Plus className="w-4 h-4 mr-2" /> Novo Plano
           </Button>
         </div>
@@ -100,7 +77,7 @@ export default function AdminPlanosHoras() {
         {planos.map(p => (
           <Card key={p.id} className="p-6 flex flex-col items-center text-center relative hover:shadow-lg transition-all border-none shadow-sm">
             <div className="absolute top-4 right-4 flex gap-2">
-              <button onClick={() => setEditingPlano(p)} className="p-2 hover:bg-accent rounded-full transition-colors"><Edit2 className="w-4 h-4 text-muted-foreground" /></button>
+              <button onClick={() => navigate(`/admin/planos/${p.id}`)} className="p-2 hover:bg-accent rounded-full transition-colors"><Edit2 className="w-4 h-4 text-muted-foreground" /></button>
               <button onClick={() => deletePlano(p.id)} className="p-2 hover:bg-destructive/10 rounded-full transition-colors"><Trash2 className="w-4 h-4 text-destructive" /></button>
             </div>
             
@@ -119,7 +96,7 @@ export default function AdminPlanosHoras() {
               {p.validade_dias && <p className="text-[10px] text-brand-orange uppercase font-bold tracking-wider">Validade: {p.validade_dias} dias</p>}
             </div>
 
-            <Button variant="outline" className="w-full border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white" onClick={() => setEditingPlano(p)}>
+            <Button variant="outline" className="w-full border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white" onClick={() => navigate(`/admin/planos/${p.id}`)}>
               Editar Configurações
             </Button>
           </Card>
@@ -131,56 +108,6 @@ export default function AdminPlanosHoras() {
         )}
       </div>
 
-      {/* Dialog Plano */}
-      <Dialog open={!!editingPlano} onOpenChange={() => setEditingPlano(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingPlano?.id ? "Editar Plano" : "Novo Plano de Horas"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome do Plano</label>
-              <Input 
-                value={editingPlano?.nome || ''} 
-                onChange={(e) => setEditingPlano({...editingPlano, nome: e.target.value})}
-                placeholder="Ex: Pacote VIP 20h"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Quantidade de Horas</label>
-                <Input 
-                  type="number"
-                  value={editingPlano?.quantidade_horas || ''} 
-                  onChange={(e) => setEditingPlano({...editingPlano, quantidade_horas: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Preço (R$)</label>
-                <Input 
-                  type="number"
-                  step="0.01"
-                  value={editingPlano?.preco || ''} 
-                  onChange={(e) => setEditingPlano({...editingPlano, preco: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Validade (Dias)</label>
-              <Input 
-                type="number"
-                value={editingPlano?.validade_dias || ''} 
-                onChange={(e) => setEditingPlano({...editingPlano, validade_dias: e.target.value})}
-                placeholder="Opcional"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPlano(null)}>Cancelar</Button>
-            <Button onClick={savePlano} className="bg-brand-orange text-white">Salvar Plano</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
