@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Edit, Info, Users, Clock, CheckCircle2, Save, X } from "lucide-react";
+import { ArrowLeft, Edit, Info, Users, Clock, CheckCircle2, Save, X, ImageIcon } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "./ImageUpload";
 import { toast } from "sonner";
 
 export default function AdminSalaDetalhe() {
@@ -66,7 +67,8 @@ export default function AdminSalaDetalhe() {
         tipo: editingSala.tipo,
         capacidade: parseInt(editingSala.capacidade) || null,
         descricao: editingSala.descricao,
-        foto_url: editingSala.foto_url
+        foto_url: editingSala.galeria?.[0] || editingSala.foto_url,
+        galeria: editingSala.galeria
       })
       .eq('id', id);
     
@@ -124,7 +126,15 @@ export default function AdminSalaDetalhe() {
               </Button>
             </div>
 
-            {sala.foto_url && (
+            {sala.galeria && sala.galeria.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {sala.galeria.map((url: string, index: number) => (
+                  <div key={index} className={`rounded-2xl overflow-hidden border-4 border-white shadow-md ${index === 0 ? 'md:col-span-2 aspect-video' : 'aspect-square'}`}>
+                    <img src={url} alt={`${sala.nome} - ${index}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            ) : sala.foto_url && (
               <div className="aspect-video w-full rounded-2xl overflow-hidden mb-8 border-4 border-white shadow-md">
                 <img src={sala.foto_url} alt={sala.nome} className="w-full h-full object-cover" />
               </div>
@@ -221,12 +231,11 @@ export default function AdminSalaDetalhe() {
                   onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL da Foto de Destaque</label>
-                <Input 
-                  value={editingSala?.foto_url || ''} 
-                  onChange={(e) => setEditingSala({...editingSala, foto_url: e.target.value})}
-                  placeholder="https://..."
+              <div className="space-y-2 col-span-2">
+                <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
+                <ImageUpload 
+                  value={editingSala?.galeria || []} 
+                  onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
                 />
               </div>
             </div>
