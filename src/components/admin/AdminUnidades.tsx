@@ -3,9 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, Save, X, Building2, Layers } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, Building2, Layers, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ export default function AdminUnidades() {
   const [editingUnidade, setEditingUnidade] = useState<any>(null);
   const [editingSala, setEditingSala] = useState<any>(null);
   const [selectedUnidade, setSelectedUnidade] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUnidades();
@@ -139,6 +141,7 @@ export default function AdminUnidades() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setEditingUnidade(u); }}><Edit2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/unidades/${u.id}`); }} className="text-brand-blue-dark"><Eye className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deleteUnidade(u.id); }} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                     <Button 
                       variant={selectedUnidade?.id === u.id ? "default" : "outline"} 
@@ -185,6 +188,7 @@ export default function AdminUnidades() {
                       </div>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" onClick={() => setEditingSala(s)}><Edit2 className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/unidades/sala/${s.id}`)}><Eye className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => deleteSala(s.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                       </div>
                     </div>
