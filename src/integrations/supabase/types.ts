@@ -236,6 +236,7 @@ export type Database = {
           nome: string
           preco: number
           quantidade_horas: number
+          unidade_id: string | null
           validade_dias: number | null
         }
         Insert: {
@@ -244,6 +245,7 @@ export type Database = {
           nome: string
           preco: number
           quantidade_horas: number
+          unidade_id?: string | null
           validade_dias?: number | null
         }
         Update: {
@@ -252,9 +254,18 @@ export type Database = {
           nome?: string
           preco?: number
           quantidade_horas?: number
+          unidade_id?: string | null
           validade_dias?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "planos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reservations: {
         Row: {
@@ -412,47 +423,67 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_global: boolean | null
           name: string
           route: string
+          unidade_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          is_global?: boolean | null
           name: string
           route: string
+          unidade_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          is_global?: boolean | null
           name?: string
           route?: string
+          unidade_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "site_pages_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_sections: {
         Row: {
           content: Json
           created_at: string
           id: string
+          is_visible: boolean | null
           order_index: number | null
           page_id: string | null
           section_key: string
+          settings: Json | null
         }
         Insert: {
           content?: Json
           created_at?: string
           id?: string
+          is_visible?: boolean | null
           order_index?: number | null
           page_id?: string | null
           section_key: string
+          settings?: Json | null
         }
         Update: {
           content?: Json
           created_at?: string
           id?: string
+          is_visible?: boolean | null
           order_index?: number | null
           page_id?: string | null
           section_key?: string
+          settings?: Json | null
         }
         Relationships: [
           {
