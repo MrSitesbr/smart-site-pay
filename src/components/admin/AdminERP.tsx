@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Building2 } from "lucide-react";
 import { isBusinessDay } from "@/lib/holidays";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const AMBIENTES = ["estacao", "sala_privativa", "sala_reuniao"] as const;
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -20,6 +22,12 @@ function dayKey(d: Date) {
 
 export default function AdminERP({ contratos, reservas }: { contratos: any[]; reservas: any[] }) {
   const [month, setMonth] = useState<Date>(new Date());
+  const [unidades, setUnidades] = useState<any[]>([]);
+  const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
+
+  useEffect(() => {
+    supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+  }, []);
 
   const stats = useMemo(() => {
     const y = month.getFullYear(), m = month.getMonth();
@@ -27,11 +35,20 @@ export default function AdminERP({ contratos, reservas }: { contratos: any[]; re
     const days: Date[] = [];
     for (let i = 1; i <= daysInMonth; i++) days.push(new Date(y, m, i));
 
+    // Filtrar dados pela unidade selecionada se necessário
+    const filteredContratos = selectedUnidade === "todas" 
+      ? contratos 
+      : contratos.filter(c => c.unidade_id === selectedUnidade);
+    
+    const filteredReservas = selectedUnidade === "todas" 
+      ? reservas 
+      : reservas.filter(r => r.unidade_id === selectedUnidade);
+
     // ocupação por dia por ambiente
     const ocupacao: Record<string, Record<string, number>> = {};
     AMBIENTES.forEach((a) => { ocupacao[a] = {}; days.forEach((d) => { ocupacao[a][dayKey(d)] = 0; }); });
 
-    contratos.forEach((c) => {
+    filteredContratos.forEach((c) => {
       if (c.status === "cancelada") return;
       const dias: string[] = c.dias_selecionados || [];
       dias.forEach((d) => {
@@ -41,7 +58,7 @@ export default function AdminERP({ contratos, reservas }: { contratos: any[]; re
         }
       });
     });
-    reservas.forEach((r) => {
+    filteredReservas.forEach((r) => {
       if (r.status === "cancelada") return;
       const dd = new Date(r.data + "T00:00");
       if (dd.getFullYear() === y && dd.getMonth() === m) {
@@ -60,14 +77,14 @@ export default function AdminERP({ contratos, reservas }: { contratos: any[]; re
     });
 
     return { days, ocupacao, resumo };
-  }, [contratos, reservas, month]);
+  }, [contratos, reservas, month, selectedUnidade]);
 
   const goPrev = () => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
   const goNext = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-white p-4 rounded-xl shadow-sm">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setMonth(new Date())} className="font-heading font-bold">Hoje</Button>
           <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="w-5 h-5" /></Button>
@@ -75,6 +92,21 @@ export default function AdminERP({ contratos, reservas }: { contratos: any[]; re
           <h2 className="font-heading font-black text-xl capitalize ml-2">
             {MONTHS[month.getMonth()]} <span className="text-muted-foreground">{month.getFullYear()}</span>
           </h2>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Building2 className="w-4 h-4 text-muted-foreground" />
+          <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+            <SelectTrigger className="w-[200px] h-9">
+              <SelectValue placeholder="Todas as Unidades" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as Unidades</SelectItem>
+              {unidades.map(u => (
+                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

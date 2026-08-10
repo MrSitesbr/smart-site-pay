@@ -79,12 +79,13 @@ export default function AdminUnidades() {
   async function saveSala() {
     if (!editingSala.nome || !editingSala.tipo) return toast.error("Nome e tipo são obrigatórios");
     
-    const payload = {
+    const payload: any = {
       nome: editingSala.nome,
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
-      unidade_id: selectedUnidade.id
+      unidade_id: selectedUnidade.id,
+      planos_permitidos: editingSala.planos_permitidos || []
     };
 
     const { error } = editingSala.id 
@@ -270,12 +271,34 @@ export default function AdminUnidades() {
               />
             </div>
             <div className="space-y-2">
+              <label className="text-sm font-medium">Planos de Horas Permitidos</label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {planos.map(p => (
+                  <label key={p.id} className="flex items-center gap-2 text-xs border p-2 rounded hover:bg-muted/50 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="rounded"
+                      checked={(editingSala?.planos_permitidos || []).includes(p.id)}
+                      onChange={(e) => {
+                        const current = editingSala?.planos_permitidos || [];
+                        const next = e.target.checked 
+                          ? [...current, p.id] 
+                          : current.filter((id: string) => id !== p.id);
+                        setEditingSala({...editingSala, planos_permitidos: next});
+                      }}
+                    />
+                    <span>{p.nome}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
               <label className="text-sm font-medium">Descrição / Observações</label>
               <Textarea 
                 value={editingSala?.descricao || ''} 
                 onChange={(e) => setEditingSala({...editingSala, descricao: e.target.value})}
                 placeholder="Recursos disponíveis, metragem, etc."
-                rows={3}
+                rows={2}
               />
             </div>
           </div>
