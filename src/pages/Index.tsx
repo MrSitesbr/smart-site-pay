@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import IdealParaSection from "@/components/IdealParaSection";
 import DestaquesProfissionais from "@/components/DestaquesProfissionais";
-import InstitucionalSection from "@/components/InstitucionalSection";
+
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -20,7 +20,7 @@ const Index = () => {
       <HeroSection />
       <IdealParaSection />
       <DestaquesProfissionais />
-      <InstitucionalSection />
+      
       <ContactSection />
       <Footer />
       <WhatsAppButton />
