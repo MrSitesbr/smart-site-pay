@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "./ImageUpload";
 import { 
   ArrowLeft, 
   Building2, 
@@ -17,7 +18,8 @@ import {
   Plus, 
   Trash2,
   X,
-  Save
+  Save,
+  ImageIcon
 } from "lucide-react";
 import {
   Dialog,
@@ -80,7 +82,8 @@ export default function AdminUnidadeDetalhe() {
       nome: editingUnidade.nome,
       endereco: editingUnidade.endereco,
       descricao: editingUnidade.descricao,
-      foto_url: editingUnidade.foto_url
+      foto_url: editingUnidade.galeria?.[0] || editingUnidade.foto_url,
+      galeria: editingUnidade.galeria
     };
 
     const { error } = await supabase.from('unidades').update(payload).eq('id', id);
@@ -141,6 +144,16 @@ export default function AdminUnidadeDetalhe() {
       fetchData();
     }
   }
+
+  const payloadSala: any = {
+    nome: editingSala?.nome,
+    tipo: editingSala?.tipo,
+    capacidade: parseInt(editingSala?.capacidade) || null,
+    descricao: editingSala?.descricao,
+    foto_url: editingSala?.galeria?.[0] || editingSala?.foto_url,
+    galeria: editingSala?.galeria,
+    unidade_id: id
+  };
 
   if (loading) {
     return (
@@ -286,12 +299,11 @@ export default function AdminUnidadeDetalhe() {
                   placeholder="Ex: Unidade Boqueirão"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL da Foto</label>
-                <Input 
-                  value={editingUnidade?.foto_url || ''} 
-                  onChange={(e) => setEditingUnidade({...editingUnidade, foto_url: e.target.value})}
-                  placeholder="URL da imagem (ex: https://...)"
+              <div className="space-y-2 col-span-2">
+                <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
+                <ImageUpload 
+                  value={editingUnidade?.galeria || []} 
+                  onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls})}
                 />
               </div>
             </div>
@@ -361,14 +373,13 @@ export default function AdminUnidadeDetalhe() {
                   onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL da Foto</label>
-                <Input 
-                  value={editingSala?.foto_url || ''} 
-                  onChange={(e) => setEditingSala({...editingSala, foto_url: e.target.value})}
-                  placeholder="https://..."
-                />
-              </div>
+            <div className="space-y-2 col-span-2">
+              <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
+              <ImageUpload 
+                value={editingSala?.galeria || []} 
+                onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
+              />
+            </div>
             </div>
 
             <div className="space-y-2">
