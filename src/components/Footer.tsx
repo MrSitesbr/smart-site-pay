@@ -13,7 +13,6 @@ const Footer = () => {
         { label: "Unidades", href: "/unidades", route: true },
         { label: "Contato", href: "#contato" },
         { label: "Área do Cliente", href: "/painel", route: true },
-        { label: "Admin", href: "/auth-admin", route: true },
       ],
     },
     {
