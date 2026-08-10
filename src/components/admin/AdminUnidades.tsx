@@ -87,6 +87,7 @@ export default function AdminUnidades() {
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
+      foto_url: editingSala.foto_url,
       unidade_id: selectedUnidade.id
     };
 
@@ -307,6 +308,14 @@ export default function AdminUnidades() {
                 type="number"
                 value={editingSala?.capacidade || ''} 
                 onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL da Foto</label>
+              <Input 
+                value={editingSala?.foto_url || ''} 
+                onChange={(e) => setEditingSala({...editingSala, foto_url: e.target.value})}
+                placeholder="https://..."
               />
             </div>
             <div className="space-y-2">
