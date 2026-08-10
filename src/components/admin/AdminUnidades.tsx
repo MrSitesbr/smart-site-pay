@@ -87,6 +87,7 @@ export default function AdminUnidades() {
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
+      foto_url: editingSala.foto_url,
       unidade_id: selectedUnidade.id
     };
 
