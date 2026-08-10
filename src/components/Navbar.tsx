@@ -31,7 +31,6 @@ const Navbar = () => {
       ]
     },
     { label: "Unidades", href: "/unidades", route: true },
-    { label: "Institucional", href: "/institucional", route: true },
     { label: "Contato", href: "/#contato" },
   ];
 

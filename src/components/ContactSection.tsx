@@ -54,8 +54,29 @@ const ContactSection = () => {
   return (
     <section id="contato" className="py-24 bg-brand-gray">
       <div className="container mx-auto px-4">
+        <div className="relative bg-gradient-to-r from-secondary to-brand-blue-dark rounded-3xl p-8 md:p-10 mb-16 overflow-hidden text-white">
+          <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
+          <div className="relative grid md:grid-cols-3 gap-6 items-center">
+            <div className="md:col-span-2 flex items-start gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-black text-2xl md:text-3xl leading-tight">{content.cta_title}</h3>
+                <p className="text-white/80 text-sm mt-2">{content.cta_subtitle}</p>
+              </div>
+            </div>
+            <div className="flex md:justify-end">
+              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-brand-orange-light rounded-full font-heading font-bold px-8">
+                {content.cta_button} <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2">
+            <span className="inline-block text-secondary font-heading font-bold text-xs tracking-widest mb-4 uppercase">FALE COM A GENTE</span>
             <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground leading-tight mb-8" dangerouslySetInnerHTML={{ __html: content.title }} />
             <div className="space-y-5">
               {content.contact_items.map((item: any, i: number) => {
