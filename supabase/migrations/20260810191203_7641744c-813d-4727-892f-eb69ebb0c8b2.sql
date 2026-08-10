@@ -1,0 +1,25 @@
+INSERT INTO public.planos (nome, quantidade_horas, preco, validade_dias) VALUES 
+('Auditório Start', 1, 0, 30),
+('Auditório Standard', 4, 0, 30),
+('Auditório Smart', 8, 0, 30),
+('Auditório Pro', 12, 0, 30),
+('Privativo Start', 1, 0, 30),
+('Privativo Standard', 4, 0, 30),
+('Privativo Smart', 8, 0, 30),
+('Privativo Pro', 12, 0, 30),
+('Privativo 013 Plus', 10, 0, 30),
+('Privativo 013 Pass', 10, 0, 90),
+('Consultório Start', 1, 0, 30),
+('Consultório Standard', 4, 0, 30),
+('Consultório Smart', 8, 0, 30),
+('Consultório Pro', 12, 0, 30),
+('Virtual Start', 0, 0, 30),
+('Virtual Standard', 0, 0, 30),
+('Virtual Smart', 4, 0, 30);
+INSERT INTO public.servicos (nome, preco, categoria, icon) VALUES 
+('Endereço Comercial', 'Consultar', 'Infraestrutura', 'Building2'),
+('Endereço Fiscal', 'Consultar', 'Infraestrutura', 'FileText'),
+('Sala de Reunião', 'Consultar', 'Infraestrutura', 'Users'),
+('Internet Fibra', 'Cortesia', 'Cortesia', 'Wifi'),
+('Café & Água', 'Cortesia', 'Cortesia', 'Coffee'),
+('Impressões', 'Adicional', 'Adicional', 'Printer');
