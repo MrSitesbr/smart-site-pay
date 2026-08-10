@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import AdminUnidadeDetalhe from "./components/admin/AdminUnidadeDetalhe";
 import AdminSalaDetalhe from "./components/admin/AdminSalaDetalhe";
+import AdminPlanoDetalhe from "./components/admin/AdminPlanoDetalhe";
 import AuthAdmin from "./pages/AuthAdmin";
 import NotFound from "./pages/NotFound";
 import Institutional from "./pages/Institutional";
