@@ -357,7 +357,7 @@ export default function Admin() {
             {activeTab === "clientes_corp" && <AdminClientesCorp />}
             {activeTab === "funcionarios" && <AdminFuncionarios />}
             {activeTab === "visitantes" && <AdminVisitantes />}
-            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contracts={contratos} />}
+            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
             {activeTab === "planos_horas" && <AdminPlanosHoras />}
             {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} />}
