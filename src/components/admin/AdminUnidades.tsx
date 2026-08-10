@@ -46,7 +46,7 @@ export default function AdminUnidades() {
   async function saveUnidade() {
     if (!editingUnidade.nome) return toast.error("Nome é obrigatório");
     
-    const payload = {
+    const payload: any = {
       nome: editingUnidade.nome,
       endereco: editingUnidade.endereco,
       descricao: editingUnidade.descricao,
@@ -54,8 +54,8 @@ export default function AdminUnidades() {
     };
 
     const { error } = editingUnidade.id 
-      ? await supabase.from('unidades').update(payload).eq('id', editingUnidade.id)
-      : await supabase.from('unidades').insert([payload]);
+      ? await (supabase as any).from('unidades').update(payload).eq('id', editingUnidade.id)
+      : await (supabase as any).from('unidades').insert([payload]);
     
     if (error) {
       toast.error(error.message);
