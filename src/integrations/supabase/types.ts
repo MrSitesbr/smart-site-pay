@@ -398,6 +398,7 @@ export type Database = {
           capacidade: number | null
           created_at: string
           descricao: string | null
+          foto_url: string | null
           id: string
           nome: string
           tipo: string
@@ -407,6 +408,7 @@ export type Database = {
           capacidade?: number | null
           created_at?: string
           descricao?: string | null
+          foto_url?: string | null
           id?: string
           nome: string
           tipo: string
@@ -416,6 +418,7 @@ export type Database = {
           capacidade?: number | null
           created_at?: string
           descricao?: string | null
+          foto_url?: string | null
           id?: string
           nome?: string
           tipo?: string
