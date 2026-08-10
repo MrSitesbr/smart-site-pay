@@ -21,7 +21,6 @@ const Index = () => {
       <IdealParaSection />
       <DestaquesProfissionais />
       <InstitucionalSection />
-      <ContactSection />
       <Footer />
       <WhatsAppButton />
     </div>
