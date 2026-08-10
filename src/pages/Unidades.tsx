@@ -68,4 +68,4 @@ const Ambientes = () => {
   );
 };
 
-export default Ambientes;
+export default Unidades;

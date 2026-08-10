@@ -10,7 +10,7 @@ const Footer = () => {
       links: [
         { label: "Início", href: "/", route: true },
         { label: "Institucional", href: "/institucional", route: true },
-        { label: "Ambientes", href: "/ambientes", route: true },
+        { label: "Unidades", href: "/unidades", route: true },
         { label: "Contato", href: "#contato" },
         { label: "Área do Cliente", href: "/painel", route: true },
         { label: "Admin", href: "/auth-admin", route: true },
@@ -90,10 +90,13 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-bold mb-4">Informações</h4>
             <ul className="space-y-3 text-sm text-white/70">
-              <li>(13) 99744-0130</li>
+              <li>(13) 98805-0358</li>
               <li>contato@coworking013.com.br</li>
-              <li>Av. Pres. Kennedy, 5214<br />Vila Tupi - Praia Grande - SP</li>
-              <li>Seg-Sex: 09h às 18h</li>
+              <li>Av. P. Costa e Silva, 609 - S. 906<br />Boqueirão - Praia Grande - SP</li>
+              <li>R. São Caetano, 86<br />Boqueirão - Praia Grande - SP</li>
+              <li>R. Jaú, 955 Conj. 26<br />Boqueirão - Praia Grande - SP</li>
+              <li>Seg. à Sex.: 08h às 21h</li>
+              <li>Sáb: 08h às 12h</li>
             </ul>
           </div>
         </div>
