@@ -81,9 +81,14 @@ export default function AdminUnidadeDetalhe() {
                   {unidade.endereco}
                 </div>
               </div>
-              <Button onClick={() => {/* TODO: Integrar modal de edição */}} className="bg-brand-blue-dark text-white">
-                <Edit className="w-4 h-4 mr-2" /> Editar Unidade
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setEditingUnidade(unidade)} className="bg-brand-blue-dark text-white">
+                  <Edit className="w-4 h-4 mr-2" /> Editar Unidade
+                </Button>
+                <Button onClick={deleteUnidade} variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-white">
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir Unidade
+                </Button>
+              </div>
             </div>
             
             {unidade.foto_url && (
