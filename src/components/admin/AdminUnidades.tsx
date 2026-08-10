@@ -60,7 +60,7 @@ export default function AdminUnidades() {
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setEditing(u)}><Edit2 className="w-4 h-4" /></Button>
-                <Button variant="outline" size="sm" onClick={() => fetchSalas(u.id)}>Salas</Button>
+                <Button variant="outline" size="sm" onClick={() => fetchSalas(u.id)} className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark/10">Salas</Button>
               </div>
             </div>
           </Card>
