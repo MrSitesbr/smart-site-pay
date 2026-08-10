@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
-import escritorioImg from "@/assets/escritorio-cow013.png.asset.json";
-import auditorioImg from "@/assets/auditorio-cow013.png.asset.json";
-import consultorioImg from "@/assets/consultorio-cow013.png.asset.json";
+import { assets } from "@/lib/migration-assets";
 
 const IdealParaSection = () => {
   const [content, setContent] = useState({
