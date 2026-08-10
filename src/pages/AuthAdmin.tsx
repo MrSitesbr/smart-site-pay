@@ -55,7 +55,11 @@ export default function AuthAdmin() {
       if (error) throw error;
       
       const userId = data.user!.id;
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      if (rolesError) {
+        console.error("Roles fetch error:", rolesError);
+        throw new Error(`Database error querying roles: ${rolesError.message}`);
+      }
       const isAdmin = (roles || []).some((r: any) => r.role === "admin");
 
       if (isAdmin) {
