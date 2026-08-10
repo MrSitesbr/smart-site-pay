@@ -75,8 +75,8 @@ export default function AdminServicos() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Catálogo de Serviços</h2>
-          <p className="text-muted-foreground">Serviços adicionais e cortesias oferecidas no coworking.</p>
+          <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Serviços</h2>
+          <p className="text-muted-foreground">Gerencie o catálogo de serviços do site.</p>
         </div>
         <Button onClick={() => setEditingServico({ nome: '', preco: '', categoria: 'Adicional', icon: 'Building2' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
           <Plus className="w-4 h-4 mr-2" /> Novo Serviço

@@ -77,7 +77,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       title: "Planos", 
       icon: ClipboardList,
       items: [
-        { title: "Criar Planos", id: "planos_horas" },
+        { title: "Planos", id: "planos_horas" },
         { title: "Locação Fixa", id: "locacao_fixa" },
       ]
     },
