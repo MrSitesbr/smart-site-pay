@@ -381,6 +381,33 @@ export type Database = {
           },
         ]
       }
+      servicos: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          nome: string
+          preco: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          nome: string
+          preco?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          nome?: string
+          preco?: string | null
+        }
+        Relationships: []
+      }
       site_pages: {
         Row: {
           created_at: string
