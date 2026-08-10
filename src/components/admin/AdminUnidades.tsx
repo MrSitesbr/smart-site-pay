@@ -311,6 +311,14 @@ export default function AdminUnidades() {
               />
             </div>
             <div className="space-y-2">
+              <label className="text-sm font-medium">URL da Foto</label>
+              <Input 
+                value={editingSala?.foto_url || ''} 
+                onChange={(e) => setEditingSala({...editingSala, foto_url: e.target.value})}
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
               <label className="text-sm font-medium">Planos de Horas Permitidos</label>
               <div className="grid grid-cols-2 gap-2 mt-1">
                 {planos.map(p => (
