@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save } from "lucide-react";
+import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save, Settings } from "lucide-react";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClientes from "@/components/admin/AdminClientes";
 import AdminFinanceiro from "@/components/admin/AdminFinanceiro";
@@ -24,6 +24,7 @@ import AdminFuncionarios from "@/components/admin/AdminFuncionarios";
 import AdminVisitantes from "@/components/admin/AdminVisitantes";
 import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
+import AdminSettings from "@/components/admin/AdminSettings";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
 
@@ -233,6 +234,7 @@ export default function Admin() {
     { title: "Serviços", icon: FileText, id: "servicos" },
     { title: "Unidades", icon: Building2, id: "unidades" },
     { title: "Páginas", icon: FileText, id: "paginas" },
+    { title: "Configurações", icon: Settings, id: "configuracoes" },
   ];
 
   return (
@@ -338,32 +340,26 @@ export default function Admin() {
                             <SelectItem value="cancelada">Cancelada</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Select value={r.origem || "direto"} onValueChange={(v) => setOrigem("reserva", r.id, v)}>
-                          <SelectTrigger className="w-32 border-brand-blue-dark/10 h-9 font-bold"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="direto">Direto</SelectItem>
-                            <SelectItem value="woba">Woba</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {(() => {
-                          const valor = calcularValorReserva(r as any);
-                          const cobHref = linkCobrancaWhatsApp({ nome: r.nome, telefone: r.telefone, valor, descricao: descricaoReserva(r) });
-                          return (
-                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white font-bold h-9" asChild>
-                              <a href={cobHref} target="_blank" rel="noreferrer">Cobrar {fmtBRL(valor)}</a>
-                            </Button>
-                          );
-                        })()}
-                        <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => deleteReserva(r)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-brand-blue-dark" onClick={() => syncGoogle("reserva", r.id)} title="Sincronizar Google">
+                            <RefreshCw className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => deleteReserva(r)} title="Excluir">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
                 ))}
               </div>
             )}
+            {activeTab === "clientes_corp" && <AdminClientesCorp />}
+            {activeTab === "funcionarios" && <AdminFuncionarios />}
+            {activeTab === "visitantes" && <AdminVisitantes />}
+            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
+            {activeTab === "planos_horas" && <AdminPlanosHoras />}
             {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} />}
             {activeTab === "erp" && <AdminERP reservas={reservas} contratos={contratos} />}
             {activeTab === "woba" && <AdminWobaRepasses reservas={reservas} contratos={contratos} />}
@@ -371,12 +367,7 @@ export default function Admin() {
             {activeTab === "servicos" && <AdminServicos />}
             {activeTab === "unidades" && <AdminUnidades />}
             {activeTab === "paginas" && <AdminPaginas />}
-            {activeTab === "clientes_corp" && <AdminClientesCorp />}
-            {activeTab === "funcionarios" && <AdminFuncionarios />}
-            {activeTab === "visitantes" && <AdminVisitantes />}
-            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
-            {activeTab === "planos_horas" && <AdminPlanosHoras />}
-
+            {activeTab === "configuracoes" && <AdminSettings />}
           </main>
         </div>
       </div>
