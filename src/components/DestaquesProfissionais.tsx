@@ -1,4 +1,5 @@
-import { Stethoscope, Scale, HardHat, Cpu, Megaphone, Plus, Briefcase, Heart, Palette } from "lucide-react";
+import { Stethoscope, Scale, HardHat, Cpu, Megaphone, Briefcase } from "lucide-react";
+import { assets } from "@/lib/migration-assets";
 
 const DestaquesProfissionais = () => {
   const areas = [
@@ -62,8 +63,8 @@ const DestaquesProfissionais = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {areas.map((area, i) => (
             <div key={i} className={`group p-8 rounded-[2rem] ${area.bg} hover:shadow-xl transition-all duration-300 border border-transparent hover:border-brand-orange/20`}>
-              <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110">
-                <area.icon className={`w-8 h-8 ${area.iconColor}`} />
+              <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mb-6 shadow-sm transition-transform group-hover:scale-110 overflow-hidden">
+                <img src={i === 0 ? assets.icons.atendimento : i === 1 ? assets.icons.profissional : i === 2 ? assets.icons.documentos : i === 3 ? assets.icons.foco : i === 4 ? assets.icons.produtividade : assets.icons.qualidade} className="w-full h-full object-contain p-2" alt={area.title} />
               </div>
               <h3 className="font-heading font-bold text-2xl text-brand-blue-dark mb-4">{area.title}</h3>
               <p className="text-muted-foreground leading-relaxed">
