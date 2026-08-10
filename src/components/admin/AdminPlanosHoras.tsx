@@ -72,8 +72,8 @@ export default function AdminPlanosHoras() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Planos de Horas</h2>
-          <p className="text-muted-foreground">Gerencie pacotes de horas para os clientes.</p>
+          <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Planos</h2>
+          <p className="text-muted-foreground">Gerencie os planos de horas e serviços.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border shadow-sm">
