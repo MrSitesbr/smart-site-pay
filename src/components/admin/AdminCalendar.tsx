@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus } from "lucide-react";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeGoogleSync } from "@/lib/googleSync";
 import EventAvatar from "./EventAvatar";
 import NovaReservaDialog from "./NovaReservaDialog";
 import DayTimelineDialog from "./DayTimelineDialog";
