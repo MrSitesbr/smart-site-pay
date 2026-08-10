@@ -336,68 +336,30 @@ export default function Admin() {
                           <SelectContent>
                             <SelectItem value="pendente">Pendente</SelectItem>
                             <SelectItem value="confirmada">Confirmada</SelectItem>
-                             <SelectItem value="realizada">Realizada</SelectItem>
-                             <SelectItem value="cancelada">Cancelada</SelectItem>
-                           </SelectContent>
-                         </Select>
-                         <div className="flex gap-1">
-                           <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-brand-blue-dark" onClick={() => syncGoogle("reserva", r.id)} title="Sincronizar Google">
-                             <RefreshCw className="w-4 h-4" />
-                           </Button>
-                           <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => deleteReserva(r)} title="Excluir">
-                             <Trash2 className="w-4 h-4" />
-                           </Button>
-                         </div>
-                       </div>
-                     </div>
-                   </Card>
-                 ))}
-               </div>
-             )}
-             {activeTab === "clientes_corp" && <AdminClientesCorp />}
-             {activeTab === "funcionarios" && <AdminFuncionarios />}
-             {activeTab === "visitantes" && <AdminVisitantes />}
-             {activeTab === "locacao_fixa" && <AdminLocacaoFixa />}
-             {activeTab === "clientes" && <AdminClientes />}
-             {activeTab === "planos_horas" && <AdminPlanosHoras />}
-             {activeTab === "financeiro" && <AdminFinanceiro />}
-             {activeTab === "erp" && <AdminERP />}
-             {activeTab === "woba" && <AdminWobaRepasses />}
-             {activeTab === "artigos" && <AdminArtigos />}
-             {activeTab === "servicos" && <AdminServicos />}
-             {activeTab === "unidades" && <AdminUnidades />}
-             {activeTab === "paginas" && <AdminPaginas />}
-             {activeTab === "configuracoes" && <AdminSettings />}
-           </main>
+                            <SelectItem value="realizada">Realizada</SelectItem>
                             <SelectItem value="cancelada">Cancelada</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Select value={r.origem || "direto"} onValueChange={(v) => setOrigem("reserva", r.id, v)}>
-                          <SelectTrigger className="w-32 border-brand-blue-dark/10 h-9 font-bold"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="direto">Direto</SelectItem>
-                            <SelectItem value="woba">Woba</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {(() => {
-                          const valor = calcularValorReserva(r as any);
-                          const cobHref = linkCobrancaWhatsApp({ nome: r.nome, telefone: r.telefone, valor, descricao: descricaoReserva(r) });
-                          return (
-                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white font-bold h-9" asChild>
-                              <a href={cobHref} target="_blank" rel="noreferrer">Cobrar {fmtBRL(valor)}</a>
-                            </Button>
-                          );
-                        })()}
-                        <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => deleteReserva(r)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-brand-blue-dark" onClick={() => syncGoogle("reserva", r.id)} title="Sincronizar Google">
+                            <RefreshCw className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => deleteReserva(r)} title="Excluir">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
                 ))}
               </div>
             )}
+            {activeTab === "clientes_corp" && <AdminClientesCorp />}
+            {activeTab === "funcionarios" && <AdminFuncionarios />}
+            {activeTab === "visitantes" && <AdminVisitantes />}
+            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contracts={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
+            {activeTab === "planos_horas" && <AdminPlanosHoras />}
             {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} />}
             {activeTab === "erp" && <AdminERP reservas={reservas} contratos={contratos} />}
             {activeTab === "woba" && <AdminWobaRepasses reservas={reservas} contratos={contratos} />}
@@ -405,12 +367,7 @@ export default function Admin() {
             {activeTab === "servicos" && <AdminServicos />}
             {activeTab === "unidades" && <AdminUnidades />}
             {activeTab === "paginas" && <AdminPaginas />}
-            {activeTab === "clientes_corp" && <AdminClientesCorp />}
-            {activeTab === "funcionarios" && <AdminFuncionarios />}
-            {activeTab === "visitantes" && <AdminVisitantes />}
-            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
-            {activeTab === "planos_horas" && <AdminPlanosHoras />}
-
+            {activeTab === "configuracoes" && <AdminSettings />}
           </main>
         </div>
       </div>
