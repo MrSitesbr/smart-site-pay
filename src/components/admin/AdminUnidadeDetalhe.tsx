@@ -61,6 +61,37 @@ export default function AdminUnidadeDetalhe() {
     setLoading(false);
   }
 
+  async function deleteUnidade() {
+    if (!confirm("Tem certeza que deseja excluir esta unidade? Isso apagará todas as salas vinculadas.")) return;
+    const { error } = await supabase.from('unidades').delete().eq('id', id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Unidade excluída com sucesso");
+      navigate("/admin");
+    }
+  }
+
+  async function saveUnidade() {
+    if (!editingUnidade.nome) return toast.error("Nome é obrigatório");
+    
+    const payload: any = {
+      nome: editingUnidade.nome,
+      endereco: editingUnidade.endereco,
+      descricao: editingUnidade.descricao,
+      foto_url: editingUnidade.foto_url
+    };
+
+    const { error } = await supabase.from('unidades').update(payload).eq('id', id);
+    
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Unidade atualizada!");
+      setEditingUnidade(null);
+      fetchData();
+    }
+  }
+
   async function deleteSala(salaId: string) {
     if (!confirm("Tem certeza que deseja excluir esta sala?")) return;
     const { error } = await supabase.from('salas').delete().eq('id', salaId);
