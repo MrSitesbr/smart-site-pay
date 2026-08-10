@@ -1,6 +1,7 @@
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
+import { assets } from "@/lib/migration-assets";
 
 const Footer = () => {
   const cols = [
@@ -94,6 +95,15 @@ const Footer = () => {
               <li>Av. Pres. Kennedy, 5214<br />Vila Tupi - Praia Grande - SP</li>
               <li>Seg-Sex: 09h às 18h</li>
             </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 py-12">
+          <h4 className="font-heading font-bold text-center mb-8 text-white/40 uppercase tracking-widest text-xs">Empresas Parceiras</h4>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+            {assets.parceiros.map((logo, i) => (
+              <img key={i} src={logo} alt="Parceiro" className="h-8 md:h-12 w-auto object-contain" />
+            ))}
           </div>
         </div>
 
