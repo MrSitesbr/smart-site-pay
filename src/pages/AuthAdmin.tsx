@@ -96,9 +96,9 @@ export default function AuthAdmin() {
     } catch (e: any) {
       let message = e.message === "Invalid login credentials" ? "Credenciais inválidas." : e.message;
       
-      // Specialize error for current platform incident
-      if (e.message?.includes("Database error querying schema")) {
-        message = "O servidor de autenticação está instável no momento (Erro de Schema). Por favor, tente novamente em alguns instantes ou verifique o status da plataforma.";
+      // Mensagem amigável para instabilidade ou erros de schema
+      if (e.message?.includes("Database error querying schema") || e.message?.includes("permission denied for function")) {
+        message = "O servidor de autenticação está sendo sincronizado. Por favor, tente novamente em alguns segundos ou verifique o status da plataforma se o problema persistir.";
       }
 
       toast({ 
