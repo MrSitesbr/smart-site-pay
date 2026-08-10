@@ -148,21 +148,18 @@ export default function AdminUnidades() {
           </h3>
           <div className="grid gap-4">
             {unidades.map(u => (
-              <Card key={u.id} className={`p-6 transition-all border-2 ${selectedUnidade?.id === u.id ? 'border-brand-orange bg-brand-orange/5' : 'border-transparent shadow-sm'}`}>
-                <div className="flex items-start justify-between">
-                  <div className="cursor-pointer flex-1" onClick={() => fetchSalas(u)}>
+              <Card key={u.id} className="p-6 transition-all border-none shadow-sm hover:shadow-md bg-white rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
                     <h3 className="text-xl font-heading font-bold text-brand-blue-dark">{u.nome}</h3>
                     <p className="text-sm text-muted-foreground">{u.endereco || "Sem endereço cadastrado"}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        navigate(`/admin/unidades/${u.id}`); 
-                      }} 
-                      className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white"
+                      onClick={() => navigate(`/admin/unidades/${u.id}`)} 
+                      className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white rounded-xl px-6"
                     >
                       Acessar
                     </Button>
