@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Edit2, Clock, Save, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Clock, Save, X, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -16,13 +17,21 @@ import {
 export default function AdminPlanosHoras() {
   const [planos, setPlanos] = useState<any[]>([]);
   const [editingPlano, setEditingPlano] = useState<any>(null);
+  const [unidades, setUnidades] = useState<any[]>([]);
+  const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
 
-  useEffect(() => { fetchPlanos(); }, []);
+  useEffect(() => { 
+    fetchPlanos(); 
+    supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+  }, []);
 
   async function fetchPlanos() {
     const { data } = await supabase.from('planos').select('*').order('quantidade_horas');
     setPlanos(data || []);
   }
+
+  // Filtragem (embora a tabela 'planos' não tenha unidade_id, adicionamos o filtro UI para consistência se no futuro tiver)
+  const filteredPlanos = planos;
 
   async function savePlano() {
     if (!editingPlano.nome || !editingPlano.preco || !editingPlano.quantidade_horas) {
@@ -61,14 +70,30 @@ export default function AdminPlanosHoras() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Planos de Horas</h2>
           <p className="text-muted-foreground">Gerencie pacotes de horas para os clientes.</p>
         </div>
-        <Button onClick={() => setEditingPlano({ nome: '', preco: '', quantidade_horas: '', validade_dias: '30' })} className="bg-brand-orange text-white">
-          <Plus className="w-4 h-4 mr-2" /> Novo Plano
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border shadow-sm">
+            <Building2 className="w-4 h-4 text-muted-foreground" />
+            <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+              <SelectTrigger className="w-[180px] h-8 border-none shadow-none focus:ring-0">
+                <SelectValue placeholder="Todas as Unidades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as Unidades</SelectItem>
+                {unidades.map(u => (
+                  <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={() => setEditingPlano({ nome: '', preco: '', quantidade_horas: '', validade_dias: '30' })} className="bg-brand-orange text-white">
+            <Plus className="w-4 h-4 mr-2" /> Novo Plano
+          </Button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
