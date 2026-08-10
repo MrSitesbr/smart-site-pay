@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      clientes_corp: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          id: string
+          razao_social: string
+          responsavel_email: string | null
+          responsavel_nome: string | null
+          responsavel_telefone: string | null
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          id?: string
+          razao_social: string
+          responsavel_email?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          id?: string
+          razao_social?: string
+          responsavel_email?: string | null
+          responsavel_nome?: string | null
+          responsavel_telefone?: string | null
+        }
+        Relationships: []
+      }
       contract_requests: {
         Row: {
           admin_notes: string | null
@@ -107,6 +137,125 @@ export type Database = {
         }
         Relationships: []
       }
+      contratos_ativos: {
+        Row: {
+          automatic_renewal: boolean | null
+          cliente_corp_id: string | null
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          id: string
+          sala_id: string | null
+          status: string | null
+          tipo_locacao: string | null
+          valor_mensal: number | null
+        }
+        Insert: {
+          automatic_renewal?: boolean | null
+          cliente_corp_id?: string | null
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          id?: string
+          sala_id?: string | null
+          status?: string | null
+          tipo_locacao?: string | null
+          valor_mensal?: number | null
+        }
+        Update: {
+          automatic_renewal?: boolean | null
+          cliente_corp_id?: string | null
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          sala_id?: string | null
+          status?: string | null
+          tipo_locacao?: string | null
+          valor_mensal?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_ativos_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_ativos_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionarios_cliente: {
+        Row: {
+          cargo: string | null
+          cliente_corp_id: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          cargo?: string | null
+          cliente_corp_id?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          cargo?: string | null
+          cliente_corp_id?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_cliente_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planos: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          preco: number
+          quantidade_horas: number
+          validade_dias: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          preco: number
+          quantidade_horas: number
+          validade_dias?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          preco?: number
+          quantidade_horas?: number
+          validade_dias?: number | null
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
@@ -164,6 +313,74 @@ export type Database = {
         }
         Relationships: []
       }
+      sala_planos: {
+        Row: {
+          plano_id: string
+          sala_id: string
+        }
+        Insert: {
+          plano_id: string
+          sala_id: string
+        }
+        Update: {
+          plano_id?: string
+          sala_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sala_planos_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sala_planos_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salas: {
+        Row: {
+          capacidade: number | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          tipo: string
+          unidade_id: string | null
+        }
+        Insert: {
+          capacidade?: number | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          tipo: string
+          unidade_id?: string | null
+        }
+        Update: {
+          capacidade?: number | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tipo?: string
+          unidade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salas_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_pages: {
         Row: {
           created_at: string
@@ -220,6 +437,27 @@ export type Database = {
           },
         ]
       }
+      unidades: {
+        Row: {
+          created_at: string
+          endereco: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -240,6 +478,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      visitantes: {
+        Row: {
+          cliente_corp_id: string | null
+          created_at: string
+          data_hora_prevista: string
+          documento: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          sala_id: string | null
+        }
+        Insert: {
+          cliente_corp_id?: string | null
+          created_at?: string
+          data_hora_prevista: string
+          documento?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          sala_id?: string | null
+        }
+        Update: {
+          cliente_corp_id?: string | null
+          created_at?: string
+          data_hora_prevista?: string
+          documento?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          sala_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitantes_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visitantes_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       woba_closings: {
         Row: {

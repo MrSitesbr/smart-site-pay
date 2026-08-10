@@ -19,6 +19,11 @@ import AdminArtigos from "@/components/admin/AdminArtigos";
 import AdminServicos from "@/components/admin/AdminServicos";
 import AdminUnidades from "@/components/admin/AdminUnidades";
 import AdminPaginas from "@/components/admin/AdminPaginas";
+import AdminClientesCorp from "@/components/admin/AdminClientesCorp";
+import AdminFuncionarios from "@/components/admin/AdminFuncionarios";
+import AdminVisitantes from "@/components/admin/AdminVisitantes";
+import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
+import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
 
@@ -215,7 +220,12 @@ export default function Admin() {
     { title: "Calendários", icon: Calendar, id: "calendario" },
     { title: "Contratações", icon: Briefcase, id: "contratos" },
     { title: "Reservas", icon: ClipboardList, id: "reservas" },
-    { title: "CRM Clientes", icon: Users, id: "clientes" },
+    { title: "CRM Clientes Corp", icon: Users, id: "clientes_corp" },
+    { title: "Funcionários", icon: Users, id: "funcionarios" },
+    { title: "Visitantes", icon: Users, id: "visitantes" },
+    { title: "Locação Fixa", icon: Briefcase, id: "locacao_fixa" },
+    { title: "CRM Leads", icon: Users, id: "clientes" },
+    { title: "Planos Horas", icon: ClipboardList, id: "planos_horas" },
     { title: "Financeiro", icon: DollarSign, id: "financeiro" },
     { title: "ERP Ocupação", icon: BarChart3, id: "erp" },
     { title: "Repasses Woba", icon: Building2, id: "woba" },
@@ -361,6 +371,11 @@ export default function Admin() {
             {activeTab === "servicos" && <AdminServicos />}
             {activeTab === "unidades" && <AdminUnidades />}
             {activeTab === "paginas" && <AdminPaginas />}
+            {activeTab === "clientes_corp" && <AdminClientesCorp />}
+            {activeTab === "funcionarios" && <AdminFuncionarios />}
+            {activeTab === "visitantes" && <AdminVisitantes />}
+            {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
+            {activeTab === "planos_horas" && <AdminPlanosHoras />}
 
           </main>
         </div>
