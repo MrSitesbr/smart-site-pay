@@ -35,6 +35,8 @@ export default function AdminUnidadeDetalhe() {
   const [salas, setSalas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUnidade, setEditingUnidade] = useState<any>(null);
+  const [editingSala, setEditingSala] = useState<any>(null);
+  const [allPlanos, setAllPlanos] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -44,9 +46,10 @@ export default function AdminUnidadeDetalhe() {
 
   async function fetchData() {
     setLoading(true);
-    const [uRes, sRes] = await Promise.all([
+    const [uRes, sRes, pRes] = await Promise.all([
       supabase.from('unidades').select('*').eq('id', id).single(),
-      supabase.from('salas').select('*').eq('unidade_id', id).order('nome')
+      supabase.from('salas').select('*').eq('unidade_id', id).order('nome'),
+      supabase.from('planos').select('*').order('nome')
     ]);
 
     if (uRes.error) {
@@ -55,6 +58,7 @@ export default function AdminUnidadeDetalhe() {
     } else {
       setUnidade(uRes.data);
       setSalas(sRes.data || []);
+      setAllPlanos(pRes.data || []);
     }
     setLoading(false);
   }
@@ -96,6 +100,44 @@ export default function AdminUnidadeDetalhe() {
     if (error) toast.error(error.message);
     else {
       toast.success("Sala excluída");
+      fetchData();
+    }
+  }
+
+  async function saveSala() {
+    if (!editingSala.nome || !editingSala.tipo) return toast.error("Nome e tipo são obrigatórios");
+    
+    const payload: any = {
+      nome: editingSala.nome,
+      tipo: editingSala.tipo,
+      capacidade: parseInt(editingSala.capacidade) || null,
+      descricao: editingSala.descricao,
+      foto_url: editingSala.foto_url,
+      unidade_id: id
+    };
+
+    const { data: savedSala, error } = editingSala.id 
+      ? await supabase.from('salas').update(payload).eq('id', editingSala.id).select().single()
+      : await supabase.from('salas').insert([payload]).select().single();
+    
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    if (savedSala) {
+      await supabase.from('sala_planos').delete().eq('sala_id', savedSala.id);
+      
+      const planosPermitidos = editingSala.planos_permitidos || [];
+      if (planosPermitidos.length > 0) {
+        const relations = planosPermitidos.map((planoId: string) => ({
+          sala_id: savedSala.id,
+          plano_id: planoId
+        }));
+        await supabase.from('sala_planos').insert(relations);
+      }
+      toast.success("Sala salva!");
+      setEditingSala(null);
       fetchData();
     }
   }
@@ -184,7 +226,10 @@ export default function AdminUnidadeDetalhe() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-heading font-black text-brand-blue-dark">Salas Cadastradas</h2>
-          <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg shadow-brand-orange/20">
+          <Button 
+            onClick={() => setEditingSala({ nome: '', tipo: 'Coworking', capacidade: '', descricao: '', foto_url: '', unidade_id: id })}
+            className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg shadow-brand-orange/20"
+          >
             <Plus className="w-4 h-4 mr-2" /> Nova Sala
           </Button>
         </div>
@@ -271,6 +316,97 @@ export default function AdminUnidadeDetalhe() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
             <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Sala */}
+      <Dialog open={!!editingSala} onOpenChange={() => setEditingSala(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingSala?.id ? "Editar Sala" : "Nova Sala"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome da Sala</label>
+                <Input 
+                  value={editingSala?.nome || ''} 
+                  onChange={(e) => setEditingSala({...editingSala, nome: e.target.value})}
+                  placeholder="Ex: Sala de Reunião 01"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo</label>
+                <select 
+                  className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                  value={editingSala?.tipo || ''}
+                  onChange={(e) => setEditingSala({...editingSala, tipo: e.target.value})}
+                >
+                  <option value="Coworking">Coworking (Estação)</option>
+                  <option value="Privativa">Sala Privativa</option>
+                  <option value="Reunião">Sala de Reunião</option>
+                  <option value="Auditório">Auditório</option>
+                  <option value="Consultório">Consultório</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Capacidade (Pessoas)</label>
+                <Input 
+                  type="number"
+                  value={editingSala?.capacidade || ''} 
+                  onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">URL da Foto</label>
+                <Input 
+                  value={editingSala?.foto_url || ''} 
+                  onChange={(e) => setEditingSala({...editingSala, foto_url: e.target.value})}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Planos de Horas Permitidos</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {allPlanos.map(p => (
+                  <label key={p.id} className="flex items-center gap-2 text-xs border p-2 rounded hover:bg-muted/50 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="rounded"
+                      checked={(editingSala?.planos_permitidos || []).includes(p.id)}
+                      onChange={(e) => {
+                        const current = editingSala?.planos_permitidos || [];
+                        const next = e.target.checked 
+                          ? [...current, p.id] 
+                          : current.filter((id: string) => id !== p.id);
+                        setEditingSala({...editingSala, planos_permitidos: next});
+                      }}
+                    />
+                    <span className="truncate">{p.nome}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descrição / Observações</label>
+              <Textarea 
+                value={editingSala?.descricao || ''} 
+                onChange={(e) => setEditingSala({...editingSala, descricao: e.target.value})}
+                placeholder="Recursos disponíveis, metragem, etc."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSala(null)}>Cancelar</Button>
+            <Button onClick={saveSala} className="bg-brand-orange text-white">Salvar Sala</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
