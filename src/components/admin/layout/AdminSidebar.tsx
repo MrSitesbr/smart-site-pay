@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -11,7 +12,8 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
-  SidebarProvider 
+  SidebarProvider,
+  SidebarFooter
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -28,7 +30,9 @@ import {
   ClipboardList,
   UserPlus,
   Globe,
-  Settings2
+  Settings2,
+  ExternalLink,
+  LogOut
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -45,6 +49,7 @@ interface NavItem {
 }
 
 export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: string, onTabChange: (id: string) => void }) {
+  const navigate = useNavigate();
   const menuItems: NavItem[] = [
     { 
       title: "Calendário", 
@@ -172,6 +177,25 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="bg-[#2c3338] border-t border-white/10 p-4 space-y-2">
+        <button
+          onClick={() => navigate("/")}
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-[#eee] hover:bg-white/10 transition-colors rounded-md text-sm font-medium"
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>Ver Site</span>
+        </button>
+        <button
+          onClick={() => {
+            localStorage.removeItem("admin_bypass");
+            window.location.href = "/auth";
+          }}
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Sair</span>
+        </button>
+      </SidebarFooter>
     </Sidebar>
   );
 }
