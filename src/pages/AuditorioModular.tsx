@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import auditorioImg from "@/assets/auditorio-cow013.png.asset.json";
+import { assets } from "@/lib/migration-assets";
 
 const AuditorioModular = () => {
   return (
@@ -43,7 +43,7 @@ const AuditorioModular = () => {
                 </Button>
               </div>
               <div className="rounded-3xl overflow-hidden shadow-2xl aspect-video relative group">
-                <img src={auditorioImg.url} alt="Auditório Modular" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={assets.images.recepcao} alt="Auditório Modular" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
               </div>
             </div>
