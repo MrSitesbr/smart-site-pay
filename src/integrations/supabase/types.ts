@@ -399,6 +399,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           foto_url: string | null
+          galeria: string[] | null
           id: string
           nome: string
           tipo: string
@@ -409,6 +410,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           foto_url?: string | null
+          galeria?: string[] | null
           id?: string
           nome: string
           tipo: string
@@ -419,6 +421,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           foto_url?: string | null
+          galeria?: string[] | null
           id?: string
           nome?: string
           tipo?: string
@@ -543,6 +546,7 @@ export type Database = {
           descricao: string | null
           endereco: string | null
           foto_url: string | null
+          galeria: string[] | null
           id: string
           nome: string
         }
@@ -551,6 +555,7 @@ export type Database = {
           descricao?: string | null
           endereco?: string | null
           foto_url?: string | null
+          galeria?: string[] | null
           id?: string
           nome: string
         }
@@ -559,6 +564,7 @@ export type Database = {
           descricao?: string | null
           endereco?: string | null
           foto_url?: string | null
+          galeria?: string[] | null
           id?: string
           nome?: string
         }
