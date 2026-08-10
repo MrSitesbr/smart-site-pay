@@ -301,47 +301,22 @@ export default function Admin() {
               </div>
             )}
             {activeTab === "reservas" && (
-              <div className="space-y-3">
-                {reservas.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhuma reserva encontrada.</Card>}
-                {reservas.map((r) => (
-                  <Card key={r.id} className="p-4 border-none shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <Badge className={`${RES_COLORS[r.status]} text-white border-none`}>{r.status}</Badge>
-                          <Badge variant="outline" className="border-brand-blue-dark/20 text-brand-blue-dark">{AMBIENTE_LABEL[r.ambiente]}</Badge>
-                          <Badge variant="secondary" className="bg-muted text-muted-foreground">{r.tipo === "hora" ? "Hora" : "Diária"}</Badge>
-                          {r.origem === "woba" && <Badge className="bg-pink-500 text-white border-none">Woba</Badge>}
-                        </div>
-                        <p className="font-heading font-black text-brand-blue-dark text-lg">{r.nome}</p>
-                        <p className="text-sm text-muted-foreground font-medium">
-                          {new Date(r.data + "T00:00").toLocaleDateString("pt-BR")} · {r.hora_inicio.slice(0,5)} - {r.hora_fim.slice(0,5)}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">{r.email} · {r.telefone}</p>
-                      </div>
-                      <div className="flex gap-2 flex-wrap items-center">
-                        <Select value={r.status} onValueChange={(v) => updateReserva(r.id, v)}>
-                          <SelectTrigger className="w-40 border-brand-blue-dark/10 h-9 font-bold"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pendente">Pendente</SelectItem>
-                            <SelectItem value="confirmada">Confirmada</SelectItem>
-                            <SelectItem value="realizada">Realizada</SelectItem>
-                            <SelectItem value="cancelada">Cancelada</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-brand-blue-dark" onClick={() => syncGoogle("reserva", r.id)} title="Sincronizar Google">
-                            <RefreshCw className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-9 w-9 text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => deleteReserva(r)} title="Excluir">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              <AdminCalendar 
+                reservas={reservas} 
+                contratos={contratos} 
+                onDeleteReserva={deleteReserva}
+                onDeleteContrato={deleteContrato}
+                onCreated={() => { fetchReservas(); fetchContratos(); }}
+              />
+            )}
+            {activeTab === "calendario" && (
+              <AdminCalendar 
+                reservas={reservas} 
+                contratos={contratos} 
+                onDeleteReserva={deleteReserva}
+                onDeleteContrato={deleteContrato}
+                onCreated={() => { fetchReservas(); fetchContratos(); }}
+              />
             )}
             {activeTab === "clientes_corp" && <AdminClientesCorp />}
             {activeTab === "funcionarios" && <AdminFuncionarios />}

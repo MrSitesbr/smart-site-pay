@@ -79,7 +79,7 @@ export default function AdminUnidades() {
   async function saveSala() {
     if (!editingSala.nome || !editingSala.tipo) return toast.error("Nome e tipo são obrigatórios");
     
-    const payload = {
+    const payload: any = {
       nome: editingSala.nome,
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
