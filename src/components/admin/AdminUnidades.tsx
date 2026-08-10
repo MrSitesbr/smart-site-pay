@@ -46,15 +46,16 @@ export default function AdminUnidades() {
   async function saveUnidade() {
     if (!editingUnidade.nome) return toast.error("Nome é obrigatório");
     
+    const payload: any = {
+      nome: editingUnidade.nome,
+      endereco: editingUnidade.endereco,
+      descricao: editingUnidade.descricao,
+      foto_url: editingUnidade.foto_url
+    };
+
     const { error } = editingUnidade.id 
-      ? await supabase.from('unidades').update({
-          nome: editingUnidade.nome,
-          endereco: editingUnidade.endereco
-        }).eq('id', editingUnidade.id)
-      : await supabase.from('unidades').insert([{
-          nome: editingUnidade.nome,
-          endereco: editingUnidade.endereco
-        }]);
+      ? await (supabase as any).from('unidades').update(payload).eq('id', editingUnidade.id)
+      : await (supabase as any).from('unidades').insert([payload]);
     
     if (error) {
       toast.error(error.message);
@@ -118,7 +119,7 @@ export default function AdminUnidades() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Unidades & Salas</h2>
           <p className="text-muted-foreground">Gerencie endereços, infraestrutura e capacidades.</p>
         </div>
-        <Button onClick={() => setEditingUnidade({ nome: '', endereco: '' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+        <Button onClick={() => setEditingUnidade({ nome: '', endereco: '', descricao: '', foto_url: '' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
           <Plus className="w-4 h-4 mr-2" /> Nova Unidade
         </Button>
       </div>
@@ -203,18 +204,28 @@ export default function AdminUnidades() {
 
       {/* Dialog Unidade */}
       <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingUnidade?.id ? "Editar Unidade" : "Nova Unidade"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome da Unidade</label>
-              <Input 
-                value={editingUnidade?.nome || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
-                placeholder="Ex: Unidade Boqueirão"
-              />
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome da Unidade</label>
+                <Input 
+                  value={editingUnidade?.nome || ''} 
+                  onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
+                  placeholder="Ex: Unidade Boqueirão"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">URL da Foto</label>
+                <Input 
+                  value={editingUnidade?.foto_url || ''} 
+                  onChange={(e) => setEditingUnidade({...editingUnidade, foto_url: e.target.value})}
+                  placeholder="URL da imagem (ex: https://...)"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Endereço Completo</label>
@@ -222,6 +233,15 @@ export default function AdminUnidades() {
                 value={editingUnidade?.endereco || ''} 
                 onChange={(e) => setEditingUnidade({...editingUnidade, endereco: e.target.value})}
                 placeholder="Rua, número, bairro..."
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descrição da Unidade</label>
+              <Textarea 
+                value={editingUnidade?.descricao || ''} 
+                onChange={(e) => setEditingUnidade({...editingUnidade, descricao: e.target.value})}
+                placeholder="Descreva os diferenciais desta unidade..."
+                rows={4}
               />
             </div>
           </div>
