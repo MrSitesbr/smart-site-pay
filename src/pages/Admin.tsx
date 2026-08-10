@@ -241,12 +241,13 @@ export default function Admin() {
   const getTitle = (id: string) => {
     const titles: Record<string, string> = {
       dashboard: "Dashboard",
-      calendario: "Reservas & Calendário",
+      calendario: "Calendário Geral",
       contratos: "Contratações",
       reservas: "Reservas",
       clientes_corp: "CRM Clientes Corp",
-      funcionarios: "Funcionários",
-      visitantes: "Visitantes",
+      funcionarios: "Colaboradores",
+      visitantes: "Visitas",
+      visitantes_crm: "Visitantes",
       locacao_fixa: "Locação Fixa",
       clientes: "CRM Leads",
       planos_horas: "Planos Horas",
@@ -255,9 +256,9 @@ export default function Admin() {
       woba: "Repasses Woba",
       artigos: "Artigos (Blog)",
       servicos: "Serviços",
-      unidades: "Unidades",
-      paginas: "Páginas",
-      configuracoes: "Configurações Gerais"
+      unidades: "Unidades & Salas",
+      paginas: "Páginas do Site",
+      configuracoes: "Configurações, SEO & Scripts"
     };
     return titles[id] || "Admin";
   };
@@ -320,7 +321,7 @@ export default function Admin() {
             )}
             {activeTab === "clientes_corp" && <AdminClientesCorp />}
             {activeTab === "funcionarios" && <AdminFuncionarios />}
-            {activeTab === "visitantes" && <AdminVisitantes />}
+            {(activeTab === "visitantes" || activeTab === "visitantes_crm") && <AdminVisitantes />}
             {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
             {activeTab === "planos_horas" && <AdminPlanosHoras />}
