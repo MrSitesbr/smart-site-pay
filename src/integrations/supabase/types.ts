@@ -229,9 +229,46 @@ export type Database = {
           },
         ]
       }
+      plano_unidades: {
+        Row: {
+          created_at: string
+          id: string
+          plano_id: string
+          unidade_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plano_id: string
+          unidade_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plano_id?: string
+          unidade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_unidades_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_unidades_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planos: {
         Row: {
           created_at: string
+          descricao: string | null
           id: string
           nome: string
           preco: number
@@ -241,6 +278,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          descricao?: string | null
           id?: string
           nome: string
           preco: number
@@ -250,6 +288,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          descricao?: string | null
           id?: string
           nome?: string
           preco?: number
