@@ -31,9 +31,7 @@ const AuditorioModular = () => {
                     "Suporte técnico local"
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-orange-500" />
-                      </div>
+                      <img src={assets.icons.qualidade} className="w-6 h-6 object-contain flex-shrink-0" alt="check" />
                       <span className="text-muted-foreground">{item}</span>
                     </div>
                   ))}
