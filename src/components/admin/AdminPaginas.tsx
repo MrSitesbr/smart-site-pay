@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
-  Trash2, Eye, Layout, Type, Image as ImageIcon, MousePointer2 
+  Trash2, Eye, Layout, Type, Image as ImageIcon, MousePointer2,
+  Globe, Search, Code, Map as MapIcon
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { toast } from "sonner";
@@ -227,32 +229,96 @@ export default function AdminPaginas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-3xl font-black text-brand-blue-dark">Páginas do Site</h2>
-        <p className="text-muted-foreground">Selecione uma página para editar o layout e conteúdo visualmente.</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {pages.map(p => (
-          <Card 
-            key={p.name} 
-            className="group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white"
-            onClick={() => loadPage(p.route)}
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-all" />
-            <div className="relative z-10">
-              <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all">
-                <FileText className="w-7 h-7" />
+      <Tabs defaultValue="pages" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="pages" className="flex items-center gap-2">
+            <Globe className="w-4 h-4" /> Páginas
+          </TabsTrigger>
+          <TabsTrigger value="seo" className="flex items-center gap-2">
+            <Search className="w-4 h-4" /> SEO & Meta
+          </TabsTrigger>
+          <TabsTrigger value="scripts" className="flex items-center gap-2">
+            <Code className="w-4 h-4" /> Scripts (Headers/Footers)
+          </TabsTrigger>
+          <TabsTrigger value="sitemap" className="flex items-center gap-2">
+            <MapIcon className="w-4 h-4" /> Site Map
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pages" className="space-y-6">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-3xl font-black text-brand-blue-dark">Páginas do Site</h2>
+            <p className="text-muted-foreground">Selecione uma página para editar o layout e conteúdo visualmente.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pages.map(p => (
+              <Card 
+                key={p.name} 
+                className="group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white"
+                onClick={() => loadPage(p.route)}
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-all" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-black text-brand-blue-dark mb-1">{p.name}</h3>
+                  <p className="text-sm text-muted-foreground font-medium mb-6">{p.route}</p>
+                  <div className="flex items-center text-xs font-bold text-brand-orange uppercase tracking-widest">
+                    Abrir no Editor <ChevronRight className="w-4 h-4 ml-1" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="seo">
+          <Card className="p-8">
+            <h3 className="text-xl font-bold mb-4">Configurações de SEO</h3>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label>Meta Descrição Padrão</Label>
+                <Textarea placeholder="Descreva seu site para os buscadores..." />
               </div>
-              <h3 className="text-xl font-black text-brand-blue-dark mb-1">{p.name}</h3>
-              <p className="text-sm text-muted-foreground font-medium mb-6">{p.route}</p>
-              <div className="flex items-center text-xs font-bold text-brand-orange uppercase tracking-widest">
-                Abrir no Editor <ChevronRight className="w-4 h-4 ml-1" />
+              <div className="grid gap-2">
+                <Label>Palavras-chave</Label>
+                <Input placeholder="coworking, praia grande, escritorio virtual" />
               </div>
+              <Button className="bg-brand-orange text-white">Salvar SEO</Button>
             </div>
           </Card>
-        ))}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="scripts">
+          <Card className="p-8">
+            <h3 className="text-xl font-bold mb-4">Scripts Customizados</h3>
+            <div className="space-y-6">
+              <div className="grid gap-2">
+                <Label>Header Scripts (Google Ads, Analytics, Facebook Pixel)</Label>
+                <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Footer Scripts</Label>
+                <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
+              </div>
+              <Button className="bg-brand-orange text-white">Salvar Scripts</Button>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sitemap">
+          <Card className="p-8">
+            <h3 className="text-xl font-bold mb-4">Site Map</h3>
+            <p className="text-sm text-muted-foreground mb-4">Gere ou visualize o sitemap.xml do seu projeto.</p>
+            <div className="bg-muted p-4 rounded-lg font-mono text-xs">
+              {window.location.origin}/sitemap.xml
+            </div>
+            <Button variant="outline" className="mt-4">Atualizar Sitemap</Button>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

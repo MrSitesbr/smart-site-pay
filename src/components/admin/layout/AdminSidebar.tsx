@@ -46,33 +46,54 @@ interface NavItem {
 
 export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: string, onTabChange: (id: string) => void }) {
   const menuItems: NavItem[] = [
-    { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
+    { 
+      title: "Calendário", 
+      icon: Calendar,
+      items: [
+        { title: "Calendário Geral", id: "calendario" },
+        { title: "Reservas", id: "reservas" },
+        { title: "Visitas", id: "visitantes" },
+      ]
+    },
     { 
       title: "CRM", 
       icon: Users,
       items: [
         { title: "CRM Leads", id: "clientes" },
         { title: "CRM Clientes Corp", id: "clientes_corp" },
-        { title: "Visitantes", id: "visitantes" },
+        { title: "Colaboradores", id: "funcionarios" },
+        { title: "Visitantes", id: "visitantes_crm" },
+      ]
+    },
+    { 
+      title: "Unidades", 
+      icon: Building2,
+      items: [
+        { title: "Gerenciar Unidades", id: "unidades" },
+        { title: "Salas", id: "unidades" }, // Na mesma tela, mas com foco em salas se puder scrollar
+      ]
+    },
+    { 
+      title: "Planos", 
+      icon: ClipboardList,
+      items: [
+        { title: "Criar Planos", id: "planos_horas" },
+        { title: "Locação Fixa", id: "locacao_fixa" },
       ]
     },
     { 
       title: "ERP & Operações", 
       icon: Briefcase,
       items: [
-        { title: "Reservas & Calendário", id: "calendario" },
-        { title: "Locação Fixa", id: "locacao_fixa" },
-        { title: "Planos Horas", id: "planos_horas" },
         { title: "Contratações", id: "contratos" },
         { title: "ERP Ocupação", id: "erp" },
-        { title: "Funcionários", id: "funcionarios" },
       ]
     },
     { 
       title: "Financeiro", 
       icon: DollarSign,
       items: [
-        { title: "Financeiro", id: "financeiro" },
+        { title: "Financeiro Geral", id: "financeiro" },
         { title: "Repasses Woba", id: "woba" },
       ]
     },
@@ -83,7 +104,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
         { title: "Páginas", id: "paginas" },
         { title: "Artigos (Blog)", id: "artigos" },
         { title: "Serviços", id: "servicos" },
-        { title: "Unidades", id: "unidades" },
+        { title: "SEO & Scripts", id: "configuracoes" },
       ]
     },
     { 
