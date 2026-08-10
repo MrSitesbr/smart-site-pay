@@ -35,8 +35,11 @@ function dayKey(d: Date) {
 }
 
 export default function AdminCalendar({ reservas, contratos, onDeleteReserva, onDeleteContrato, onCreated }: { reservas: any[]; contratos: any[]; onDeleteReserva?: (r: any) => Promise<void> | void; onDeleteContrato?: (c: any) => Promise<void> | void; onCreated?: () => void }) {
+  const [viewMode, setViewMode] = useState<"calendar" | "list" | "gantt">("calendar");
   const [month, setMonth] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
+  const [unidades, setUnidades] = useState<any[]>([]);
+  const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
   const [ambiente, setAmbiente] = useState<string>("todos");
   const [status, setStatus] = useState<string>("todos");
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
@@ -48,6 +51,10 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [gError, setGError] = useState<string | null>(null);
   const [showGoogle, setShowGoogle] = useState(true);
   const { overrides: colorOverrides } = useClientColors();
+
+  useEffect(() => {
+    supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+  }, []);
 
   // IDs de eventos do Google que já foram associados a reservas/contratos internos.
   // Se um desses sumir do banco (reserva excluída), guardamos o id para nunca mais
@@ -106,20 +113,21 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       map.get(key)!.push(ev);
     };
     const q = search.trim().toLowerCase();
-    const matches = (nome: string, email: string, amb: string, st: string) => {
+    const matches = (nome: string, email: string, amb: string, st: string, unidId?: string) => {
+      if (selectedUnidade !== "todas" && unidId !== selectedUnidade) return false;
       if (ambiente !== "todos" && amb !== ambiente) return false;
       if (status !== "todos" && st !== status) return false;
       if (q && !nome.toLowerCase().includes(q) && !email.toLowerCase().includes(q)) return false;
       return true;
     };
     contratos.forEach((c) => {
-      if (!matches(c.nome, c.email, c.ambiente, c.status)) return;
+      if (!matches(c.nome, c.email, c.ambiente, c.status, c.unidade_id)) return;
       const dias: string[] = c.dias_selecionados || [];
       dias.forEach((d) => push(d, { kind: "contrato", obj: c }));
       if (c.data_inicio && !dias.includes(c.data_inicio)) push(c.data_inicio, { kind: "contrato", obj: c });
     });
     reservas.forEach((r) => {
-      if (!matches(r.nome, r.email, r.ambiente, r.status)) return;
+      if (!matches(r.nome, r.email, r.ambiente, r.status, r.unidade_id)) return;
       push(r.data, { kind: "reserva", obj: r });
     });
     if (showGoogle) {
@@ -138,7 +146,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       });
     }
     return map;
-  }, [reservas, contratos, gEvents, showGoogle, internalIds, deletedGoogleIds, search, ambiente, status]);
+  }, [reservas, contratos, gEvents, showGoogle, internalIds, deletedGoogleIds, search, ambiente, status, selectedUnidade]);
 
 
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -159,33 +167,74 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   return (
     <Card className="overflow-hidden">
       {/* Filtros */}
-      <div className="p-4 border-b bg-muted/20 grid gap-3 md:grid-cols-[1fr,auto,auto,auto,auto]">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar cliente por nome ou email…" className="pl-9" />
+      <div className="p-4 border-b bg-muted/20 flex flex-wrap gap-3 items-center">
+        <div className="flex bg-white p-1 rounded-lg border shadow-sm shrink-0">
+          <Button 
+            variant={viewMode === "calendar" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setViewMode("calendar")}
+            className="text-xs h-8"
+          >
+            Calendário
+          </Button>
+          <Button 
+            variant={viewMode === "list" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setViewMode("list")}
+            className="text-xs h-8"
+          >
+            Lista
+          </Button>
+          <Button 
+            variant={viewMode === "gantt" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setViewMode("gantt")}
+            className="text-xs h-8"
+          >
+            Gantt
+          </Button>
         </div>
-        <Select value={ambiente} onValueChange={setAmbiente}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="Ambiente" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos ambientes</SelectItem>
-            <SelectItem value="estacao">Estação</SelectItem>
-            <SelectItem value="sala_privativa">Sala Privativa</SelectItem>
-            <SelectItem value="sala_reuniao">Sala Reunião</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos status</SelectItem>
-            <SelectItem value="pendente">Pendente</SelectItem>
-            <SelectItem value="aprovada">Aprovada</SelectItem>
-            <SelectItem value="paga">Paga</SelectItem>
-            <SelectItem value="confirmada">Confirmada</SelectItem>
-            <SelectItem value="cancelada">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="sm" onClick={() => setMonth(new Date())} className="font-heading font-bold">Hoje</Button>
-        <div className="flex gap-1">
+
+        <div className="flex items-center gap-2 grow">
+          <div className="relative grow max-w-xs">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cliente..." className="pl-9 h-9" />
+          </div>
+          
+          <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+            <SelectTrigger className="w-40 h-9 text-xs"><SelectValue placeholder="Unidade" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas Unidades</SelectItem>
+              {unidades.map(u => (
+                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={ambiente} onValueChange={setAmbiente}>
+            <SelectTrigger className="w-40 h-9 text-xs"><SelectValue placeholder="Ambiente" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos ambientes</SelectItem>
+              <SelectItem value="estacao">Estação</SelectItem>
+              <SelectItem value="sala_privativa">Sala Privativa</SelectItem>
+              <SelectItem value="sala_reuniao">Sala Reunião</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-32 h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos status</SelectItem>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="aprovada">Aprovada</SelectItem>
+              <SelectItem value="paga">Paga</SelectItem>
+              <SelectItem value="confirmada">Confirmada</SelectItem>
+              <SelectItem value="cancelada">Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={() => setMonth(new Date())} className="font-heading font-bold h-9">Hoje</Button>
           <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="w-5 h-5" /></Button>
           <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="w-5 h-5" /></Button>
         </div>
