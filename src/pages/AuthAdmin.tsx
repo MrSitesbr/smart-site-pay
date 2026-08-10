@@ -27,19 +27,29 @@ export default function AuthAdmin() {
   }, []);
 
   async function checkAdminAndRedirect(userId: string) {
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-    const isAdmin = (roles || []).some((r: any) => r.role === "admin");
-    
-    if (isAdmin) {
-      navigate("/admin");
-    } else {
-      // Se não for admin mas estiver logado, desloga e avisa
-      await supabase.auth.signOut();
-      toast({ 
-        title: "Acesso negado", 
-        description: "Esta área é restrita a administradores.", 
-        variant: "destructive" 
+    try {
+      const { data: isAdmin, error } = await supabase.rpc("has_role", { 
+        _user_id: userId, 
+        _role: "admin" 
       });
+      
+      if (error || !isAdmin) {
+        // Fallback check
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+        const hasAdminTable = (roles || []).some((r: any) => r.role === "admin");
+        if (!hasAdminTable) {
+          await supabase.auth.signOut();
+          toast({ 
+            title: "Acesso negado", 
+            description: "Esta área é restrita a administradores.", 
+            variant: "destructive" 
+          });
+          return;
+        }
+      }
+      navigate("/admin");
+    } catch (err) {
+      console.error("Redirect check error:", err);
     }
   }
 
@@ -59,23 +69,30 @@ export default function AuthAdmin() {
       }
       
       const userId = data.user!.id;
-      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-      if (rolesError) {
-        console.error("Roles fetch error:", rolesError);
-        throw new Error(`Database error querying roles: ${rolesError.message}`);
-      }
-      const isAdmin = (roles || []).some((r: any) => r.role === "admin");
+      
+      // Verification using RPC for robustness
+      const { data: isAdmin, error: rolesError } = await supabase.rpc("has_role", { 
+        _user_id: userId, 
+        _role: "admin" 
+      });
 
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        await supabase.auth.signOut();
-        toast({ 
-          title: "Acesso negado", 
-          description: "Usuário não possui privilégios de administrador.", 
-          variant: "destructive" 
-        });
+      if (rolesError || !isAdmin) {
+        console.warn("RPC check failed or user not admin, trying table check", rolesError);
+        const { data: roles, error: tableError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+        
+        if (tableError) {
+           console.error("Table check error:", tableError);
+           throw new Error(`Erro de permissão: ${tableError.message}`);
+        }
+        
+        const hasAdmin = (roles || []).some((r: any) => r.role === "admin");
+        if (!hasAdmin) {
+           await supabase.auth.signOut();
+           throw new Error("Usuário não possui privilégios de administrador.");
+        }
       }
+
+      navigate("/admin");
     } catch (e: any) {
       toast({ 
         title: "Falha no acesso", 
