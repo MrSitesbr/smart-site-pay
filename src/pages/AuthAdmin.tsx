@@ -94,12 +94,20 @@ export default function AuthAdmin() {
 
       navigate("/admin");
     } catch (e: any) {
+      let message = e.message === "Invalid login credentials" ? "Credenciais inválidas." : e.message;
+      
+      // Specialize error for current platform incident
+      if (e.message?.includes("Database error querying schema")) {
+        message = "O servidor de autenticação está instável no momento (Erro de Schema). Por favor, tente novamente em alguns instantes ou verifique o status da plataforma.";
+      }
+
       toast({ 
         title: "Falha no acesso", 
-        description: e.message === "Invalid login credentials" ? "Credenciais inválidas." : e.message, 
+        description: message, 
         variant: "destructive" 
       });
     } finally { 
+
       setLoading(false); 
     }
   }
