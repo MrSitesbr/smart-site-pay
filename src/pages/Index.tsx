@@ -20,7 +20,7 @@ const Index = () => {
       <HeroSection />
       <IdealParaSection />
       <DestaquesProfissionais />
-      <InstitucionalSection />
+      <ContactSection />
       <Footer />
       <WhatsAppButton />
     </div>
