@@ -250,7 +250,7 @@ export default function Admin() {
       visitantes_crm: "Visitantes",
       locacao_fixa: "Locação Fixa",
       clientes: "CRM Leads",
-      planos_horas: "Planos Horas",
+      planos_horas: "Planos",
       financeiro: "Financeiro",
       erp: "ERP Ocupação",
       woba: "Repasses Woba",
