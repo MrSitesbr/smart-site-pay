@@ -19,7 +19,6 @@ const Navbar = () => {
 
   const links = [
     { label: "Início", href: "/", route: true },
-    { label: "Institucional", href: "/institucional", route: true },
     { 
       label: "Serviços", 
       href: "#", 
@@ -31,6 +30,7 @@ const Navbar = () => {
       ]
     },
     { label: "Unidades", href: "/unidades", route: true },
+    { label: "Institucional", href: "/institucional", route: true },
     { label: "Contato", href: "/#contato" },
   ];
 
