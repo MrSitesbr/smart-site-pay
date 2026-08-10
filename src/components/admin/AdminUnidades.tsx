@@ -87,17 +87,33 @@ export default function AdminUnidades() {
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
-      unidade_id: selectedUnidade.id,
-      planos_permitidos: editingSala.planos_permitidos || []
+      unidade_id: selectedUnidade.id
     };
 
-    const { error } = editingSala.id 
-      ? await supabase.from('salas').update(payload).eq('id', editingSala.id)
-      : await supabase.from('salas').insert([payload]);
+    const { data: savedSala, error } = editingSala.id 
+      ? await supabase.from('salas').update(payload).eq('id', editingSala.id).select().single()
+      : await supabase.from('salas').insert([payload]).select().single();
     
     if (error) {
       toast.error(error.message);
-    } else {
+      return;
+    }
+
+    // Salvar relacionamentos de planos
+    if (savedSala) {
+      // Remover planos antigos
+      await supabase.from('sala_planos').delete().eq('sala_id', savedSala.id);
+      
+      // Inserir novos planos
+      const planosPermitidos = editingSala.planos_permitidos || [];
+      if (planosPermitidos.length > 0) {
+        const relations = planosPermitidos.map((planoId: string) => ({
+          sala_id: savedSala.id,
+          plano_id: planoId
+        }));
+        await supabase.from('sala_planos').insert(relations);
+      }
+    }
       toast.success("Sala salva!");
       setEditingSala(null);
       fetchSalas(selectedUnidade);
@@ -187,7 +203,10 @@ export default function AdminUnidades() {
                         {s.descricao && <p className="text-xs italic mt-1 line-clamp-1">{s.descricao}</p>}
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setEditingSala(s)}><Edit2 className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="sm" onClick={async () => {
+                          const { data } = await supabase.from('sala_planos').select('plano_id').eq('sala_id', s.id);
+                          setEditingSala({...s, planos_permitidos: (data || []).map(d => d.plano_id)});
+                        }}><Edit2 className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/unidades/sala/${s.id}`)}><Eye className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => deleteSala(s.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                       </div>

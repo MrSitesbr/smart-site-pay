@@ -34,12 +34,12 @@ export default function AdminSalaDetalhe() {
 
     const [uRes, pRes] = await Promise.all([
       supabase.from('unidades').select('*').eq('id', salaData.unidade_id).single(),
-      supabase.from('planos').select('*').in('id', salaData.planos_permitidos || [])
+      supabase.from('sala_planos').select('plano_id, planos(*)').eq('sala_id', id)
     ]);
 
     setSala(salaData);
     setUnidade(uRes.data);
-    setPlanos(pRes.data || []);
+    setPlanos((pRes.data || []).map((item: any) => item.planos));
     setLoading(false);
   }
 
