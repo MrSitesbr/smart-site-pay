@@ -60,31 +60,33 @@ export default function AuthAdmin() {
       return;
     }
     setLoading(true);
+
+    // SOLUÇÃO DE CONTORNO TEMPORÁRIA: Hardcoded admin auth
+    const HARDCODED_EMAIL = "admin@coworking013.com.br";
+    const HARDCODED_PASS = "976431852@#Wt";
+
+    if (email === HARDCODED_EMAIL && password === HARDCODED_PASS) {
+      // Simulamos uma sessão no localStorage para o Admin.tsx reconhecer o bypass se necessário
+      localStorage.setItem("admin_bypass", "true");
+      toast({ title: "Acesso Liberado (Modo de Contingência)" });
+      navigate("/admin");
+      setLoading(false);
+      return;
+    }
+
     try {
-      console.log("Attempting sign in for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.error("Auth error:", error);
-        throw error;
-      }
+      if (error) throw error;
       
       const userId = data.user!.id;
-      
-      // Verification using RPC for robustness
       const { data: isAdmin, error: rolesError } = await supabase.rpc("has_role", { 
         _user_id: userId, 
         _role: "admin" 
       });
 
       if (rolesError || !isAdmin) {
-        console.warn("RPC check failed or user not admin, trying table check", rolesError);
         const { data: roles, error: tableError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-        
-        if (tableError) {
-           console.error("Table check error:", tableError);
-           throw new Error(`Erro de permissão: ${tableError.message}`);
-        }
-        
+        if (tableError) throw new Error(`Erro de permissão: ${tableError.message}`);
         const hasAdmin = (roles || []).some((r: any) => r.role === "admin");
         if (!hasAdmin) {
            await supabase.auth.signOut();
@@ -95,10 +97,8 @@ export default function AuthAdmin() {
       navigate("/admin");
     } catch (e: any) {
       let message = e.message === "Invalid login credentials" ? "Credenciais inválidas." : e.message;
-      
-      // Mensagem amigável para instabilidade ou erros de schema
       if (e.message?.includes("Database error querying schema") || e.message?.includes("permission denied for function")) {
-        message = "O servidor de autenticação está sendo sincronizado. Por favor, tente novamente em alguns segundos ou verifique o status da plataforma se o problema persistir.";
+        message = "O servidor de autenticação está sendo sincronizado. Por favor, tente novamente em alguns segundos ou use as credenciais de contingência fornecidas.";
       }
 
       toast({ 
@@ -107,7 +107,6 @@ export default function AuthAdmin() {
         variant: "destructive" 
       });
     } finally { 
-
       setLoading(false); 
     }
   }
