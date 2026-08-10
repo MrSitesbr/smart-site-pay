@@ -35,8 +35,6 @@ export default function AdminUnidadeDetalhe() {
   const [salas, setSalas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUnidade, setEditingUnidade] = useState<any>(null);
-  const [editingSala, setEditingSala] = useState<any>(null);
-  const [planos, setPlanos] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -171,56 +169,7 @@ export default function AdminUnidadeDetalhe() {
               <div className="flex justify-between items-center py-2 border-b border-white/10">
                 <span className="opacity-80">Total de Salas</span>
                 <span className="font-black text-2xl">{salas.length}</span>
-      {/* Dialog Unidade */}
-      <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Unidade</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome da Unidade</label>
-                <Input 
-                  value={editingUnidade?.nome || ''} 
-                  onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
-                  placeholder="Ex: Unidade Boqueirão"
-                />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL da Foto</label>
-                <Input 
-                  value={editingUnidade?.foto_url || ''} 
-                  onChange={(e) => setEditingUnidade({...editingUnidade, foto_url: e.target.value})}
-                  placeholder="URL da imagem (ex: https://...)"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Endereço Completo</label>
-              <Input 
-                value={editingUnidade?.endereco || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, endereco: e.target.value})}
-                placeholder="Rua, número, bairro..."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descrição da Unidade</label>
-              <Textarea 
-                value={editingUnidade?.descricao || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, descricao: e.target.value})}
-                placeholder="Descreva os diferenciais desta unidade..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
-            <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar Alterações</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
               <div className="flex justify-between items-center py-2">
                 <span className="opacity-80">Capacidade Total</span>
                 <span className="font-black text-2xl">
@@ -275,6 +224,56 @@ export default function AdminUnidadeDetalhe() {
           ))}
         </div>
       </div>
+
+      {/* Dialog Unidade */}
+      <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Unidade</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome da Unidade</label>
+                <Input 
+                  value={editingUnidade?.nome || ''} 
+                  onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
+                  placeholder="Ex: Unidade Boqueirão"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">URL da Foto</label>
+                <Input 
+                  value={editingUnidade?.foto_url || ''} 
+                  onChange={(e) => setEditingUnidade({...editingUnidade, foto_url: e.target.value})}
+                  placeholder="URL da imagem (ex: https://...)"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Endereço Completo</label>
+              <Input 
+                value={editingUnidade?.endereco || ''} 
+                onChange={(e) => setEditingUnidade({...editingUnidade, endereco: e.target.value})}
+                placeholder="Rua, número, bairro..."
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descrição da Unidade</label>
+              <Textarea 
+                value={editingUnidade?.descricao || ''} 
+                onChange={(e) => setEditingUnidade({...editingUnidade, descricao: e.target.value})}
+                placeholder="Descreva os diferenciais desta unidade..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
+            <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
