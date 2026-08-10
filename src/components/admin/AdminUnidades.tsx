@@ -113,7 +113,6 @@ export default function AdminUnidades() {
         }));
         await supabase.from('sala_planos').insert(relations);
       }
-    }
       toast.success("Sala salva!");
       setEditingSala(null);
       fetchSalas(selectedUnidade);
