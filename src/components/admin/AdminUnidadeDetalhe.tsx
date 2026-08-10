@@ -34,6 +34,9 @@ export default function AdminUnidadeDetalhe() {
   const [unidade, setUnidade] = useState<any>(null);
   const [salas, setSalas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingUnidade, setEditingUnidade] = useState<any>(null);
+  const [editingSala, setEditingSala] = useState<any>(null);
+  const [planos, setPlanos] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
