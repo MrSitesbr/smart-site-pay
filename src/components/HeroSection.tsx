@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, User, Mail, Phone, ArrowRight } from "lucide-react";
-import heroBg from "@/assets/sala-reuniao-1.jpg";
+import { assets } from "@/lib/migration-assets";
 
 const HeroSection = () => {
   const [step, setStep] = useState(1);
