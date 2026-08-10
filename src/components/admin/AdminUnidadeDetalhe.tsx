@@ -5,7 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Building2, Layers, MapPin, Info, Edit, Plus, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  ArrowLeft, 
+  Building2, 
+  Layers, 
+  MapPin, 
+  Info, 
+  Edit, 
+  Plus, 
+  Trash2,
+  X,
+  Save
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export default function AdminUnidadeDetalhe() {
@@ -14,6 +34,7 @@ export default function AdminUnidadeDetalhe() {
   const [unidade, setUnidade] = useState<any>(null);
   const [salas, setSalas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingUnidade, setEditingUnidade] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -36,6 +57,37 @@ export default function AdminUnidadeDetalhe() {
       setSalas(sRes.data || []);
     }
     setLoading(false);
+  }
+
+  async function deleteUnidade() {
+    if (!confirm("Tem certeza que deseja excluir esta unidade? Isso apagará todas as salas vinculadas.")) return;
+    const { error } = await supabase.from('unidades').delete().eq('id', id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Unidade excluída com sucesso");
+      navigate("/admin");
+    }
+  }
+
+  async function saveUnidade() {
+    if (!editingUnidade.nome) return toast.error("Nome é obrigatório");
+    
+    const payload: any = {
+      nome: editingUnidade.nome,
+      endereco: editingUnidade.endereco,
+      descricao: editingUnidade.descricao,
+      foto_url: editingUnidade.foto_url
+    };
+
+    const { error } = await supabase.from('unidades').update(payload).eq('id', id);
+    
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Unidade atualizada!");
+      setEditingUnidade(null);
+      fetchData();
+    }
   }
 
   async function deleteSala(salaId: string) {
@@ -81,9 +133,14 @@ export default function AdminUnidadeDetalhe() {
                   {unidade.endereco}
                 </div>
               </div>
-              <Button onClick={() => {/* TODO: Integrar modal de edição */}} className="bg-brand-blue-dark text-white">
-                <Edit className="w-4 h-4 mr-2" /> Editar Unidade
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setEditingUnidade(unidade)} className="bg-brand-blue-dark text-white">
+                  <Edit className="w-4 h-4 mr-2" /> Editar Unidade
+                </Button>
+                <Button onClick={deleteUnidade} variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-white">
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir Unidade
+                </Button>
+              </div>
             </div>
             
             {unidade.foto_url && (
@@ -167,6 +224,56 @@ export default function AdminUnidadeDetalhe() {
           ))}
         </div>
       </div>
+
+      {/* Dialog Unidade */}
+      <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Unidade</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome da Unidade</label>
+                <Input 
+                  value={editingUnidade?.nome || ''} 
+                  onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
+                  placeholder="Ex: Unidade Boqueirão"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">URL da Foto</label>
+                <Input 
+                  value={editingUnidade?.foto_url || ''} 
+                  onChange={(e) => setEditingUnidade({...editingUnidade, foto_url: e.target.value})}
+                  placeholder="URL da imagem (ex: https://...)"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Endereço Completo</label>
+              <Input 
+                value={editingUnidade?.endereco || ''} 
+                onChange={(e) => setEditingUnidade({...editingUnidade, endereco: e.target.value})}
+                placeholder="Rua, número, bairro..."
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descrição da Unidade</label>
+              <Textarea 
+                value={editingUnidade?.descricao || ''} 
+                onChange={(e) => setEditingUnidade({...editingUnidade, descricao: e.target.value})}
+                placeholder="Descreva os diferenciais desta unidade..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
+            <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar Alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

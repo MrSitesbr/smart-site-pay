@@ -155,16 +155,16 @@ export default function AdminUnidades() {
                     <p className="text-sm text-muted-foreground">{u.endereco || "Sem endereço cadastrado"}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setEditingUnidade(u); }}><Edit2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/unidades/${u.id}`); }} className="text-brand-blue-dark"><Eye className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deleteUnidade(u.id); }} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                     <Button 
-                      variant={selectedUnidade?.id === u.id ? "default" : "outline"} 
+                      variant="outline" 
                       size="sm" 
-                      onClick={() => fetchSalas(u)}
-                      className={selectedUnidade?.id === u.id ? "bg-brand-orange" : "border-brand-blue-dark text-brand-blue-dark"}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        navigate(`/admin/unidades/${u.id}`); 
+                      }} 
+                      className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white"
                     >
-                      Salas
+                      Acessar
                     </Button>
                   </div>
                 </div>
