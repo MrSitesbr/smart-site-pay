@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import escritorioImg from "@/assets/escritorio-cow013.png.asset.json";
+import { assets } from "@/lib/migration-assets";
 
 const EscritorioPrivativo = () => {
   return (
@@ -43,7 +43,7 @@ const EscritorioPrivativo = () => {
                 </Button>
               </div>
               <div className="rounded-3xl overflow-hidden shadow-2xl aspect-video relative group">
-                <img src={escritorioImg.url} alt="Escritório Privativo" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={assets.images.recepcao} alt="Escritório Privativo" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
               </div>
             </div>

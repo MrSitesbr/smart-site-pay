@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, User, Mail, Phone, ArrowRight } from "lucide-react";
-import heroBg from "@/assets/sala-reuniao-1.jpg";
+import { assets } from "@/lib/migration-assets";
 
 const HeroSection = () => {
   const [step, setStep] = useState(1);
@@ -23,7 +23,7 @@ const HeroSection = () => {
     <section id="home" className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden bg-brand-blue-dark">
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
-        <img src={heroBg} alt="Coworking 013" className="w-full h-full object-cover opacity-40" />
+        <img src={assets.images.vistaAerea} alt="Coworking 013" className="w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-blue-dark via-brand-blue-dark/80 to-transparent" />
       </div>
 

@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
-import escritorioImg from "@/assets/escritorio-cow013.png.asset.json";
-import auditorioImg from "@/assets/auditorio-cow013.png.asset.json";
-import consultorioImg from "@/assets/consultorio-cow013.png.asset.json";
+import { assets } from "@/lib/migration-assets";
 
 const IdealParaSection = () => {
   const [content, setContent] = useState({
@@ -15,37 +13,37 @@ const IdealParaSection = () => {
         title: "Salas Privativas", 
         desc: "Escritórios exclusivos para sua empresa ou equipe, com total privacidade.",
         href: "/escritorio-privativo",
-        image: escritorioImg.url
+        image: assets.images.recepcao
       },
       { 
         title: "Sala de Reunião", 
         desc: "Ambiente profissional para receber clientes e realizar fechamentos importantes.",
         href: "/auditorio-modular",
-        image: auditorioImg.url
+        image: assets.icons.reuniao
       },
       { 
         title: "Coworking", 
         desc: "Estações de trabalho em ambiente compartilhado, ideal para networking.",
         href: "/ambientes",
-        image: "https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&q=80&w=800"
+        image: assets.icons.compartilhado
       },
       { 
         title: "Endereço Fiscal", 
         desc: "Sua empresa no endereço comercial de maior prestígio da Vila Tupi.",
         href: "/endereco-virtual",
-        image: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=800"
+        image: assets.icons.fiscal
       },
       { 
         title: "Consultórios", 
         desc: "Salas equipadas para profissionais da saúde e bem-estar.",
         href: "/consultorio-privativo",
-        image: consultorioImg.url
+        image: assets.icons.consultorio
       },
       { 
         title: "Auditório", 
         desc: "Espaço modular para cursos, palestras e treinamentos corporativos.",
         href: "/auditorio-modular",
-        image: auditorioImg.url
+        image: assets.icons.auditorio
       },
     ]
   });
