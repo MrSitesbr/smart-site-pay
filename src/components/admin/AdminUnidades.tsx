@@ -2,77 +2,87 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Building2, Plus, Image as ImageIcon, Trash2, Edit2, Save, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function AdminUnidades() {
   const [unidades, setUnidades] = useState<any[]>([]);
+  const [salas, setSalas] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedUnidade, setSelectedUnidade] = useState<string | null>(null);
 
   useEffect(() => { fetchUnidades(); }, []);
 
   async function fetchUnidades() {
-    const { data } = await supabase.from('unidades' as any).select('*');
-    setUnidades(data || [
-      { id: '1', nome: 'Unidade Tupi', endereco: 'Av. Pres. Kennedy, 5214', status: 'Ativo', espaços: 6 }
-    ]);
+    const { data } = await supabase.from('unidades').select('*');
+    setUnidades(data || []);
+  }
+
+  async function fetchSalas(unidadeId: string) {
+    const { data } = await supabase.from('salas').select('*').eq('unidade_id', unidadeId);
+    setSalas(data || []);
+    setSelectedUnidade(unidadeId);
+  }
+
+  async function saveUnidade(u: any) {
+    const { error } = u.id 
+      ? await supabase.from('unidades').update(u).eq('id', u.id)
+      : await supabase.from('unidades').insert(u);
+    
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Unidade salva!");
+      setEditing(null);
+      fetchUnidades();
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Unidades & Espaços</h2>
-          <p className="text-muted-foreground">Gerencie seus locais físicos e as salas disponíveis para reserva.</p>
+          <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Unidades & Salas</h2>
+          <p className="text-muted-foreground">Gerencie unidades físicas e as salas de cada uma.</p>
         </div>
-        <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white"><Plus className="w-4 h-4 mr-2" /> Nova Unidade</Button>
+        <Button onClick={() => setEditing({ nome: '', endereco: '' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+          <Plus className="w-4 h-4 mr-2" /> Nova Unidade
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {unidades.map(u => (
-          <Card key={u.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all">
-            <div className="aspect-video bg-muted relative group">
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                <Button size="sm" variant="secondary"><ImageIcon className="w-4 h-4 mr-2" /> Trocar Foto</Button>
+          <Card key={u.id} className="p-6 border-none shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-xl font-heading font-bold text-brand-blue-dark">{u.nome}</h3>
+                <p className="text-sm text-muted-foreground">{u.endereco}</p>
               </div>
-              <div className="absolute top-4 right-4 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">{u.status}</div>
-            </div>
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-heading font-bold text-brand-blue-dark">{u.nome}</h3>
-                  <p className="text-sm text-muted-foreground">{u.endereco}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm"><Edit2 className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="sm" className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
-                </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setEditing(u)}><Edit2 className="w-4 h-4" /></Button>
+                <Button variant="outline" size="sm" onClick={() => fetchSalas(u.id)}>Salas</Button>
               </div>
-              
-              <div className="pt-4 border-t border-dashed space-y-3">
-                 <div className="flex items-center justify-between text-sm">
-                   <span className="font-medium">Salas Privativas</span>
-                   <span className="text-brand-orange font-bold">2 disponíveis</span>
-                 </div>
-                 <div className="flex items-center justify-between text-sm">
-                   <span className="font-medium">Salas de Reunião</span>
-                   <span className="text-brand-orange font-bold">1 disponível</span>
-                 </div>
-                 <div className="flex items-center justify-between text-sm">
-                   <span className="font-medium">Coworking (Estações)</span>
-                   <span className="text-brand-orange font-bold">20 lugares</span>
-                 </div>
-              </div>
-
-              <Button variant="outline" className="w-full mt-6">Gerenciar Espaços desta Unidade</Button>
             </div>
           </Card>
         ))}
       </div>
+
+      {selectedUnidade && (
+        <Card className="p-6 mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold">Salas da Unidade</h3>
+            <Button size="sm"><Plus className="w-4 h-4 mr-2" /> Adicionar Sala</Button>
+          </div>
+          <div className="grid gap-4">
+            {salas.map(s => (
+              <div key={s.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span>{s.nome} ({s.tipo})</span>
+                <Button variant="ghost" size="sm"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
