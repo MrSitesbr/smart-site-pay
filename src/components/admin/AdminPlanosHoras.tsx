@@ -34,30 +34,6 @@ export default function AdminPlanosHoras() {
   // Filtragem (embora a tabela 'planos' não tenha unidade_id, adicionamos o filtro UI para consistência se no futuro tiver)
   const filteredPlanos = planos;
 
-  async function savePlano() {
-    if (!editingPlano.nome || !editingPlano.preco || !editingPlano.quantidade_horas) {
-      return toast.error("Preencha todos os campos obrigatórios");
-    }
-
-    const payload = {
-      nome: editingPlano.nome,
-      preco: parseFloat(editingPlano.preco),
-      quantidade_horas: parseInt(editingPlano.quantidade_horas),
-      validade_dias: editingPlano.validade_dias ? parseInt(editingPlano.validade_dias) : null
-    };
-
-    const { error } = editingPlano.id 
-      ? await supabase.from('planos').update(payload).eq('id', editingPlano.id)
-      : await supabase.from('planos').insert([payload]);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Plano salvo!");
-      setEditingPlano(null);
-      fetchPlanos();
-    }
-  }
 
   async function deletePlano(id: string) {
     if (!confirm("Tem certeza que deseja excluir este plano?")) return;
