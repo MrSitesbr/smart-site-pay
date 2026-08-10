@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Phone, Calendar, LayoutDashboard } from "lucide-react";
+import { Menu, X, Phone, Calendar, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
 import ReservaDialog from "@/components/ReservaDialog";
@@ -20,10 +20,18 @@ const Navbar = () => {
   const links = [
     { label: "Início", href: "/", route: true },
     { label: "Institucional", href: "/institucional", route: true },
+    { 
+      label: "Serviços", 
+      href: "#", 
+      submenu: [
+        { label: "Escritório Privativo", href: "/escritorio-privativo", route: true },
+        { label: "Consultório Privativo", href: "/consultorio-privativo", route: true },
+        { label: "Auditório Modular", href: "/auditorio-modular", route: true },
+        { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
+      ]
+    },
     { label: "Ambientes", href: "/ambientes", route: true },
-    { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
     { label: "Contato", href: "/#contato" },
-    { label: "Área do Cliente", href: "/painel", route: true },
   ];
 
   return (
@@ -50,29 +58,50 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">
-          {links.map((link) =>
-            link.route ? (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
-                }`}
-              >
-                {link.label}
-              </a>
-            )
-          )}
+          {links.map((link) => (
+            <div key={link.label} className="relative group">
+              {link.submenu ? (
+                <>
+                  <button
+                    className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                      scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
+                    }`}
+                  >
+                    {link.label} <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                    {link.submenu.map((sub) => (
+                      <Link
+                        key={sub.href}
+                        to={sub.href}
+                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-orange-500 transition-colors"
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              ) : link.route ? (
+                <Link
+                  to={link.href}
+                  className={`text-sm font-medium transition-colors ${
+                    scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  href={link.href}
+                  className={`text-sm font-medium transition-colors ${
+                    scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
+                  }`}
+                >
+                  {link.label}
+                </a>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="hidden lg:flex items-center gap-3">
@@ -102,27 +131,41 @@ const Navbar = () => {
 
       {isOpen && (
         <div className="lg:hidden bg-background border-t border-border px-4 pb-4">
-          {links.map((link) =>
-            link.route ? (
-              <Link
-                key={link.href}
-                to={link.href}
-                onClick={() => setIsOpen(false)}
-                className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
-              >
-                {link.label}
-              </a>
-            )
-          )}
+          {links.map((link) => (
+            <div key={link.label}>
+              {link.submenu ? (
+                <>
+                  <div className="py-3 text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{link.label}</div>
+                  {link.submenu.map((sub) => (
+                    <Link
+                      key={sub.href}
+                      to={sub.href}
+                      onClick={() => setIsOpen(false)}
+                      className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
+                    >
+                      {sub.label}
+                    </Link>
+                  ))}
+                </>
+              ) : link.route ? (
+                <Link
+                  to={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
+                >
+                  {link.label}
+                </a>
+              )}
+            </div>
+          ))}
           <Button
             onClick={() => { setIsOpen(false); setReservaOpen(true); }}
             className="w-full mt-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold"

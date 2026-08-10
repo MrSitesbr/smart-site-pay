@@ -12,7 +12,7 @@ const Footer = () => {
         { label: "Institucional", href: "/institucional", route: true },
         { label: "Ambientes", href: "/ambientes", route: true },
         { label: "Contato", href: "#contato" },
-        { label: "Painel do cliente", href: "/painel", route: true },
+        { label: "Área do Cliente", href: "/painel", route: true },
         { label: "Admin", href: "/auth-admin", route: true },
       ],
     },
@@ -68,7 +68,7 @@ const Footer = () => {
                   <li key={j}>
                     {(l as any).route ? (
                       <Link to={l.href} className="text-sm text-white/60 hover:text-secondary transition-colors inline-flex items-center gap-1.5">
-                        {l.label === "Painel do cliente" || l.label === "Admin" ? (
+                        {l.label === "Área do Cliente" || l.label === "Admin" ? (
                           <LayoutDashboard className="w-3.5 h-3.5" />
                         ) : (
                           <ChevronRight className="w-3.5 h-3.5" />

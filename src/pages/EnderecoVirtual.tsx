@@ -2,7 +2,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
-import { Check, Mail, MapPin, Phone } from "lucide-react";
+import { MapPin, Mail, Phone } from "lucide-react";
+import { assets } from "@/lib/migration-assets";
 
 const EnderecoVirtual = () => {
   return (
@@ -36,9 +37,7 @@ const EnderecoVirtual = () => {
                       "Segurança e Credibilidade"
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <div className="w-5 h-5 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3 h-3 text-orange-500" />
-                        </div>
+                        <img src={assets.icons.qualidade} className="w-5 h-5 object-contain flex-shrink-0" alt="check" />
                         <span className="text-sm text-muted-foreground font-medium">{item}</span>
                       </div>
                     ))}
