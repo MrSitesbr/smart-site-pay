@@ -15,10 +15,10 @@ const ContactSection = () => {
     cta_button: 'Agendar Visita Agora',
     title: 'Tire dúvidas ou agende uma visita.',
     contact_items: [
-      { icon: "Phone", title: "WhatsApp", value: "(13) 99744-0130", href: "https://wa.me/5513997440130" },
+      { icon: "Phone", title: "WhatsApp", value: "(13) 98805-0358", href: "https://wa.me/5513988050358" },
       { icon: "Mail", title: "E-mail", value: "contato@coworking013.com.br", href: "mailto:contato@coworking013.com.br" },
-      { icon: "MapPin", title: "Endereço", value: "Av. Pres. Kennedy, 5214\nVila Tupi, Praia Grande - SP", href: "https://maps.google.com/?q=Av.+Presidente+Kennedy,+5214+-+Vila+Tupi,+Praia+Grande+-+SP" },
-      { icon: "Clock", title: "Atendimento", value: "Segunda a Sexta\n09h às 18h", href: "" },
+      { icon: "MapPin", title: "Unidades", value: "Av. P. Costa e Silva, 609 - S. 906\nR. São Caetano, 86\nR. Jaú, 955 Conj. 26\nPraia Grande - SP", href: "#" },
+      { icon: "Clock", title: "Atendimento", value: "Seg. à Sex.: 08h às 21h\nSábados: 08h às 12h", href: "" },
     ]
   });
 

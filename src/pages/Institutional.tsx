@@ -25,7 +25,7 @@ const Institutional = () => {
                 <div className="grid grid-cols-2 gap-6 mb-8">
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                     <h3 className="text-3xl font-black text-brand-blue-dark mb-1">2+</h3>
-                    <p className="text-sm text-muted-foreground">Unidades Premium</p>
+                    <p className="text-sm text-muted-foreground">Unidades</p>
                   </div>
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                     <h3 className="text-3xl font-black text-brand-blue-dark mb-1">100+</h3>

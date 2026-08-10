@@ -12,7 +12,7 @@ import Admin from "./pages/Admin";
 import AuthAdmin from "./pages/AuthAdmin";
 import NotFound from "./pages/NotFound";
 import Institutional from "./pages/Institutional";
-import Ambientes from "./pages/Ambientes";
+import Unidades from "./pages/Unidades";
 import EscritorioPrivativo from "./pages/EscritorioPrivativo";
 import AuditorioModular from "./pages/AuditorioModular";
 import ConsultorioPrivativo from "./pages/ConsultorioPrivativo";
@@ -29,7 +29,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/institucional" element={<Institutional />} />
-          <Route path="/ambientes" element={<Ambientes />} />
+          <Route path="/unidades" element={<Unidades />} />
           <Route path="/escritorio-privativo" element={<EscritorioPrivativo />} />
           <Route path="/auditorio-modular" element={<AuditorioModular />} />
           <Route path="/consultorio-privativo" element={<ConsultorioPrivativo />} />

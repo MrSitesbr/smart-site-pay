@@ -30,7 +30,7 @@ const Navbar = () => {
         { label: "Endereço Virtual", href: "/endereco-virtual", route: true },
       ]
     },
-    { label: "Ambientes", href: "/ambientes", route: true },
+    { label: "Unidades", href: "/unidades", route: true },
     { label: "Contato", href: "/#contato" },
   ];
 
@@ -112,7 +112,7 @@ const Navbar = () => {
             }`}
           >
             <Phone className="w-4 h-4 text-primary" />
-            (13) 99744-0130
+            (13) 98805-0358
           </a>
           <Button onClick={() => setReservaOpen(true)} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
             <Calendar className="w-4 h-4 mr-2" />
