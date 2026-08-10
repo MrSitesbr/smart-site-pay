@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeGoogleSync } from "@/lib/googleSync";
 import { toast } from "@/hooks/use-toast";
 import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save, Settings } from "lucide-react";
 import AdminCalendar from "@/components/admin/AdminCalendar";
@@ -118,7 +119,7 @@ export default function Admin() {
   }
 
   async function syncGoogle(type: "reserva" | "contrato", id: string, silent = false) {
-    const { data, error } = await supabase.functions.invoke("sync-google-calendar", { body: { action: "upsert", type, id } });
+    const { data, error } = await invokeGoogleSync({ action: "upsert", type, id });
     if (error || data?.error) {
       if (!silent) toast({ title: "Erro no Google Agenda", description: (error?.message || data?.error) as string, variant: "destructive" });
       return false;
@@ -129,7 +130,7 @@ export default function Admin() {
 
   async function syncAll() {
     toast({ title: "Sincronizando…", description: "Enviando eventos ao Google Agenda" });
-    const { data, error } = await supabase.functions.invoke("sync-google-calendar", { body: { action: "sync_all" } });
+    const { data, error } = await invokeGoogleSync({ action: "sync_all" });
     if (error || data?.error) {
       toast({ title: "Erro", description: (error?.message || data?.error) as string, variant: "destructive" });
     } else {
@@ -154,7 +155,7 @@ export default function Admin() {
       const gId = r?.google_event_id;
       const cid = r?.google_calendar_id;
       if (gId) {
-        const { error: gErr } = await supabase.functions.invoke("sync-google-calendar", { body: { action: "delete_event", eventId: gId, calendarId: cid } });
+        const { error: gErr } = await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
         if (gErr) toast({ title: "Aviso: evento pode continuar no Google Agenda", description: gErr.message, variant: "destructive" });
         else await (supabase.from("reservations") as any).update({ google_event_id: null }).eq("id", id);
       }
@@ -189,7 +190,7 @@ export default function Admin() {
     const gId = (r as any).google_event_id;
     const cid = (r as any).google_calendar_id;
     if (gId) {
-      const { error: gErr } = await supabase.functions.invoke("sync-google-calendar", { body: { action: "delete_event", eventId: gId, calendarId: cid } });
+      const { error: gErr } = await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
       if (gErr) {
         toast({ title: "Não foi possível remover no Google Agenda", description: gErr.message + " — reserva não excluída para evitar inconsistência.", variant: "destructive" });
         return;
@@ -205,7 +206,7 @@ export default function Admin() {
     const gId = (c as any).google_event_id;
     const cid = (c as any).google_calendar_id;
     if (gId) {
-      const { error: gErr } = await supabase.functions.invoke("sync-google-calendar", { body: { action: "delete_event", eventId: gId, calendarId: cid } });
+      const { error: gErr } = await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
       if (gErr) {
         toast({ title: "Não foi possível remover no Google Agenda", description: gErr.message + " — solicitação não excluída.", variant: "destructive" });
         return;

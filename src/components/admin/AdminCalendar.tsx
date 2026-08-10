@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus } from "lucide-react";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeGoogleSync } from "@/lib/googleSync";
 import EventAvatar from "./EventAvatar";
 import NovaReservaDialog from "./NovaReservaDialog";
 import DayTimelineDialog from "./DayTimelineDialog";
@@ -79,8 +80,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       const last = new Date(month.getFullYear(), month.getMonth() + 1, 1);
       const timeMin = new Date(first); timeMin.setDate(first.getDate() - 7);
       const timeMax = new Date(last); timeMax.setDate(last.getDate() + 7);
-      const { data, error } = await supabase.functions.invoke("sync-google-calendar", {
-        body: { action: "list_events", timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() },
+      const { data, error } = await invokeGoogleSync({
+        action: "list_events", timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(),
       });
       if (cancelled) return;
       if (error || data?.error) setGError((error?.message || data?.error) as string);
