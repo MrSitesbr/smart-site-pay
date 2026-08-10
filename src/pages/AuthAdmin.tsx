@@ -51,11 +51,19 @@ export default function AuthAdmin() {
     }
     setLoading(true);
     try {
+      console.log("Attempting sign in for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        console.error("Auth error:", error);
+        throw error;
+      }
       
       const userId = data.user!.id;
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      if (rolesError) {
+        console.error("Roles fetch error:", rolesError);
+        throw new Error(`Database error querying roles: ${rolesError.message}`);
+      }
       const isAdmin = (roles || []).some((r: any) => r.role === "admin");
 
       if (isAdmin) {
