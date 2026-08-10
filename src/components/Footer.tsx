@@ -98,14 +98,6 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/10 py-12">
-          <h4 className="font-heading font-bold text-center mb-8 text-white/40 uppercase tracking-widest text-xs">Empresas Parceiras</h4>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-            {assets.parceiros.map((logo, i) => (
-              <img key={i} src={logo} alt="Parceiro" className="h-8 md:h-12 w-auto object-contain" />
-            ))}
-          </div>
-        </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <p>© {new Date().getFullYear()} Coworking 013. Todos os direitos reservados.</p>
