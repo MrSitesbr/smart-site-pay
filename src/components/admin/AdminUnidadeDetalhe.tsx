@@ -119,6 +119,19 @@ export default function AdminUnidadeDetalhe() {
       unidade_id: id
     };
 
+  async function saveSala() {
+    if (!editingSala.nome || !editingSala.tipo) return toast.error("Nome e tipo são obrigatórios");
+    
+    const payload: any = {
+      nome: editingSala.nome,
+      tipo: editingSala.tipo,
+      capacidade: parseInt(editingSala.capacidade) || null,
+      descricao: editingSala.descricao,
+      foto_url: editingSala.galeria?.[0] || editingSala.foto_url,
+      galeria: editingSala.galeria,
+      unidade_id: id
+    };
+
     const { data: savedSala, error } = editingSala.id 
       ? await supabase.from('salas').update(payload).eq('id', editingSala.id).select().single()
       : await supabase.from('salas').insert([payload]).select().single();
