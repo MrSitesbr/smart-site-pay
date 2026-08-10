@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save, Settings } from "lucide-react";
+import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save, Settings, LogOut as LogoutIcon } from "lucide-react";
 import AdminCalendar from "@/components/admin/AdminCalendar";
 import AdminClientes from "@/components/admin/AdminClientes";
 import AdminFinanceiro from "@/components/admin/AdminFinanceiro";
@@ -26,7 +26,8 @@ import AdminVisitantes from "@/components/admin/AdminVisitantes";
 import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
 import AdminSettings from "@/components/admin/AdminSettings";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
+import AdminSidebar from "@/components/admin/layout/AdminSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
 
 
@@ -237,73 +238,40 @@ export default function Admin() {
     );
   }
 
-  const menuItems = [
-    { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
-    { title: "Calendários", icon: Calendar, id: "calendario" },
-    { title: "Contratações", icon: Briefcase, id: "contratos" },
-    { title: "Reservas", icon: ClipboardList, id: "reservas" },
-    { title: "CRM Clientes Corp", icon: Users, id: "clientes_corp" },
-    { title: "Funcionários", icon: Users, id: "funcionarios" },
-    { title: "Visitantes", icon: Users, id: "visitantes" },
-    { title: "Locação Fixa", icon: Briefcase, id: "locacao_fixa" },
-    { title: "CRM Leads", icon: Users, id: "clientes" },
-    { title: "Planos Horas", icon: ClipboardList, id: "planos_horas" },
-    { title: "Financeiro", icon: DollarSign, id: "financeiro" },
-    { title: "ERP Ocupação", icon: BarChart3, id: "erp" },
-    { title: "Repasses Woba", icon: Building2, id: "woba" },
-    { title: "Artigos (Blog)", icon: BookOpen, id: "artigos" },
-    { title: "Serviços", icon: FileText, id: "servicos" },
-    { title: "Unidades", icon: Building2, id: "unidades" },
-    { title: "Páginas", icon: FileText, id: "paginas" },
-    { title: "Configurações", icon: Settings, id: "configuracoes" },
-  ];
+  const getTitle = (id: string) => {
+    const titles: Record<string, string> = {
+      dashboard: "Dashboard",
+      calendario: "Reservas & Calendário",
+      contratos: "Contratações",
+      reservas: "Reservas",
+      clientes_corp: "CRM Clientes Corp",
+      funcionarios: "Funcionários",
+      visitantes: "Visitantes",
+      locacao_fixa: "Locação Fixa",
+      clientes: "CRM Leads",
+      planos_horas: "Planos Horas",
+      financeiro: "Financeiro",
+      erp: "ERP Ocupação",
+      woba: "Repasses Woba",
+      artigos: "Artigos (Blog)",
+      servicos: "Serviços",
+      unidades: "Unidades",
+      paginas: "Páginas",
+      configuracoes: "Configurações Gerais"
+    };
+    return titles[id] || "Admin";
+  };
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-[#f0f0f1]">
-        <Sidebar className="border-r border-brand-blue-dark/10 bg-[#2c3338] text-[#eee]">
-          <SidebarContent className="bg-[#2c3338]">
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-white/40 px-4 py-4 font-black uppercase text-[10px] tracking-widest">
-                Admin CoWorking
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        onClick={() => setActiveTab(item.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-brand-orange hover:text-white ${
-                          activeTab === item.id ? "bg-brand-orange text-white" : "text-[#eee] hover:bg-white/10"
-                        }`}
-                      >
-                        <item.icon className="w-4 h-4" />
-                        <span className="text-sm font-medium">{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                  <div className="mt-8 pt-4 border-t border-white/10">
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span className="text-sm font-medium">Sair do Painel</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </div>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 border-b bg-white flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
             <div className="flex items-center gap-4">
               <h2 className="font-heading font-black text-brand-blue-dark">
-                {menuItems.find(i => i.id === activeTab)?.title}
+                {getTitle(activeTab)}
               </h2>
             </div>
             <div className="flex items-center gap-3">
