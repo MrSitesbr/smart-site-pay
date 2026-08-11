@@ -274,7 +274,7 @@ export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas,
 
         {/* Detalhes do evento clicado */}
         <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-          <DialogContent className="max-w-lg">
+          <DialogScrollContent className="max-w-lg">
             {selected && (() => {
               const b = selected;
               const isGoogle = b.kind === "google";
