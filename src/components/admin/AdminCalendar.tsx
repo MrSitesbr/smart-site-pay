@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus, UserCheck } from "lucide-react";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 import { supabase } from "@/integrations/supabase/client";
@@ -462,7 +462,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
 
       <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(undefined)}>
-        <DialogContent className="max-w-lg">
+        <DialogScrollContent className="max-w-lg">
           {selectedDay && (
             <>
               <DialogHeader>
@@ -551,12 +551,12 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               )}
             </>
           )}
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
 
       {/* Detalhes completos da reserva/contrato */}
       <Dialog open={!!fullView} onOpenChange={(o) => !o && setFullView(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogScrollContent className="max-w-lg">
           {fullView && (
             <>
               <DialogHeader>
@@ -611,7 +611,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               </div>
             </>
           )}
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
 
       <NovaReservaDialog

@@ -11,6 +11,7 @@ import { ImageUpload } from "./ImageUpload";
 import {
   Dialog,
   DialogContent,
+  DialogScrollContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -241,7 +242,7 @@ export default function AdminUnidades() {
 
       {/* Dialog Unidade */}
       <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogScrollContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingUnidade?.id ? "Editar Unidade" : "Nova Unidade"}</DialogTitle>
           </DialogHeader>
@@ -285,12 +286,12 @@ export default function AdminUnidades() {
             <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
             <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar</Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
 
       {/* Dialog Sala */}
       <Dialog open={!!editingSala} onOpenChange={() => setEditingSala(null)}>
-        <DialogContent className="max-w-md">
+        <DialogScrollContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingSala?.id ? "Editar Sala" : "Nova Sala"}</DialogTitle>
           </DialogHeader>
@@ -369,7 +370,7 @@ export default function AdminUnidades() {
             <Button variant="outline" onClick={() => setEditingSala(null)}>Cancelar</Button>
             <Button onClick={saveSala} className="bg-brand-orange text-white">Salvar Sala</Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
     </div>
   );

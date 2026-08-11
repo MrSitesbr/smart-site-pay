@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -111,7 +111,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogScrollContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">Agendar Visita</DialogTitle>
         </DialogHeader>
@@ -218,7 +218,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
             Agendar Visita
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogScrollContent>
     </Dialog>
   );
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, ExternalLink, Trash2, DollarSign } from "lucide-react";
@@ -274,7 +274,7 @@ export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas,
 
         {/* Detalhes do evento clicado */}
         <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-          <DialogContent className="max-w-lg">
+          <DialogScrollContent className="max-w-lg">
             {selected && (() => {
               const b = selected;
               const isGoogle = b.kind === "google";
@@ -377,7 +377,7 @@ export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas,
                 </>
               );
             })()}
-          </DialogContent>
+          </DialogScrollContent>
         </Dialog>
       </DialogContent>
     </Dialog>

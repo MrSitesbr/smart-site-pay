@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -77,7 +77,7 @@ export default function NovoEventoDialog({ open, onOpenChange, date, onCreated }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogScrollContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">Novo Evento (Google Agenda)</DialogTitle>
         </DialogHeader>
@@ -112,7 +112,7 @@ export default function NovoEventoDialog({ open, onOpenChange, date, onCreated }
             Criar Evento
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogScrollContent>
     </Dialog>
   );
 }

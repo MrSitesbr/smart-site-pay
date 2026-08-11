@@ -6,13 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import NovoVisitanteDialog from "./NovoVisitanteDialog";
 
 export default function AdminVisitantes() {
   const [visitantes, setVisitantes] = useState<any[]>([]);
   const [unidades, setUnidades] = useState<any[]>([]);
   const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
   const [search, setSearch] = useState("");
+  const [showNovoVisita, setShowNovoVisita] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { 
@@ -59,7 +61,7 @@ export default function AdminVisitantes() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Controle de Portaria & Visitantes</h2>
           <p className="text-muted-foreground">Lista de acesso autorizado para portaria e recepção.</p>
         </div>
-        <Button className="bg-brand-orange text-white">
+        <Button onClick={() => setShowNovoVisita(true)} className="bg-brand-orange text-white">
           <Plus className="w-4 h-4 mr-2" /> Agendar Visita
         </Button>
       </div>
@@ -127,6 +129,13 @@ export default function AdminVisitantes() {
           </div>
         </section>
       </div>
+
+      <NovoVisitanteDialog 
+        open={showNovoVisita}
+        onOpenChange={setShowNovoVisita}
+        date={new Date()}
+        onCreated={fetchData}
+      />
     </div>
   );
 }
