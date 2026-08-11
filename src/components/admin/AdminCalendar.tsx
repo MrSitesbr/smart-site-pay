@@ -556,7 +556,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
       {/* Detalhes completos da reserva/contrato */}
       <Dialog open={!!fullView} onOpenChange={(o) => !o && setFullView(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogScrollContent className="max-w-lg">
           {fullView && (
             <>
               <DialogHeader>
