@@ -256,7 +256,7 @@ export default function AdminClienteCorpDetalhe() {
         open={showNovoVisita} 
         onOpenChange={setShowNovoVisita} 
         onCreated={fetchData}
-        initialClienteId={id}
+        date={new Date()}
       />
     </div>
   );
