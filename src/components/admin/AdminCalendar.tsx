@@ -17,6 +17,7 @@ import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
 import { CalendarListView } from "./CalendarListView";
 import { CalendarGanttView } from "./CalendarGanttView";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
+import NovoEventoDialog from "./NovoEventoDialog";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
