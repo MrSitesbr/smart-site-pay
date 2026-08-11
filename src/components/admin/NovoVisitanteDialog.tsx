@@ -111,7 +111,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogScrollContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">Agendar Visita</DialogTitle>
         </DialogHeader>
