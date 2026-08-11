@@ -53,7 +53,7 @@ export default function AdminUnidades() {
       nome: editingUnidade.nome,
       endereco: editingUnidade.endereco,
       descricao: editingUnidade.descricao,
-      foto_url: editingUnidade.foto_url,
+      foto_url: editingUnidade.galeria?.[0] || '',
       galeria: editingUnidade.galeria || []
     };
 
@@ -89,7 +89,7 @@ export default function AdminUnidades() {
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
-      foto_url: editingSala.foto_url,
+      foto_url: editingSala.galeria?.[0] || '',
       galeria: editingSala.galeria || [],
       unidade_id: selectedUnidade.id
     };
@@ -259,7 +259,7 @@ export default function AdminUnidades() {
                 <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
                 <ImageUpload 
                   value={editingUnidade?.galeria || []} 
-                onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls, foto_url: urls[0] || ''})}
+                onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls})}
                 />
               </div>
             </div>
@@ -330,7 +330,7 @@ export default function AdminUnidades() {
               <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
               <ImageUpload 
                 value={editingSala?.galeria || []} 
-                onChange={(urls) => setEditingSala({...editingSala, galeria: urls, foto_url: urls[0] || ''})}
+                onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
               />
             </div>
             <div className="space-y-2">

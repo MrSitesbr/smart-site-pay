@@ -195,9 +195,6 @@ export default function AdminUnidadeDetalhe() {
                   src={unidade.foto_url} 
                   alt={unidade.nome} 
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.error("Erro ao carregar imagem da unidade:", unidade.foto_url);
-                  }}
                 />
               </div>
             )}
@@ -210,7 +207,6 @@ export default function AdminUnidadeDetalhe() {
                       src={url} 
                       alt={`${unidade.nome} gallery ${index}`} 
                       className="w-full h-full object-cover"
-                      onError={(e) => console.error("Erro na galeria:", url)}
                     />
                   </div>
                 ))}
@@ -273,9 +269,6 @@ export default function AdminUnidadeDetalhe() {
                     src={sala.foto_url} 
                     className="w-full h-full object-cover" 
                     alt={sala.nome} 
-                    onError={(e) => {
-                      console.error("Erro na listagem de sala:", sala.foto_url);
-                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
