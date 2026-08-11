@@ -77,7 +77,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
             Salvar Cliente
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogScrollContent>
     </Dialog>
   );
 }
