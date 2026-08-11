@@ -76,6 +76,14 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
             <Label>Email do Responsável</Label>
             <Input type="email" value={emailResp} onChange={(e) => setEmailResp(e.target.value)} placeholder="email@empresa.com" />
           </div>
+          <div className="grid gap-2">
+            <Label>CPF do Responsável</Label>
+            <Input value={cpfResp} onChange={(e) => setCpfResp(e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Whatsapp do Responsável</Label>
+            <Input value={telResp} onChange={(e) => setTelResp(e.target.value)} placeholder="(00) 00000-0000" />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
