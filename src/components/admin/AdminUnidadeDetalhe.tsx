@@ -270,7 +270,14 @@ export default function AdminUnidadeDetalhe() {
             >
               <div className="h-48 bg-slate-100 relative">
                 {sala.foto_url ? (
-                  <img src={sala.foto_url} className="w-full h-full object-cover" alt={sala.nome} />
+                  <img 
+                    src={sala.foto_url} 
+                    className="w-full h-full object-cover" 
+                    alt={sala.nome} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Erro';
+                    }}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Building2 className="w-12 h-12 text-slate-300" />
