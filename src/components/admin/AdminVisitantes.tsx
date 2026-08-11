@@ -61,7 +61,7 @@ export default function AdminVisitantes() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Controle de Portaria & Visitantes</h2>
           <p className="text-muted-foreground">Lista de acesso autorizado para portaria e recepção.</p>
         </div>
-        <Button className="bg-brand-orange text-white">
+        <Button onClick={() => setShowNovoVisita(true)} className="bg-brand-orange text-white">
           <Plus className="w-4 h-4 mr-2" /> Agendar Visita
         </Button>
       </div>
