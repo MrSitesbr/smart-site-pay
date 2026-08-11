@@ -163,7 +163,7 @@ export default function AdminServicos() {
             <Button variant="outline" onClick={() => setEditingServico(null)}>Cancelar</Button>
             <Button onClick={saveServico} className="bg-brand-orange text-white">Salvar Serviço</Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
     </div>
   );
