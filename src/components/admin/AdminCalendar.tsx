@@ -462,7 +462,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
 
       <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(undefined)}>
-        <DialogContent className="max-w-lg">
+        <DialogScrollContent className="max-w-lg">
           {selectedDay && (
             <>
               <DialogHeader>
