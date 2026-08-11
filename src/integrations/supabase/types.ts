@@ -221,6 +221,7 @@ export type Database = {
           email: string | null
           id: string
           nome: string
+          telefone: string | null
         }
         Insert: {
           cargo?: string | null
@@ -230,6 +231,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome: string
+          telefone?: string | null
         }
         Update: {
           cargo?: string | null
@@ -239,6 +241,7 @@ export type Database = {
           email?: string | null
           id?: string
           nome?: string
+          telefone?: string | null
         }
         Relationships: [
           {
