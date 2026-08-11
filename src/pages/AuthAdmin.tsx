@@ -28,25 +28,22 @@ export default function AuthAdmin() {
 
   async function checkAdminAndRedirect(userId: string) {
     try {
-      const { data: isAdmin, error } = await supabase.rpc("has_role", { 
-        _user_id: userId, 
-        _role: "admin" 
-      });
-      
-      if (error || !isAdmin) {
-        // Fallback check
-        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-        const hasAdminTable = (roles || []).some((r: any) => r.role === "admin");
-        if (!hasAdminTable) {
-          await supabase.auth.signOut();
-          toast({ 
-            title: "Acesso negado", 
-            description: "Esta área é restrita a administradores.", 
-            variant: "destructive" 
-          });
-          return;
-        }
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      const isAdmin = !error && (roles || []).some((r: any) => r.role === "admin");
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Acesso negado",
+          description: "Esta área é restrita a administradores.",
+          variant: "destructive"
+        });
+        return;
       }
+
       navigate("/admin");
     } catch (err) {
       console.error("Redirect check error:", err);
