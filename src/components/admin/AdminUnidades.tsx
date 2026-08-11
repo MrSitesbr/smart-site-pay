@@ -291,7 +291,7 @@ export default function AdminUnidades() {
 
       {/* Dialog Sala */}
       <Dialog open={!!editingSala} onOpenChange={() => setEditingSala(null)}>
-        <DialogContent className="max-w-md">
+        <DialogScrollContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingSala?.id ? "Editar Sala" : "Nova Sala"}</DialogTitle>
           </DialogHeader>
