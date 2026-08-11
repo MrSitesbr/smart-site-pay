@@ -85,10 +85,14 @@ export default function AdminClienteCorpDetalhe() {
   }
 
   async function saveFunc() {
-    if (!editingFunc.nome) return toast.error("Nome é obrigatório");
+    if (!editingFunc?.nome) return toast.error("Nome é obrigatório");
+    
+    // Ensure cliente_corp_id is present
+    const payload = { ...editingFunc, cliente_corp_id: id };
+    
     const { error } = editingFunc.id 
-      ? await supabase.from('funcionarios_cliente').update(editingFunc).eq('id', editingFunc.id)
-      : await supabase.from('funcionarios_cliente').insert([editingFunc]);
+      ? await supabase.from('funcionarios_cliente').update(payload).eq('id', editingFunc.id)
+      : await supabase.from('funcionarios_cliente').insert([payload]);
     
     if (error) toast.error(error.message);
     else {
