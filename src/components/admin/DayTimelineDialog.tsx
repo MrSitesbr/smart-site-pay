@@ -377,7 +377,7 @@ export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas,
                 </>
               );
             })()}
-          </DialogContent>
+          </DialogScrollContent>
         </Dialog>
       </DialogContent>
     </Dialog>
