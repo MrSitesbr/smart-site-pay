@@ -218,7 +218,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
             Agendar Visita
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogScrollContent>
     </Dialog>
   );
 }
