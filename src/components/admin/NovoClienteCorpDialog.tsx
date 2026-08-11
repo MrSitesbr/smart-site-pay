@@ -18,6 +18,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [razaoSocial, setRazaoSocial] = useState(initialNome);
   const [nomeResp, setNomeResp] = useState("");
   const [emailResp, setEmailResp] = useState("");
+  const [telResp, setTelResp] = useState("");
+  const [cpfResp, setCpfResp] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
