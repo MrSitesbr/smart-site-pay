@@ -20,12 +20,18 @@ import ContactSection from "@/components/ContactSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 
 export default function AdminPaginas() {
-  const [pages] = useState([
-    { name: "Home", route: "/" },
-    { name: "Sobre Nós", route: "/sobre" },
-    { name: "Planos", route: "/planos" },
-    { name: "Contato", route: "/contato" },
-  ]);
+  const [pages, setPages] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadPages();
+  }, []);
+
+  const loadPages = async () => {
+    const { data } = await supabase.from('site_pages').select('*');
+    if (data) {
+      setPages(data);
+    }
+  };
 
   const [selectedPage, setSelectedPage] = useState<any>(null);
   const [editingSection, setEditingSection] = useState<any>(null);
@@ -71,6 +77,38 @@ export default function AdminPaginas() {
 
   const renderSectionPreview = (section: any) => {
     switch (section.section_key) {
+      case 'navbar': return (
+        <div className="bg-[#002f5e] p-4 text-white rounded-lg shadow-inner">
+          <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2">
+               <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-[8px] font-bold">ICON</div>
+               <div className="flex flex-col leading-none">
+                 <span className="text-[8px] text-orange-500 uppercase font-bold">{section.content.logo_text_top}</span>
+                 <span className="text-lg font-black">{section.content.logo_text_bottom}</span>
+               </div>
+             </div>
+             <div className="flex gap-4 text-[10px] font-bold opacity-70">
+                {section.content.links?.map((l: any) => <span key={l.label}>{l.label}</span>)}
+             </div>
+             <div className="text-[10px] font-bold">{section.content.phone}</div>
+          </div>
+        </div>
+      );
+      case 'footer': return (
+        <div className="bg-brand-blue-dark p-8 text-white rounded-lg">
+          <div className="grid grid-cols-2 gap-8">
+            <div className="space-y-4">
+               <div className="text-xl font-black">013</div>
+               <p className="text-xs text-white/60">{section.content.description}</p>
+            </div>
+            <div className="space-y-2 text-xs text-white/60">
+               <div>{section.content.phone}</div>
+               <div>{section.content.email}</div>
+               <div>{section.content.address_1}</div>
+            </div>
+          </div>
+        </div>
+      );
       case 'hero': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><HeroSection /></div>;
       case 'features': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><IdealParaSection /></div>;
       case 'pricing': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><PricingSection /></div>;
@@ -247,23 +285,26 @@ export default function AdminPaginas() {
 
         <TabsContent value="pages" className="space-y-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-3xl font-black text-brand-blue-dark">Páginas do Site</h2>
-            <p className="text-muted-foreground">Selecione uma página para editar o layout e conteúdo visualmente.</p>
+            <h2 className="text-3xl font-black text-brand-blue-dark">Páginas e Cabeçalho/Rodapé</h2>
+            <p className="text-muted-foreground">Selecione uma página ou elemento global para editar o layout e conteúdo.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pages.map(p => (
               <Card 
-                key={p.name} 
-                className="group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white"
+                key={p.id} 
+                className={`group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white ${p.is_global ? 'border-l-4 border-l-brand-orange' : ''}`}
                 onClick={() => loadPage(p.route)}
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-all" />
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all">
-                    <FileText className="w-7 h-7" />
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all ${p.is_global ? 'bg-orange-100 text-brand-orange' : 'bg-orange-50'}`}>
+                    {p.is_global ? <Layout className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
                   </div>
-                  <h3 className="text-xl font-black text-brand-blue-dark mb-1">{p.name}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-black text-brand-blue-dark">{p.name}</h3>
+                    {p.is_global && <span className="text-[10px] bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full font-bold">GLOBAL</span>}
+                  </div>
                   <p className="text-sm text-muted-foreground font-medium mb-6">{p.route}</p>
                   <div className="flex items-center text-xs font-bold text-brand-orange uppercase tracking-widest">
                     Abrir no Editor <ChevronRight className="w-4 h-4 ml-1" />
