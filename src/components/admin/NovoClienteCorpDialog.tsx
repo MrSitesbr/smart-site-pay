@@ -18,6 +18,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [razaoSocial, setRazaoSocial] = useState(initialNome);
   const [nomeResp, setNomeResp] = useState("");
   const [emailResp, setEmailResp] = useState("");
+  const [telResp, setTelResp] = useState("");
+  const [cpfResp, setCpfResp] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -25,6 +27,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       setRazaoSocial(initialNome);
       setNomeResp("");
       setEmailResp("");
+      setTelResp("");
+      setCpfResp("");
     }
   }, [open, initialNome]);
 
@@ -37,7 +41,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
     const { data, error } = await supabase.from("clientes_corp").insert({
       razao_social: razaoSocial,
       responsavel_nome: nomeResp,
-      responsavel_email: emailResp
+      responsavel_email: emailResp,
+      responsavel_telefone: telResp,
+      // @ts-ignore
+      responsavel_cpf: cpfResp
     }).select().single();
 
     if (error) {
@@ -68,6 +75,14 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
           <div className="grid gap-2">
             <Label>Email do Responsável</Label>
             <Input type="email" value={emailResp} onChange={(e) => setEmailResp(e.target.value)} placeholder="email@empresa.com" />
+          </div>
+          <div className="grid gap-2">
+            <Label>CPF do Responsável</Label>
+            <Input value={cpfResp} onChange={(e) => setCpfResp(e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Whatsapp do Responsável</Label>
+            <Input value={telResp} onChange={(e) => setTelResp(e.target.value)} placeholder="(00) 00000-0000" />
           </div>
         </div>
         <DialogFooter>

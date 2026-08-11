@@ -23,6 +23,7 @@ export default function AdminClienteCorpDetalhe() {
     responsavel_nome: "",
     responsavel_email: "",
     responsavel_telefone: "",
+    responsavel_cpf: "",
     cnpj: "",
     unidade_id: null,
     plano_id: null,
@@ -76,6 +77,8 @@ export default function AdminClienteCorpDetalhe() {
       responsavel_nome: cliente.responsavel_nome,
       responsavel_email: cliente.responsavel_email,
       responsavel_telefone: cliente.responsavel_telefone,
+      // @ts-ignore
+      responsavel_cpf: cliente.responsavel_cpf,
       cnpj: cliente.cnpj,
       // @ts-ignore
       unidade_id: cliente.unidade_id,
@@ -147,17 +150,21 @@ export default function AdminClienteCorpDetalhe() {
                 <Input value={cliente.cnpj || ''} onChange={e => setCliente({...cliente, cnpj: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Responsável</Label>
                 <Input value={cliente.responsavel_nome || ''} onChange={e => setCliente({...cliente, responsavel_nome: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>CPF do Responsável</Label>
+                <Input value={cliente.responsavel_cpf || ''} onChange={e => setCliente({...cliente, responsavel_cpf: e.target.value})} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
                 <Input value={cliente.responsavel_email || ''} onChange={e => setCliente({...cliente, responsavel_email: e.target.value})} />
               </div>
               <div className="space-y-2">
-                <Label>Telefone</Label>
+                <Label>Whatsapp</Label>
                 <Input value={cliente.responsavel_telefone || ''} onChange={e => setCliente({...cliente, responsavel_telefone: e.target.value})} />
               </div>
             </div>
