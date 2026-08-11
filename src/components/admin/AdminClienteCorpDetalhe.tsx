@@ -77,6 +77,8 @@ export default function AdminClienteCorpDetalhe() {
       responsavel_nome: cliente.responsavel_nome,
       responsavel_email: cliente.responsavel_email,
       responsavel_telefone: cliente.responsavel_telefone,
+      // @ts-ignore
+      responsavel_cpf: cliente.responsavel_cpf,
       cnpj: cliente.cnpj,
       // @ts-ignore
       unidade_id: cliente.unidade_id,
