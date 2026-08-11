@@ -11,6 +11,7 @@ import { ImageUpload } from "./ImageUpload";
 import {
   Dialog,
   DialogContent,
+  DialogScrollContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
