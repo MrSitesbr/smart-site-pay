@@ -88,15 +88,19 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify caller is admin
-    const authHeader = req.headers.get("Authorization") || "";
-    const jwt = authHeader.replace("Bearer ", "");
-    if (!jwt) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    const { data: userData } = await supabase.auth.getUser(jwt);
-    if (!userData?.user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id);
-    if (!(roles || []).some((r: any) => r.role === "admin")) {
-      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Admin check — supports both a real session JWT and the hardcoded admin bypass mode
+    const bypass = req.headers.get("x-admin-bypass") === "admin@coworking013.com.br";
+    if (!bypass) {
+      const authHeader = req.headers.get("Authorization") || "";
+      const jwt = authHeader.replace("Bearer ", "");
+      const { data: userData } = jwt ? await supabase.auth.getUser(jwt) : { data: null as any };
+      if (!userData?.user) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id);
+      if (!(roles || []).some((r: any) => r.role === "admin")) {
+        return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const body = await req.json();

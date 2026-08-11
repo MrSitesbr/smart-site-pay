@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, UserPlus, User, DollarSign, Plus, AlertTriangle, Building, Layout } from "lucide-react";
 import { linkCobrancaWhatsApp, fmtBRL } from "@/lib/cobranca";
 import { verificarConflitos, ConflitoReserva } from "@/lib/disponibilidade";
+import { invokeGoogleSync } from "@/lib/googleSync";
 
 type Cliente = { nome: string; email: string; telefone: string };
 
@@ -175,7 +176,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setSaving(false); return;
     }
     try {
-      await supabase.functions.invoke("sync-google-calendar", { body: { action: "upsert", type: "reserva", id: data.id } });
+      await invokeGoogleSync({ action: "upsert", type: "reserva", id: data.id });
     } catch {}
     toast({ title: "Reserva criada" });
     setSaving(false);
