@@ -39,7 +39,6 @@ export const ImageUpload = ({ value = [], onChange, maxImages = 10 }: ImageUploa
           .from('assets')
           .getPublicUrl(filePath);
 
-        // Remove tokens de cache para garantir que a imagem seja recarregada se necessário
         const finalUrl = publicUrl;
 
         // Debug: Log the generated URL

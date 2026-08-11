@@ -161,7 +161,7 @@ export default function AdminUnidades() {
                         className="w-full h-full object-cover" 
                         alt={u.nome}
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=Erro';
+                          console.error("Erro no card da unidade:", u.foto_url);
                         }}
                       />
                     </div>
@@ -259,7 +259,7 @@ export default function AdminUnidades() {
                 <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
                 <ImageUpload 
                   value={editingUnidade?.galeria || []} 
-                  onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls, foto_url: urls[0] || ''})}
+                onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls, foto_url: urls[0] || ''})}
                 />
               </div>
             </div>
