@@ -75,7 +75,9 @@ export default function AdminClienteCorpDetalhe() {
       responsavel_email: cliente.responsavel_email,
       responsavel_telefone: cliente.responsavel_telefone,
       cnpj: cliente.cnpj,
+      // @ts-ignore
       unidade_id: cliente.unidade_id,
+      // @ts-ignore
       plano_id: cliente.plano_id
     }).eq('id', id);
 
