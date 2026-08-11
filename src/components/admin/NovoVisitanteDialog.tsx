@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Building2 } from "lucide-react";
+import NovoClienteCorpDialog from "./NovoClienteCorpDialog";
 
 type Props = {
   open: boolean;
@@ -22,7 +23,11 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
   const [hora, setHora] = useState("09:00");
   const [clientes, setClientes] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
+  const [showNovoCliente, setShowNovoCliente] = useState(false);
+  const [searchFilter, setSearchFilter] = useState("");
   const [saving, setSaving] = useState(false);
+
+
 
   useEffect(() => {
     if (open) {
@@ -77,12 +82,51 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
           <div className="grid gap-2">
             <Label>Empresa (Cliente)</Label>
             <Select value={clienteCorpId} onValueChange={setClienteCorpId}>
-              <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o cliente" />
+              </SelectTrigger>
               <SelectContent>
-                {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.razao_social}</SelectItem>)}
+                <div className="p-2 border-b">
+                  <Input 
+                    placeholder="Filtrar empresas..." 
+                    value={searchFilter} 
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                </div>
+                {clientes
+                  .filter(c => c.razao_social.toLowerCase().includes(searchFilter.toLowerCase()))
+                  .map(c => <SelectItem key={c.id} value={c.id}>{c.razao_social}</SelectItem>)
+                }
+                {clientes.filter(c => c.razao_social.toLowerCase().includes(searchFilter.toLowerCase())).length === 0 && (
+                  <div className="p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-2">Nenhum cliente encontrado</p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full text-xs bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowNovoCliente(true);
+                      }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Criar "{searchFilter}"
+                    </Button>
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
+          
+          <NovoClienteCorpDialog 
+            open={showNovoCliente}
+            onOpenChange={setShowNovoCliente}
+            initialNome={searchFilter}
+            onCreated={(newClient) => {
+              setClientes(prev => [...prev, newClient]);
+              setClienteCorpId(newClient.id);
+            }}
+          />
           <div className="grid gap-2">
             <Label>Sala/Ambiente</Label>
             <Select value={salaId} onValueChange={setSalaId}>
