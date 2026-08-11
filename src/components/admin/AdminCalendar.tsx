@@ -640,6 +640,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         date={novoVisitanteDay}
         onCreated={() => { onCreated?.(); setVisitantes([]); supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || [])); }}
       />
+      <NovoEventoDialog
         open={!!novoEventoDay}
         onOpenChange={(o) => !o && setNovoEventoDay(null)}
         date={novoEventoDay}
