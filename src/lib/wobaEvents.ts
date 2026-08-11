@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import {
 import { invokeGoogleSync } from "@/lib/googleSync";
+import {
   WOBA_SALA_TIERS,
   WobaSalaTier,
   WOBA_REPASSE_PRIVATIVO_HORA,
@@ -127,8 +127,7 @@ export function mapGoogleEventsToWoba(
 export async function fetchWobaEventsYear(year: number, cfg: WobaCfg): Promise<any[]> {
   const timeMin = new Date(year, 0, 1).toISOString();
   const timeMax = new Date(year + 1, 0, 1).toISOString();
-  const { data, error } = await invokeGoogleSync({ action: "list_events", timeMin, timeMax, calendarId: cfg.calendarId || "primary" },
-  });
+  const { data, error } = await invokeGoogleSync({ action: "list_events", timeMin, timeMax, calendarId: cfg.calendarId || "primary" });
   if (error) throw error;
   return (data as any)?.events || [];
 }
