@@ -25,43 +25,22 @@ export const ImageUpload = ({ value = [], onChange, maxImages = 10 }: ImageUploa
         if (newUrls.length >= maxImages) break;
 
         const file = files[i];
-        const cleanFileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-        const filePath = cleanFileName;
+        
+        // Converter diretamente para Base64 (Data URL)
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
 
-        try {
-          // 1. Upload com opções obrigatórias
-          const { error: uploadError } = await supabase.storage
-            .from('assets')
-            .upload(filePath, file, { 
-              contentType: file.type, 
-              upsert: true 
-            });
-
-          if (uploadError) throw uploadError;
-
-          // 2. Tentar obter URL pública
-          const { data: { publicUrl } } = supabase.storage
-            .from('assets')
-            .getPublicUrl(filePath);
-
-          newUrls.push(publicUrl);
-        } catch (storageError: any) {
-          console.error("Storage error, falling back to Base64:", storageError);
-          // 3. Fallback para Base64 se o storage falhar
-          const base64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
-          });
-          newUrls.push(base64);
-          toast.warning(`Upload falhou (${file.name}), usando fallback visual.`);
-        }
+        newUrls.push(base64);
       }
 
       onChange(newUrls);
-      toast.success("Imagens processadas com sucesso!");
+      toast.success("Imagens convertidas com sucesso!");
     } catch (error: any) {
-      toast.error("Erro geral: " + error.message);
+      toast.error("Erro ao processar imagens: " + error.message);
     } finally {
       setUploading(false);
     }
