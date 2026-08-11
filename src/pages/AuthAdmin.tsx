@@ -28,25 +28,22 @@ export default function AuthAdmin() {
 
   async function checkAdminAndRedirect(userId: string) {
     try {
-      const { data: isAdmin, error } = await supabase.rpc("has_role", { 
-        _user_id: userId, 
-        _role: "admin" 
-      });
-      
-      if (error || !isAdmin) {
-        // Fallback check
-        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-        const hasAdminTable = (roles || []).some((r: any) => r.role === "admin");
-        if (!hasAdminTable) {
-          await supabase.auth.signOut();
-          toast({ 
-            title: "Acesso negado", 
-            description: "Esta área é restrita a administradores.", 
-            variant: "destructive" 
-          });
-          return;
-        }
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      const isAdmin = !error && (roles || []).some((r: any) => r.role === "admin");
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Acesso negado",
+          description: "Esta área é restrita a administradores.",
+          variant: "destructive"
+        });
+        return;
       }
+
       navigate("/admin");
     } catch (err) {
       console.error("Redirect check error:", err);
@@ -79,20 +76,17 @@ export default function AuthAdmin() {
       if (error) throw error;
       
       const userId = data.user!.id;
-      const { data: isAdmin, error: rolesError } = await supabase.rpc("has_role", { 
-        _user_id: userId, 
-        _role: "admin" 
-      });
-
-      if (rolesError || !isAdmin) {
-        const { data: roles, error: tableError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-        if (tableError) throw new Error(`Erro de permissão: ${tableError.message}`);
-        const hasAdmin = (roles || []).some((r: any) => r.role === "admin");
-        if (!hasAdmin) {
-           await supabase.auth.signOut();
-           throw new Error("Usuário não possui privilégios de administrador.");
-        }
+      const { data: roles, error: tableError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (tableError) throw new Error(`Erro de permissão: ${tableError.message}`);
+      const hasAdmin = (roles || []).some((r: any) => r.role === "admin");
+      if (!hasAdmin) {
+        await supabase.auth.signOut();
+        throw new Error("Usuário não possui privilégios de administrador.");
       }
+
 
       navigate("/admin");
     } catch (e: any) {
