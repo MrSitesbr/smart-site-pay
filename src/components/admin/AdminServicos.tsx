@@ -109,7 +109,7 @@ export default function AdminServicos() {
 
       {/* Dialog Serviço */}
       <Dialog open={!!editingServico} onOpenChange={() => setEditingServico(null)}>
-        <DialogContent>
+        <DialogScrollContent>
           <DialogHeader>
             <DialogTitle>{editingServico?.id ? "Editar Serviço" : "Novo Serviço"}</DialogTitle>
           </DialogHeader>
