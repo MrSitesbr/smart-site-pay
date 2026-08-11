@@ -551,7 +551,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               )}
             </>
           )}
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
 
       {/* Detalhes completos da reserva/contrato */}
