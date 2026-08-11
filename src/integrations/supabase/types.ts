@@ -320,9 +320,11 @@ export type Database = {
           nome: string
           observacoes: string | null
           origem: string
+          sala_id: string | null
           status: Database["public"]["Enums"]["reserva_status"]
           telefone: string
           tipo: Database["public"]["Enums"]["reserva_tipo"]
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
@@ -338,9 +340,11 @@ export type Database = {
           nome: string
           observacoes?: string | null
           origem?: string
+          sala_id?: string | null
           status?: Database["public"]["Enums"]["reserva_status"]
           telefone: string
           tipo: Database["public"]["Enums"]["reserva_tipo"]
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -356,12 +360,29 @@ export type Database = {
           nome?: string
           observacoes?: string | null
           origem?: string
+          sala_id?: string | null
           status?: Database["public"]["Enums"]["reserva_status"]
           telefone?: string
           tipo?: Database["public"]["Enums"]["reserva_tipo"]
+          unidade_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reservations_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sala_planos: {
         Row: {

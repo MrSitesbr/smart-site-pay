@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, User, DollarSign, Plus } from "lucide-react";
+import { Loader2, UserPlus, User, DollarSign, Plus, AlertTriangle, Building, Layout } from "lucide-react";
 import { linkCobrancaWhatsApp, fmtBRL } from "@/lib/cobranca";
+import { verificarConflitos, ConflitoReserva } from "@/lib/disponibilidade";
 
 type Cliente = { nome: string; email: string; telefone: string };
 
@@ -43,6 +44,14 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const [selected, setSelected] = useState<Cliente | null>(null);
   const [showList, setShowList] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  
+  const [unidades, setUnidades] = useState<any[]>([]);
+  const [selectedUnidade, setSelectedUnidade] = useState<string>("");
+  const [salas, setSalas] = useState<any[]>([]);
+  const [selectedSala, setSelectedSala] = useState<string>("");
+  const [conflitos, setConflitos] = useState<ConflitoReserva[]>([]);
+  const [checkingConflitos, setCheckingConflitos] = useState(false);
+
   const [ambiente, setAmbiente] = useState<string>("estacao");
   const [tipo, setTipo] = useState<string>("hora");
   const [horaInicio, setHoraInicio] = useState("09:00");
@@ -59,8 +68,39 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setAmbiente("estacao"); setTipo("hora");
       setHoraInicio("09:00"); setHoraFim("10:00");
       setStatus("confirmada"); setOrigem("direto"); setObservacoes("");
+      setSelectedUnidade(""); setSelectedSala(""); setConflitos([]);
+      
+      supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
     }
   }, [open]);
+
+  useEffect(() => {
+    if (selectedUnidade) {
+      supabase.from("salas").select("id, nome, tipo").eq("unidade_id", selectedUnidade).then(({ data }) => {
+        setSalas(data || []);
+        setSelectedSala("");
+      });
+    } else {
+      setSalas([]);
+    }
+  }, [selectedUnidade]);
+
+  // Checar conflitos sempre que mudar sala, data ou horário
+  useEffect(() => {
+    if (!selectedSala || !date || !horaInicio || !horaFim) {
+      setConflitos([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setCheckingConflitos(true);
+      const results = await verificarConflitos(selectedSala, dateISO(date), horaInicio, horaFim);
+      setConflitos(results);
+      setCheckingConflitos(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [selectedSala, date, horaInicio, horaFim]);
 
   useEffect(() => {
     if (tipo === "diaria") { setHoraInicio("09:00"); setHoraFim("17:00"); }
@@ -122,6 +162,8 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       ambiente, tipo, data: dateISO(date),
       hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
       status, origem, observacoes: observacoes.trim() || null,
+      unidade_id: selectedUnidade || null,
+      sala_id: selectedSala || null,
     };
     const { data, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
     if (error) {
@@ -221,7 +263,30 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
         <div className="grid grid-cols-2 gap-2 pt-2 border-t mt-2">
           <div>
-            <Label className="text-xs">Ambiente</Label>
+            <Label className="text-xs">Unidade</Label>
+            <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+              <SelectTrigger><SelectValue placeholder="Escolha a unidade" /></SelectTrigger>
+              <SelectContent>
+                {unidades.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Sala</Label>
+            <Select 
+              value={selectedSala} 
+              onValueChange={setSelectedSala}
+              disabled={!selectedUnidade}
+            >
+              <SelectTrigger><SelectValue placeholder={selectedUnidade ? "Escolha a sala" : "Selecione unidade primeiro"} /></SelectTrigger>
+              <SelectContent>
+                {salas.map(s => <SelectItem key={s.id} value={s.id}>{s.nome} ({s.tipo})</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="hidden">
+            <Label className="text-xs">Ambiente (Legacy)</Label>
             <Select value={ambiente} onValueChange={setAmbiente}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -249,6 +314,21 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             <Label className="text-xs">Fim</Label>
             <Input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
           </div>
+          
+          {conflitos.length > 0 && (
+            <div className="col-span-2 p-2 bg-red-50 border border-red-200 rounded-lg flex gap-2 items-start mt-1">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="text-[11px] text-red-800">
+                <p className="font-bold">Atenção: Já existem agendamentos para este horário!</p>
+                <ul className="list-disc list-inside">
+                  {conflitos.map((c, i) => (
+                    <li key={i}>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio}-{c.hora_fim})</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           <div>
             <Label className="text-xs">Status</Label>
             <Select value={status} onValueChange={setStatus}>
