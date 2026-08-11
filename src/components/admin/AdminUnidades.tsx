@@ -149,21 +149,35 @@ export default function AdminUnidades() {
           </h3>
           <div className="grid gap-4">
             {unidades.map(u => (
-              <Card key={u.id} className="p-6 transition-all border-none shadow-sm hover:shadow-md bg-white rounded-2xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-heading font-bold text-brand-blue-dark">{u.nome}</h3>
-                    <p className="text-sm text-muted-foreground">{u.endereco || "Sem endereço cadastrado"}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => navigate(`/admin/unidades/${u.id}`)} 
-                      className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white rounded-xl px-6"
-                    >
-                      Acessar
-                    </Button>
+              <Card key={u.id} className="group p-6 transition-all border-none shadow-sm hover:shadow-md bg-white rounded-2xl overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {u.foto_url && (
+                    <div className="w-full md:w-32 h-32 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+                      <img 
+                        src={u.foto_url} 
+                        className="w-full h-full object-cover" 
+                        alt={u.nome}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=Erro';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-heading font-bold text-brand-blue-dark">{u.nome}</h3>
+                      <p className="text-sm text-muted-foreground">{u.endereco || "Sem endereço cadastrado"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigate(`/admin/unidades/${u.id}`)} 
+                        className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white rounded-xl px-6"
+                      >
+                        Acessar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>
