@@ -99,7 +99,10 @@ export default function AdminPaginas() {
         <div className="bg-brand-blue-dark p-8 text-white rounded-lg">
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-4">
-               <div className="text-xl font-black">013</div>
+               <div className="flex flex-col leading-none">
+                 <span className="text-[10px] text-orange-500 font-bold">{section.content.logo_text_top}</span>
+                 <span className="text-2xl font-black">{section.content.logo_text_bottom}</span>
+               </div>
                <p className="text-xs text-white/60">{section.content.description}</p>
             </div>
             <div className="space-y-2 text-xs text-white/60">
