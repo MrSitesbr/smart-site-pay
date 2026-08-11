@@ -41,7 +41,7 @@ const Footer = () => {
     },
   ];
 
-  const cols = defaultCols; // Keep structure for now, but allow content overrides
+  const cols = defaultCols;
   const description = cmsContent?.description || "O seu espaço de trabalho e networking na Praia Grande.";
   const phone = cmsContent?.phone || "(13) 98805-0358";
   const email = cmsContent?.email || "contato@coworking013.com.br";
@@ -50,6 +50,8 @@ const Footer = () => {
   const address3 = cmsContent?.address_3 || "R. Jaú, 955 Conj. 26 - Boqueirão - Praia Grande - SP";
   const workingHoursWeek = cmsContent?.working_hours_week || "Seg. à Sex.: 08h às 21h";
   const workingHoursSat = cmsContent?.working_hours_sat || "Sáb: 08h às 12h";
+  const logoTop = cmsContent?.logo_text_top || "CoWorking";
+  const logoBottom = cmsContent?.logo_text_bottom || "013";
 
   return (
     <footer className="bg-brand-blue-dark text-white pt-16 pb-6">
@@ -60,10 +62,10 @@ const Footer = () => {
               <img src={logoIcon.url} alt="Logo" className="h-8 w-auto object-contain" />
               <div className="flex flex-col leading-[0.8] items-start">
                 <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
-                  CoWorking
+                  {logoTop}
                 </span>
                 <h1 className="text-3xl font-heading font-extrabold text-white -mt-1">
-                  013
+                  {logoBottom}
                 </h1>
               </div>
             </div>
