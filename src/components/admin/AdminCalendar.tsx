@@ -16,6 +16,7 @@ import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
 import { CalendarListView } from "./CalendarListView";
 import { CalendarGanttView } from "./CalendarGanttView";
+import NovoVisitanteDialog from "./NovoVisitanteDialog";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -50,6 +51,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [fullView, setFullView] = useState<{ kind: "reserva" | "contrato"; obj: any } | null>(null);
   const [novaDay, setNovaDay] = useState<Date | null>(null);
   const [timelineDay, setTimelineDay] = useState<Date | null>(null);
+  const [novoVisitanteDay, setNovoVisitanteDay] = useState<Date | null>(null);
+  const [novoEventoDay, setNovoEventoDay] = useState<Date | null>(null);
   const [gEvents, setGEvents] = useState<any[]>([]);
   const [gLoading, setGLoading] = useState(false);
   const [gError, setGError] = useState<string | null>(null);
@@ -281,7 +284,25 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
           </Select>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <Select onValueChange={(val) => {
+            const today = new Date();
+            if (val === "reserva") setNovaDay(today);
+            else if (val === "visita") setNovoVisitanteDay(today);
+            else if (val === "evento") setNovoEventoDay(today);
+          }}>
+            <SelectTrigger className="bg-brand-orange text-white h-9 border-none font-bold">
+              <Plus className="w-4 h-4 mr-2" /> Criar Novo
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="reserva">Nova Reserva</SelectItem>
+              <SelectItem value="visita">Nova Visita</SelectItem>
+              <SelectItem value="evento">Novo Evento</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="h-6 w-px bg-border mx-1" />
+          
           <Button variant="outline" size="sm" onClick={() => setMonth(new Date())} className="font-heading font-bold h-9">Hoje</Button>
           <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="w-5 h-5" /></Button>
           <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="w-5 h-5" /></Button>
@@ -610,6 +631,13 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
         onDeleteReserva={onDeleteReserva}
         onDeleteContrato={onDeleteContrato}
+      />
+
+      <NovoVisitanteDialog
+        open={!!novoVisitanteDay}
+        onOpenChange={(o) => !o && setNovoVisitanteDay(null)}
+        date={novoVisitanteDay}
+        onCreated={() => { onCreated?.(); setVisitantes([]); supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || [])); }}
       />
     </Card>
   );
