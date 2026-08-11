@@ -23,6 +23,7 @@ export default function AdminClienteCorpDetalhe() {
     responsavel_nome: "",
     responsavel_email: "",
     responsavel_telefone: "",
+    responsavel_cpf: "",
     cnpj: "",
     unidade_id: null,
     plano_id: null,
