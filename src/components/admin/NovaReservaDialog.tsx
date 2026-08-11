@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, User, DollarSign } from "lucide-react";
+import { Loader2, UserPlus, User, DollarSign, Plus } from "lucide-react";
 import { linkCobrancaWhatsApp, fmtBRL } from "@/lib/cobranca";
 
 type Cliente = { nome: string; email: string; telefone: string };
@@ -186,8 +186,23 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
               </div>
             )}
             {showList && suggestions.length === 0 && nome.trim() && (
-              <div className="absolute z-50 left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg p-3 text-xs text-muted-foreground inline-flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-blue-600" /> Nenhum cliente encontrado — preencha email e telefone para cadastrar.
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg p-3 flex flex-col gap-2">
+                <div className="text-xs text-muted-foreground inline-flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-blue-600" /> Nenhum cliente encontrado.
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full text-xs h-8 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Just filling the fields is enough for "Quick Create" as it uses 'nome', 'email', 'telefone' directly in save()
+                    setShowList(false);
+                    toast({ title: "Modo Cadastro Rápido", description: "Preencha email e telefone abaixo para cadastrar." });
+                  }}
+                >
+                  <Plus className="w-3 h-3 mr-1" /> Usar "{nome}" como novo cliente
+                </Button>
               </div>
             )}
           </div>
