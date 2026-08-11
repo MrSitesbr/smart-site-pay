@@ -201,14 +201,14 @@ export default function AdminClienteCorpDetalhe() {
           <Card className="p-6 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold">Colaboradores Autorizados</h3>
-              <Button size="sm" onClick={() => setEditingFunc({ nome: "", cargo: "", email: "", cliente_corp_id: id })}><Plus className="w-4 h-4 mr-2" /> Novo Colaborador</Button>
+              <Button size="sm" onClick={() => setEditingFunc({ nome: "", cargo: "", telefone: "", cliente_corp_id: id })}><Plus className="w-4 h-4 mr-2" /> Novo Colaborador</Button>
             </div>
             <div className="grid gap-2">
               {funcionarios.map(f => (
                 <div key={f.id} className="p-3 border rounded-lg flex justify-between items-center">
                   <div>
                     <p className="font-bold uppercase text-xs">{f.nome}</p>
-                    <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.email}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.telefone || f.email}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="icon" onClick={() => setEditingFunc(f)}><Edit2 className="w-4 h-4" /></Button>
@@ -255,8 +255,8 @@ export default function AdminClienteCorpDetalhe() {
               <Input value={editingFunc?.cargo || ""} onChange={e => setEditingFunc({...editingFunc, cargo: e.target.value})} />
             </div>
             <div className="grid gap-2">
-              <Label>Email</Label>
-              <Input value={editingFunc?.email || ""} onChange={e => setEditingFunc({...editingFunc, email: e.target.value})} />
+              <Label>Whatsapp</Label>
+              <Input value={editingFunc?.telefone || ""} onChange={e => setEditingFunc({...editingFunc, telefone: e.target.value})} />
             </div>
           </div>
           <DialogFooter>
