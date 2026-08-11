@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus, UserCheck } from "lucide-react";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
@@ -37,8 +37,9 @@ function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
-export default function AdminCalendar({ reservas, contratos, onDeleteReserva, onDeleteContrato, onCreated }: { reservas: any[]; contratos: any[]; onDeleteReserva?: (r: any) => Promise<void> | void; onDeleteContrato?: (c: any) => Promise<void> | void; onCreated?: () => void }) {
+export default function AdminCalendar({ reservas, contratos, onDeleteReserva, onDeleteContrato, onCreated, initialFilter = "geral" }: { reservas: any[]; contratos: any[]; onDeleteReserva?: (r: any) => Promise<void> | void; onDeleteContrato?: (c: any) => Promise<void> | void; onCreated?: () => void; initialFilter?: "geral" | "reservas" | "visitas" }) {
   const [viewMode, setViewMode] = useState<"calendar" | "list" | "gantt">("calendar");
+  const [filterType, setFilterType] = useState<"geral" | "reservas" | "visitas">(initialFilter);
   const [month, setMonth] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [unidades, setUnidades] = useState<any[]>([]);
@@ -54,9 +55,11 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [gError, setGError] = useState<string | null>(null);
   const [showGoogle, setShowGoogle] = useState(true);
   const { overrides: colorOverrides } = useClientColors();
+  const [visitantes, setVisitantes] = useState<any[]>([]);
 
   useEffect(() => {
     supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+    supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || []));
   }, []);
 
   // IDs de eventos do Google que já foram associados a reservas/contratos internos.
@@ -123,21 +126,34 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       if (q && !nome.toLowerCase().includes(q) && !email.toLowerCase().includes(q)) return false;
       return true;
     };
-    contratos.forEach((c) => {
-      if (!matches(c.nome, c.email, c.ambiente, c.status, c.unidade_id)) return;
-      const dias: string[] = c.dias_selecionados || [];
-      dias.forEach((d) => push(d, { kind: "contrato", obj: c }));
-      if (c.data_inicio && !dias.includes(c.data_inicio)) push(c.data_inicio, { kind: "contrato", obj: c });
-    });
-    reservas.forEach((r) => {
-      if (!matches(r.nome, r.email, r.ambiente, r.status, r.unidade_id)) return;
-      push(r.data, { kind: "reserva", obj: r });
-    });
-    if (showGoogle) {
+    if (filterType === "geral" || filterType === "reservas") {
+      contratos.forEach((c) => {
+        if (!matches(c.nome, c.email, c.ambiente, c.status, c.unidade_id)) return;
+        const dias: string[] = c.dias_selecionados || [];
+        dias.forEach((d) => push(d, { kind: "contrato", obj: c }));
+        if (c.data_inicio && !dias.includes(c.data_inicio)) push(c.data_inicio, { kind: "contrato", obj: c });
+      });
+      reservas.forEach((r) => {
+        if (!matches(r.nome, r.email, r.ambiente, r.status, r.unidade_id)) return;
+        push(r.data, { kind: "reserva", obj: r });
+      });
+    }
+
+    if (filterType === "geral" || filterType === "visitas") {
+      visitantes.forEach((v) => {
+        const dateKey = v.data_hora_prevista?.slice(0, 10);
+        if (!dateKey) return;
+        if (selectedUnidade !== "todas" && v.salas?.unidade_id !== selectedUnidade) return;
+        if (q && !v.nome.toLowerCase().includes(q) && !v.clientes_corp?.razao_social.toLowerCase().includes(q)) return;
+        push(dateKey, { kind: "visita", obj: v });
+      });
+    }
+
+    if (showGoogle && (filterType === "geral" || filterType === "reservas")) {
       gEvents.forEach((g) => {
         if (g.status === "cancelled") return;
-        if (internalIds.has(g.id)) return; // já representado como reserva/contrato
-        if (deletedGoogleIds.has(g.id)) return; // reserva foi excluída — não mostrar mais
+        if (internalIds.has(g.id)) return; 
+        if (deletedGoogleIds.has(g.id)) return;
         const startStr: string | undefined = g.start?.dateTime || g.start?.date;
         if (!startStr) return;
         if (q) {
@@ -149,7 +165,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       });
     }
     return map;
-  }, [reservas, contratos, gEvents, showGoogle, internalIds, deletedGoogleIds, search, ambiente, status, selectedUnidade]);
+  }, [reservas, contratos, visitantes, filterType, gEvents, showGoogle, internalIds, deletedGoogleIds, search, ambiente, status, selectedUnidade]);
 
 
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -171,6 +187,35 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
     <Card className="overflow-hidden">
       {/* Filtros */}
       <div className="p-4 border-b bg-muted/20 flex flex-wrap gap-3 items-center">
+        <div className="flex bg-white p-1 rounded-lg border shadow-sm shrink-0">
+          <Button 
+            variant={filterType === "geral" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("geral")}
+            className="text-xs h-8"
+          >
+            Geral
+          </Button>
+          <Button 
+            variant={filterType === "reservas" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("reservas")}
+            className="text-xs h-8"
+          >
+            Reservas
+          </Button>
+          <Button 
+            variant={filterType === "visitas" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setFilterType("visitas")}
+            className="text-xs h-8"
+          >
+            Visitas
+          </Button>
+        </div>
+
+        <div className="h-6 w-px bg-border mx-1 hidden md:block" />
+
         <div className="flex bg-white p-1 rounded-lg border shadow-sm shrink-0">
           <Button 
             variant={viewMode === "calendar" ? "default" : "ghost"} 
@@ -343,6 +388,17 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                           <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1" style={{ background: bg, color: fg }} title={g.summary}>
                             <EventAvatar name={displayName} isWoba={isWoba} color={bg} size={16} />
                             <span className="truncate">{t} · {g.summary || "(sem título)"}</span>
+                          </div>
+                        );
+                      }
+                      if (e.kind === "visita") {
+                        const v = e.obj;
+                        const t = v.data_hora_prevista ? new Date(v.data_hora_prevista).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "visita";
+                        const bg = "#f97316"; // Brand Orange
+                        return (
+                          <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1 bg-brand-orange text-white" title={`Visita: ${v.nome}`}>
+                            <UserCheck className="w-3 h-3" />
+                            <span className="truncate">{t} · {v.nome}</span>
                           </div>
                         );
                       }

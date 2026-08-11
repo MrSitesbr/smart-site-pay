@@ -243,10 +243,10 @@ export default function Admin() {
       dashboard: "Dashboard",
       calendario: "Calendário Geral",
       contratos: "Contratações",
-      reservas: "Reservas",
+      reservas: "Calendário de Reservas",
       clientes_corp: "CRM Clientes Corp",
       funcionarios: "Colaboradores",
-      visitantes: "Visitas",
+      visitantes: "Calendário de Visitas",
       visitantes_crm: "Visitantes",
       locacao_fixa: "Locação Fixa",
       clientes: "CRM Leads",
@@ -316,11 +316,22 @@ export default function Admin() {
                 onDeleteReserva={deleteReserva}
                 onDeleteContrato={deleteContrato}
                 onCreated={() => { fetchReservas(); fetchContratos(); }}
+                initialFilter="reservas"
               />
             )}
             {activeTab === "clientes_corp" && <AdminClientesCorp />}
             {activeTab === "funcionarios" && <AdminFuncionarios />}
-            {(activeTab === "visitantes" || activeTab === "visitantes_crm") && <AdminVisitantes />}
+            {activeTab === "visitantes" && (
+              <AdminCalendar 
+                reservas={reservas} 
+                contratos={contratos} 
+                onDeleteReserva={deleteReserva}
+                onDeleteContrato={deleteContrato}
+                onCreated={() => { fetchReservas(); fetchContratos(); }}
+                initialFilter="visitas"
+              />
+            )}
+            {activeTab === "visitantes_crm" && <AdminVisitantes />}
             {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
             {activeTab === "planos_horas" && <AdminPlanosHoras />}
