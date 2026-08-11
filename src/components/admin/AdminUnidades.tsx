@@ -7,6 +7,7 @@ import { Plus, Trash2, Edit2, Save, X, Building2, Layers, Eye } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { ImageUpload } from "./ImageUpload";
 import {
   Dialog,
   DialogContent,
