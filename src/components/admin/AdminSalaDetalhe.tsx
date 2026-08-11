@@ -67,8 +67,8 @@ export default function AdminSalaDetalhe() {
         tipo: editingSala.tipo,
         capacidade: parseInt(editingSala.capacidade) || null,
         descricao: editingSala.descricao,
-        foto_url: editingSala.galeria?.[0] || editingSala.foto_url,
-        galeria: editingSala.galeria
+        foto_url: editingSala.galeria?.[0] || '',
+        galeria: editingSala.galeria || []
       })
       .eq('id', id);
     

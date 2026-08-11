@@ -82,8 +82,8 @@ export default function AdminUnidadeDetalhe() {
       nome: editingUnidade.nome,
       endereco: editingUnidade.endereco,
       descricao: editingUnidade.descricao,
-      foto_url: editingUnidade.galeria?.[0] || editingUnidade.foto_url,
-      galeria: editingUnidade.galeria
+      foto_url: editingUnidade.galeria?.[0] || '',
+      galeria: editingUnidade.galeria || []
     };
 
     const { error } = await supabase.from('unidades').update(payload).eq('id', id);
@@ -115,8 +115,8 @@ export default function AdminUnidadeDetalhe() {
       tipo: editingSala.tipo,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
-      foto_url: editingSala.galeria?.[0] || editingSala.foto_url,
-      galeria: editingSala.galeria,
+      foto_url: editingSala.galeria?.[0] || '',
+      galeria: editingSala.galeria || [],
       unidade_id: id
     };
 
