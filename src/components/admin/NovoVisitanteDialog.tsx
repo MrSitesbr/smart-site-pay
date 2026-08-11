@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Plus, Building2 } from "lucide-react";
+import { Loader2, Plus, Building2, AlertTriangle } from "lucide-react";
 import NovoClienteCorpDialog from "./NovoClienteCorpDialog";
+import { verificarConflitos, ConflitoReserva } from "@/lib/disponibilidade";
 
 type Props = {
   open: boolean;
@@ -19,12 +20,15 @@ type Props = {
 export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreated }: Props) {
   const [nome, setNome] = useState("");
   const [clienteCorpId, setClienteCorpId] = useState<string>("");
+  const [unidadeId, setUnidadeId] = useState<string>("");
   const [salaId, setSalaId] = useState<string>("");
   const [hora, setHora] = useState("09:00");
+  const [unidades, setUnidades] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
+  const [conflitos, setConflitos] = useState<ConflitoReserva[]>([]);
   const [saving, setSaving] = useState(false);
 
 
@@ -33,12 +37,44 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
     if (open) {
       setNome("");
       setClienteCorpId("");
+      setUnidadeId("");
       setSalaId("");
       setHora("09:00");
+      setConflitos([]);
+      supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
       supabase.from("clientes_corp").select("id, razao_social").then(({ data }) => setClientes(data || []));
-      supabase.from("salas").select("id, nome").then(({ data }) => setSalas(data || []));
     }
   }, [open]);
+
+  useEffect(() => {
+    if (unidadeId) {
+      supabase.from("salas").select("id, nome").eq("unidade_id", unidadeId).then(({ data }) => {
+        setSalas(data || []);
+        setSalaId("");
+      });
+    } else {
+      setSalas([]);
+    }
+  }, [unidadeId]);
+
+  useEffect(() => {
+    if (!salaId || !date || !hora) {
+      setConflitos([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const dateStr = date.toISOString().slice(0, 10);
+      // Para visita, vamos checar um range de 1h em volta do horário marcado
+      const [h, m] = hora.split(":").map(Number);
+      const hEnd = (h + 1).toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
+      
+      const results = await verificarConflitos(salaId, dateStr, hora, hEnd);
+      setConflitos(results);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [salaId, date, hora]);
 
   async function save() {
     if (!date || !nome || !clienteCorpId || !salaId) {
@@ -128,14 +164,37 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
             }}
           />
           <div className="grid gap-2">
+            <Label>Unidade</Label>
+            <Select value={unidadeId} onValueChange={setUnidadeId}>
+              <SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger>
+              <SelectContent>
+                {unidades.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
             <Label>Sala/Ambiente</Label>
-            <Select value={salaId} onValueChange={setSalaId}>
-              <SelectTrigger><SelectValue placeholder="Selecione a sala" /></SelectTrigger>
+            <Select value={salaId} onValueChange={setSalaId} disabled={!unidadeId}>
+              <SelectTrigger><SelectValue placeholder={unidadeId ? "Selecione a sala" : "Selecione unidade primeiro"} /></SelectTrigger>
               <SelectContent>
                 {salas.map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          
+          {conflitos.length > 0 && (
+            <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex gap-2 items-start">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="text-[11px] text-red-800">
+                <p className="font-bold">Atenção: Já existe ocupação para este horário!</p>
+                <ul className="list-disc list-inside">
+                  {conflitos.map((c, i) => (
+                    <li key={i}>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio})</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
           <div className="grid gap-2">
             <Label>Horário</Label>
             <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
