@@ -185,7 +185,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogScrollContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-heading">
             Nova reserva {date && (
