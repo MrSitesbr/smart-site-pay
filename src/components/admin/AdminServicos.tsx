@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+  DialogScrollContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
