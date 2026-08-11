@@ -41,7 +41,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
     const { data, error } = await supabase.from("clientes_corp").insert({
       razao_social: razaoSocial,
       responsavel_nome: nomeResp,
-      responsavel_email: emailResp
+      responsavel_email: emailResp,
+      responsavel_telefone: telResp,
+      // @ts-ignore
+      responsavel_cpf: cpfResp
     }).select().single();
 
     if (error) {
