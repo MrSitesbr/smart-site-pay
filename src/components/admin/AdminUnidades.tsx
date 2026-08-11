@@ -259,7 +259,7 @@ export default function AdminUnidades() {
                 <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
                 <ImageUpload 
                   value={editingUnidade?.galeria || []} 
-                  onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls, foto_url: urls[0] || editingUnidade.foto_url})}
+                  onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls, foto_url: urls[0] || ''})}
                 />
               </div>
             </div>
@@ -330,7 +330,7 @@ export default function AdminUnidades() {
               <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
               <ImageUpload 
                 value={editingSala?.galeria || []} 
-                onChange={(urls) => setEditingSala({...editingSala, galeria: urls, foto_url: urls[0] || editingSala.foto_url})}
+                onChange={(urls) => setEditingSala({...editingSala, galeria: urls, foto_url: urls[0] || ''})}
               />
             </div>
             <div className="space-y-2">
