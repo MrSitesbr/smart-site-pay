@@ -286,7 +286,7 @@ export default function AdminUnidades() {
             <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
             <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar</Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
 
       {/* Dialog Sala */}
