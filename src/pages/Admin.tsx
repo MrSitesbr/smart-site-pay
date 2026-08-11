@@ -294,7 +294,15 @@ export default function Admin() {
 
           <main className="p-8">
             {activeTab === "dashboard" && <AdminDashboard reservas={reservas} contratos={contratos} />}
-            {activeTab === "calendario" && <AdminCalendar reservas={reservas} contratos={contratos} onDeleteReserva={deleteReserva} onDeleteContrato={deleteContrato} onCreated={fetchReservas} />}
+            {activeTab === "calendario" && (
+              <AdminCalendar 
+                reservas={reservas} 
+                contratos={contratos} 
+                onDeleteReserva={deleteReserva} 
+                onDeleteContrato={deleteContrato} 
+                onCreated={fetchReservas} 
+              />
+            )}
             {activeTab === "contratos" && (
               <div className="space-y-3">
                 {contratos.length === 0 && <Card className="p-8 text-center text-muted-foreground">Nenhuma solicitação ainda.</Card>}
@@ -302,15 +310,6 @@ export default function Admin() {
               </div>
             )}
             {activeTab === "reservas" && (
-              <AdminCalendar 
-                reservas={reservas} 
-                contratos={contratos} 
-                onDeleteReserva={deleteReserva}
-                onDeleteContrato={deleteContrato}
-                onCreated={() => { fetchReservas(); fetchContratos(); }}
-              />
-            )}
-            {activeTab === "calendario" && (
               <AdminCalendar 
                 reservas={reservas} 
                 contratos={contratos} 
