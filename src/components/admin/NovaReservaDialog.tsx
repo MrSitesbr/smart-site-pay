@@ -156,6 +156,10 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       toast({ title: "Horário de fim deve ser após o início", variant: "destructive" });
       return;
     }
+    if (conflitos.some(c => c.tipo === 'bloqueio')) {
+      toast({ title: "Data bloqueada", description: "Não é possível realizar reservas em domingos ou feriados.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     const payload: any = {
       nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
@@ -319,10 +323,16 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             <div className="col-span-2 p-2 bg-red-50 border border-red-200 rounded-lg flex gap-2 items-start mt-1">
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="text-[11px] text-red-800">
-                <p className="font-bold">Atenção: Já existem agendamentos para este horário!</p>
+                <p className="font-bold">Atenção: A data/horário selecionado possui conflitos!</p>
                 <ul className="list-disc list-inside">
                   {conflitos.map((c, i) => (
-                    <li key={i}>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio}-{c.hora_fim})</li>
+                    <li key={i}>
+                      {c.tipo === 'bloqueio' ? (
+                        <span className="font-bold text-red-700">BLOQUEADO: {c.nome}</span>
+                      ) : (
+                        <>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio}-{c.hora_fim})</>
+                      )}
+                    </li>
                   ))}
                 </ul>
               </div>

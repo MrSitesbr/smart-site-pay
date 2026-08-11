@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isBusinessDay, getDateInfo } from "./holidays";
 
 export type ConflitoReserva = {
-  tipo: 'reserva' | 'visita';
-  id: string;
+  tipo: 'reserva' | 'visita' | 'bloqueio';
+  id?: string;
   nome: string;
   hora_inicio: string;
   hora_fim: string;
@@ -17,7 +18,19 @@ export async function verificarConflitos(
 ): Promise<ConflitoReserva[]> {
   if (!salaId || !data || !horaInicio || !horaFim) return [];
 
+  const dateObj = new Date(data + "T12:00:00Z"); // Midday to avoid TZ issues
   const conflitos: ConflitoReserva[] = [];
+
+  // 0. Verificar Feriados e Domingos
+  if (!isBusinessDay(dateObj)) {
+    const info = getDateInfo(dateObj);
+    conflitos.push({
+      tipo: 'bloqueio',
+      nome: info?.name || (dateObj.getDay() === 0 ? "Domingo" : "Feriado"),
+      hora_inicio: "00:00",
+      hora_fim: "23:59"
+    });
+  }
 
   // 1. Verificar Reservas
   // Logica: (Inicio1 < Fim2) AND (Fim1 > Inicio2)
