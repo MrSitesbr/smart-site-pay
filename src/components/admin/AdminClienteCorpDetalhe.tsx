@@ -17,7 +17,15 @@ export default function AdminClienteCorpDetalhe() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [cliente, setCliente] = useState<any>(null);
+  const [cliente, setCliente] = useState<any>({
+    razao_social: "",
+    responsavel_nome: "",
+    responsavel_email: "",
+    responsavel_telefone: "",
+    cnpj: "",
+    unidade_id: null,
+    plano_id: null
+  });
   const [unidades, setUnidades] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
   const [planos, setPlanos] = useState<any[]>([]);
