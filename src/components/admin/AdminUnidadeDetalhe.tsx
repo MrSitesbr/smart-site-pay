@@ -190,8 +190,31 @@ export default function AdminUnidadeDetalhe() {
             </div>
             
             {unidade.foto_url && (
-              <div className="aspect-video w-full rounded-2xl overflow-hidden mb-6 border-4 border-white shadow-md">
-                <img src={unidade.foto_url} alt={unidade.nome} className="w-full h-full object-cover" />
+              <div className="aspect-video w-full rounded-2xl overflow-hidden mb-6 border-4 border-white shadow-md bg-slate-100">
+                <img 
+                  src={unidade.foto_url} 
+                  alt={unidade.nome} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error("Erro ao carregar imagem da unidade:", unidade.foto_url);
+                    (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Erro+na+Imagem';
+                  }}
+                />
+              </div>
+            )}
+            
+            {unidade.galeria && unidade.galeria.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {unidade.galeria.map((url: string, index: number) => (
+                  <div key={index} className="aspect-square rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                    <img 
+                      src={url} 
+                      alt={`${unidade.nome} gallery ${index}`} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=Erro'}
+                    />
+                  </div>
+                ))}
               </div>
             )}
             

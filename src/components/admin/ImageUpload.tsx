@@ -39,6 +39,9 @@ export const ImageUpload = ({ value = [], onChange, maxImages = 10 }: ImageUploa
           .from('assets')
           .getPublicUrl(filePath);
 
+        // Debug: Log the generated URL
+        console.log("Generated Public URL:", publicUrl);
+
         newUrls.push(publicUrl);
       }
 
