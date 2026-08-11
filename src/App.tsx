@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import AdminUnidadeDetalhe from "./components/admin/AdminUnidadeDetalhe";
 import AdminSalaDetalhe from "./components/admin/AdminSalaDetalhe";
 import AdminPlanoDetalhe from "./components/admin/AdminPlanoDetalhe";
+import AdminClienteCorpDetalhe from "./components/admin/AdminClienteCorpDetalhe";
 import AuthAdmin from "./pages/AuthAdmin";
 import NotFound from "./pages/NotFound";
 import Institutional from "./pages/Institutional";
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/admin/unidades/:id" element={<AdminUnidadeDetalhe />} />
           <Route path="/admin/unidades/sala/:id" element={<AdminSalaDetalhe />} />
           <Route path="/admin/planos/:id" element={<AdminPlanoDetalhe />} />
+          <Route path="/admin/clientes-corp/:id" element={<AdminClienteCorpDetalhe />} />
           <Route path="/auth-admin" element={<AuthAdmin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

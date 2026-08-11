@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,14 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [nomeResp, setNomeResp] = useState("");
   const [emailResp, setEmailResp] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setRazaoSocial(initialNome);
+      setNomeResp("");
+      setEmailResp("");
+    }
+  }, [open, initialNome]);
 
   async function save() {
     if (!razaoSocial) {
