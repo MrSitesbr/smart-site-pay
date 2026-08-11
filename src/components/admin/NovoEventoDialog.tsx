@@ -112,7 +112,7 @@ export default function NovoEventoDialog({ open, onOpenChange, date, onCreated }
             Criar Evento
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogScrollContent>
     </Dialog>
   );
 }
