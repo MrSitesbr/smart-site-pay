@@ -76,20 +76,17 @@ export default function AuthAdmin() {
       if (error) throw error;
       
       const userId = data.user!.id;
-      const { data: isAdmin, error: rolesError } = await supabase.rpc("has_role", { 
-        _user_id: userId, 
-        _role: "admin" 
-      });
-
-      if (rolesError || !isAdmin) {
-        const { data: roles, error: tableError } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-        if (tableError) throw new Error(`Erro de permissão: ${tableError.message}`);
-        const hasAdmin = (roles || []).some((r: any) => r.role === "admin");
-        if (!hasAdmin) {
-           await supabase.auth.signOut();
-           throw new Error("Usuário não possui privilégios de administrador.");
-        }
+      const { data: roles, error: tableError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (tableError) throw new Error(`Erro de permissão: ${tableError.message}`);
+      const hasAdmin = (roles || []).some((r: any) => r.role === "admin");
+      if (!hasAdmin) {
+        await supabase.auth.signOut();
+        throw new Error("Usuário não possui privilégios de administrador.");
       }
+
 
       navigate("/admin");
     } catch (e: any) {
