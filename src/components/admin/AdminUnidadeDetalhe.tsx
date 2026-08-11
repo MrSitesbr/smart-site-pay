@@ -197,7 +197,6 @@ export default function AdminUnidadeDetalhe() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     console.error("Erro ao carregar imagem da unidade:", unidade.foto_url);
-                    (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Erro+na+Imagem';
                   }}
                 />
               </div>
@@ -211,7 +210,7 @@ export default function AdminUnidadeDetalhe() {
                       src={url} 
                       alt={`${unidade.nome} gallery ${index}`} 
                       className="w-full h-full object-cover"
-                      onError={(e) => (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=Erro'}
+                      onError={(e) => console.error("Erro na galeria:", url)}
                     />
                   </div>
                 ))}
@@ -275,7 +274,7 @@ export default function AdminUnidadeDetalhe() {
                     className="w-full h-full object-cover" 
                     alt={sala.nome} 
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Erro';
+                      console.error("Erro na listagem de sala:", sala.foto_url);
                     }}
                   />
                 ) : (
