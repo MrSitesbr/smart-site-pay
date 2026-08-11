@@ -1,21 +1,30 @@
-## Objetivo
-Transformar a página `/reservar` (formulário de reserva) em um popup modal que abre sobre a página ativa, com fundo preto semitransparente (overlay).
+# Plano de Implementação: Fluxo de Unidade e Sala nos Formulários de Reserva e Visita
 
-## Mudanças
+O objetivo é garantir que tanto o administrador quanto os usuários escolham primeiro a unidade e depois a sala (filtrada pela unidade), com avisos visuais de conflito de horário/disponibilidade.
 
-1. **Novo componente `src/components/ReservaDialog.tsx`**
-   - Move todo o conteúdo do formulário atual de `src/pages/Reservar.tsx` (campos, verificação de disponibilidade, envio ao WhatsApp) para dentro de um `Dialog` do shadcn.
-   - Props: `open`, `onOpenChange`, `defaultAmbiente?`, `defaultData?`.
-   - Overlay preto com transparência (já é o padrão do `DialogOverlay` — `bg-black/80`).
-   - Conteúdo scrollável (`max-h-[90vh] overflow-y-auto`) para caber em telas menores.
+## 1. Ajustes no Banco de Dados
+- Garantir que a tabela `reservations` tenha `sala_id` (atualmente parece usar apenas o campo `ambiente` de texto, o que impede verificação real de disponibilidade por sala).
+- Criar migração para adicionar `sala_id` e `unidade_id` em `reservations` se necessário.
+- Adicionar RLS e permissões para novas colunas.
 
-2. **Gatilhos de abertura**
-   - `HeroSection`, `PricingSection` (botão "Reservar" da linha diária/hora, se houver) e qualquer outro CTA que hoje leva para `/reservar` passam a abrir o `ReservaDialog` via estado local em vez de navegar.
-   - Botões de "Selecionar" da tabela de planos continuam como links (não alterados).
+## 2. Componente de Verificação de Conflitos
+- Criar uma função utilitária em `src/lib/disponibilidade.ts` que consulta o banco de dados por conflitos de horário para uma sala e data específica.
 
-3. **Rota `/reservar` (retrocompatibilidade)**
-   - Mantém a rota funcional: `src/pages/Reservar.tsx` vira uma página fina que renderiza `<ReservaDialog open onOpenChange={() => navigate("/")}/>` sobre a Home, para que links diretos e QR codes antigos continuem funcionando abrindo o popup sobre a home.
+## 3. Refatoração do `NovaReservaDialog.tsx`
+- **Seleção de Unidade:** Adicionar um `Select` para Unidade no topo.
+- **Seleção de Sala:** Adicionar um `Select` para Sala, carregando apenas as salas da unidade selecionada.
+- **Lógica de Bloqueio/Aviso:** Ao selecionar um horário, disparar a verificação de conflitos. Exibir um aviso visual (ex: banner vermelho ou texto abaixo do horário) se a sala já estiver ocupada.
+- **Persistência:** Salvar `unidade_id` e `sala_id` no registro da reserva.
 
-## Fora de escopo
-- Nenhuma mudança de lógica de negócio, validação, integração com Supabase Functions ou fluxo do WhatsApp.
-- Nenhuma mudança visual no formulário em si além de encaixá-lo no modal.
+## 4. Refatoração do `NovoVisitanteDialog.tsx`
+- **Seleção de Unidade:** Adicionar um `Select` para Unidade antes da seleção de sala.
+- **Seleção de Sala:** Filtrar as salas com base na unidade selecionada.
+- **Aviso de Visita:** Similar à reserva, verificar se já existe um visitante marcado para aquele horário/sala e mostrar aviso.
+
+## 5. Calendário Administrativo (`AdminCalendar.tsx`)
+- Garantir que o filtro de unidade no calendário geral reflita as novas associações de `unidade_id` nas reservas.
+
+## Detalhes Técnicos
+- Utilizar `useQuery` ou `useEffect` com Supabase para carregar unidades e salas dinamicamente.
+- Implementar debounce na verificação de conflitos para evitar excesso de requisições enquanto o usuário digita horários.
+- Mensagem de aviso sugerida: "Atenção: Esta sala já possui uma reserva/visita para o horário selecionado."
