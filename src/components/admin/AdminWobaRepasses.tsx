@@ -15,6 +15,7 @@ import {
   type WobaEvento, type WobaProduto,
 } from "@/lib/wobaEvents";
 import { Save, Download, CheckCircle2, Clock, RefreshCw, ExternalLink } from "lucide-react";
+import { invokeGoogleSync } from "@/lib/googleSync";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -61,8 +62,7 @@ export default function AdminWobaRepasses(_: { reservas: any[]; contratos: any[]
     try {
       const timeMin = new Date(year, 0, 1).toISOString();
       const timeMax = new Date(year + 1, 0, 1).toISOString();
-      const { data, error } = await supabase.functions.invoke("sync-google-calendar", {
-        body: { action: "list_events", timeMin, timeMax, calendarId: cfg.calendarId || "primary" },
+      const { data, error } = await invokeGoogleSync({ action: "list_events", timeMin, timeMax, calendarId: cfg.calendarId || "primary" },
       });
       if (error) throw error;
       setGEvents((data as any)?.events || []);
