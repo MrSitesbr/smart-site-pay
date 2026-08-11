@@ -14,6 +14,9 @@ import NovaReservaDialog from "./NovaReservaDialog";
 import DayTimelineDialog from "./DayTimelineDialog";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
+import { CalendarListView } from "./CalendarListView";
+import { CalendarGanttView } from "./CalendarGanttView";
+
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Estação", sala_privativa: "Sala Privativa", sala_reuniao: "Sala Reunião",
