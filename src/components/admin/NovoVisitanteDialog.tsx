@@ -25,6 +25,8 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
   const [salas, setSalas] = useState<any[]>([]);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
   const [searchFilter, setSearchFilter] = useState("");
+  const [saving, setSaving] = useState(false);
+
 
 
   useEffect(() => {
