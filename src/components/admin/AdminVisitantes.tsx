@@ -14,6 +14,7 @@ export default function AdminVisitantes() {
   const [unidades, setUnidades] = useState<any[]>([]);
   const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
   const [search, setSearch] = useState("");
+  const [showNovoVisita, setShowNovoVisita] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { 
