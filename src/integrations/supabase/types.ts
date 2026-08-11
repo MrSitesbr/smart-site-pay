@@ -46,6 +46,7 @@ export type Database = {
           id: string
           plano_id: string | null
           razao_social: string
+          responsavel_cpf: string | null
           responsavel_email: string | null
           responsavel_nome: string | null
           responsavel_telefone: string | null
@@ -58,6 +59,7 @@ export type Database = {
           id?: string
           plano_id?: string | null
           razao_social: string
+          responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
@@ -70,6 +72,7 @@ export type Database = {
           id?: string
           plano_id?: string | null
           razao_social?: string
+          responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
