@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
+import { DocumentUpload } from "./DocumentUpload";
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
@@ -24,7 +25,8 @@ export default function AdminClienteCorpDetalhe() {
     responsavel_telefone: "",
     cnpj: "",
     unidade_id: null,
-    plano_id: null
+    plano_id: null,
+    documentos: []
   });
   const [unidades, setUnidades] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
@@ -78,7 +80,9 @@ export default function AdminClienteCorpDetalhe() {
       // @ts-ignore
       unidade_id: cliente.unidade_id,
       // @ts-ignore
-      plano_id: cliente.plano_id
+      plano_id: cliente.plano_id,
+      // @ts-ignore
+      documentos: cliente.documentos || []
     }).eq('id', id);
 
     if (error) toast.error("Erro ao salvar: " + error.message);
@@ -157,7 +161,19 @@ export default function AdminClienteCorpDetalhe() {
                 <Input value={cliente.responsavel_telefone || ''} onChange={e => setCliente({...cliente, responsavel_telefone: e.target.value})} />
               </div>
             </div>
-            <Button className="w-fit" onClick={save} disabled={saving}>
+            
+            <div className="mt-4 space-y-4 border-t pt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-5 h-5 text-brand-orange" />
+                <Label className="text-lg font-bold">Documentos do Responsável</Label>
+              </div>
+              <DocumentUpload 
+                value={cliente.documentos || []} 
+                onChange={docs => setCliente({...cliente, documentos: docs})} 
+              />
+            </div>
+
+            <Button className="w-fit mt-4" onClick={save} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Salvar Alterações
             </Button>
