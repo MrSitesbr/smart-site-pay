@@ -27,6 +27,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       setRazaoSocial(initialNome);
       setNomeResp("");
       setEmailResp("");
+      setTelResp("");
+      setCpfResp("");
     }
   }, [open, initialNome]);
 
