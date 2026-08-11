@@ -7,20 +7,32 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2, User, Building, CreditCard, Users } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import NovoVisitanteDialog from "./NovoVisitanteDialog";
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [cliente, setCliente] = useState<any>(null);
+  const [cliente, setCliente] = useState<any>({
+    razao_social: "",
+    responsavel_nome: "",
+    responsavel_email: "",
+    responsavel_telefone: "",
+    cnpj: "",
+    unidade_id: null,
+    plano_id: null
+  });
   const [unidades, setUnidades] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
   const [planos, setPlanos] = useState<any[]>([]);
   const [funcionarios, setFuncionarios] = useState<any[]>([]);
   const [visitantes, setVisitantes] = useState<any[]>([]);
+  const [editingFunc, setEditingFunc] = useState<any>(null);
+  const [showNovoVisita, setShowNovoVisita] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -62,12 +74,44 @@ export default function AdminClienteCorpDetalhe() {
       responsavel_nome: cliente.responsavel_nome,
       responsavel_email: cliente.responsavel_email,
       responsavel_telefone: cliente.responsavel_telefone,
-      cnpj: cliente.cnpj
+      cnpj: cliente.cnpj,
+      // @ts-ignore
+      unidade_id: cliente.unidade_id,
+      // @ts-ignore
+      plano_id: cliente.plano_id
     }).eq('id', id);
 
     if (error) toast.error("Erro ao salvar: " + error.message);
     else toast.success("Cliente atualizado");
     setSaving(false);
+  }
+
+  async function saveFunc() {
+    if (!editingFunc?.nome) return toast.error("Nome é obrigatório");
+    
+    // Ensure cliente_corp_id is present
+    const payload = { ...editingFunc, cliente_corp_id: id };
+    
+    const { error } = editingFunc.id 
+      ? await supabase.from('funcionarios_cliente').update(payload).eq('id', editingFunc.id)
+      : await supabase.from('funcionarios_cliente').insert([payload]);
+    
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Colaborador salvo");
+      setEditingFunc(null);
+      fetchData();
+    }
+  }
+
+  async function deleteFunc(fid: string) {
+    if (!confirm("Excluir colaborador?")) return;
+    const { error } = await supabase.from('funcionarios_cliente').delete().eq('id', fid);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Colaborador removido");
+      fetchData();
+    }
   }
 
   if (loading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>;
@@ -126,7 +170,10 @@ export default function AdminClienteCorpDetalhe() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Unidade</Label>
-                <Select>
+                <Select 
+                  value={cliente.unidade_id || ""} 
+                  onValueChange={val => setCliente({...cliente, unidade_id: val})}
+                >
                   <SelectTrigger><SelectValue placeholder="Selecione a Unidade" /></SelectTrigger>
                   <SelectContent>
                     {unidades.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
@@ -135,7 +182,10 @@ export default function AdminClienteCorpDetalhe() {
               </div>
               <div className="space-y-2">
                 <Label>Plano</Label>
-                <Select>
+                <Select 
+                  value={cliente.plano_id || ""} 
+                  onValueChange={val => setCliente({...cliente, plano_id: val})}
+                >
                   <SelectTrigger><SelectValue placeholder="Selecione o Plano" /></SelectTrigger>
                   <SelectContent>
                     {planos.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
@@ -143,7 +193,7 @@ export default function AdminClienteCorpDetalhe() {
                 </Select>
               </div>
             </div>
-            <Button variant="outline">Vincular Contrato</Button>
+            <Button onClick={save} disabled={saving}>Salvar Vinculação</Button>
           </Card>
         </TabsContent>
 
@@ -151,7 +201,7 @@ export default function AdminClienteCorpDetalhe() {
           <Card className="p-6 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold">Colaboradores Autorizados</h3>
-              <Button size="sm"><Plus className="w-4 h-4 mr-2" /> Novo Colaborador</Button>
+              <Button size="sm" onClick={() => setEditingFunc({ nome: "", cargo: "", email: "", cliente_corp_id: id })}><Plus className="w-4 h-4 mr-2" /> Novo Colaborador</Button>
             </div>
             <div className="grid gap-2">
               {funcionarios.map(f => (
@@ -160,7 +210,10 @@ export default function AdminClienteCorpDetalhe() {
                     <p className="font-bold uppercase text-xs">{f.nome}</p>
                     <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.email}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => setEditingFunc(f)}><Edit2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteFunc(f.id)}><Trash2 className="w-4 h-4" /></Button>
+                  </div>
                 </div>
               ))}
               {funcionarios.length === 0 && <p className="text-center py-8 text-muted-foreground italic text-sm">Nenhum colaborador cadastrado.</p>}
@@ -172,7 +225,7 @@ export default function AdminClienteCorpDetalhe() {
           <Card className="p-6 space-y-4">
              <div className="flex justify-between items-center">
               <h3 className="font-bold">Histórico de Visitantes</h3>
-              <Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-2" /> Agendar Visita</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowNovoVisita(true)}><Plus className="w-4 h-4 mr-2" /> Agendar Visita</Button>
             </div>
             <div className="grid gap-2">
               {visitantes.map(v => (
@@ -188,6 +241,37 @@ export default function AdminClienteCorpDetalhe() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editingFunc} onOpenChange={() => setEditingFunc(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingFunc?.id ? "Editar Colaborador" : "Novo Colaborador"}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Nome</Label>
+              <Input value={editingFunc?.nome || ""} onChange={e => setEditingFunc({...editingFunc, nome: e.target.value})} />
+            </div>
+            <div className="grid gap-2">
+              <Label>Cargo</Label>
+              <Input value={editingFunc?.cargo || ""} onChange={e => setEditingFunc({...editingFunc, cargo: e.target.value})} />
+            </div>
+            <div className="grid gap-2">
+              <Label>Email</Label>
+              <Input value={editingFunc?.email || ""} onChange={e => setEditingFunc({...editingFunc, email: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingFunc(null)}>Cancelar</Button>
+            <Button onClick={saveFunc}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <NovoVisitanteDialog 
+        open={showNovoVisita} 
+        onOpenChange={setShowNovoVisita} 
+        onCreated={fetchData}
+        date={new Date()}
+      />
     </div>
   );
 }
