@@ -52,7 +52,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogScrollContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading">Novo Cliente Corporativo</DialogTitle>
         </DialogHeader>
