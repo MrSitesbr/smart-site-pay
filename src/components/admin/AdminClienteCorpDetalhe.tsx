@@ -150,17 +150,21 @@ export default function AdminClienteCorpDetalhe() {
                 <Input value={cliente.cnpj || ''} onChange={e => setCliente({...cliente, cnpj: e.target.value})} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Responsável</Label>
                 <Input value={cliente.responsavel_nome || ''} onChange={e => setCliente({...cliente, responsavel_nome: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>CPF do Responsável</Label>
+                <Input value={cliente.responsavel_cpf || ''} onChange={e => setCliente({...cliente, responsavel_cpf: e.target.value})} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
                 <Input value={cliente.responsavel_email || ''} onChange={e => setCliente({...cliente, responsavel_email: e.target.value})} />
               </div>
               <div className="space-y-2">
-                <Label>Telefone</Label>
+                <Label>Whatsapp</Label>
                 <Input value={cliente.responsavel_telefone || ''} onChange={e => setCliente({...cliente, responsavel_telefone: e.target.value})} />
               </div>
             </div>
