@@ -370,7 +370,7 @@ export default function AdminUnidades() {
             <Button variant="outline" onClick={() => setEditingSala(null)}>Cancelar</Button>
             <Button onClick={saveSala} className="bg-brand-orange text-white">Salvar Sala</Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
     </div>
   );
