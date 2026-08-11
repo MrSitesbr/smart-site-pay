@@ -7,6 +7,7 @@ import { Plus, Trash2, Edit2, Save, X, Building2, Layers, Eye } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { ImageUpload } from "./ImageUpload";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,8 @@ export default function AdminUnidades() {
       nome: editingUnidade.nome,
       endereco: editingUnidade.endereco,
       descricao: editingUnidade.descricao,
-      foto_url: editingUnidade.foto_url
+      foto_url: editingUnidade.foto_url,
+      galeria: editingUnidade.galeria || []
     };
 
     const { error } = editingUnidade.id 
@@ -88,6 +90,7 @@ export default function AdminUnidades() {
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
       foto_url: editingSala.foto_url,
+      galeria: editingSala.galeria || [],
       unidade_id: selectedUnidade.id
     };
 
@@ -252,12 +255,11 @@ export default function AdminUnidades() {
                   placeholder="Ex: Unidade Boqueirão"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL da Foto</label>
-                <Input 
-                  value={editingUnidade?.foto_url || ''} 
-                  onChange={(e) => setEditingUnidade({...editingUnidade, foto_url: e.target.value})}
-                  placeholder="URL da imagem (ex: https://...)"
+              <div className="space-y-2 col-span-2">
+                <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
+                <ImageUpload 
+                  value={editingUnidade?.galeria || []} 
+                  onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls, foto_url: urls[0] || editingUnidade.foto_url})}
                 />
               </div>
             </div>
@@ -324,12 +326,11 @@ export default function AdminUnidades() {
                 onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">URL da Foto</label>
-              <Input 
-                value={editingSala?.foto_url || ''} 
-                onChange={(e) => setEditingSala({...editingSala, foto_url: e.target.value})}
-                placeholder="https://..."
+            <div className="space-y-2 col-span-2">
+              <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
+              <ImageUpload 
+                value={editingSala?.galeria || []} 
+                onChange={(urls) => setEditingSala({...editingSala, galeria: urls, foto_url: urls[0] || editingSala.foto_url})}
               />
             </div>
             <div className="space-y-2">
