@@ -129,6 +129,13 @@ export default function AdminVisitantes() {
           </div>
         </section>
       </div>
+
+      <NovoVisitanteDialog 
+        open={showNovoVisita}
+        onOpenChange={setShowNovoVisita}
+        date={new Date()}
+        onCreated={fetchData}
+      />
     </div>
   );
 }
