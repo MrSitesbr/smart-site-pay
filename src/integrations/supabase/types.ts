@@ -43,30 +43,51 @@ export type Database = {
           cnpj: string | null
           created_at: string
           id: string
+          plano_id: string | null
           razao_social: string
           responsavel_email: string | null
           responsavel_nome: string | null
           responsavel_telefone: string | null
+          unidade_id: string | null
         }
         Insert: {
           cnpj?: string | null
           created_at?: string
           id?: string
+          plano_id?: string | null
           razao_social: string
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          unidade_id?: string | null
         }
         Update: {
           cnpj?: string | null
           created_at?: string
           id?: string
+          plano_id?: string | null
           razao_social?: string
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          unidade_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clientes_corp_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_corp_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_requests: {
         Row: {
