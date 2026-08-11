@@ -42,6 +42,7 @@ export type Database = {
         Row: {
           cnpj: string | null
           created_at: string
+          documentos: string[] | null
           id: string
           plano_id: string | null
           razao_social: string
@@ -53,6 +54,7 @@ export type Database = {
         Insert: {
           cnpj?: string | null
           created_at?: string
+          documentos?: string[] | null
           id?: string
           plano_id?: string | null
           razao_social: string
@@ -64,6 +66,7 @@ export type Database = {
         Update: {
           cnpj?: string | null
           created_at?: string
+          documentos?: string[] | null
           id?: string
           plano_id?: string | null
           razao_social?: string
