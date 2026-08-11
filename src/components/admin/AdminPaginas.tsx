@@ -11,6 +11,7 @@ import {
   Globe, Search, Code, Map as MapIcon
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import HeroSection from "@/components/HeroSection";
 import IdealParaSection from "@/components/IdealParaSection";
