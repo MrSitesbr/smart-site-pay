@@ -611,7 +611,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               </div>
             </>
           )}
-        </DialogContent>
+        </DialogScrollContent>
       </Dialog>
 
       <NovaReservaDialog
