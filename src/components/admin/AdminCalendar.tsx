@@ -259,113 +259,129 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       </div>
 
 
-      <div className="grid grid-cols-7 border-b bg-brand-blue-dark">
-        {WEEKDAYS.map((w) => (
-          <div key={w} className="px-2 py-2 text-[11px] font-heading font-bold tracking-widest text-white text-center">{w}</div>
-        ))}
-      </div>
+      {viewMode === "calendar" ? (
+        <>
+          <div className="grid grid-cols-7 border-b bg-brand-blue-dark">
+            {WEEKDAYS.map((w) => (
+              <div key={w} className="px-2 py-2 text-[11px] font-heading font-bold tracking-widest text-white text-center">{w}</div>
+            ))}
+          </div>
 
-      <div className="grid grid-cols-7 grid-rows-6 min-h-[600px]">
-        {days.map((d, i) => {
-          const inMonth = d.getMonth() === month.getMonth();
-          const isToday = d.getTime() === today.getTime();
-          const business = isBusinessDay(d);
-          const holiday = isHoliday(d);
-          const info = getDateInfo(d);
-          const events = eventsByDay.get(dayKey(d)) || [];
-          const isSunday = i % 7 === 0;
-          const isLastRow = i >= 35;
-          return (
-            <div
-              key={i}
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedDay(new Date(d))}
-              onKeyDown={(ev) => { if (ev.key === "Enter") setSelectedDay(new Date(d)); }}
-              className={[
-                "group text-left p-1.5 border-border transition-colors relative flex flex-col gap-1 overflow-hidden min-h-[100px] cursor-pointer",
-                !isSunday && "border-l",
-                !isLastRow && "border-b",
-                inMonth ? "bg-card" : "bg-muted/60",
-                holiday && inMonth && "bg-red-500/15",
-                !business && !holiday && inMonth && "bg-secondary/5",
-                "hover:bg-primary/10",
-              ].filter(Boolean).join(" ")}
-            >
-              <div className="flex items-center justify-between">
-                <span className={[
-                  "text-sm font-heading font-black w-7 h-7 flex items-center justify-center rounded-full",
-                  isToday && "bg-primary text-primary-foreground shadow-md",
-                  !isToday && holiday && inMonth && "text-red-700",
-                  !isToday && !holiday && inMonth && "text-foreground",
-                  !isToday && !inMonth && "text-muted-foreground/60",
-                ].filter(Boolean).join(" ")}>{d.getDate()}</span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    title="Ver dia em linha do tempo"
-                    onClick={(ev) => { ev.stopPropagation(); setTimelineDay(new Date(d)); }}
-                    onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setTimelineDay(new Date(d)); } }}
-                    className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center hover:scale-110 cursor-pointer"
-                  >
-                    <Eye className="w-3 h-3" />
-                  </span>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    title="Nova reserva neste dia"
-                    onClick={(ev) => { ev.stopPropagation(); setNovaDay(new Date(d)); }}
-                    onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setNovaDay(new Date(d)); } }}
-                    className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </span>
-                </div>
-              </div>
-              {info && (
-                <div className={`text-[10px] px-1 truncate font-heading font-bold ${info.holiday ? "text-red-600" : "text-muted-foreground"}`}>{info.name}</div>
-              )}
-              <div className="flex-1 space-y-1 overflow-hidden">
-                {events.slice(0, 3).map((e, idx) => {
-                  if (e.kind === "google") {
-                    const g = e.obj;
-                    const t = g.start?.dateTime ? new Date(g.start.dateTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "dia";
-                    const blob = `${g.summary || ""} ${g.description || ""} ${(g.attendees||[]).map((a:any)=>`${a.email||""} ${a.displayName||""}`).join(" ")}`.toLowerCase();
-                    const isWoba = blob.includes("woba");
-                    const attendee = g.attendees?.find((a: any) => a.email && !a.email.includes("group.calendar")) || g.attendees?.[0];
-                    const displayName = attendee?.displayName || attendee?.email || g.summary || "Google";
-                    const bg = isWoba ? WOBA_COLOR : getClientColor({ name: displayName, email: attendee?.email, overrides: colorOverrides });
-                    const fg = readableTextOn(bg);
-                    return (
-                      <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1" style={{ background: bg, color: fg }} title={g.summary}>
-                        <EventAvatar name={displayName} isWoba={isWoba} color={bg} size={16} />
-                        <span className="truncate">{t} · {g.summary || "(sem título)"}</span>
-                      </div>
-                    );
-                  }
-                  const isWobaRow = e.obj.origem === "woba";
-                  const ambLabel = AMBIENTE_LABEL[e.obj.ambiente] || e.obj.ambiente;
-                  const tipoLabel = e.kind === "contrato" ? PLANO_LABEL[e.obj.plano_tipo] : (e.obj.tipo === "diaria" ? "Diária" : "Hora");
-                  const label = `${e.obj.nome.split(" ")[0]} · ${ambLabel} · ${tipoLabel}`;
-                  const bg = getClientColor({ name: e.obj.nome, email: e.obj.email, isWoba: isWobaRow, overrides: colorOverrides });
-                  const fg = readableTextOn(bg);
-                  const statusDot = STATUS_COLORS[e.obj.status] || "bg-secondary";
-                  return (
-                    <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1" style={{ background: bg, color: fg }} title={`${e.obj.nome} — ${AMBIENTE_LABEL[e.obj.ambiente]} · ${e.obj.status}`}>
-                      <EventAvatar name={e.obj.nome} isWoba={isWobaRow} photoUrl={e.obj.photo_url} color={bg} size={16} />
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot}`} />
-                      <span className="truncate">{label}</span>
+          <div className="grid grid-cols-7 grid-rows-6 min-h-[600px]">
+            {days.map((d, i) => {
+              const inMonth = d.getMonth() === month.getMonth();
+              const isToday = d.getTime() === today.getTime();
+              const business = isBusinessDay(d);
+              const holiday = isHoliday(d);
+              const info = getDateInfo(d);
+              const events = eventsByDay.get(dayKey(d)) || [];
+              const isSunday = i % 7 === 0;
+              const isLastRow = i >= 35;
+              return (
+                <div
+                  key={i}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedDay(new Date(d))}
+                  onKeyDown={(ev) => { if (ev.key === "Enter") setSelectedDay(new Date(d)); }}
+                  className={[
+                    "group text-left p-1.5 border-border transition-colors relative flex flex-col gap-1 overflow-hidden min-h-[100px] cursor-pointer",
+                    !isSunday && "border-l",
+                    !isLastRow && "border-b",
+                    inMonth ? "bg-card" : "bg-muted/60",
+                    holiday && inMonth && "bg-red-500/15",
+                    !business && !holiday && inMonth && "bg-secondary/5",
+                    "hover:bg-primary/10",
+                  ].filter(Boolean).join(" ")}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={[
+                      "text-sm font-heading font-black w-7 h-7 flex items-center justify-center rounded-full",
+                      isToday && "bg-primary text-primary-foreground shadow-md",
+                      !isToday && holiday && inMonth && "text-red-700",
+                      !isToday && !holiday && inMonth && "text-foreground",
+                      !isToday && !inMonth && "text-muted-foreground/60",
+                    ].filter(Boolean).join(" ")}>{d.getDate()}</span>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="Ver dia em linha do tempo"
+                        onClick={(ev) => { ev.stopPropagation(); setTimelineDay(new Date(d)); }}
+                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setTimelineDay(new Date(d)); } }}
+                        className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center hover:scale-110 cursor-pointer"
+                      >
+                        <Eye className="w-3 h-3" />
+                      </span>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="Nova reserva neste dia"
+                        onClick={(ev) => { ev.stopPropagation(); setNovaDay(new Date(d)); }}
+                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setNovaDay(new Date(d)); } }}
+                        className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </span>
                     </div>
-                  );
-                })}
-                {events.length > 3 && <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} mais</div>}
-              </div>
+                  </div>
+                  {info && (
+                    <div className={`text-[10px] px-1 truncate font-heading font-bold ${info.holiday ? "text-red-600" : "text-muted-foreground"}`}>{info.name}</div>
+                  )}
+                  <div className="flex-1 space-y-1 overflow-hidden">
+                    {events.slice(0, 3).map((e, idx) => {
+                      if (e.kind === "google") {
+                        const g = e.obj;
+                        const t = g.start?.dateTime ? new Date(g.start.dateTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "dia";
+                        const blob = `${g.summary || ""} ${g.description || ""} ${(g.attendees||[]).map((a:any)=>`${a.email||""} ${a.displayName||""}`).join(" ")}`.toLowerCase();
+                        const isWoba = blob.includes("woba");
+                        const attendee = g.attendees?.find((a: any) => a.email && !a.email.includes("group.calendar")) || g.attendees?.[0];
+                        const displayName = attendee?.displayName || attendee?.email || g.summary || "Google";
+                        const bg = isWoba ? WOBA_COLOR : getClientColor({ name: displayName, email: attendee?.email, overrides: colorOverrides });
+                        const fg = readableTextOn(bg);
+                        return (
+                          <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1" style={{ background: bg, color: fg }} title={g.summary}>
+                            <EventAvatar name={displayName} isWoba={isWoba} color={bg} size={16} />
+                            <span className="truncate">{t} · {g.summary || "(sem título)"}</span>
+                          </div>
+                        );
+                      }
+                      const isWobaRow = e.obj.origem === "woba";
+                      const ambLabel = AMBIENTE_LABEL[e.obj.ambiente] || e.obj.ambiente;
+                      const tipoLabel = e.kind === "contrato" ? PLANO_LABEL[e.obj.plano_tipo] : (e.obj.tipo === "diaria" ? "Diária" : "Hora");
+                      const label = `${e.obj.nome.split(" ")[0]} · ${ambLabel} · ${tipoLabel}`;
+                      const bg = getClientColor({ name: e.obj.nome, email: e.obj.email, isWoba: isWobaRow, overrides: colorOverrides });
+                      const fg = readableTextOn(bg);
+                      const statusDot = STATUS_COLORS[e.obj.status] || "bg-secondary";
+                      return (
+                        <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1" style={{ background: bg, color: fg }} title={`${e.obj.nome} — ${AMBIENTE_LABEL[e.obj.ambiente]} · ${e.obj.status}`}>
+                          <EventAvatar name={e.obj.nome} isWoba={isWobaRow} photoUrl={e.obj.photo_url} color={bg} size={16} />
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot}`} />
+                          <span className="truncate">{label}</span>
+                        </div>
+                      );
+                    })}
+                    {events.length > 3 && <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} mais</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      ) : viewMode === "list" ? (
+        <CalendarListView 
+          events={Array.from(eventsByDay.values()).flat()} 
+          onDeleteReserva={onDeleteReserva}
+          onDeleteContrato={onDeleteContrato}
+          onViewDetails={(kind, obj) => setFullView({ kind, obj })}
+        />
+      ) : (
+        <CalendarGanttView 
+          events={Array.from(eventsByDay.values()).flat()} 
+          month={month} 
+        />
+      )}
 
-            </div>
-          );
-        })}
-      </div>
 
       <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(undefined)}>
         <DialogContent className="max-w-lg">
