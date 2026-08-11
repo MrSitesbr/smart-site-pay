@@ -422,7 +422,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             Criar reserva
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </DialogScrollContent>
     </Dialog>
   );
 }
