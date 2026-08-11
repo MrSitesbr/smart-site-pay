@@ -82,6 +82,11 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
       return;
     }
 
+    if (conflitos.some(c => c.tipo === 'bloqueio')) {
+      toast({ title: "Data bloqueada", description: "Não é possível agendar visitas em domingos ou feriados.", variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
     const dt = new Date(date);
     const [h, m] = hora.split(":").map(Number);
@@ -186,10 +191,16 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, onCreate
             <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex gap-2 items-start">
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="text-[11px] text-red-800">
-                <p className="font-bold">Atenção: Já existe ocupação para este horário!</p>
+                <p className="font-bold">Atenção: Conflito detectado!</p>
                 <ul className="list-disc list-inside">
                   {conflitos.map((c, i) => (
-                    <li key={i}>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio})</li>
+                    <li key={i}>
+                      {c.tipo === 'bloqueio' ? (
+                        <span className="font-bold text-red-700">BLOQUEADO: {c.nome}</span>
+                      ) : (
+                        <>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio})</>
+                      )}
+                    </li>
                   ))}
                 </ul>
               </div>
