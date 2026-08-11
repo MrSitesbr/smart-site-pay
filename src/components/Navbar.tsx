@@ -4,20 +4,29 @@ import { Menu, X, Phone, Calendar, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
 import ReservaDialog from "@/components/ReservaDialog";
-
+import { getPageContent } from "@/lib/cms";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [reservaOpen, setReservaOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [cmsContent, setCmsContent] = useState<any>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
+    loadCms();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const links = [
+  const loadCms = async () => {
+    const data = await getPageContent("global-header");
+    if (data && data.site_sections && data.site_sections.length > 0) {
+      setCmsContent(data.site_sections[0].content);
+    }
+  };
+
+  const defaultLinks = [
     { label: "Início", href: "/", route: true },
     { 
       label: "Serviços", 
@@ -34,6 +43,12 @@ const Navbar = () => {
     { label: "Contato", href: "/#contato" },
   ];
 
+  const links = cmsContent?.links || defaultLinks;
+  const logoTop = cmsContent?.logo_text_top || "CoWorking";
+  const logoBottom = cmsContent?.logo_text_bottom || "013";
+  const phone = cmsContent?.phone || "(13) 98805-0358";
+  const phoneHref = cmsContent?.phone_href || "tel:13988050358";
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -47,18 +62,18 @@ const Navbar = () => {
           <img src={logoIcon.url} alt="Logo" className="h-10 w-auto object-contain" />
           <div className="flex flex-col leading-[0.8] items-start">
             <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
-              CoWorking
+              {logoTop}
             </span>
             <h1 className={`text-3xl font-heading font-extrabold transition-colors ${
               scrolled ? "text-black" : "text-white"
             } -mt-1`}>
-              013
+              {logoBottom}
             </h1>
           </div>
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">
-          {links.map((link) => (
+          {links.map((link: any) => (
             <div key={link.label} className="relative group">
               {link.submenu ? (
                 <>
@@ -70,7 +85,7 @@ const Navbar = () => {
                     {link.label} <ChevronDown className="w-4 h-4" />
                   </button>
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                    {link.submenu.map((sub) => (
+                    {link.submenu.map((sub: any) => (
                       <Link
                         key={sub.href}
                         to={sub.href}
@@ -81,7 +96,7 @@ const Navbar = () => {
                     ))}
                   </div>
                 </>
-              ) : link.route ? (
+              ) : link.route || link.href.startsWith('/') ? (
                 <Link
                   to={link.href}
                   className={`text-sm font-medium transition-colors ${
@@ -106,13 +121,13 @@ const Navbar = () => {
 
         <div className="hidden lg:flex items-center gap-3">
           <a
-            href="tel:13997440130"
+            href={phoneHref}
             className={`flex items-center gap-2 text-sm font-medium ${
               scrolled ? "text-foreground" : "text-white"
             }`}
           >
             <Phone className="w-4 h-4 text-primary" />
-            (13) 98805-0358
+            {phone}
           </a>
           <Button onClick={() => setReservaOpen(true)} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
             <Calendar className="w-4 h-4 mr-2" />
@@ -131,12 +146,12 @@ const Navbar = () => {
 
       {isOpen && (
         <div className="lg:hidden bg-background border-t border-border px-4 pb-4">
-          {links.map((link) => (
+          {links.map((link: any) => (
             <div key={link.label}>
               {link.submenu ? (
                 <>
                   <div className="py-3 text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{link.label}</div>
-                  {link.submenu.map((sub) => (
+                  {link.submenu.map((sub: any) => (
                     <Link
                       key={sub.href}
                       to={sub.href}
@@ -147,7 +162,7 @@ const Navbar = () => {
                     </Link>
                   ))}
                 </>
-              ) : link.route ? (
+              ) : link.route || link.href.startsWith('/') ? (
                 <Link
                   to={link.href}
                   onClick={() => setIsOpen(false)}
