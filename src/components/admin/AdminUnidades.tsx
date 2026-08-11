@@ -242,7 +242,7 @@ export default function AdminUnidades() {
 
       {/* Dialog Unidade */}
       <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogScrollContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingUnidade?.id ? "Editar Unidade" : "Nova Unidade"}</DialogTitle>
           </DialogHeader>
