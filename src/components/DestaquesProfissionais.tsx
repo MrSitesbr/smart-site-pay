@@ -3,50 +3,27 @@ import { Stethoscope, Scale, HardHat, Cpu, Megaphone, Briefcase } from "lucide-r
 import { assets } from "@/lib/migration-assets";
 import { getPageContent } from "@/lib/cms";
 
+const DEFAULTS = {
+  tag: "Soluções por Área",
+  title: 'O ambiente perfeito para sua <span class="text-secondary">profissão</span>',
+  subtitle: 'Nossa estrutura foi desenhada para atender as exigências de diferentes nichos do mercado profissional.',
+  areas: [
+    { icon: "atendimento", title: "Saúde", desc: "Consultórios modernos e equipados, prontos para receber seus pacientes com total conforto e biossegurança.", bg: "bg-blue-50/50" },
+    { icon: "profissional", title: "Jurídico", desc: "Privacidade absoluta e ambiente corporativo de alto nível para reuniões com clientes e parceiros.", bg: "bg-slate-50/50" },
+    { icon: "documentos", title: "Engenharia", desc: "Espaço ideal para desenvolvimento de projetos, reuniões de equipe e gestão de obras com agilidade.", bg: "bg-orange-50/50" },
+    { icon: "foco", title: "Tecnologia", desc: "Conectividade ultra veloz e ambiente focado em produtividade para desenvolvedores e startups.", bg: "bg-indigo-50/50" },
+    { icon: "produtividade", title: "Marketing", desc: "Ambiente criativo e dinâmico para agências e profissionais que buscam inovação constante.", bg: "bg-pink-50/50" },
+    { icon: "qualidade", title: "Consultoria", desc: "Toda a estrutura necessária para atender seus clientes com profissionalismo e eficiência.", bg: "bg-emerald-50/50" },
+  ]
+};
+
 const DestaquesProfissionais = ({ content, settings }: { content?: any, settings?: any }) => {
-  const [localContent, setLocalContent] = useState(content || {
-    tag: "Soluções por Área",
-    title: 'O ambiente perfeito para sua <span class="text-secondary">profissão</span>',
-    subtitle: 'Nossa estrutura foi desenhada para atender as exigências de diferentes nichos do mercado profissional.',
-    areas: [
-      { 
-        icon: "atendimento", 
-        title: "Saúde", 
-        desc: "Consultórios modernos e equipados, prontos para receber seus pacientes com total conforto e biossegurança.",
-        bg: "bg-blue-50/50"
-      },
-      { 
-        icon: "profissional", 
-        title: "Jurídico", 
-        desc: "Privacidade absoluta e ambiente corporativo de alto nível para reuniões com clientes e parceiros.",
-        bg: "bg-slate-50/50"
-      },
-      { 
-        icon: "documentos", 
-        title: "Engenharia", 
-        desc: "Espaço ideal para desenvolvimento de projetos, reuniões de equipe e gestão de obras com agilidade.",
-        bg: "bg-orange-50/50"
-      },
-      { 
-        icon: "foco", 
-        title: "Tecnologia", 
-        desc: "Conectividade ultra veloz e ambiente focado em produtividade para desenvolvedores e startups.",
-        bg: "bg-indigo-50/50"
-      },
-      { 
-        icon: "produtividade", 
-        title: "Marketing", 
-        desc: "Ambiente criativo e dinâmico para agências e profissionais que buscam inovação constante.",
-        bg: "bg-pink-50/50"
-      },
-      { 
-        icon: "qualidade", 
-        title: "Consultoria", 
-        desc: "Toda a estrutura necessária para atender seus clientes com profissionalismo e eficiência.",
-        bg: "bg-emerald-50/50"
-      },
-    ]
-  });
+  const [localContent, setLocalContent] = useState<any>({ ...DEFAULTS, ...(content || {}) });
+
+  useEffect(() => {
+    if (content) setLocalContent({ ...DEFAULTS, ...content });
+  }, [content]);
+
 
   const sectionSettings = settings || {};
   const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};

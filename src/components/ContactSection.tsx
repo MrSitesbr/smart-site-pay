@@ -6,21 +6,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getPageContent } from "@/lib/cms";
 
+const DEFAULTS = {
+  cta_title: 'Pronto para levar seu negócio para outro nível?',
+  cta_subtitle: 'Agende uma visita e conheça de perto o que o Coworking 013 pode fazer por você.',
+  cta_button: 'Agendar Visita Agora',
+  title: 'Tire dúvidas ou agende uma visita.',
+  contact_items: [
+    { icon: "Phone", title: "WhatsApp", value: "(13) 98805-0358", href: "https://wa.me/5513988050358" },
+    { icon: "Mail", title: "E-mail", value: "contato@coworking013.com.br", href: "mailto:contato@coworking013.com.br" },
+    { icon: "MapPin", title: "Unidades", value: "Av. P. Costa e Silva, 609 - S. 906\nR. São Caetano, 86\nR. Jaú, 955 Conj. 26\nPraia Grande - SP", href: "#" },
+    { icon: "Clock", title: "Atendimento", value: "Seg. à Sex.: 08h às 21h\nSábados: 08h às 12h", href: "" },
+  ]
+};
+
 const ContactSection = ({ content, settings }: { content?: any, settings?: any }) => {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "planos", message: "" });
-  const [localContent, setLocalContent] = useState(content || {
-    cta_title: 'Pronto para levar seu negócio para outro nível?',
-    cta_subtitle: 'Agende uma visita e conheça de perto o que o Coworking 013 pode fazer por você.',
-    cta_button: 'Agendar Visita Agora',
-    title: 'Tire dúvidas ou agende uma visita.',
-    contact_items: [
-      { icon: "Phone", title: "WhatsApp", value: "(13) 98805-0358", href: "https://wa.me/5513988050358" },
-      { icon: "Mail", title: "E-mail", value: "contato@coworking013.com.br", href: "mailto:contato@coworking013.com.br" },
-      { icon: "MapPin", title: "Unidades", value: "Av. P. Costa e Silva, 609 - S. 906\nR. São Caetano, 86\nR. Jaú, 955 Conj. 26\nPraia Grande - SP", href: "#" },
-      { icon: "Clock", title: "Atendimento", value: "Seg. à Sex.: 08h às 21h\nSábados: 08h às 12h", href: "" },
-    ]
-  });
+  const [localContent, setLocalContent] = useState<any>({ ...DEFAULTS, ...(content || {}) });
+
+  useEffect(() => {
+    if (content) setLocalContent({ ...DEFAULTS, ...content });
+  }, [content]);
+
 
   const sectionSettings = settings || {};
   const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
