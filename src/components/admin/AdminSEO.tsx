@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Code, Map as MapIcon, Save } from "lucide-react";
+import { Search, Code, Map as MapIcon, Save, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function AdminSEO() {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [settings, setSettings] = useState({
     meta_description: "",
     keywords: "",
@@ -24,23 +25,61 @@ export default function AdminSEO() {
   }, []);
 
   const loadSettings = async () => {
-    // Busca configurações globais da tabela site_settings se existir, ou de uma página global específica
-    const { data } = await supabase.from('site_pages').select('settings').eq('is_global', true).limit(1).single();
-    if (data?.settings) {
-      setSettings(prev => ({ ...prev, ...data.settings }));
+    setFetching(true);
+    try {
+      // Usamos a coluna 'content' de uma seção global para persistir dados, já que 'settings' na site_pages não existe no schema atual
+      const { data, error } = await supabase
+        .from('site_sections')
+        .select('content')
+        .eq('section_key', 'seo_global')
+        .single();
+      
+      if (data?.content) {
+        setSettings(prev => ({ ...prev, ...data.content }));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar SEO:", error);
+    } finally {
+      setFetching(false);
     }
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Salva em todas as páginas globais (Header/Footer costumam compartilhar settings globais)
-      const { error } = await supabase
-        .from('site_pages')
-        .update({ settings })
-        .eq('is_global', true);
+      // Verifica se a seção existe
+      const { data: existing } = await supabase
+        .from('site_sections')
+        .select('id')
+        .eq('section_key', 'seo_global')
+        .single();
+
+      if (existing) {
+        await supabase
+          .from('site_sections')
+          .update({ content: settings })
+          .eq('id', existing.id);
+      } else {
+        // Busca a página global Header para vincular a seção se ela não existir
+        const { data: page } = await supabase
+          .from('site_pages')
+          .select('id')
+          .eq('is_global', true)
+          .limit(1)
+          .single();
+
+        if (page) {
+          await supabase
+            .from('site_sections')
+            .insert({
+              page_id: page.id,
+              section_key: 'seo_global',
+              content: settings,
+              order_index: 999
+            });
+        }
+      }
       
-      if (error) throw error;
       toast.success("Configurações de SEO e Scripts atualizadas!");
     } catch (error) {
       console.error(error);
@@ -50,12 +89,20 @@ export default function AdminSEO() {
     }
   };
 
+  if (fetching) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-orange" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex flex-col gap-1">
         <h2 className="text-3xl font-black text-brand-blue-dark">SEO & Scripts</h2>
         <p className="text-muted-foreground">
-          Gerencie as tags de busca, scripts de rastreamento e mapa do site.
+          Gerencie as tags de busca, scripts de rastreamento e mapa do site de forma global.
         </p>
       </div>
 

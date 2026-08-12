@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
   Trash2, Eye, Layout, Type, Image as ImageIcon, MousePointer2,
-  Globe, Search, Code, Map as MapIcon, ChevronRight
+  Globe, Search, Code, Map as MapIcon, ChevronRight, Settings2
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,9 +133,14 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
             </Button>
             <h2 className="text-xl font-black text-brand-blue-dark">Editando: {editingSection.section_key}</h2>
           </div>
-          <Button onClick={handleSave} className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg">
-            <Save className="w-4 h-4 mr-2" /> Salvar Alterações
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => toast.info("Configurações de SEO movidas para a aba 'Marketing > SEO & Scripts' e configurações específicas em desenvolvimento.")} className="text-muted-foreground">
+              <Settings2 className="w-4 h-4 mr-2" /> SEO da Página
+            </Button>
+            <Button onClick={handleSave} className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg">
+              <Save className="w-4 h-4 mr-2" /> Salvar Alterações
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-[350px_1fr] gap-8">
@@ -320,73 +325,10 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
       </div>
 
       {mode === 'pages' && (
-        <Tabs defaultValue="pages" className="w-full mt-12">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="pages" className="flex items-center gap-2">
-              <Globe className="w-4 h-4" /> Páginas
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="flex items-center gap-2">
-              <Search className="w-4 h-4" /> SEO & Meta
-            </TabsTrigger>
-            <TabsTrigger value="scripts" className="flex items-center gap-2">
-              <Code className="w-4 h-4" /> Scripts
-            </TabsTrigger>
-            <TabsTrigger value="sitemap" className="flex items-center gap-2">
-              <MapIcon className="w-4 h-4" /> Site Map
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="pages" className="space-y-6">
-            <div className="p-8 text-center bg-muted/20 rounded-xl border-2 border-dashed">
-              <p className="text-muted-foreground">As páginas são gerenciadas na lista acima.</p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="seo">
-            <Card className="p-8">
-              <h3 className="text-xl font-bold mb-4">Configurações de SEO</h3>
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label>Meta Descrição Padrão</Label>
-                  <Textarea placeholder="Descreva seu site para os buscadores..." />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Palavras-chave</Label>
-                  <Input placeholder="coworking, praia grande, escritorio virtual" />
-                </div>
-                <Button className="bg-brand-orange text-white">Salvar SEO</Button>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="scripts">
-            <Card className="p-8">
-              <h3 className="text-xl font-bold mb-4">Scripts Customizados</h3>
-              <div className="space-y-6">
-                <div className="grid gap-2">
-                  <Label>Header Scripts (Google Ads, Analytics, Facebook Pixel)</Label>
-                  <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Footer Scripts</Label>
-                  <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
-                </div>
-                <Button className="bg-brand-orange text-white">Salvar Scripts</Button>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="sitemap">
-            <Card className="p-8">
-              <h3 className="text-xl font-bold mb-4">Site Map</h3>
-              <p className="text-sm text-muted-foreground mb-4">Gere ou visualize o sitemap.xml do seu projeto.</p>
-              <div className="bg-muted p-4 rounded-lg font-mono text-xs">
-                {window.location.origin}/sitemap.xml
-              </div>
-              <Button variant="outline" className="mt-4">Atualizar Sitemap</Button>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div className="mt-12 p-8 text-center bg-muted/20 rounded-xl border-2 border-dashed">
+          <p className="text-muted-foreground">Utilize a lista acima para selecionar e editar o conteúdo das páginas.</p>
+          <p className="text-xs text-muted-foreground/60 mt-2 italic">Dica: Configurações globais de SEO e Scripts foram movidas para o menu "Marketing / Site > SEO & Scripts".</p>
+        </div>
       )}
     </div>
   );
