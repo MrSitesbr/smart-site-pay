@@ -17,6 +17,7 @@ export default function AdminArtigos() {
 
   async function fetchArtigos() {
     setLoading(true);
+    // @ts-ignore - a tipagem pode demorar a atualizar
     const { data, error } = await supabase
       .from('site_articles')
       .select('*')
@@ -32,6 +33,7 @@ export default function AdminArtigos() {
 
   async function deleteArtigo(id: string) {
     if (!confirm("Tem certeza que deseja excluir este artigo?")) return;
+    // @ts-ignore
     const { error } = await supabase.from('site_articles').delete().eq('id', id);
     if (error) {
       toast.error("Erro ao excluir");
