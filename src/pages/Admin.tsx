@@ -258,6 +258,7 @@ export default function Admin() {
       servicos: "Serviços",
       unidades: "Unidades & Salas",
       paginas: "Páginas do Site",
+      paginas_fixos: "Páginas Fixas (Globais)",
       configuracoes: "Configurações, SEO & Scripts"
     };
     return titles[id] || "Admin";
@@ -341,7 +342,8 @@ export default function Admin() {
             {activeTab === "artigos" && <AdminArtigos />}
             {activeTab === "servicos" && <AdminServicos />}
             {activeTab === "unidades" && <AdminUnidades />}
-            {activeTab === "paginas" && <AdminPaginas />}
+            {activeTab === "paginas" && <AdminPaginas mode="pages" />}
+            {activeTab === "paginas_fixos" && <AdminPaginas mode="fixos" />}
             {activeTab === "configuracoes" && <AdminSettings />}
           </main>
         </div>
