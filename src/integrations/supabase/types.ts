@@ -515,6 +515,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_articles: {
+        Row: {
+          author: string | null
+          content: string | null
+          created_at: string | null
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          published_at: string | null
+          slug: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          slug?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          slug?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       site_pages: {
         Row: {
           created_at: string
