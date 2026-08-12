@@ -99,14 +99,15 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     };
 
     switch (section.section_key) {
-      case 'hero': return <HeroSection {...sectionProps} />;
-      case 'features': return <IdealParaSection {...sectionProps} />;
-      case 'pricing': return <PricingSection {...sectionProps} />;
-      case 'institucional': return <InstitucionalSection {...sectionProps} />;
-      case 'testimonials': return <TestimonialsSection {...sectionProps} />;
-      case 'contact': return <ContactSection {...sectionProps} />;
-      case 'especialidades': return <DestaquesProfissionais {...sectionProps} />;
+      case 'hero': return <HeroSection content={sectionProps.content} settings={sectionProps.settings} />;
+      case 'features': return <IdealParaSection content={sectionProps.content} settings={sectionProps.settings} />;
+      case 'pricing': return <PricingSection content={sectionProps.content} settings={sectionProps.settings} />;
+      case 'institucional': return <InstitucionalSection content={sectionProps.content} settings={sectionProps.settings} />;
+      case 'testimonials': return <TestimonialsSection content={sectionProps.content} settings={sectionProps.settings} />;
+      case 'contact': return <ContactSection content={sectionProps.content} settings={sectionProps.settings} />;
+      case 'especialidades': return <DestaquesProfissionais content={sectionProps.content} settings={sectionProps.settings} />;
       default: return (
+
         <div className="p-20 text-center bg-muted/20 border-2 border-dashed rounded-3xl">
           <p className="text-muted-foreground font-bold">Visualizador para "{section.section_key}" em desenvolvimento.</p>
         </div>
