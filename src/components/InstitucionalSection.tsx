@@ -3,17 +3,24 @@ import { MapPin, Building2, Navigation, Store } from "lucide-react";
 import sabrina from "@/assets/sabrina-cow013.png.asset.json";
 import { getPageContent } from "@/lib/cms";
 
+const DEFAULTS = {
+  title: 'Localização que aproxima você de mais oportunidades',
+  description: 'Estamos localizados na Av. Presidente Kennedy, 5214 — fácil acesso e ótima visibilidade para o seu negócio na Vila Tupi.',
+  location_tag: 'Praia Grande - SP',
+  features: [
+    { icon: "Navigation", title: "Fácil acesso e mobilidade" },
+    { icon: "Building2", title: "Região estratégica" },
+    { icon: "Store", title: "Próximo a serviços" },
+  ]
+};
+
 const InstitucionalSection = ({ content, settings }: { content?: any, settings?: any }) => {
-  const [localContent, setLocalContent] = useState(content || {
-    title: 'Localização que aproxima você de mais oportunidades',
-    description: 'Estamos localizados na Av. Presidente Kennedy, 5214 — fácil acesso e ótima visibilidade para o seu negócio na Vila Tupi.',
-    location_tag: 'Praia Grande - SP',
-    features: [
-      { icon: "Navigation", title: "Fácil acesso e mobilidade" },
-      { icon: "Building2", title: "Região estratégica" },
-      { icon: "Store", title: "Próximo a serviços" },
-    ]
-  });
+  const [localContent, setLocalContent] = useState<any>({ ...DEFAULTS, ...(content || {}) });
+
+  useEffect(() => {
+    if (content) setLocalContent({ ...DEFAULTS, ...content });
+  }, [content]);
+
 
   const sectionSettings = settings || {};
   const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
