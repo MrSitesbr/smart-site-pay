@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, MessageCircle, Mail, RotateCcw } from "lucide-react";
+import { Search, MessageCircle, Mail, RotateCcw, Trash2 } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
