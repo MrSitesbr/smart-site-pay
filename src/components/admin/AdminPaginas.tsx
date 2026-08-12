@@ -327,7 +327,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
       {mode === 'pages' && (
         <div className="mt-12 p-8 text-center bg-muted/20 rounded-xl border-2 border-dashed">
           <p className="text-muted-foreground">Utilize a lista acima para selecionar e editar o conteúdo das páginas.</p>
-          <p className="text-xs text-muted-foreground/60 mt-2 italic">Dica: Configurações globais de SEO e Scripts foram movidas para o menu "Marketing / Site > SEO & Scripts".</p>
+          <p className="text-xs text-muted-foreground/60 mt-2 italic">Dica: Configurações globais de SEO e Scripts foram movidas para o menu "Marketing / Site &gt; SEO &amp; Scripts".</p>
         </div>
       )}
     </div>
