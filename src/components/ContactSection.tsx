@@ -6,10 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getPageContent } from "@/lib/cms";
 
-const ContactSection = () => {
+const ContactSection = ({ content, settings }: { content?: any, settings?: any }) => {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "planos", message: "" });
-  const [content, setContent] = useState({
+  const [localContent, setLocalContent] = useState(content || {
     cta_title: 'Pronto para levar seu negócio para outro nível?',
     cta_subtitle: 'Agende uma visita e conheça de perto o que o Coworking 013 pode fazer por você.',
     cta_button: 'Agendar Visita Agora',
@@ -22,18 +22,24 @@ const ContactSection = () => {
     ]
   });
 
+  const sectionSettings = settings || {};
+  const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
+  const textStyle = sectionSettings.textColor ? { color: sectionSettings.textColor } : {};
+  const widthClass = sectionSettings.widthMode === 'full' ? 'w-full px-4' : 'container mx-auto px-4';
+
   useEffect(() => {
     const loadContent = async () => {
+      if (content) return;
       const data = await getPageContent('/');
       if (data && data.site_sections) {
         const section = data.site_sections.find((s: any) => s.section_key === 'contact');
         if (section && section.content) {
-          setContent({ ...content, ...section.content });
+          setLocalContent(prev => ({ ...prev, ...section.content }));
         }
       }
     };
     loadContent();
-  }, []);
+  }, [content]);
 
   const getIcon = (name: string) => {
     switch (name) {
@@ -52,8 +58,17 @@ const ContactSection = () => {
   };
 
   return (
-    <section id="contato" className="py-24 bg-brand-gray">
-      <div className="container mx-auto px-4">
+    <section 
+      id="contato" 
+      className="py-24 bg-brand-gray"
+      style={{
+        ...bgStyle,
+        paddingTop: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        paddingBottom: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        marginBottom: sectionSettings.marginBottom ? `${sectionSettings.marginBottom}px` : undefined
+      }}
+    >
+      <div className={widthClass}>
         <div className="relative bg-gradient-to-r from-secondary to-brand-blue-dark rounded-3xl p-8 md:p-10 mb-16 overflow-hidden text-white">
           <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
           <div className="relative grid md:grid-cols-3 gap-6 items-center">
@@ -62,13 +77,13 @@ const ContactSection = () => {
                 <Calendar className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h3 className="font-heading font-black text-2xl md:text-3xl leading-tight">{content.cta_title}</h3>
-                <p className="text-white/80 text-sm mt-2">{content.cta_subtitle}</p>
+                <h3 className="font-heading font-black text-2xl md:text-3xl leading-tight">{localContent.cta_title}</h3>
+                <p className="text-white/80 text-sm mt-2">{localContent.cta_subtitle}</p>
               </div>
             </div>
             <div className="flex md:justify-end">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-brand-orange-light rounded-full font-heading font-bold px-8">
-                {content.cta_button} <ArrowRight className="w-4 h-4 ml-2" />
+                {localContent.cta_button} <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>
@@ -77,9 +92,9 @@ const ContactSection = () => {
         <div className="grid lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2">
             <span className="inline-block text-secondary font-heading font-bold text-xs tracking-widest mb-4 uppercase">FALE COM A GENTE</span>
-            <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground leading-tight mb-8" dangerouslySetInnerHTML={{ __html: content.title }} />
+            <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground leading-tight mb-8" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
             <div className="space-y-5">
-              {content.contact_items.map((item: any, i: number) => {
+              {localContent.contact_items.map((item: any, i: number) => {
                 const Icon = getIcon(item.icon);
                 const Inner = (
                   <div className="flex items-start gap-4 bg-card rounded-2xl p-5 hover:shadow-md transition-shadow">

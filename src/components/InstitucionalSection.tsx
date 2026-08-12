@@ -3,8 +3,8 @@ import { MapPin, Building2, Navigation, Store } from "lucide-react";
 import sabrina from "@/assets/sabrina-cow013.png.asset.json";
 import { getPageContent } from "@/lib/cms";
 
-const InstitucionalSection = () => {
-  const [content, setContent] = useState({
+const InstitucionalSection = ({ content, settings }: { content?: any, settings?: any }) => {
+  const [localContent, setLocalContent] = useState(content || {
     title: 'Localização que aproxima você de mais oportunidades',
     description: 'Estamos localizados na Av. Presidente Kennedy, 5214 — fácil acesso e ótima visibilidade para o seu negócio na Vila Tupi.',
     location_tag: 'Praia Grande - SP',
@@ -15,18 +15,26 @@ const InstitucionalSection = () => {
     ]
   });
 
+  const sectionSettings = settings || {};
+  const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
+  const textStyle = sectionSettings.textColor ? { color: sectionSettings.textColor } : {};
+  const widthClass = sectionSettings.widthMode === 'full' ? 'w-full px-4' : 'container mx-auto px-4';
+
+
   useEffect(() => {
     const loadContent = async () => {
+      if (content) return;
       const data = await getPageContent('/');
       if (data && data.site_sections) {
         const section = data.site_sections.find((s: any) => s.section_key === 'institucional');
         if (section && section.content) {
-          setContent({ ...content, ...section.content });
+          setLocalContent(prev => ({ ...prev, ...section.content }));
         }
       }
     };
     loadContent();
-  }, []);
+  }, [content]);
+
 
   const getIcon = (name: string) => {
     switch (name) {
@@ -38,9 +46,22 @@ const InstitucionalSection = () => {
   };
 
   return (
-    <section id="institucional" className="py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="relative bg-brand-blue-dark rounded-[2rem] overflow-hidden">
+    <section 
+      id="institucional" 
+      className="py-24 bg-background"
+      style={{
+        ...bgStyle,
+        paddingTop: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        paddingBottom: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        marginBottom: sectionSettings.marginBottom ? `${sectionSettings.marginBottom}px` : undefined
+      }}
+    >
+      <div className={widthClass}>
+        <div 
+          className="relative bg-brand-blue-dark rounded-[2rem] overflow-hidden"
+          style={sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {}}
+        >
+
           <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-secondary/30 blur-3xl pointer-events-none" />
           <div className="grid lg:grid-cols-2 items-stretch">
             <div className="relative h-80 lg:h-96">

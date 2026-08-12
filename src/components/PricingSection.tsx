@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import ReservaDialog from "@/components/ReservaDialog";
 import { getPageContent } from "@/lib/cms";
 
-const PricingSection = () => {
+const PricingSection = ({ content, settings }: { content?: any, settings?: any }) => {
   const [reservaOpen, setReservaOpen] = useState(false);
-  const [content, setContent] = useState({
+  const [localContent, setLocalContent] = useState(content || {
     title: 'Planos que se adaptam ao <span class="text-primary">seu crescimento.</span>',
     subtitle: 'Escolha a melhor opção para você ou para sua equipe. Sem burocracia, sem fiador, apenas foco no seu trabalho.',
     plans_individual: [
@@ -17,26 +17,44 @@ const PricingSection = () => {
     ]
   });
 
+  const sectionSettings = settings || {};
+  const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
+  const textStyle = sectionSettings.textColor ? { color: sectionSettings.textColor } : {};
+  const widthClass = sectionSettings.widthMode === 'full' ? 'w-full px-4' : 'container mx-auto px-4';
+
+
   useEffect(() => {
     const loadContent = async () => {
+      if (content) return;
       const data = await getPageContent('/');
       if (data && data.site_sections) {
         const section = data.site_sections.find((s: any) => s.section_key === 'pricing');
         if (section && section.content) {
-          setContent({ ...content, ...section.content });
+          setLocalContent(prev => ({ ...prev, ...section.content }));
         }
       }
     };
     loadContent();
-  }, []);
+  }, [content]);
+
 
   return (
-    <section id="planos" className="py-24 bg-brand-gray relative overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section 
+      id="planos" 
+      className="py-24 bg-brand-gray relative overflow-hidden"
+      style={{
+        ...bgStyle,
+        paddingTop: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        paddingBottom: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        marginBottom: sectionSettings.marginBottom ? `${sectionSettings.marginBottom}px` : undefined
+      }}
+    >
+      <div className={widthClass}>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground mb-6" dangerouslySetInnerHTML={{ __html: content.title }} />
-          <p className="text-muted-foreground text-lg">{content.subtitle}</p>
+          <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
+          <p className="text-muted-foreground text-lg" style={textStyle}>{localContent.subtitle}</p>
         </div>
+
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {content.plans_individual.map((plan: any, i: number) => (

@@ -4,8 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
 import { assets } from "@/lib/migration-assets";
 
-const IdealParaSection = () => {
-  const [content, setContent] = useState({
+const IdealParaSection = ({ content, settings }: { content?: any, settings?: any }) => {
+  const [localContent, setLocalContent] = useState(content || {
     tag: "NOSSOS AMBIENTES",
     title: 'Espaços planejados para o seu <span class="text-secondary">sucesso.</span>',
     services: [
@@ -48,26 +48,44 @@ const IdealParaSection = () => {
     ]
   });
 
+  const sectionSettings = settings || {};
+  const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
+  const textStyle = sectionSettings.textColor ? { color: sectionSettings.textColor } : {};
+  const widthClass = sectionSettings.widthMode === 'full' ? 'w-full px-4' : 'container mx-auto px-4';
+
+
   useEffect(() => {
     const loadContent = async () => {
+      if (content) return; // Se as props já vieram, não busca no CMS
       const data = await getPageContent('/');
       if (data && data.site_sections) {
         const section = data.site_sections.find((s: any) => s.section_key === 'features');
         if (section && section.content) {
-          // Keep structure but allow dynamic text if available
+          setLocalContent(prev => ({ ...prev, ...section.content }));
         }
       }
     };
     loadContent();
-  }, []);
+  }, [content]);
+
 
   return (
-    <section id="ambientes" className="py-24 bg-brand-gray">
-      <div className="container mx-auto px-4">
+    <section 
+      id="ambientes" 
+      className="py-24 bg-brand-gray"
+      style={{
+        ...bgStyle,
+        paddingTop: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        paddingBottom: sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : undefined,
+        marginBottom: sectionSettings.marginBottom ? `${sectionSettings.marginBottom}px` : undefined
+      }}
+    >
+      <div className={widthClass}>
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <span className="text-secondary font-heading font-bold text-sm tracking-widest uppercase mb-4 inline-block">{content.tag}</span>
-          <h2 className="font-heading font-black text-4xl md:text-5xl text-brand-blue-dark mb-6" dangerouslySetInnerHTML={{ __html: content.title }} />
+          <span className="text-secondary font-heading font-bold text-sm tracking-widest uppercase mb-4 inline-block">{localContent.tag}</span>
+          <h2 className="font-heading font-black text-4xl md:text-5xl text-brand-blue-dark mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
         </div>
+
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {content.services.map((service, i) => (

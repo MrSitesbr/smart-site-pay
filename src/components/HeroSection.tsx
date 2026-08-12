@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, User, Mail, Phone, ArrowRight } from "lucide-react";
 import { assets } from "@/lib/migration-assets";
 
-const HeroSection = () => {
+const HeroSection = ({ content, settings }: { content?: any, settings?: any }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     servico: "",
@@ -16,31 +16,64 @@ const HeroSection = () => {
     telefone: ""
   });
 
+  const sectionContent = content || {
+    title: 'MUDE SUA <span class="text-secondary">ROTINA</span> <br />DE TRABALHO',
+    subtitle: 'O espaço que seu negócio merece, com a flexibilidade que você precisa. Descubra como podemos transformar sua produtividade.',
+    location_label: 'Sede Vila Tupi - Praia Grande',
+    form_type: 'reserva'
+  };
+
+  const sectionSettings = settings || {};
+  const paddingY = sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : "pt-20";
+  const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
+  const textStyle = sectionSettings.textColor ? { color: sectionSettings.textColor } : {};
+  const widthClass = sectionSettings.widthMode === 'full' ? 'w-full px-4' : 'container mx-auto px-4';
+
+
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
   return (
-    <section id="home" className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden bg-brand-blue-dark">
+    <section 
+      id="home" 
+      className="relative min-h-[90vh] flex items-center overflow-hidden bg-brand-blue-dark"
+      style={{ 
+        ...bgStyle,
+        paddingTop: sectionSettings.paddingY !== undefined ? paddingY : undefined,
+        paddingBottom: sectionSettings.paddingY !== undefined ? paddingY : undefined,
+        marginBottom: sectionSettings.marginBottom ? `${sectionSettings.marginBottom}px` : undefined
+      }}
+    >
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
-        <img src={assets.images.vistaAerea} alt="Coworking 013" className="w-full h-full object-cover opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-blue-dark via-brand-blue-dark/80 to-transparent" />
+        <img 
+          src={sectionSettings.backgroundImage || assets.images.vistaAerea} 
+          alt="Coworking 013" 
+          className="w-full h-full object-cover opacity-40" 
+          style={{ opacity: sectionSettings.overlayOpacity !== undefined ? 1 - sectionSettings.overlayOpacity : 0.4 }}
+        />
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-brand-blue-dark via-brand-blue-dark/80 to-transparent" 
+          style={sectionSettings.backgroundColor ? { backgroundImage: `linear-gradient(to right, ${sectionSettings.backgroundColor}, transparent)` } : {}}
+        />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className={`${widthClass} relative z-10`}>
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="text-white animate-fade-in-up">
-            <h1 className="font-heading font-black text-5xl md:text-7xl leading-tight mb-6 tracking-tighter">
-              MUDE SUA <span className="text-secondary">ROTINA</span> <br />DE TRABALHO
-            </h1>
-            <p className="text-xl text-white/90 mb-8 max-w-xl leading-relaxed">
-              O espaço que seu negócio merece, com a flexibilidade que você precisa. Descubra como podemos transformar sua produtividade.
+          <div className="text-white animate-fade-in-up" style={textStyle}>
+            <h1 
+              className="font-heading font-black text-5xl md:text-7xl leading-tight mb-6 tracking-tighter"
+              dangerouslySetInnerHTML={{ __html: sectionContent.title }}
+            />
+            <p className="text-xl text-white/90 mb-8 max-w-xl leading-relaxed" style={textStyle}>
+              {sectionContent.subtitle}
             </p>
-            <div className="flex items-center gap-4 text-secondary font-heading font-bold uppercase tracking-widest text-sm">
-              <span className="w-12 h-[2px] bg-secondary" />
-              Sede Vila Tupi - Praia Grande
+            <div className="flex items-center gap-4 font-heading font-bold uppercase tracking-widest text-sm" style={sectionContent.secondary_color ? { color: sectionContent.secondary_color } : { color: '#FF7F00' }}>
+              <span className="w-12 h-[2px]" style={sectionContent.secondary_color ? { backgroundColor: sectionContent.secondary_color } : { backgroundColor: '#FF7F00' }} />
+              {sectionContent.location_label}
             </div>
           </div>
+
 
           <div className="bg-white rounded-3xl p-8 shadow-2xl animate-fade-in-up delay-200 max-w-md mx-auto lg:mr-0 w-full">
             <div className="mb-6 text-center">
