@@ -28,7 +28,17 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
   }, []);
 
   const loadPages = async () => {
-    const { data } = await supabase.from('site_pages').select('*');
+    const { data, error } = await supabase
+      .from('site_pages')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error("Erro ao carregar páginas:", error);
+      toast.error("Erro ao carregar lista de páginas.");
+      return;
+    }
+    
     if (data) {
       setPages(data);
     }
