@@ -119,7 +119,7 @@ export default function AdminPaginas() {
       case 'institucional': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><InstitucionalSection /></div>;
       case 'testimonials': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><TestimonialsSection /></div>;
       case 'contact': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><ContactSection /></div>;
-      default: return <div className="p-8 text-center bg-muted">Seção: {section.section_key}</div>;
+      default: return <div className="p-8 text-center bg-muted rounded-lg border-2 border-dashed">Visualizador para "{section.section_key}" em desenvolvimento.</div>;
     }
   };
 

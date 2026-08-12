@@ -44,9 +44,10 @@ export default function AdminFuncionarios() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Gestão de Acessos: Funcionários</h2>
           <p className="text-muted-foreground">Controle quem está autorizado a entrar nas unidades por empresa.</p>
         </div>
-        <Button className="bg-brand-orange text-white">
+        <Button onClick={() => toast.info("Para adicionar um colaborador, acesse os detalhes de um Cliente Corporativo.")} className="bg-brand-orange text-white">
           <Plus className="w-4 h-4 mr-2" /> Adicionar Autorizado
         </Button>
+
       </div>
 
       <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-xl shadow-sm border border-brand-blue-dark/5">
@@ -105,9 +106,10 @@ export default function AdminFuncionarios() {
                 <p className="text-xs font-medium">{f.email || "Email não cadastrado"}</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="font-bold text-brand-blue-dark">Ver Histórico</Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="w-3.5 h-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                <Button variant="ghost" size="sm" className="font-bold text-brand-blue-dark" onClick={() => toast.info("Histórico de acessos em desenvolvimento")}>Ver Histórico</Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.info("Para editar, acesse os detalhes do Cliente Corporativo.")}><Edit2 className="w-3.5 h-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => toast.info("Para excluir, acesse os detalhes do Cliente Corporativo.")}><Trash2 className="w-3.5 h-3.5" /></Button>
+
               </div>
             </div>
           </Card>

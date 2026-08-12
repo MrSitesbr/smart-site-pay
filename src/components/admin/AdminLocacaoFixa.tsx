@@ -54,7 +54,7 @@ export default function AdminLocacaoFixa({ contratos }: { contratos: any[] }) {
               </SelectContent>
             </Select>
           </div>
-          <Button className="bg-brand-orange text-white"><Briefcase className="w-4 h-4 mr-2" /> Novo Contrato</Button>
+          <Button onClick={() => toast.info("Criação de contrato de locação em desenvolvimento")} className="bg-brand-orange text-white"><Briefcase className="w-4 h-4 mr-2" /> Novo Contrato</Button>
         </div>
       </div>
 
@@ -77,8 +77,9 @@ export default function AdminLocacaoFixa({ contratos }: { contratos: any[] }) {
               <p className="text-xs mt-1">Vigência: {new Date(c.data_inicio).toLocaleDateString()} até {new Date(c.data_fim).toLocaleDateString()}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" /> Gerar Contrato</Button>
-              <Button variant="ghost" size="sm" className="text-brand-orange font-bold">Editar</Button>
+              <Button variant="outline" size="sm" onClick={() => toast.info("Geração automática de PDF em desenvolvimento")}><FileText className="w-4 h-4 mr-2" /> Gerar Contrato</Button>
+              <Button variant="ghost" size="sm" className="text-brand-orange font-bold" onClick={() => toast.info("Edição de locação fixa em desenvolvimento")}>Editar</Button>
+
             </div>
           </Card>
         ))}

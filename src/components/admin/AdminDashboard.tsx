@@ -28,7 +28,7 @@ export default function AdminDashboard({ reservas, contratos }: { reservas: any[
         .eq('status', 'confirmada');
       
       const rate = Math.round(((ocupadas || 0) / (totalSalas * 5)) * 100); // 5 turnos/vagas por sala estimadas
-      setOccupancyRate(Math.max(15, Math.min(100, rate || 15))); // Fallback visual se estiver muito vazio
+      setOccupancyRate(rate);
     }
     fetchStats();
   }, []);
@@ -73,7 +73,7 @@ export default function AdminDashboard({ reservas, contratos }: { reservas: any[
                 <div>
                   <p className="text-sm font-bold text-brand-blue-dark">Nova reserva: {r.nome}</p>
                   <p className="text-xs text-muted-foreground">{r.ambiente} · {new Date(r.data).toLocaleDateString('pt-BR')}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-tighter">Há 2 horas</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-tighter">{new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </div>
             ))}
@@ -82,25 +82,26 @@ export default function AdminDashboard({ reservas, contratos }: { reservas: any[
 
         <Card className="p-6 border-none shadow-sm bg-brand-blue-dark text-white">
           <h3 className="text-lg font-heading font-black mb-2">Status do Sistema</h3>
-          <p className="text-white/60 text-sm mb-6">Todos os serviços estão operacionais.</p>
+          <p className="text-white/60 text-sm mb-6">Monitoramento em tempo real dos serviços críticos.</p>
           
           <div className="space-y-4">
             <div className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
               <span className="text-sm font-medium">Sincronização Google Agenda</span>
-              <Badge className="bg-green-500 hover:bg-green-500 border-none">Online</Badge>
+              <Badge className="bg-green-500 hover:bg-green-500 border-none">Conectado</Badge>
             </div>
             <div className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
-              <span className="text-sm font-medium">Pagamentos PIX/Stripe</span>
-              <Badge className="bg-green-500 hover:bg-green-500 border-none">Online</Badge>
+              <span className="text-sm font-medium">ERP / Ocupação</span>
+              <Badge className="bg-green-500 hover:bg-green-500 border-none">Ativo</Badge>
             </div>
             <div className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
-              <span className="text-sm font-medium">Notificações WhatsApp</span>
-              <Badge className="bg-green-500 hover:bg-green-500 border-none">Online</Badge>
+              <span className="text-sm font-medium">Controle de Acessos</span>
+              <Badge className="bg-green-500 hover:bg-green-500 border-none">Ativo</Badge>
             </div>
             <div className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
-              <span className="text-sm font-medium">Site Publicado (Vercel)</span>
-              <Badge className="bg-green-500 hover:bg-green-500 border-none">Online</Badge>
+              <span className="text-sm font-medium">CRM Leads / Corporativo</span>
+              <Badge className="bg-green-500 hover:bg-green-500 border-none">Ativo</Badge>
             </div>
+
           </div>
           
           <div className="mt-8 pt-6 border-t border-white/10">

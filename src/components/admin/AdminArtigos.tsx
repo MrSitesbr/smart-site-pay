@@ -55,9 +55,10 @@ export default function AdminArtigos() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Blog & Artigos</h2>
           <p className="text-muted-foreground">Gerencie o conteúdo do blog para atrair mais clientes (Conectado ao DB).</p>
         </div>
-        <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+        <Button onClick={() => toast.info("Funcionalidade de criação de artigos em desenvolvimento")} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
           <Plus className="w-4 h-4 mr-2" /> Novo Artigo
         </Button>
+
       </div>
 
       <div className="flex gap-4 mb-6">
@@ -103,7 +104,7 @@ export default function AdminArtigos() {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.info("Edição em desenvolvimento")}><Edit2 className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`/blog/${a.slug}`, '_blank')}><Eye className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteArtigo(a.id)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
