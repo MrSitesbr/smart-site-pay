@@ -4,18 +4,25 @@ import { Button } from "@/components/ui/button";
 import ReservaDialog from "@/components/ReservaDialog";
 import { getPageContent } from "@/lib/cms";
 
+const DEFAULTS = {
+  title: 'Planos que se adaptam ao <span class="text-primary">seu crescimento.</span>',
+  subtitle: 'Escolha a melhor opção para você ou para sua equipe. Sem burocracia, sem fiador, apenas foco no seu trabalho.',
+  plans_individual: [
+    { name: "Endereço Fiscal", price: "R$ 150", period: "/mês", features: ["Gestão de correspondência", "Divulgação de endereço", "Uso em materiais impressos", "Recebimento de encomendas"], highlight: false },
+    { name: "Day Pass", price: "R$ 70", period: "/dia", features: ["Estação de trabalho rotativa", "Internet 500MB Fibra", "Café e Água inclusos", "Ambiente climatizado"], highlight: false },
+    { name: "Estação Fixa", price: "R$ 550", period: "/mês", features: ["Mesa exclusiva 24/7", "Locker individual", "Endereço comercial incluso", "Descontos em salas de reunião"], highlight: true },
+    { name: "Sala Privativa", price: "Sob consulta", period: "", features: ["Espaço exclusivo para equipes", "Mobiliário completo", "Limpeza e manutenção", "Toda infraestrutura inclusa"], highlight: false },
+  ]
+};
+
 const PricingSection = ({ content, settings }: { content?: any, settings?: any }) => {
   const [reservaOpen, setReservaOpen] = useState(false);
-  const [localContent, setLocalContent] = useState(content || {
-    title: 'Planos que se adaptam ao <span class="text-primary">seu crescimento.</span>',
-    subtitle: 'Escolha a melhor opção para você ou para sua equipe. Sem burocracia, sem fiador, apenas foco no seu trabalho.',
-    plans_individual: [
-      { name: "Endereço Fiscal", price: "R$ 150", period: "/mês", features: ["Gestão de correspondência", "Divulgação de endereço", "Uso em materiais impressos", "Recebimento de encomendas"], highlight: false },
-      { name: "Day Pass", price: "R$ 70", period: "/dia", features: ["Estação de trabalho rotativa", "Internet 500MB Fibra", "Café e Água inclusos", "Ambiente climatizado"], highlight: false },
-      { name: "Estação Fixa", price: "R$ 550", period: "/mês", features: ["Mesa exclusiva 24/7", "Locker individual", "Endereço comercial incluso", "Descontos em salas de reunião"], highlight: true },
-      { name: "Sala Privativa", price: "Sob consulta", period: "", features: ["Espaço exclusivo para equipes", "Mobiliário completo", "Limpeza e manutenção", "Toda infraestrutura inclusa"], highlight: false },
-    ]
-  });
+  const [localContent, setLocalContent] = useState<any>({ ...DEFAULTS, ...(content || {}) });
+
+  useEffect(() => {
+    if (content) setLocalContent({ ...DEFAULTS, ...content });
+  }, [content]);
+
 
   const sectionSettings = settings || {};
   const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};

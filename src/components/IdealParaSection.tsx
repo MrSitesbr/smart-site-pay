@@ -4,49 +4,56 @@ import { ArrowRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
 import { assets } from "@/lib/migration-assets";
 
+const DEFAULTS = {
+  tag: "NOSSOS AMBIENTES",
+  title: 'Espaços planejados para o seu <span class="text-secondary">sucesso.</span>',
+  services: [
+    { 
+      title: "Salas Privativas", 
+      desc: "Escritórios exclusivos para sua empresa ou equipe, com total privacidade.",
+      href: "/escritorio-privativo",
+      image: assets.images.recepcao
+    },
+    { 
+      title: "Sala de Reunião", 
+      desc: "Ambiente profissional para receber clientes e realizar fechamentos importantes.",
+      href: "/auditorio-modular",
+      image: assets.icons.reuniao
+    },
+    { 
+      title: "Coworking", 
+      desc: "Estações de trabalho em ambiente compartilhado, ideal para networking.",
+      href: "/ambientes",
+      image: assets.icons.compartilhado
+    },
+    { 
+      title: "Endereço Fiscal", 
+      desc: "Sua empresa no endereço comercial de maior prestígio da Vila Tupi.",
+      href: "/endereco-virtual",
+      image: assets.icons.fiscal
+    },
+    { 
+      title: "Consultórios", 
+      desc: "Salas equipadas para profissionais da saúde e bem-estar.",
+      href: "/consultorio-privativo",
+      image: assets.icons.consultorio
+    },
+    { 
+      title: "Auditório", 
+      desc: "Espaço modular para cursos, palestras e treinamentos corporativos.",
+      href: "/auditorio-modular",
+      image: assets.icons.auditorio
+    },
+  ]
+};
+
 const IdealParaSection = ({ content, settings }: { content?: any, settings?: any }) => {
-  const [localContent, setLocalContent] = useState(content || {
-    tag: "NOSSOS AMBIENTES",
-    title: 'Espaços planejados para o seu <span class="text-secondary">sucesso.</span>',
-    services: [
-      { 
-        title: "Salas Privativas", 
-        desc: "Escritórios exclusivos para sua empresa ou equipe, com total privacidade.",
-        href: "/escritorio-privativo",
-        image: assets.images.recepcao
-      },
-      { 
-        title: "Sala de Reunião", 
-        desc: "Ambiente profissional para receber clientes e realizar fechamentos importantes.",
-        href: "/auditorio-modular",
-        image: assets.icons.reuniao
-      },
-      { 
-        title: "Coworking", 
-        desc: "Estações de trabalho em ambiente compartilhado, ideal para networking.",
-        href: "/ambientes",
-        image: assets.icons.compartilhado
-      },
-      { 
-        title: "Endereço Fiscal", 
-        desc: "Sua empresa no endereço comercial de maior prestígio da Vila Tupi.",
-        href: "/endereco-virtual",
-        image: assets.icons.fiscal
-      },
-      { 
-        title: "Consultórios", 
-        desc: "Salas equipadas para profissionais da saúde e bem-estar.",
-        href: "/consultorio-privativo",
-        image: assets.icons.consultorio
-      },
-      { 
-        title: "Auditório", 
-        desc: "Espaço modular para cursos, palestras e treinamentos corporativos.",
-        href: "/auditorio-modular",
-        image: assets.icons.auditorio
-      },
-    ]
-  });
+  const [localContent, setLocalContent] = useState<any>({ ...DEFAULTS, ...(content || {}) });
+
+  useEffect(() => {
+    if (content) setLocalContent({ ...DEFAULTS, ...content });
+  }, [content]);
+
 
   const sectionSettings = settings || {};
   const bgStyle = sectionSettings.backgroundColor ? { backgroundColor: sectionSettings.backgroundColor } : {};
