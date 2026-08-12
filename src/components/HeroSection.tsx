@@ -16,12 +16,14 @@ const HeroSection = ({ content, settings }: { content?: any, settings?: any }) =
     telefone: ""
   });
 
-  const sectionContent = content || {
+  const sectionContent = {
     title: 'MUDE SUA <span class="text-secondary">ROTINA</span> <br />DE TRABALHO',
     subtitle: 'O espaço que seu negócio merece, com a flexibilidade que você precisa. Descubra como podemos transformar sua produtividade.',
     location_label: 'Sede Vila Tupi - Praia Grande',
-    form_type: 'reserva'
+    form_type: 'reserva',
+    ...(content || {})
   };
+
 
   const sectionSettings = settings || {};
   const paddingY = sectionSettings.paddingY !== undefined ? `${sectionSettings.paddingY}px` : "pt-20";
