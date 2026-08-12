@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import DynamicPage from "./pages/DynamicPage";
 import Reservar from "./pages/Reservar";
 import Contratar from "./pages/Contratar";
 import Painel from "./pages/Painel";
@@ -15,12 +15,6 @@ import AdminPlanoDetalhe from "./components/admin/AdminPlanoDetalhe";
 import AdminClienteCorpDetalhe from "./components/admin/AdminClienteCorpDetalhe";
 import AuthAdmin from "./pages/AuthAdmin";
 import NotFound from "./pages/NotFound";
-import Institutional from "./pages/Institutional";
-import Unidades from "./pages/Unidades";
-import EscritorioPrivativo from "./pages/EscritorioPrivativo";
-import AuditorioModular from "./pages/AuditorioModular";
-import ConsultorioPrivativo from "./pages/ConsultorioPrivativo";
-import EnderecoVirtual from "./pages/EnderecoVirtual";
 
 const queryClient = new QueryClient();
 
@@ -31,18 +25,21 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/institucional" element={<Institutional />} />
-          <Route path="/unidades" element={<Unidades />} />
-          <Route path="/escritorio-privativo" element={<EscritorioPrivativo />} />
-          <Route path="/auditorio-modular" element={<AuditorioModular />} />
-          <Route path="/consultorio-privativo" element={<ConsultorioPrivativo />} />
-          <Route path="/endereco-virtual" element={<EnderecoVirtual />} />
+          {/* Main Dynamic Pages */}
+          <Route path="/" element={<DynamicPage />} />
+          <Route path="/institucional" element={<DynamicPage />} />
+          <Route path="/unidades" element={<DynamicPage />} />
+          <Route path="/escritorio-privativo" element={<DynamicPage />} />
+          <Route path="/auditorio-modular" element={<DynamicPage />} />
+          <Route path="/consultorio-privativo" element={<DynamicPage />} />
+          <Route path="/endereco-virtual" element={<DynamicPage />} />
+          
+          {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />
           <Route path="/contratar" element={<Contratar />} />
           <Route path="/painel" element={<Painel />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/*" element={<Admin />} />
           <Route path="/admin/unidades/:id" element={<AdminUnidadeDetalhe />} />
           <Route path="/admin/unidades/sala/:id" element={<AdminSalaDetalhe />} />
           <Route path="/admin/planos/:id" element={<AdminPlanoDetalhe />} />
@@ -56,3 +53,4 @@ const App = () => (
 );
 
 export default App;
+
