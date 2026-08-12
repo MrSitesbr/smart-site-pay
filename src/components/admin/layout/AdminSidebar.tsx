@@ -189,7 +189,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
         <button
           onClick={() => {
             localStorage.removeItem("admin_bypass");
-            window.location.href = "/auth";
+            window.location.href = "/auth-admin";
           }}
           className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium"
         >

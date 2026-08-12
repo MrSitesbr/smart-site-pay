@@ -94,7 +94,7 @@ export default function Painel() {
   const selectedIsBusiness = selectedDay ? isBusinessDay(selectedDay) : false;
   const selectedInPast = selectedDay ? selectedDay < todayStart() : false;
 
-  async function logout() { await supabase.auth.signOut(); navigate("/"); }
+  async function logout() { await supabase.auth.signOut(); navigate("/auth"); }
   function copyPix(code: string) { navigator.clipboard.writeText(code); toast({ title: "Código PIX copiado" }); }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
