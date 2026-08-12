@@ -181,8 +181,9 @@ function VisitanteCard({ v }: { v: any }) {
           <p className="text-[10px] text-muted-foreground">{dia}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.info("Edição de visitante em desenvolvimento")}><Edit2 className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => toast.info("Exclusão de visitante em desenvolvimento")}><Trash2 className="w-4 h-4" /></Button>
+
         </div>
       </div>
     </Card>

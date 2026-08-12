@@ -106,9 +106,10 @@ export default function AdminFuncionarios() {
                 <p className="text-xs font-medium">{f.email || "Email não cadastrado"}</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="font-bold text-brand-blue-dark">Ver Histórico</Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="w-3.5 h-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                <Button variant="ghost" size="sm" className="font-bold text-brand-blue-dark" onClick={() => toast.info("Histórico de acessos em desenvolvimento")}>Ver Histórico</Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.info("Para editar, acesse os detalhes do Cliente Corporativo.")}><Edit2 className="w-3.5 h-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteFunc(f.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+
               </div>
             </div>
           </Card>
