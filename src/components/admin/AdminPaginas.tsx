@@ -323,7 +323,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
         <Tabs defaultValue="pages" className="w-full mt-12">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="pages" className="flex items-center gap-2">
-              <Globe className="w-4 h-4" /> Configurações Adicionais
+              <Globe className="w-4 h-4" /> Páginas
             </TabsTrigger>
             <TabsTrigger value="seo" className="flex items-center gap-2">
               <Search className="w-4 h-4" /> SEO & Meta
@@ -336,109 +336,58 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
             </TabsTrigger>
           </TabsList>
           
-          {/* O conteúdo das abas permanece o mesmo, mas agora dentro do modo páginas se necessário */}
+          <TabsContent value="pages" className="space-y-6">
+            <div className="p-8 text-center bg-muted/20 rounded-xl border-2 border-dashed">
+              <p className="text-muted-foreground">As páginas são gerenciadas na lista acima.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo">
+            <Card className="p-8">
+              <h3 className="text-xl font-bold mb-4">Configurações de SEO</h3>
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label>Meta Descrição Padrão</Label>
+                  <Textarea placeholder="Descreva seu site para os buscadores..." />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Palavras-chave</Label>
+                  <Input placeholder="coworking, praia grande, escritorio virtual" />
+                </div>
+                <Button className="bg-brand-orange text-white">Salvar SEO</Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="scripts">
+            <Card className="p-8">
+              <h3 className="text-xl font-bold mb-4">Scripts Customizados</h3>
+              <div className="space-y-6">
+                <div className="grid gap-2">
+                  <Label>Header Scripts (Google Ads, Analytics, Facebook Pixel)</Label>
+                  <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Footer Scripts</Label>
+                  <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
+                </div>
+                <Button className="bg-brand-orange text-white">Salvar Scripts</Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sitemap">
+            <Card className="p-8">
+              <h3 className="text-xl font-bold mb-4">Site Map</h3>
+              <p className="text-sm text-muted-foreground mb-4">Gere ou visualize o sitemap.xml do seu projeto.</p>
+              <div className="bg-muted p-4 rounded-lg font-mono text-xs">
+                {window.location.origin}/sitemap.xml
+              </div>
+              <Button variant="outline" className="mt-4">Atualizar Sitemap</Button>
+            </Card>
+          </TabsContent>
         </Tabs>
       )}
     </div>
   );
-
-        <TabsContent value="pages" className="space-y-6">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-3xl font-black text-brand-blue-dark">Páginas e Cabeçalho/Rodapé</h2>
-            <p className="text-muted-foreground">Selecione uma página ou elemento global para editar o layout e conteúdo.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pages.map(p => (
-              <Card 
-                key={p.id} 
-                className={`group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white ${p.is_global ? 'border-l-4 border-l-brand-orange' : ''}`}
-                onClick={() => loadPage(p.route)}
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-all" />
-                <div className="relative z-10">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all ${p.is_global ? 'bg-orange-100 text-brand-orange' : 'bg-orange-50'}`}>
-                    {p.is_global ? <Layout className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
-                  </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-xl font-black text-brand-blue-dark">{p.name}</h3>
-                    {p.is_global && <span className="text-[10px] bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full font-bold">GLOBAL</span>}
-                  </div>
-                  <p className="text-sm text-muted-foreground font-medium mb-6">{p.route}</p>
-                  <div className="flex items-center text-xs font-bold text-brand-orange uppercase tracking-widest">
-                    Abrir no Editor <ChevronRight className="w-4 h-4 ml-1" />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="seo">
-          <Card className="p-8">
-            <h3 className="text-xl font-bold mb-4">Configurações de SEO</h3>
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label>Meta Descrição Padrão</Label>
-                <Textarea placeholder="Descreva seu site para os buscadores..." />
-              </div>
-              <div className="grid gap-2">
-                <Label>Palavras-chave</Label>
-                <Input placeholder="coworking, praia grande, escritorio virtual" />
-              </div>
-              <Button className="bg-brand-orange text-white">Salvar SEO</Button>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="scripts">
-          <Card className="p-8">
-            <h3 className="text-xl font-bold mb-4">Scripts Customizados</h3>
-            <div className="space-y-6">
-              <div className="grid gap-2">
-                <Label>Header Scripts (Google Ads, Analytics, Facebook Pixel)</Label>
-                <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Footer Scripts</Label>
-                <Textarea className="font-mono text-xs" rows={6} placeholder="<script>...</script>" />
-              </div>
-              <Button className="bg-brand-orange text-white">Salvar Scripts</Button>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sitemap">
-          <Card className="p-8">
-            <h3 className="text-xl font-bold mb-4">Site Map</h3>
-            <p className="text-sm text-muted-foreground mb-4">Gere ou visualize o sitemap.xml do seu projeto.</p>
-            <div className="bg-muted p-4 rounded-lg font-mono text-xs">
-              {window.location.origin}/sitemap.xml
-            </div>
-            <Button variant="outline" className="mt-4">Atualizar Sitemap</Button>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
 }
-
-function ChevronRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
-  )
-}
-
