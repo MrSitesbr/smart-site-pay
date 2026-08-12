@@ -54,7 +54,7 @@ export default function AdminLocacaoFixa({ contratos }: { contratos: any[] }) {
               </SelectContent>
             </Select>
           </div>
-          <Button className="bg-brand-orange text-white"><Briefcase className="w-4 h-4 mr-2" /> Novo Contrato</Button>
+          <Button onClick={() => toast.info("Criação de contrato de locação em desenvolvimento")} className="bg-brand-orange text-white"><Briefcase className="w-4 h-4 mr-2" /> Novo Contrato</Button>
         </div>
       </div>
 

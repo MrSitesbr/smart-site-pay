@@ -44,9 +44,10 @@ export default function AdminFuncionarios() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Gestão de Acessos: Funcionários</h2>
           <p className="text-muted-foreground">Controle quem está autorizado a entrar nas unidades por empresa.</p>
         </div>
-        <Button className="bg-brand-orange text-white">
+        <Button onClick={() => toast.info("Para adicionar um colaborador, acesse os detalhes de um Cliente Corporativo.")} className="bg-brand-orange text-white">
           <Plus className="w-4 h-4 mr-2" /> Adicionar Autorizado
         </Button>
+
       </div>
 
       <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-xl shadow-sm border border-brand-blue-dark/5">
