@@ -2,35 +2,22 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
-  Trash2, Eye, Layout, Type, Image as ImageIcon, MousePointer2,
-  Globe, Search, Code, Map as MapIcon, ChevronRight, Settings2,
-  Palette, Maximize2, Columns
+  Trash2, Eye, Layout, Type, Image as ImageIcon, Globe, Search, 
+  Map as MapIcon, ChevronRight, Settings2, Palette, Maximize2
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-// Componentes Reais
-import HeroSection from "@/components/HeroSection";
-import IdealParaSection from "@/components/IdealParaSection";
-import PricingSection from "@/components/PricingSection";
-import InstitucionalSection from "@/components/InstitucionalSection";
-import ContactSection from "@/components/ContactSection";
-import TestimonialsSection from "@/components/TestimonialsSection";
-import DestaquesProfissionais from "@/components/DestaquesProfissionais";
+import { PageBuilder } from "./PageBuilder";
+import { SectionData } from "@/types/page-builder";
 
 export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fixos' }) {
   const [pages, setPages] = useState<any[]>([]);
   const [selectedPage, setSelectedPage] = useState<any>(null);
-  const [editingSection, setEditingSection] = useState<any>(null);
+  const [isBuilding, setIsBuilding] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'preview'>('preview');
 
   useEffect(() => {
     loadPages();
@@ -58,62 +45,73 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     const data = await getPageContent(route);
     if (data) {
       setSelectedPage(data);
+      setIsBuilding(true);
     } else {
       toast.error("Erro ao carregar dados da página.");
     }
     setLoading(false);
   };
 
-  const handleSave = async () => {
-    if (!editingSection) return;
-    setLoading(true);
+  const handleSavePage = async (layout: SectionData[]) => {
+    if (!selectedPage) return;
+    
     try {
-      await updateSectionContent(editingSection.id, editingSection.content, editingSection.settings || {});
-      toast.success("Seção publicada com sucesso!");
+      // Find the "dynamic" section or create one if it doesn't exist
+      // For the new architecture, we'll store the entire page layout in a single section or distribute it
+      // For now, let's assume we update the first section with the new JSON content
+      const dynamicSection = selectedPage.site_sections?.find((s: any) => s.section_key === 'dynamic-layout') || selectedPage.site_sections?.[0];
       
-      const updatedSections = selectedPage.site_sections.map((s: any) => 
-        s.id === editingSection.id ? editingSection : s
-      );
-      setSelectedPage({ ...selectedPage, site_sections: updatedSections });
-      setEditingSection(null);
+      if (dynamicSection) {
+        await updateSectionContent(dynamicSection.id, { layout }, dynamicSection.settings || {});
+      } else {
+        // Create a new section if none exists
+        const { data: newSection, error } = await supabase
+          .from('site_sections')
+          .insert({
+            page_id: selectedPage.id,
+            section_key: 'dynamic-layout',
+            content: { layout },
+            settings: {},
+            order_index: 0
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+      }
+      
+      toast.success("Página salva com sucesso!");
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao salvar:", error);
       toast.error("Erro ao salvar alterações.");
-    }
-    setLoading(false);
-  };
-
-  const reorderSections = (index: number, direction: 'up' | 'down') => {
-    const newSections = [...selectedPage.site_sections];
-    const target = newSections[index];
-    const swap = newSections[direction === 'up' ? index - 1 : index + 1];
-    if (!swap) return;
-    [newSections[index], newSections[direction === 'up' ? index - 1 : index + 1]] = [swap, target];
-    setSelectedPage({ ...selectedPage, site_sections: newSections });
-  };
-
-  const renderSection = (section: any) => {
-    const sectionProps = {
-      content: section.content,
-      settings: section.settings || {}
-    };
-
-    switch (section.section_key) {
-      case 'hero': return <HeroSection content={sectionProps.content} settings={sectionProps.settings} />;
-      case 'features': return <IdealParaSection content={sectionProps.content} settings={sectionProps.settings} />;
-      case 'pricing': return <PricingSection content={sectionProps.content} settings={sectionProps.settings} />;
-      case 'institucional': return <InstitucionalSection content={sectionProps.content} settings={sectionProps.settings} />;
-      case 'testimonials': return <TestimonialsSection content={sectionProps.content} settings={sectionProps.settings} />;
-      case 'contact': return <ContactSection content={sectionProps.content} settings={sectionProps.settings} />;
-      case 'especialidades': return <DestaquesProfissionais content={sectionProps.content} settings={sectionProps.settings} />;
-      default: return (
-
-        <div className="p-20 text-center bg-muted/20 border-2 border-dashed rounded-3xl">
-          <p className="text-muted-foreground font-bold">Visualizador para "{section.section_key}" em desenvolvimento.</p>
-        </div>
-      );
+      throw error;
     }
   };
+
+  if (isBuilding && selectedPage) {
+    // Determine the initial layout
+    const dynamicSection = selectedPage.site_sections?.find((s: any) => s.section_key === 'dynamic-layout') || selectedPage.site_sections?.[0];
+    const initialLayout = dynamicSection?.content?.layout || [];
+
+    return (
+      <div className="fixed inset-0 z-50 bg-white">
+        <PageBuilder 
+          pageId={selectedPage.id}
+          initialLayout={initialLayout}
+          onSave={handleSavePage}
+        />
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="absolute top-3 left-4 z-[60] text-white hover:bg-white/10"
+          onClick={() => setIsBuilding(false)}
+        >
+          <ChevronLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+      </div>
+    );
+  }
+
 
   const updateSectionField = (key: string, value: any, type: 'content' | 'settings' = 'content') => {
     setEditingSection({
@@ -329,40 +327,27 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
         <div className="flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 py-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => setSelectedPage(null)}>
-              <X className="w-5 h-5 mr-2" /> Sair do Editor
+              <ChevronLeft className="w-5 h-5 mr-2" /> Sair
             </Button>
             <h2 className="text-2xl font-black text-brand-blue-dark">{selectedPage.name}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <div className="bg-muted p-1 rounded-lg flex gap-1 mr-4">
-              <Button 
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setViewMode('list')}
-                className="h-8 text-xs font-bold"
-              >
-                Estrutura
-              </Button>
-              <Button 
-                variant={viewMode === 'preview' ? 'secondary' : 'ghost'} 
-                size="sm" 
-                onClick={() => setViewMode('preview')}
-                className="h-8 text-xs font-bold"
-              >
-                Visual
-              </Button>
-            </div>
+            <Button 
+              className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold"
+              onClick={() => setIsBuilding(true)}
+            >
+              <Layout className="w-4 h-4 mr-2" /> ABRIR EDITOR VISUAL
+            </Button>
             <Button variant="outline" size="sm" onClick={() => window.open(selectedPage.route, '_blank')} className="font-bold">
               <Eye className="w-4 h-4 mr-2" /> Ver Publicado
             </Button>
           </div>
         </div>
 
-        <div className={viewMode === 'list' ? "space-y-2 max-w-3xl mx-auto" : "space-y-12"}>
-          {selectedPage.site_sections?.sort((a: any, b: any) => a.order_index - b.order_index).map((section: any, index: number) => (
-            <div key={section.id} className="group relative">
-              {viewMode === 'list' ? (
-                <Card className="p-4 flex items-center justify-between border-none shadow-sm hover:shadow-md transition-all group-hover:translate-x-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {selectedPage.site_sections?.sort((a: any, b: any) => a.order_index - b.order_index).map((section: any) => (
+            <Card key={section.id} className="p-6 border-none shadow-sm hover:shadow-md transition-all">
+
                   <div className="flex items-center gap-4">
                     <div className="p-2 rounded-lg bg-brand-gray text-muted-foreground">
                       <GripVertical className="w-4 h-4 cursor-grab" />
