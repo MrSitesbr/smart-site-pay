@@ -34,8 +34,8 @@ export default function AdminSEO() {
         .eq('section_key', 'seo_global')
         .single();
       
-      if (data?.content) {
-        setSettings(prev => ({ ...prev, ...data.content }));
+      if (data && data.content && typeof data.content === 'object') {
+        setSettings(prev => ({ ...prev, ...(data.content as any) }));
       }
     } catch (error) {
       console.error("Erro ao carregar SEO:", error);
