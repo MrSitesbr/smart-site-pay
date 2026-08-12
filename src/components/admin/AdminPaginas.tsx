@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
   Trash2, Eye, Layout, Type, Image as ImageIcon, MousePointer2,
-  Globe, Search, Code, Map as MapIcon
+  Globe, Search, Code, Map as MapIcon, ChevronRight
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ import InstitucionalSection from "@/components/InstitucionalSection";
 import ContactSection from "@/components/ContactSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 
-export default function AdminPaginas() {
+export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fixos' }) {
   const [pages, setPages] = useState<any[]>([]);
 
   useEffect(() => {
@@ -279,23 +279,68 @@ export default function AdminPaginas() {
     );
   }
 
+  const filteredPages = pages.filter(p => mode === 'fixos' ? p.is_global : !p.is_global);
+
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="pages" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8">
-          <TabsTrigger value="pages" className="flex items-center gap-2">
-            <Globe className="w-4 h-4" /> Páginas
-          </TabsTrigger>
-          <TabsTrigger value="seo" className="flex items-center gap-2">
-            <Search className="w-4 h-4" /> SEO & Meta
-          </TabsTrigger>
-          <TabsTrigger value="scripts" className="flex items-center gap-2">
-            <Code className="w-4 h-4" /> Scripts (Headers/Footers)
-          </TabsTrigger>
-          <TabsTrigger value="sitemap" className="flex items-center gap-2">
-            <MapIcon className="w-4 h-4" /> Site Map
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-3xl font-black text-brand-blue-dark">
+          {mode === 'fixos' ? 'Fixos (Cabeçalho e Rodapé)' : 'Páginas do Site'}
+        </h2>
+        <p className="text-muted-foreground">
+          {mode === 'fixos' 
+            ? 'Selecione um elemento global para editar o layout e conteúdo que aparece em todo o site.' 
+            : 'Selecione uma página para editar suas seções de conteúdo.'}
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredPages.map(p => (
+          <Card 
+            key={p.id} 
+            className={`group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white ${p.is_global ? 'border-l-4 border-l-brand-orange' : ''}`}
+            onClick={() => loadPage(p.route)}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-all" />
+            <div className="relative z-10">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all ${p.is_global ? 'bg-orange-100 text-brand-orange' : 'bg-orange-50'}`}>
+                {p.is_global ? <Layout className="w-7 h-7" /> : <FileText className="w-7 h-7" />}
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-xl font-black text-brand-blue-dark">{p.name}</h3>
+                {p.is_global && <span className="text-[10px] bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full font-bold">GLOBAL</span>}
+              </div>
+              <p className="text-sm text-muted-foreground font-medium mb-6">{p.route}</p>
+              <div className="flex items-center text-xs font-bold text-brand-orange uppercase tracking-widest">
+                Abrir no Editor <ChevronRight className="w-4 h-4 ml-1" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {mode === 'pages' && (
+        <Tabs defaultValue="pages" className="w-full mt-12">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="pages" className="flex items-center gap-2">
+              <Globe className="w-4 h-4" /> Configurações Adicionais
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="flex items-center gap-2">
+              <Search className="w-4 h-4" /> SEO & Meta
+            </TabsTrigger>
+            <TabsTrigger value="scripts" className="flex items-center gap-2">
+              <Code className="w-4 h-4" /> Scripts
+            </TabsTrigger>
+            <TabsTrigger value="sitemap" className="flex items-center gap-2">
+              <MapIcon className="w-4 h-4" /> Site Map
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* O conteúdo das abas permanece o mesmo, mas agora dentro do modo páginas se necessário */}
+        </Tabs>
+      )}
+    </div>
+  );
 
         <TabsContent value="pages" className="space-y-6">
           <div className="flex flex-col gap-1">
