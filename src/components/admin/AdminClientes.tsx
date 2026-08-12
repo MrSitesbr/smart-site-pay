@@ -147,6 +147,19 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
                       <Button size="sm" variant="outline" asChild>
                         <a href={`mailto:${c.email}`}><Mail className="w-4 h-4" /></a>
                       </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-destructive h-8 w-8 p-0"
+                        onClick={async () => {
+                          if (!confirm("Excluir histórico de leads deste e-mail?")) return;
+                          // @ts-ignore
+                          const { error } = await supabase.from('contract_requests').delete().eq('email', c.email);
+                          if (!error) window.location.reload();
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
