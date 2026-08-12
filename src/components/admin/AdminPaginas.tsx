@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
   Trash2, Eye, Layout, Type, Image as ImageIcon, Globe, Search, 
-  Map as MapIcon, ChevronRight, Settings2, Palette, Maximize2
+  Map as MapIcon, ChevronRight, Settings2, Palette, Maximize2,
+  ChevronLeft
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,15 +56,11 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     if (!selectedPage) return;
     
     try {
-      // Find the "dynamic" section or create one if it doesn't exist
-      // For the new architecture, we'll store the entire page layout in a single section or distribute it
-      // For now, let's assume we update the first section with the new JSON content
       const dynamicSection = selectedPage.site_sections?.find((s: any) => s.section_key === 'dynamic-layout') || selectedPage.site_sections?.[0];
       
       if (dynamicSection) {
         await updateSectionContent(dynamicSection.id, { layout }, dynamicSection.settings || {});
       } else {
-        // Create a new section if none exists
         const { data: newSection, error } = await supabase
           .from('site_sections')
           .insert({
@@ -89,7 +85,6 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
   };
 
   if (isBuilding && selectedPage) {
-    // Determine the initial layout
     const dynamicSection = selectedPage.site_sections?.find((s: any) => s.section_key === 'dynamic-layout') || selectedPage.site_sections?.[0];
     const initialLayout = dynamicSection?.content?.layout || [];
 
@@ -108,215 +103,6 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
         >
           <ChevronLeft className="w-4 h-4 mr-2" /> Voltar
         </Button>
-      </div>
-    );
-  }
-
-
-  const updateSectionField = (key: string, value: any, type: 'content' | 'settings' = 'content') => {
-    setEditingSection({
-      ...editingSection,
-      [type]: {
-        ...editingSection[type],
-        [key]: value
-      }
-    });
-  };
-
-  if (editingSection) {
-    return (
-      <div className="flex flex-col h-full gap-6">
-        <div className="flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-20 py-4 border-b">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>
-              <X className="w-5 h-5 mr-2" /> Fechar
-            </Button>
-            <div>
-              <h2 className="text-xl font-black text-brand-blue-dark leading-none">Editor de Seção</h2>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Seção: {editingSection.section_key}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button onClick={handleSave} className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg font-bold">
-              <Save className="w-4 h-4 mr-2" /> PUBLICAR ALTERAÇÕES
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-[400px_1fr] gap-8 h-[calc(100vh-180px)]">
-          <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
-            <Tabs defaultValue="content" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50 p-1">
-                <TabsTrigger value="content" className="text-xs font-bold gap-2"><Type className="w-3 h-3" /> Conteúdo</TabsTrigger>
-                <TabsTrigger value="style" className="text-xs font-bold gap-2"><Palette className="w-3 h-3" /> Estilo</TabsTrigger>
-                <TabsTrigger value="layout" className="text-xs font-bold gap-2"><Maximize2 className="w-3 h-3" /> Layout</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="content">
-                <Card className="p-6 border-none shadow-sm bg-white">
-                  <div className="space-y-6">
-                    {Object.keys(editingSection.content).map((key) => (
-                      <div key={key} className="space-y-2 group">
-                        <Label className="capitalize text-[11px] font-black text-muted-foreground group-hover:text-brand-orange transition-colors flex items-center gap-2">
-                          {key.replace(/_/g, ' ')}
-                          {key.includes('img') && <ImageIcon className="w-3 h-3" />}
-                        </Label>
-                        {key.includes('text') || key.includes('description') || key.includes('subtitle') || key.includes('title') ? (
-                          <Textarea 
-                            className="min-h-[120px] border-muted bg-brand-gray/30 focus-visible:ring-brand-orange text-sm leading-relaxed"
-                            value={editingSection.content[key]} 
-                            onChange={(e) => updateSectionField(key, e.target.value)} 
-                          />
-                        ) : (
-                          <Input 
-                            className="h-11 border-muted bg-brand-gray/30 focus-visible:ring-brand-orange text-sm"
-                            value={editingSection.content[key]} 
-                            onChange={(e) => updateSectionField(key, e.target.value)} 
-                          />
-                        )}
-                      </div>
-                    ))}
-                    
-                    {editingSection.section_key === 'hero' && (
-                      <div className="space-y-2 pt-4 border-t">
-                        <Label className="text-[11px] font-black text-muted-foreground">Tipo de Formulário</Label>
-                        <Select 
-                          value={editingSection.content.form_type || 'reserva'} 
-                          onValueChange={(v) => updateSectionField('form_type', v)}
-                        >
-                          <SelectTrigger className="bg-brand-gray/30 border-muted">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="reserva">Formulário de Reserva</SelectItem>
-                            <SelectItem value="contato">Formulário de Contato</SelectItem>
-                            <SelectItem value="none">Sem Formulário</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="style">
-                <Card className="p-6 border-none shadow-sm bg-white space-y-6">
-                  <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Cores</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold">Cor de Fundo</Label>
-                        <div className="flex gap-2">
-                          <Input 
-                            type="color" 
-                            className="w-10 h-10 p-1 rounded-lg border-none bg-transparent"
-                            value={editingSection.settings?.backgroundColor || "#ffffff"}
-                            onChange={(e) => updateSectionField('backgroundColor', e.target.value, 'settings')}
-                          />
-                          <Input 
-                            className="h-10 text-xs font-mono"
-                            value={editingSection.settings?.backgroundColor || "#ffffff"}
-                            onChange={(e) => updateSectionField('backgroundColor', e.target.value, 'settings')}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold">Cor do Texto</Label>
-                        <div className="flex gap-2">
-                          <Input 
-                            type="color" 
-                            className="w-10 h-10 p-1 rounded-lg border-none bg-transparent"
-                            value={editingSection.settings?.textColor || "#1a1a1a"}
-                            onChange={(e) => updateSectionField('textColor', e.target.value, 'settings')}
-                          />
-                          <Input 
-                            className="h-10 text-xs font-mono"
-                            value={editingSection.settings?.textColor || "#1a1a1a"}
-                            onChange={(e) => updateSectionField('textColor', e.target.value, 'settings')}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-4 border-t">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
-                    <Input 
-                      placeholder="URL da Imagem de Fundo"
-                      className="bg-brand-gray/30 border-muted text-xs"
-                      value={editingSection.settings?.backgroundImage || ""}
-                      onChange={(e) => updateSectionField('backgroundImage', e.target.value, 'settings')}
-                    />
-                    <div className="flex items-center gap-2 mt-2">
-                      <Label className="text-[10px] font-bold">Opacidade do Overlay</Label>
-                      <Input 
-                        type="range" min="0" max="1" step="0.1"
-                        className="h-4 accent-brand-orange"
-                        value={editingSection.settings?.overlayOpacity || 0}
-                        onChange={(e) => updateSectionField('overlayOpacity', parseFloat(e.target.value), 'settings')}
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="layout">
-                <Card className="p-6 border-none shadow-sm bg-white space-y-6">
-                  <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Estrutura</Label>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold">Largura da Seção</Label>
-                      <Select 
-                        value={editingSection.settings?.widthMode || 'boxed'} 
-                        onValueChange={(v) => updateSectionField('widthMode', v, 'settings')}
-                      >
-                        <SelectTrigger className="bg-brand-gray/30 border-muted">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="boxed">Boxed (Contido)</SelectItem>
-                          <SelectItem value="full">Full Width (Largura Total)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-black text-muted-foreground">Padding Top/Bottom</Label>
-                      <Input 
-                        type="number" 
-                        className="bg-brand-gray/30 border-muted"
-                        value={editingSection.settings?.paddingY || 96}
-                        onChange={(e) => updateSectionField('paddingY', parseInt(e.target.value), 'settings')}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[11px] font-black text-muted-foreground">Margin Bottom</Label>
-                      <Input 
-                        type="number" 
-                        className="bg-brand-gray/30 border-muted"
-                        value={editingSection.settings?.marginBottom || 0}
-                        onChange={(e) => updateSectionField('marginBottom', parseInt(e.target.value), 'settings')}
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="bg-brand-gray/30 rounded-3xl border-4 border-dashed border-muted/50 overflow-hidden relative group">
-            <div className="absolute top-6 left-6 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border">
-              <Eye className="w-4 h-4 text-brand-orange" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-brand-blue-dark">Preview Interativo</span>
-            </div>
-            
-            <div className="h-full overflow-y-auto bg-white">
-              {renderSection(editingSection)}
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
@@ -346,48 +132,38 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {selectedPage.site_sections?.sort((a: any, b: any) => a.order_index - b.order_index).map((section: any) => (
-            <Card key={section.id} className="p-6 border-none shadow-sm hover:shadow-md transition-all">
-
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-brand-gray text-muted-foreground">
-                      <GripVertical className="w-4 h-4 cursor-grab" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-brand-blue-dark uppercase text-xs tracking-wider">{section.section_key}</span>
-                      <span className="text-xs text-muted-foreground">{section.content.title?.replace(/<[^>]*>/g, '').substring(0, 60) || "Sem título"}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => reorderSections(index, 'up')} className="h-8 w-8 p-0"><ChevronUp className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => reorderSections(index, 'down')} className="h-8 w-8 p-0"><ChevronDown className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEditingSection(section)} className="h-8 px-3 text-xs font-bold bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-white ml-2 transition-all">EDITAR</Button>
-                  </div>
-                </Card>
-              ) : (
-                <div className="relative group/preview border-4 border-transparent hover:border-brand-orange/50 rounded-3xl overflow-hidden transition-all">
-                  <div className="absolute inset-0 bg-brand-blue-dark/0 group-hover/preview:bg-brand-blue-dark/5 z-10 transition-all" />
-                  <div className="absolute top-4 right-4 z-20 opacity-0 group-hover/preview:opacity-100 transition-all flex gap-2">
-                    <Button size="sm" onClick={() => setEditingSection(section)} className="bg-brand-orange text-white shadow-xl font-bold">
-                      <MousePointer2 className="w-4 h-4 mr-2" /> EDITAR SEÇÃO
-                    </Button>
-                    <div className="flex flex-col gap-1">
-                       <Button size="icon" variant="secondary" onClick={() => reorderSections(index, 'up')} className="h-8 w-8 shadow-md"><ChevronUp className="w-4 h-4" /></Button>
-                       <Button size="icon" variant="secondary" onClick={() => reorderSections(index, 'down')} className="h-8 w-8 shadow-md"><ChevronDown className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-                  <div className="pointer-events-none">
-                    {renderSection(section)}
-                  </div>
+            <Card key={section.id} className="p-6 border-none shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-2 rounded-lg bg-brand-gray text-muted-foreground">
+                  <Layout className="w-4 h-4" />
                 </div>
-              )}
-            </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-brand-blue-dark uppercase text-xs tracking-wider">{section.section_key}</span>
+                  <span className="text-xs text-muted-foreground">ID: {section.id.substring(0, 8)}</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    // Logic to set editing section if needed, but we prefer visual editor now
+                    setIsBuilding(true);
+                  }}
+                  className="h-8 px-3 text-xs font-bold bg-brand-orange/10 text-brand-orange hover:bg-brand-orange hover:text-white transition-all flex-1"
+                >
+                  EDITAR NO BUILDER
+                </Button>
+              </div>
+            </Card>
           ))}
           
           <Button 
-            className="w-full border-dashed border-2 py-8 bg-transparent text-muted-foreground hover:bg-brand-orange/5 hover:text-brand-orange hover:border-brand-orange transition-all rounded-3xl"
-            onClick={() => toast.info("Funcionalidade de adicionar novas seções em desenvolvimento.")}
+            className="w-full border-dashed border-2 py-12 bg-transparent text-muted-foreground hover:bg-brand-orange/5 hover:text-brand-orange hover:border-brand-orange transition-all rounded-3xl flex flex-col gap-2"
+            onClick={() => setIsBuilding(true)}
           >
-            <Plus className="w-5 h-5 mr-2" /> Adicionar Nova Seção
+            <Plus className="w-6 h-6" />
+            <span className="font-bold">Nova Seção Visual</span>
           </Button>
         </div>
       </div>
