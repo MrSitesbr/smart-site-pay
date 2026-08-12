@@ -38,7 +38,10 @@ export const updateSectionContent = async (sectionId: string, content: any, sett
     .update({ content, settings, is_visible })
     .eq('id', sectionId);
     
-  if (error) throw error;
+  if (error) {
+    console.error("Erro ao atualizar seção:", error);
+    throw error;
+  }
   return data;
 };
 

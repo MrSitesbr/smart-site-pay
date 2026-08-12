@@ -5,23 +5,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
   Trash2, Eye, Layout, Type, Image as ImageIcon, MousePointer2,
-  Globe, Search, Code, Map as MapIcon, ChevronRight, Settings2
+  Globe, Search, Code, Map as MapIcon, ChevronRight, Settings2,
+  Palette, Maximize2, Columns
 } from "lucide-react";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Componentes Reais
 import HeroSection from "@/components/HeroSection";
 import IdealParaSection from "@/components/IdealParaSection";
 import PricingSection from "@/components/PricingSection";
 import InstitucionalSection from "@/components/InstitucionalSection";
 import ContactSection from "@/components/ContactSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import DestaquesProfissionais from "@/components/DestaquesProfissionais";
 
 export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fixos' }) {
   const [pages, setPages] = useState<any[]>([]);
+  const [selectedPage, setSelectedPage] = useState<any>(null);
+  const [editingSection, setEditingSection] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'preview'>('preview');
 
   useEffect(() => {
     loadPages();
@@ -44,11 +53,6 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     }
   };
 
-  const [selectedPage, setSelectedPage] = useState<any>(null);
-  const [editingSection, setEditingSection] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'preview'>('preview');
-
   const loadPage = async (route: string) => {
     setLoading(true);
     const data = await getPageContent(route);
@@ -64,15 +68,17 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     if (!editingSection) return;
     setLoading(true);
     try {
-      await updateSectionContent(editingSection.id, editingSection.content);
-      toast.success("Seção atualizada!");
+      await updateSectionContent(editingSection.id, editingSection.content, editingSection.settings || {});
+      toast.success("Seção publicada com sucesso!");
+      
       const updatedSections = selectedPage.site_sections.map((s: any) => 
         s.id === editingSection.id ? editingSection : s
       );
       setSelectedPage({ ...selectedPage, site_sections: updatedSections });
       setEditingSection(null);
     } catch (error) {
-      toast.error("Erro ao salvar.");
+      console.error(error);
+      toast.error("Erro ao salvar alterações.");
     }
     setLoading(false);
   };
@@ -86,115 +92,230 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     setSelectedPage({ ...selectedPage, site_sections: newSections });
   };
 
-  const renderSectionPreview = (section: any) => {
+  const renderSection = (section: any) => {
+    const sectionProps = {
+      content: section.content,
+      settings: section.settings || {}
+    };
+
     switch (section.section_key) {
-      case 'navbar': return (
-        <div className="bg-[#002f5e] p-4 text-white rounded-lg shadow-inner">
-          <div className="flex items-center justify-between">
-             <div className="flex items-center gap-2">
-               <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-[8px] font-bold">ICON</div>
-               <div className="flex flex-col leading-none">
-                 <span className="text-[8px] text-orange-500 uppercase font-bold">{section.content.logo_text_top}</span>
-                 <span className="text-lg font-black">{section.content.logo_text_bottom}</span>
-               </div>
-             </div>
-             <div className="flex gap-4 text-[10px] font-bold opacity-70">
-                {section.content.links?.map((l: any) => <span key={l.label}>{l.label}</span>)}
-             </div>
-             <div className="text-[10px] font-bold">{section.content.phone}</div>
-          </div>
+      case 'hero': return <HeroSection {...sectionProps} />;
+      case 'features': return <IdealParaSection {...sectionProps} />;
+      case 'pricing': return <PricingSection {...sectionProps} />;
+      case 'institucional': return <InstitucionalSection {...sectionProps} />;
+      case 'testimonials': return <TestimonialsSection {...sectionProps} />;
+      case 'contact': return <ContactSection {...sectionProps} />;
+      case 'especialidades': return <DestaquesProfissionais {...sectionProps} />;
+      default: return (
+        <div className="p-20 text-center bg-muted/20 border-2 border-dashed rounded-3xl">
+          <p className="text-muted-foreground font-bold">Visualizador para "{section.section_key}" em desenvolvimento.</p>
         </div>
       );
-      case 'footer': return (
-        <div className="bg-brand-blue-dark p-8 text-white rounded-lg">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-               <div className="flex flex-col leading-none">
-                 <span className="text-[10px] text-orange-500 font-bold">{section.content.logo_text_top}</span>
-                 <span className="text-2xl font-black">{section.content.logo_text_bottom}</span>
-               </div>
-               <p className="text-xs text-white/60">{section.content.description}</p>
-            </div>
-            <div className="space-y-2 text-xs text-white/60">
-               <div>{section.content.phone}</div>
-               <div>{section.content.email}</div>
-               <div>{section.content.address_1}</div>
-            </div>
-          </div>
-        </div>
-      );
-      case 'hero': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><HeroSection /></div>;
-      case 'features': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><IdealParaSection /></div>;
-      case 'pricing': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><PricingSection /></div>;
-      case 'institucional': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><InstitucionalSection /></div>;
-      case 'testimonials': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><TestimonialsSection /></div>;
-      case 'contact': return <div className="pointer-events-none scale-75 origin-top mb-[-10%]"><ContactSection /></div>;
-      default: return <div className="p-8 text-center bg-muted rounded-lg border-2 border-dashed">Visualizador para "{section.section_key}" em desenvolvimento.</div>;
     }
+  };
+
+  const updateSectionField = (key: string, value: any, type: 'content' | 'settings' = 'content') => {
+    setEditingSection({
+      ...editingSection,
+      [type]: {
+        ...editingSection[type],
+        [key]: value
+      }
+    });
   };
 
   if (editingSection) {
     return (
       <div className="flex flex-col h-full gap-6">
-        <div className="flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 py-4">
+        <div className="flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-20 py-4 border-b">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>
-              <X className="w-5 h-5 mr-2" /> Cancelar
+              <X className="w-5 h-5 mr-2" /> Fechar
             </Button>
-            <h2 className="text-xl font-black text-brand-blue-dark">Editando: {editingSection.section_key}</h2>
+            <div>
+              <h2 className="text-xl font-black text-brand-blue-dark leading-none">Editor de Seção</h2>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Seção: {editingSection.section_key}</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => toast.info("Configurações de SEO movidas para a aba 'Marketing > SEO & Scripts' e configurações específicas em desenvolvimento.")} className="text-muted-foreground">
-              <Settings2 className="w-4 h-4 mr-2" /> SEO da Página
-            </Button>
-            <Button onClick={handleSave} className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg">
-              <Save className="w-4 h-4 mr-2" /> Salvar Alterações
+            <Button onClick={handleSave} className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg font-bold">
+              <Save className="w-4 h-4 mr-2" /> PUBLICAR ALTERAÇÕES
             </Button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-[350px_1fr] gap-8">
-          <Card className="p-6 h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar shadow-sm border-none bg-white">
-            <div className="flex items-center gap-2 mb-6 text-brand-orange">
-              <Layout className="w-5 h-5" />
-              <h3 className="font-bold">Conteúdo da Seção</h3>
-            </div>
-            <div className="space-y-6">
-              {Object.keys(editingSection.content).map((key) => (
-                <div key={key} className="space-y-2 group">
-                  <div className="flex items-center justify-between">
-                    <Label className="capitalize text-xs font-bold text-muted-foreground group-hover:text-brand-orange transition-colors">
-                      {key.replace(/_/g, ' ')}
-                    </Label>
-                    {key.includes('title') && <Type className="w-3 h-3 text-muted-foreground/50" />}
-                    {key.includes('img') && <ImageIcon className="w-3 h-3 text-muted-foreground/50" />}
-                  </div>
-                  {key.includes('text') || key.includes('description') || key.includes('subtitle') || key.includes('title') ? (
-                    <Textarea 
-                      className="min-h-[100px] border-muted bg-brand-gray/30 focus-visible:ring-brand-orange"
-                      value={editingSection.content[key]} 
-                      onChange={(e) => setEditingSection({...editingSection, content: {...editingSection.content, [key]: e.target.value}})} 
-                    />
-                  ) : (
-                    <Input 
-                      className="border-muted bg-brand-gray/30 focus-visible:ring-brand-orange"
-                      value={editingSection.content[key]} 
-                      onChange={(e) => setEditingSection({...editingSection, content: {...editingSection.content, [key]: e.target.value}})} 
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
+        <div className="grid lg:grid-cols-[400px_1fr] gap-8 h-[calc(100vh-180px)]">
+          <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+            <Tabs defaultValue="content" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50 p-1">
+                <TabsTrigger value="content" className="text-xs font-bold gap-2"><Type className="w-3 h-3" /> Conteúdo</TabsTrigger>
+                <TabsTrigger value="style" className="text-xs font-bold gap-2"><Palette className="w-3 h-3" /> Estilo</TabsTrigger>
+                <TabsTrigger value="layout" className="text-xs font-bold gap-2"><Maximize2 className="w-3 h-3" /> Layout</TabsTrigger>
+              </TabsList>
 
-          <div className="hidden lg:block">
-             <div className="flex items-center gap-2 mb-4 text-muted-foreground">
-               <Eye className="w-4 h-4" />
-               <span className="text-xs font-bold uppercase tracking-widest">Visualização em Tempo Real</span>
-             </div>
-             <div className="rounded-2xl border-4 border-brand-blue-dark/10 overflow-hidden bg-white shadow-2xl h-[calc(100vh-250px)] overflow-y-auto scale-90 origin-top">
-                {renderSectionPreview(editingSection)}
-             </div>
+              <TabsContent value="content">
+                <Card className="p-6 border-none shadow-sm bg-white">
+                  <div className="space-y-6">
+                    {Object.keys(editingSection.content).map((key) => (
+                      <div key={key} className="space-y-2 group">
+                        <Label className="capitalize text-[11px] font-black text-muted-foreground group-hover:text-brand-orange transition-colors flex items-center gap-2">
+                          {key.replace(/_/g, ' ')}
+                          {key.includes('img') && <ImageIcon className="w-3 h-3" />}
+                        </Label>
+                        {key.includes('text') || key.includes('description') || key.includes('subtitle') || key.includes('title') ? (
+                          <Textarea 
+                            className="min-h-[120px] border-muted bg-brand-gray/30 focus-visible:ring-brand-orange text-sm leading-relaxed"
+                            value={editingSection.content[key]} 
+                            onChange={(e) => updateSectionField(key, e.target.value)} 
+                          />
+                        ) : (
+                          <Input 
+                            className="h-11 border-muted bg-brand-gray/30 focus-visible:ring-brand-orange text-sm"
+                            value={editingSection.content[key]} 
+                            onChange={(e) => updateSectionField(key, e.target.value)} 
+                          />
+                        )}
+                      </div>
+                    ))}
+                    
+                    {editingSection.section_key === 'hero' && (
+                      <div className="space-y-2 pt-4 border-t">
+                        <Label className="text-[11px] font-black text-muted-foreground">Tipo de Formulário</Label>
+                        <Select 
+                          value={editingSection.content.form_type || 'reserva'} 
+                          onValueChange={(v) => updateSectionField('form_type', v)}
+                        >
+                          <SelectTrigger className="bg-brand-gray/30 border-muted">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="reserva">Formulário de Reserva</SelectItem>
+                            <SelectItem value="contato">Formulário de Contato</SelectItem>
+                            <SelectItem value="none">Sem Formulário</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="style">
+                <Card className="p-6 border-none shadow-sm bg-white space-y-6">
+                  <div className="space-y-4">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Cores</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold">Cor de Fundo</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            type="color" 
+                            className="w-10 h-10 p-1 rounded-lg border-none bg-transparent"
+                            value={editingSection.settings?.backgroundColor || "#ffffff"}
+                            onChange={(e) => updateSectionField('backgroundColor', e.target.value, 'settings')}
+                          />
+                          <Input 
+                            className="h-10 text-xs font-mono"
+                            value={editingSection.settings?.backgroundColor || "#ffffff"}
+                            onChange={(e) => updateSectionField('backgroundColor', e.target.value, 'settings')}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold">Cor do Texto</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            type="color" 
+                            className="w-10 h-10 p-1 rounded-lg border-none bg-transparent"
+                            value={editingSection.settings?.textColor || "#1a1a1a"}
+                            onChange={(e) => updateSectionField('textColor', e.target.value, 'settings')}
+                          />
+                          <Input 
+                            className="h-10 text-xs font-mono"
+                            value={editingSection.settings?.textColor || "#1a1a1a"}
+                            onChange={(e) => updateSectionField('textColor', e.target.value, 'settings')}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
+                    <Input 
+                      placeholder="URL da Imagem de Fundo"
+                      className="bg-brand-gray/30 border-muted text-xs"
+                      value={editingSection.settings?.backgroundImage || ""}
+                      onChange={(e) => updateSectionField('backgroundImage', e.target.value, 'settings')}
+                    />
+                    <div className="flex items-center gap-2 mt-2">
+                      <Label className="text-[10px] font-bold">Opacidade do Overlay</Label>
+                      <Input 
+                        type="range" min="0" max="1" step="0.1"
+                        className="h-4 accent-brand-orange"
+                        value={editingSection.settings?.overlayOpacity || 0}
+                        onChange={(e) => updateSectionField('overlayOpacity', parseFloat(e.target.value), 'settings')}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="layout">
+                <Card className="p-6 border-none shadow-sm bg-white space-y-6">
+                  <div className="space-y-4">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Estrutura</Label>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold">Largura da Seção</Label>
+                      <Select 
+                        value={editingSection.settings?.widthMode || 'boxed'} 
+                        onValueChange={(v) => updateSectionField('widthMode', v, 'settings')}
+                      >
+                        <SelectTrigger className="bg-brand-gray/30 border-muted">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="boxed">Boxed (Contido)</SelectItem>
+                          <SelectItem value="full">Full Width (Largura Total)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-black text-muted-foreground">Padding Top/Bottom</Label>
+                      <Input 
+                        type="number" 
+                        className="bg-brand-gray/30 border-muted"
+                        value={editingSection.settings?.paddingY || 96}
+                        onChange={(e) => updateSectionField('paddingY', parseInt(e.target.value), 'settings')}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-black text-muted-foreground">Margin Bottom</Label>
+                      <Input 
+                        type="number" 
+                        className="bg-brand-gray/30 border-muted"
+                        value={editingSection.settings?.marginBottom || 0}
+                        onChange={(e) => updateSectionField('marginBottom', parseInt(e.target.value), 'settings')}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div className="bg-brand-gray/30 rounded-3xl border-4 border-dashed border-muted/50 overflow-hidden relative group">
+            <div className="absolute top-6 left-6 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border">
+              <Eye className="w-4 h-4 text-brand-orange" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-blue-dark">Preview Interativo</span>
+            </div>
+            
+            <div className="h-full overflow-y-auto bg-white">
+              {renderSection(editingSection)}
+            </div>
           </div>
         </div>
       </div>
@@ -269,19 +390,12 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
                     </div>
                   </div>
                   <div className="pointer-events-none">
-                    {renderSectionPreview(section)}
+                    {renderSection(section)}
                   </div>
                 </div>
               )}
             </div>
           ))}
-          
-          {selectedPage.site_sections?.length === 0 && (
-            <Card className="p-12 text-center border-dashed border-2 bg-muted/20">
-              <Layout className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground">Esta página ainda não possui seções de conteúdo.</p>
-            </Card>
-          )}
           
           <Button 
             className="w-full border-dashed border-2 py-8 bg-transparent text-muted-foreground hover:bg-brand-orange/5 hover:text-brand-orange hover:border-brand-orange transition-all rounded-3xl"
@@ -302,10 +416,10 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
         <h2 className="text-3xl font-black text-brand-blue-dark">
           {mode === 'fixos' ? 'Fixos (Cabeçalho e Rodapé)' : 'Páginas do Site'}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground font-medium">
           {mode === 'fixos' 
             ? 'Selecione um elemento global para editar o layout e conteúdo que aparece em todo o site.' 
-            : 'Selecione uma página para editar suas seções de conteúdo.'}
+            : 'Selecione uma página para editar suas seções de conteúdo no estilo Elementor.'}
         </p>
       </div>
       
@@ -333,13 +447,6 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
           </Card>
         ))}
       </div>
-
-      {mode === 'pages' && (
-        <div className="mt-12 p-8 text-center bg-muted/20 rounded-xl border-2 border-dashed">
-          <p className="text-muted-foreground">Utilize a lista acima para selecionar e editar o conteúdo das páginas.</p>
-          <p className="text-xs text-muted-foreground/60 mt-2 italic">Dica: Configurações globais de SEO e Scripts foram movidas para o menu "Marketing / Site &gt; SEO &amp; Scripts".</p>
-        </div>
-      )}
     </div>
   );
 }
