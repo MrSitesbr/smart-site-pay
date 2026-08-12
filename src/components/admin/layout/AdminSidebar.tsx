@@ -65,7 +65,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: Users,
       items: [
         { title: "CRM Leads", id: "clientes" },
-        { title: "CRM Clientes Corp", id: "clientes_corp" },
+        { title: "Clientes", id: "clientes_corp" },
         { title: "Colaboradores", id: "funcionarios" },
         { title: "Visitantes", id: "visitantes_crm" },
       ]
