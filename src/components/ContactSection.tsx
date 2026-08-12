@@ -24,16 +24,18 @@ const ContactSection = () => {
 
   useEffect(() => {
     const loadContent = async () => {
+      if (content) return;
       const data = await getPageContent('/');
       if (data && data.site_sections) {
         const section = data.site_sections.find((s: any) => s.section_key === 'contact');
         if (section && section.content) {
-          setContent({ ...content, ...section.content });
+          setLocalContent(prev => ({ ...prev, ...section.content }));
         }
       }
     };
     loadContent();
-  }, []);
+  }, [content]);
+
 
   const getIcon = (name: string) => {
     switch (name) {
