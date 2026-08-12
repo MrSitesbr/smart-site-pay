@@ -59,14 +59,14 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
       const dynamicSection = selectedPage.site_sections?.find((s: any) => s.section_key === 'dynamic-layout') || selectedPage.site_sections?.[0];
       
       if (dynamicSection) {
-        await updateSectionContent(dynamicSection.id, { layout }, dynamicSection.settings || {});
+        await updateSectionContent(dynamicSection.id, { layout } as any, dynamicSection.settings || {});
       } else {
         const { data: newSection, error } = await supabase
           .from('site_sections')
           .insert({
             page_id: selectedPage.id,
             section_key: 'dynamic-layout',
-            content: { layout },
+            content: { layout } as any,
             settings: {},
             order_index: 0
           })
