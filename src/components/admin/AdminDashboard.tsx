@@ -11,6 +11,7 @@ export default function AdminDashboard({ reservas, contratos }: { reservas: any[
   useEffect(() => {
     async function fetchStats() {
       // Clientes corporativos reais
+      // @ts-ignore
       const { count } = await supabase.from('clientes_corp').select('*', { count: 'exact', head: true });
       setClientCount(count || 0);
 
@@ -27,14 +28,14 @@ export default function AdminDashboard({ reservas, contratos }: { reservas: any[
         .eq('status', 'confirmada');
       
       const rate = Math.round(((ocupadas || 0) / (totalSalas * 5)) * 100); // 5 turnos/vagas por sala estimadas
-      setOccupancyRate(Math.min(100, rate || 15)); // Fallback visual se estiver muito vazio
+      setOccupancyRate(Math.max(15, Math.min(100, rate || 15))); // Fallback visual se estiver muito vazio
     }
     fetchStats();
   }, []);
 
   const stats = [
     { label: "Clientes Ativos", value: clientCount.toString(), icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Reservas Totais", value: reservas.length.toString(), icon: Calendar, color: "text-brand-orange", bg: "bg-orange-50" },
+    { label: "Reservas Totais", value: (reservas.length).toString(), icon: Calendar, color: "text-brand-orange", bg: "bg-orange-50" },
     { label: "Taxa Ocupação", value: `${occupancyRate}%`, icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
     { label: "Pendentes", value: reservas.filter(r => r.status === 'pendente').length.toString(), icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50" },
   ];
