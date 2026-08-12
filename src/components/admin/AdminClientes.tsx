@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, MessageCircle, Mail, RotateCcw } from "lucide-react";
+import { Search, MessageCircle, Mail, RotateCcw, Trash2 } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
@@ -146,6 +146,19 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
                       </Button>
                       <Button size="sm" variant="outline" asChild>
                         <a href={`mailto:${c.email}`}><Mail className="w-4 h-4" /></a>
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-destructive h-8 w-8 p-0"
+                        onClick={async () => {
+                          if (!confirm("Excluir histórico de leads deste e-mail?")) return;
+                          // @ts-ignore
+                          const { error } = await supabase.from('contract_requests').delete().eq('email', c.email);
+                          if (!error) window.location.reload();
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>

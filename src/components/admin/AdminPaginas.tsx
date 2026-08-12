@@ -261,7 +261,17 @@ export default function AdminPaginas() {
             </div>
           ))}
           
-          <Button className="w-full border-dashed border-2 py-8 bg-transparent text-muted-foreground hover:bg-brand-orange/5 hover:text-brand-orange hover:border-brand-orange transition-all rounded-3xl">
+          {selectedPage.site_sections?.length === 0 && (
+            <Card className="p-12 text-center border-dashed border-2 bg-muted/20">
+              <Layout className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-muted-foreground">Esta página ainda não possui seções de conteúdo.</p>
+            </Card>
+          )}
+          
+          <Button 
+            className="w-full border-dashed border-2 py-8 bg-transparent text-muted-foreground hover:bg-brand-orange/5 hover:text-brand-orange hover:border-brand-orange transition-all rounded-3xl"
+            onClick={() => toast.info("Funcionalidade de adicionar novas seções em desenvolvimento.")}
+          >
             <Plus className="w-5 h-5 mr-2" /> Adicionar Nova Seção
           </Button>
         </div>
