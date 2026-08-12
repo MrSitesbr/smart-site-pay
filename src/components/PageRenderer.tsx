@@ -17,7 +17,7 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onE
 
   return (
     <div className="w-full overflow-x-hidden">
-      {layout.map((section) => (
+      {layout.filter(Boolean).map((section) => (
         <SectionRenderer 
           key={section.id} 
           section={section} 
@@ -34,7 +34,8 @@ const SectionRenderer: React.FC<{
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
 }> = ({ section, isAdmin, onElementClick }) => {
-  const { settings } = section;
+  const settings = section?.settings || {};
+  const columns = Array.isArray(section?.columns) ? section.columns : [];
   
   const sectionStyle: React.CSSProperties = {
     backgroundColor: settings.backgroundColor,
@@ -72,9 +73,9 @@ const SectionRenderer: React.FC<{
     >
       {settings.backgroundImage && <div style={overlayStyle} />}
       
-      <div className={`relative z-10 grid gap-4 ${section.columns.length > 1 ? `grid-cols-1 md:grid-cols-${section.columns.length}` : 'grid-cols-1'}`}
-           style={{ gridTemplateColumns: section.columns.length > 1 ? section.columns.map(c => `${c.widthPercentage || (100/section.columns.length)}%`).join(' ') : '1fr' }}>
-        {section.columns.map((column) => (
+      <div className={`relative z-10 grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
+           style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr' }}>
+        {columns.filter(Boolean).map((column) => (
           <ColumnRenderer 
             key={column.id} 
             column={column} 
@@ -98,7 +99,8 @@ const ColumnRenderer: React.FC<{
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
 }> = ({ column, isAdmin, onElementClick }) => {
-  const { settings } = column;
+  const settings = column?.settings || {};
+  const widgets = Array.isArray(column?.widgets) ? column.widgets : [];
   
   const columnStyle: React.CSSProperties = {
     backgroundColor: settings.backgroundColor,
@@ -119,7 +121,7 @@ const ColumnRenderer: React.FC<{
         }
       }}
     >
-      {column.widgets.map((widget) => (
+      {widgets.filter(Boolean).map((widget) => (
         <WidgetRenderer 
           key={widget.id} 
           widget={widget} 
@@ -142,7 +144,8 @@ const WidgetRenderer: React.FC<{
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
 }> = ({ widget, isAdmin, onElementClick }) => {
-  const { content, styles } = widget;
+  const content = widget?.content || {};
+  const styles = widget?.styles || {};
   
   const widgetStyle: React.CSSProperties = {
     color: styles.color,
@@ -160,10 +163,10 @@ const WidgetRenderer: React.FC<{
     switch (widget.type) {
       case 'heading':
         const Tag = (content.level || 'h2') as keyof JSX.IntrinsicElements;
-        return <Tag style={widgetStyle} className="font-heading font-bold" dangerouslySetInnerHTML={{ __html: content.text }} />;
+        return <Tag style={widgetStyle} className="font-heading font-bold" dangerouslySetInnerHTML={{ __html: content.text || '' }} />;
       
       case 'text':
-        return <div style={widgetStyle} className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.text }} />;
+        return <div style={widgetStyle} className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.text || '' }} />;
       
       case 'image':
         return (
