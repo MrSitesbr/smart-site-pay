@@ -1,21 +1,16 @@
 import React from 'react';
-import HeroSection from './HeroSection';
-import IdealParaSection from './IdealParaSection';
-import PricingSection from './PricingSection';
-import InstitucionalSection from './InstitucionalSection';
-import TestimonialsSection from './TestimonialsSection';
-import ContactSection from './ContactSection';
-import DestaquesProfissionais from './DestaquesProfissionais';
 import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
-
-// Form Components
-import { ReservaForm } from './HeroSection'; // Assuming we export these or create dedicated ones
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Mail, Phone, ArrowRight } from "lucide-react";
 
 interface PageRendererProps {
   layout: SectionData[];
   isAdmin?: boolean;
   onElementClick?: (type: 'section' | 'column' | 'widget', id: string, data: any) => void;
 }
+
 
 export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onElementClick }) => {
   if (!layout || !Array.isArray(layout)) return null;
