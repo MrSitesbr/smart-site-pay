@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
-import Index from "./Index";
+import DynamicPage from "./DynamicPage";
 import ReservaDialog from "@/components/ReservaDialog";
 
 export default function Reservar() {
@@ -10,7 +10,7 @@ export default function Reservar() {
 
   return (
     <>
-      <Index />
+      <DynamicPage />
       <ReservaDialog
         open={open}
         onOpenChange={(o) => {
