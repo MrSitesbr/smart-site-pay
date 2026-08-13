@@ -3,7 +3,8 @@ import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair } from "lucide-react";
+import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnitsWidget, PlansWidget, RoomsWidget } from "./admin/layout/CoworkingWidgets";
 
 interface PageRendererProps {
@@ -229,6 +230,40 @@ const WidgetRenderer: React.FC<{
       
       case 'rooms_grid':
         return <RoomsWidget content={content} styles={styles} />;
+
+      case 'popup':
+        return (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button style={widgetStyle} className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold rounded-full px-8 py-3">
+                {content.triggerText || "Abrir"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black text-brand-blue-dark uppercase tracking-tight">
+                  {content.title}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="py-6 font-medium text-muted-foreground" dangerouslySetInnerHTML={{ __html: content.content || '' }} />
+              {content.actionType && content.actionType !== 'none' && (
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button 
+                    className="bg-brand-blue-dark text-white font-bold"
+                    onClick={() => {
+                      if (content.actionType === 'login') window.location.href = '/auth';
+                      if (content.actionType === 'register') window.location.href = '/auth?signup=true';
+                      if (content.actionType === 'whatsapp') window.open('https://wa.me/5513992037957', '_blank');
+                    }}
+                  >
+                    {content.actionType === 'login' ? 'Entrar Agora' : 
+                     content.actionType === 'register' ? 'Criar Conta' : 'Falar no WhatsApp'}
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        );
 
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;

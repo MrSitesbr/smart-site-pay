@@ -2,7 +2,7 @@ import {
   Type, Image as ImageIcon, MousePointer2, Layout as LayoutIcon, 
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Italic, 
   Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2, 
-  Building2, CreditCard, Armchair
+  Building2, CreditCard, Armchair, MessageSquare
 } from "lucide-react";
 import { WidgetType } from "@/types/page-builder";
 
@@ -89,5 +89,16 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
     icon: Armchair,
     defaultContent: { limit: 6 },
     defaultStyles: {}
+  },
+  popup: {
+    label: "Popup/Modal",
+    icon: MessageSquare,
+    defaultContent: { 
+      title: "Título do Popup", 
+      triggerText: "Abrir Popup",
+      content: "Conteúdo do popup aqui...",
+      type: "info" // info, form, promo
+    },
+    defaultStyles: { buttonColor: "#ff6b00" }
   }
 };
