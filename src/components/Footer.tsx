@@ -56,9 +56,12 @@ const Footer = () => {
 
     // Load Global Footer Content
     const data = await getPageContent("global-footer");
-    if (data && data.site_sections && data.site_sections.length > 0) {
-      const content = data.site_sections[0].content;
-      setCmsContent(prev => ({ ...prev, ...content }));
+    if (data && data.site_sections) {
+      const footerSection = data.site_sections.find((s: any) => s.section_key === 'footer' && s.is_visible);
+      if (footerSection) {
+        const content = footerSection.content;
+        setCmsContent(prev => ({ ...prev, ...content }));
+      }
     }
   };
 
