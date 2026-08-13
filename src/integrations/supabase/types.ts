@@ -259,6 +259,36 @@ export type Database = {
           },
         ]
       }
+      media_library: {
+        Row: {
+          created_at: string | null
+          file_type: string
+          filename: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_type: string
+          filename: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          file_type?: string
+          filename?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
       plano_unidades: {
         Row: {
           created_at: string

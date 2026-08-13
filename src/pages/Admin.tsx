@@ -27,6 +27,7 @@ import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminSEO from "@/components/admin/AdminSEO";
+import AdminMidias from "@/components/admin/AdminMidias";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
@@ -261,6 +262,7 @@ export default function Admin() {
       paginas: "Páginas do Site",
       paginas_fixos: "Páginas Fixas (Globais)",
       configuracoes: "Configurações Gerais",
+      midias: "Biblioteca de Mídias",
       seo: "SEO, Scripts & Site Map"
     };
     return titles[id] || "Admin";
@@ -347,6 +349,7 @@ export default function Admin() {
             {activeTab === "paginas" && <AdminPaginas mode="pages" />}
             {activeTab === "paginas_fixos" && <AdminPaginas mode="fixos" />}
             {activeTab === "seo" && <AdminSEO />}
+            {activeTab === "midias" && <AdminMidias />}
             {activeTab === "configuracoes" && <AdminSettings />}
           </main>
         </div>

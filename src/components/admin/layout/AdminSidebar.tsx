@@ -110,6 +110,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
         { title: "Fixos", id: "paginas_fixos" },
         { title: "Artigos (Blog)", id: "artigos" },
         { title: "Serviços", id: "servicos" },
+        { title: "Mídias", id: "midias" },
         { title: "SEO & Scripts", id: "seo" },
       ]
     },
