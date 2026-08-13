@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
-  ChevronUp, ChevronDown, X, Download, Upload
+  ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon
 } from "lucide-react";
+import { MediaPickerModal } from "./MediaPickerModal";
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
 
 interface InspectorProps {
@@ -23,6 +24,13 @@ interface InspectorProps {
 
 export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onClose, onDelete }) => {
   const [activeTab, setActiveTab] = useState('content');
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<string | null>(null);
+
+  const openPicker = (path: string) => {
+    setPickerTarget(path);
+    setIsPickerOpen(true);
+  };
 
   const handleChange = (path: string, value: any) => {
     const newData = { ...data };
@@ -89,8 +97,13 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
 
                   {data.type === 'image' && (
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">URL da Imagem</Label>
-                      <Input value={data.content.url || ''} onChange={(e) => handleChange('content.url', e.target.value)} />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem</Label>
+                      <div className="flex gap-2">
+                        <Input value={data.content.url || ''} onChange={(e) => handleChange('content.url', e.target.value)} />
+                        <Button variant="outline" size="icon" onClick={() => openPicker('content.url')}>
+                          <ImageIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -227,7 +240,12 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
               {type === 'section' && (
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
-                  <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
+                  <div className="flex gap-2">
+                    <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
+                    <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
+                      <ImageIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -290,6 +308,17 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
           </Button>
         )}
       </div>
+
+      <MediaPickerModal 
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={(url) => {
+          if (pickerTarget) {
+            handleChange(pickerTarget, url);
+          }
+          setIsPickerOpen(false);
+        }}
+      />
     </div>
   );
 };
