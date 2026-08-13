@@ -117,9 +117,6 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       />
                     </div>
                   )}
-                    </div>
-                  )}
-
                   {data.type === 'popup' && (
                     <div className="space-y-4">
                       <div className="space-y-2">
