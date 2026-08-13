@@ -4,27 +4,31 @@ import { FileCode, Copy, Sparkles, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminDocsIA() {
-  const schemaExemplo = {
-    layout: [
-      {
-        id: "hero_exemplo",
-        type: "hero",
-        content: {
-          title: "Título da Hero",
-          subtitle: "Subtítulo atraente",
-          image: "URL_DA_IMAGEM",
-          cta: "Botão de Ação"
-        },
-        settings: { padding: "py-24", background: "bg-white" }
-      },
-      {
-        id: "units_1",
-        type: "units_grid",
-        content: { title: "Nossas Unidades", limit: 3 },
-        settings: { padding: "py-16" }
-      }
-    ]
-  };
+  const schemaExemplo = [
+    {
+      id: "hero_exemplo",
+      columns: [
+        {
+          id: "col_hero",
+          widthPercentage: 100,
+          widgets: [
+            {
+              id: "wid_hero_1",
+              type: "hero",
+              content: {
+                title: "Título da Hero",
+                subtitle: "Subtítulo atraente",
+                image: "URL_DA_IMAGEM",
+                cta: "Botão de Ação"
+              },
+              styles: { padding: "py-24", background: "bg-white" }
+            }
+          ]
+        }
+      ],
+      settings: { fullWidth: true, padding: { top: 60, bottom: 60, left: 0, right: 0 } }
+    }
+  ];
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -34,11 +38,17 @@ export default function AdminDocsIA() {
   const promptBase = `Você é uma IA especialista em design de interfaces para Coworking. 
 Sua tarefa é gerar seções de página no formato JSON compatível com o "Construtor Dev".
 
-A estrutura de cada seção deve seguir rigorosamente este schema:
+A estrutura deve ser uma LISTA (ARRAY) de seções.
+Cada seção deve seguir rigorosamente este schema:
+- id: string única
+- columns: Array de objetos { id, widthPercentage, widgets: Widget[] }
+- settings: { fullWidth: boolean, padding: { top, bottom, left, right }, backgroundColor }
+
+Cada Widget deve ter:
 - id: string única
 - type: 'hero' | 'features' | 'text_block' | 'ideal_para' | 'units_grid' | 'plans_grid' | 'rooms_grid' | 'contact_form' | 'popup'
 - content: objeto com campos específicos do widget
-- settings: { padding, background, maxWidth }
+- styles: objeto com estilos (ex: { padding, textAlign })
 
 Widgets Disponíveis e seus conteúdos:
 1. hero: { title, subtitle, image, cta }
@@ -50,7 +60,7 @@ Widgets Disponíveis e seus conteúdos:
 7. contact_form: { title, subtitle }
 8. popup: { triggerText, title, html, actionType: 'login'|'whatsapp'|'register' }
 
-Sempre responda APENAS o JSON da propriedade "layout", sem explicações.`;
+Sempre responda APENAS o JSON (ARRAY de seções), sem explicações.`;
 
   return (
     <div className="space-y-6">
