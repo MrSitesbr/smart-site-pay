@@ -117,6 +117,41 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       />
                     </div>
                   )}
+                    </div>
+                  )}
+
+                  {data.type === 'popup' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto do Botão Gatilho</Label>
+                        <Input value={data.content.triggerText || ''} onChange={(e) => handleChange('content.triggerText', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Título do Popup</Label>
+                        <Input value={data.content.title || ''} onChange={(e) => handleChange('content.title', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conteúdo (HTML)</Label>
+                        <Textarea 
+                          value={data.content.content || ''} 
+                          onChange={(e) => handleChange('content.content', e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Ação</Label>
+                        <Select value={data.content.actionType || 'none'} onValueChange={(v) => handleChange('content.actionType', v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhuma (Apenas Informação)</SelectItem>
+                            <SelectItem value="login">Redirecionar para Login</SelectItem>
+                            <SelectItem value="register">Redirecionar para Cadastro</SelectItem>
+                            <SelectItem value="whatsapp">Abrir WhatsApp</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 

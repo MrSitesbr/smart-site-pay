@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { WIDGET_REGISTRY } from "../WidgetRegistry";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   const [units, setUnits] = useState<any[]>([]);
@@ -102,6 +104,18 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
 export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const handleBooking = async (room: any) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Se não estiver logado, redireciona para login/cadastro com retorno
+      navigate(`/auth?redirect=/reservar&sala=${room.id}`);
+    } else {
+      // Se estiver logado, vai direto para a página de reserva
+      navigate(`/reservar?sala=${room.id}`);
+    }
+  };
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -139,7 +153,10 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
             <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-4">
               {room.unidades?.nome} • Cap. {room.capacidade}
             </p>
-            <button className="w-fit py-2 px-6 bg-white text-brand-blue-dark font-black rounded-xl hover:bg-brand-orange hover:text-white transition-all uppercase tracking-widest text-[10px]">
+            <button 
+              onClick={() => handleBooking(room)}
+              className="w-fit py-2 px-6 bg-white text-brand-blue-dark font-black rounded-xl hover:bg-brand-orange hover:text-white transition-all uppercase tracking-widest text-[10px]"
+            >
               Reservar
             </button>
           </div>
