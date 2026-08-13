@@ -1,7 +1,8 @@
 import { 
   Type, Image as ImageIcon, MousePointer2, Layout as LayoutIcon, 
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Italic, 
-  Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2 
+  Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2, 
+  Building2, CreditCard, Armchair
 } from "lucide-react";
 import { WidgetType } from "@/types/page-builder";
 
@@ -69,6 +70,24 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
     label: "Espaçador",
     icon: Maximize2,
     defaultContent: { height: 40 },
+    defaultStyles: {}
+  },
+  units_grid: {
+    label: "Grade de Unidades",
+    icon: Building2,
+    defaultContent: { limit: 6 },
+    defaultStyles: {}
+  },
+  plans_grid: {
+    label: "Grade de Planos",
+    icon: CreditCard,
+    defaultContent: { limit: 3 },
+    defaultStyles: {}
+  },
+  rooms_grid: {
+    label: "Grade de Salas",
+    icon: Armchair,
+    defaultContent: { limit: 6 },
     defaultStyles: {}
   }
 };
