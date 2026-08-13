@@ -169,49 +169,44 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     try {
       let importedLayout = JSON.parse(content);
       
-      // Se vier encapsulado em um objeto { layout: [...] } ou { sections: [...] }
       if (!Array.isArray(importedLayout)) {
         if (importedLayout.layout && Array.isArray(importedLayout.layout)) {
           importedLayout = importedLayout.layout;
         } else if (importedLayout.sections && Array.isArray(importedLayout.sections)) {
           importedLayout = importedLayout.sections;
+        } else if (importedLayout.id && Array.isArray(importedLayout.columns)) {
+          // Single section object
+          importedLayout = [importedLayout];
+        } else {
+          throw new Error("Formato não reconhecido");
         }
       }
 
-      // Basic validation
-      if (Array.isArray(importedLayout)) {
-        // Validar se os itens parecem seções (tem columns)
-        const hasColumns = importedLayout.every(s => s.columns && Array.isArray(s.columns));
-        if (hasColumns) {
-          setLayout(importedLayout);
-          toast.success("Layout importado com sucesso!");
-        } else {
-          // Talvez seja uma lista de widgets? Tentar converter para seção única
-          const newSection: SectionData = {
-            id: `sec_imp_${Math.random().toString(36).substr(2, 9)}`,
-            columns: [{
-              id: `col_imp_${Math.random().toString(36).substr(2, 9)}`,
-              widthPercentage: 100,
-              widgets: importedLayout,
-              settings: { padding: { top: 15, bottom: 15, left: 15, right: 15 } }
-            }],
-            settings: { fullWidth: false, padding: { top: 60, bottom: 60, left: 0, right: 0 }, backgroundColor: '#ffffff' }
-          };
-          setLayout([...layout, newSection]);
-          toast.success("Widgets importados em uma nova seção.");
-        }
-      } else if (importedLayout.id && importedLayout.columns) {
-        // It's a single section
-        setLayout([...layout, importedLayout]);
-        toast.success("Seção importada com sucesso!");
-      } else {
-        toast.error("Formato JSON inválido. Certifique-se de que é um array de seções ou widgets.");
-      }
+      // Deep clone and regenerate IDs to avoid collisions and fix references
+      const regenerateIds = (data: any[]) => {
+        return data.map((sec: any) => ({
+          ...sec,
+          id: `sec_${Math.random().toString(36).substr(2, 9)}`,
+          columns: (sec.columns || []).map((col: any) => ({
+            ...col,
+            id: `col_${Math.random().toString(36).substr(2, 9)}`,
+            widgets: (col.widgets || []).map((wid: any) => ({
+              ...wid,
+              id: `wid_${Math.random().toString(36).substr(2, 9)}`
+            }))
+          }))
+        }));
+      };
+
+      const validatedSections = regenerateIds(importedLayout);
+      setLayout([...layout, ...validatedSections]);
+      toast.success("Conteúdo importado com sucesso!");
+      
       setIsImportModalOpen(false);
       setImportJsonText('');
     } catch (err) {
       console.error("Erro na importação:", err);
-      toast.error("Erro ao processar arquivo JSON.");
+      toast.error("Erro ao processar JSON. Verifique se o formato segue a Documentação IA.");
     }
   };
 
