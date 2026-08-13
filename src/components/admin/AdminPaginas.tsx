@@ -45,7 +45,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     const data = await getPageContent(route);
     if (data) {
       setSelectedPage(data);
-      setIsBuilding(true);
+      setIsBuilding(true); // Abre direto no editor
     } else {
       toast.error("Erro ao carregar dados da página.");
     }
@@ -99,7 +99,10 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
           variant="ghost" 
           size="sm" 
           className="absolute top-2 left-2 z-[60] text-white bg-brand-blue-dark/50 hover:bg-brand-blue-dark/80 backdrop-blur-sm rounded-lg px-3 py-1"
-          onClick={() => setIsBuilding(false)}
+          onClick={() => {
+            setIsBuilding(false);
+            setSelectedPage(null); // Volta para a lista de páginas
+          }}
         >
           <ChevronLeft className="w-4 h-4 mr-2" /> Voltar
         </Button>
