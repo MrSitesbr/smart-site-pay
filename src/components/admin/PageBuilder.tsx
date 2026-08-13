@@ -251,7 +251,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             <h3 className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-3 px-1">Básicos</h3>
             <div className="grid grid-cols-2 gap-3">
               {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
-                .filter(([type]) => !['units_grid', 'plans_grid', 'rooms_grid'].includes(type))
+                .filter(([type]) => !['units_grid', 'plans_grid', 'rooms_grid', 'global_header', 'global_footer'].includes(type))
                 .map(([type, config]) => (
                 <div 
                   key={type}
@@ -275,10 +275,10 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           </div>
 
           <div className="mb-6">
-            <h3 className="text-[9px] font-black uppercase text-brand-orange tracking-widest mb-3 px-1">Coworking (WooCommerce Style)</h3>
+            <h3 className="text-[9px] font-black uppercase text-brand-orange tracking-widest mb-3 px-1">Componentes Dinâmicos</h3>
             <div className="grid grid-cols-2 gap-3">
               {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
-                .filter(([type]) => ['units_grid', 'plans_grid', 'rooms_grid', 'popup'].includes(type))
+                .filter(([type]) => ['units_grid', 'plans_grid', 'rooms_grid', 'popup', 'global_header', 'global_footer'].includes(type))
                 .map(([type, config]) => (
                 <div 
                   key={type}
