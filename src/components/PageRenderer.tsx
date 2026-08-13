@@ -3,7 +3,8 @@ import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, ArrowRight } from "lucide-react";
+import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair } from "lucide-react";
+import { UnitsWidget, PlansWidget, RoomsWidget } from "./admin/layout/CoworkingWidgets";
 
 interface PageRendererProps {
   layout: SectionData[];
@@ -219,6 +220,15 @@ const WidgetRenderer: React.FC<{
 
       case 'spacer':
         return <div style={{ height: `${content.height || 20}px` }}></div>;
+
+      case 'units_grid':
+        return <UnitsWidget content={content} styles={styles} />;
+      
+      case 'plans_grid':
+        return <PlansWidget content={content} styles={styles} />;
+      
+      case 'rooms_grid':
+        return <RoomsWidget content={content} styles={styles} />;
 
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;

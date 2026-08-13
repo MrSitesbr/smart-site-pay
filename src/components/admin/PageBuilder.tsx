@@ -184,29 +184,59 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           </Button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          <div className="grid grid-cols-2 gap-3">
-            {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][]).map(([type, config]) => (
-              <div 
-                key={type}
-                className="flex flex-col items-center justify-center p-4 bg-brand-gray/20 rounded-xl border border-transparent hover:border-brand-orange hover:bg-white transition-all cursor-move group"
-                draggable
-                onDragEnd={() => {
-                  // Simplificação: apenas clica para adicionar se houver seção
-                  if (layout.length > 0) {
-                    // Adiciona na última coluna do último layout por padrão se arrastado
-                    const lastSection = layout[layout.length - 1];
-                    const lastCol = lastSection.columns[lastSection.columns.length - 1];
-                    addWidget(lastCol.id, type);
-                  } else {
-                    addSection(1);
-                  }
-                }}
-              >
-                <config.icon className="w-6 h-6 mb-2 text-brand-blue-dark group-hover:text-brand-orange transition-colors" />
-                <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">{config.label}</span>
-              </div>
-            ))}
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-50/50">
+          <div className="mb-4">
+            <h3 className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-3 px-1">Básicos</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
+                .filter(([type]) => !['units_grid', 'plans_grid', 'rooms_grid'].includes(type))
+                .map(([type, config]) => (
+                <div 
+                  key={type}
+                  className="flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-brand-gray/20 hover:border-brand-orange hover:shadow-md transition-all cursor-move group h-20"
+                  draggable
+                  onDragEnd={() => {
+                    if (layout.length > 0) {
+                      const lastSection = layout[layout.length - 1];
+                      const lastCol = lastSection.columns[lastSection.columns.length - 1];
+                      addWidget(lastCol.id, type);
+                    } else {
+                      addSection(1);
+                    }
+                  }}
+                >
+                  <config.icon className="w-5 h-5 mb-1.5 text-brand-blue-dark group-hover:text-brand-orange transition-colors" />
+                  <span className="text-[9px] font-black uppercase tracking-tighter text-muted-foreground text-center leading-none">{config.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-[9px] font-black uppercase text-brand-orange tracking-widest mb-3 px-1">Coworking (WooCommerce Style)</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
+                .filter(([type]) => ['units_grid', 'plans_grid', 'rooms_grid'].includes(type))
+                .map(([type, config]) => (
+                <div 
+                  key={type}
+                  className="flex flex-col items-center justify-center p-3 bg-brand-blue-dark text-white rounded-xl border border-transparent hover:border-brand-orange hover:shadow-lg transition-all cursor-move group h-24 shadow-sm"
+                  draggable
+                  onDragEnd={() => {
+                    if (layout.length > 0) {
+                      const lastSection = layout[layout.length - 1];
+                      const lastCol = lastSection.columns[lastSection.columns.length - 1];
+                      addWidget(lastCol.id, type);
+                    } else {
+                      addSection(1);
+                    }
+                  }}
+                >
+                  <config.icon className="w-6 h-6 mb-2 text-brand-orange group-hover:scale-110 transition-transform" />
+                  <span className="text-[9px] font-black uppercase tracking-tighter text-white/90 text-center leading-none">{config.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
