@@ -107,6 +107,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: Globe,
       items: [
         { title: "Páginas", id: "paginas" },
+        { title: "Menus", id: "menus" },
         { title: "Fixos", id: "paginas_fixos" },
         { title: "Artigos (Blog)", id: "artigos" },
         { title: "Serviços", id: "servicos" },

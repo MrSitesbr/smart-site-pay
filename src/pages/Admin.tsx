@@ -27,6 +27,7 @@ import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminSEO from "@/components/admin/AdminSEO";
+import AdminMenus from "@/components/admin/AdminMenus";
 import AdminMidias from "@/components/admin/AdminMidias";
 import AdminDocsIA from "@/components/admin/AdminDocsIA";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
@@ -261,6 +262,7 @@ export default function Admin() {
       servicos: "Serviços",
       unidades: "Unidades & Salas",
       paginas: "Páginas do Site",
+      menus: "Gestão de Menus",
       paginas_fixos: "Páginas Fixas (Globais)",
       configuracoes: "Configurações Gerais",
       midias: "Biblioteca de Mídias",
@@ -349,6 +351,7 @@ export default function Admin() {
             {activeTab === "servicos" && <AdminServicos />}
             {activeTab === "unidades" && <AdminUnidades />}
             {activeTab === "paginas" && <AdminPaginas mode="pages" />}
+            {activeTab === "menus" && <AdminMenus />}
             {activeTab === "paginas_fixos" && <AdminPaginas mode="fixos" />}
             {activeTab === "seo" && <AdminSEO />}
             {activeTab === "midias" && <AdminMidias />}

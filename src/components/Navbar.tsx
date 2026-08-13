@@ -20,9 +20,41 @@ const Navbar = () => {
   }, []);
 
   const loadCms = async () => {
+    // 1. Load Dynamic Menus
+    const { data: menuData } = await supabase
+      .from('navigation_menus')
+      .select('*, items:navigation_items(*)')
+      .eq('slug', 'main-header')
+      .single();
+
+    if (menuData) {
+      const items = menuData.items || [];
+      const rootItems = items.filter((i: any) => !i.parent_id).sort((a: any, b: any) => a.order_index - b.order_index);
+      const organized = rootItems.map((root: any) => ({
+        label: root.label,
+        href: root.url,
+        route: !root.is_external && !root.url.startsWith('#'),
+        submenu: items
+          .filter((i: any) => i.parent_id === root.id)
+          .sort((a: any, b: any) => a.order_index - b.order_index)
+          .map((sub: any) => ({
+            label: sub.label,
+            href: sub.url,
+            route: !sub.is_external && !sub.url.startsWith('#')
+          }))
+      }));
+      // If organized has items, use it. If organized[0].submenu is empty, set submenu to null for consistency
+      organized.forEach((item: any) => {
+        if (item.submenu && item.submenu.length === 0) item.submenu = undefined;
+      });
+      setCmsContent(prev => ({ ...prev, links: organized }));
+    }
+
+    // 2. Load Global Header Content
     const data = await getPageContent("global-header");
     if (data && data.site_sections && data.site_sections.length > 0) {
-      setCmsContent(data.site_sections[0].content);
+      const content = data.site_sections[0].content;
+      setCmsContent(prev => ({ ...prev, ...content }));
     }
   };
 
