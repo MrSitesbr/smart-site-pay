@@ -261,6 +261,65 @@ const WidgetRenderer: React.FC<{
           </Dialog>
         );
 
+      case 'hero':
+        return (
+          <div className="relative py-24 bg-brand-blue-dark overflow-hidden">
+            <div className="absolute inset-0 opacity-40">
+              <img src={content.image} className="w-full h-full object-cover" alt="" />
+            </div>
+            <div className="container mx-auto px-4 relative z-10 text-white">
+              <h1 className="text-5xl font-black mb-6 uppercase tracking-tighter" dangerouslySetInnerHTML={{ __html: content.title || '' }} />
+              <p className="text-xl opacity-90 max-w-2xl mb-8" dangerouslySetInnerHTML={{ __html: content.subtitle || '' }} />
+              {content.cta && (
+                <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold px-8 py-6 rounded-2xl">
+                  {content.cta}
+                </Button>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'features':
+        return (
+          <div className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-black text-brand-blue-dark mb-12 text-center uppercase tracking-tighter">{content.title}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {content.items?.map((item: any, i: number) => (
+                  <div key={i} className="p-8 rounded-3xl bg-brand-gray/30 border border-brand-gray/50 hover:shadow-xl transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-orange flex items-center justify-center text-white mb-6">
+                      <LayoutIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-brand-blue-dark mb-4">{item.title}</h3>
+                    <p className="text-muted-foreground font-medium">{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'ideal_para':
+        return (
+          <div className="py-20 bg-brand-gray/20">
+            <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-black text-brand-blue-dark mb-12 text-center uppercase tracking-tighter">{content.title}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {content.services?.map((service: any, i: number) => (
+                  <div key={i} className="group relative h-80 rounded-3xl overflow-hidden shadow-2xl">
+                    <img src={service.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={service.title} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark via-transparent to-transparent opacity-90" />
+                    <div className="absolute bottom-0 left-0 p-8 text-white">
+                      <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">{service.title}</h3>
+                      <p className="text-white/80 font-medium">{service.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;
     }

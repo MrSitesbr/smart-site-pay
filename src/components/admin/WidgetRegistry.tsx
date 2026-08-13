@@ -100,5 +100,23 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
       type: "info" // info, form, promo
     },
     defaultStyles: { buttonColor: "#ff6b00" }
+  },
+  hero: {
+    label: "Hero Banner",
+    icon: LayoutIcon,
+    defaultContent: { title: "Título Principal", subtitle: "Subtítulo da página", cta: "Botão", image: "https://images.unsplash.com/photo-1497366216548-37526070297c" },
+    defaultStyles: {}
+  },
+  features: {
+    label: "Recursos/Vantagens",
+    icon: LayoutIcon,
+    defaultContent: { title: "Por que nós?", items: [{ title: "Vantagem 1", description: "Descrição aqui" }] },
+    defaultStyles: {}
+  },
+  ideal_para: {
+    label: "Ideal Para (Galeria)",
+    icon: ImageIcon,
+    defaultContent: { title: "O espaço ideal", services: [{ title: "Serviço", description: "Descrição", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f" }] },
+    defaultStyles: {}
   }
 };
