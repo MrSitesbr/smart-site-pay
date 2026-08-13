@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { 
   Plus, Save, Layout, Layers, Eye, Smartphone, Monitor, 
   ChevronLeft, History, Redo, Undo, Search, Settings,
-  Grid3X3, Columns, MousePointer2, Type, Image as ImageIcon
+  Grid3X3, Columns, MousePointer2, Type, Image as ImageIcon,
+  Download, Upload
 } from "lucide-react";
 import { PageRenderer } from "@/components/PageRenderer";
 import { Inspector } from "./Inspector";
@@ -127,6 +128,48 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     }
   };
 
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(layout, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = `layout-pagina-${pageId}.json`;
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    toast.success("Layout exportado com sucesso!");
+  };
+
+  const handleImportJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedLayout = JSON.parse(content);
+        
+        // Basic validation
+        if (Array.isArray(importedLayout)) {
+          setLayout(importedLayout);
+          toast.success("Layout importado com sucesso!");
+        } else if (importedLayout.id && importedLayout.columns) {
+          // It's a single section
+          setLayout([...layout, importedLayout]);
+          toast.success("Seção importada com sucesso!");
+        } else {
+          toast.error("Formato JSON inválido.");
+        }
+      } catch (err) {
+        console.error("Erro na importação:", err);
+        toast.error("Erro ao processar arquivo JSON.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    event.target.value = '';
+  };
+
   return (
     <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
       {/* Barra Lateral de Widgets (Estilo Elementor) */}
@@ -203,6 +246,34 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="flex gap-2 mr-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="font-bold text-[10px] h-8"
+                onClick={handleExportJSON}
+              >
+                <Download className="w-3 h-3 mr-1" /> EXPORTAR
+              </Button>
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="font-bold text-[10px] h-8"
+                  onClick={() => document.getElementById('import-json-input')?.click()}
+                >
+                  <Upload className="w-3 h-3 mr-1" /> IMPORTAR
+                </Button>
+                <input 
+                  id="import-json-input"
+                  type="file" 
+                  accept=".json" 
+                  className="hidden" 
+                  onChange={handleImportJSON}
+                />
+              </div>
+            </div>
+
             <Button variant="outline" className="font-bold text-xs" onClick={() => window.open(`/preview/${pageId}`, '_blank')}>
               <Eye className="w-4 h-4 mr-2" /> PRÉVIA
             </Button>

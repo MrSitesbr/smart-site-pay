@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
-  ChevronUp, ChevronDown, X
+  ChevronUp, ChevronDown, X, Download, Upload
 } from "lucide-react";
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
 
@@ -223,9 +223,26 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
         </Tabs>
       </div>
 
-      <div className="p-4 border-t bg-muted/20 flex gap-2">
+      <div className="p-4 border-t bg-muted/20 flex flex-col gap-2">
+        {type === 'section' && (
+          <Button 
+            variant="outline" 
+            className="w-full font-bold border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white"
+            onClick={() => {
+              const dataStr = JSON.stringify(data, null, 2);
+              const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+              const exportFileDefaultName = `secao-${data.id}.json`;
+              const linkElement = document.createElement('a');
+              linkElement.setAttribute('href', dataUri);
+              linkElement.setAttribute('download', exportFileDefaultName);
+              linkElement.click();
+            }}
+          >
+            <Download className="w-4 h-4 mr-2" /> EXPORTAR SEÇÃO
+          </Button>
+        )}
         {onDelete && (
-          <Button variant="destructive" className="flex-1 font-bold" onClick={onDelete}>
+          <Button variant="destructive" className="w-full font-bold" onClick={onDelete}>
             <Trash2 className="w-4 h-4 mr-2" /> EXCLUIR
           </Button>
         )}
