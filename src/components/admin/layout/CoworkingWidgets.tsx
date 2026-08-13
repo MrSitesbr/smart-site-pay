@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { WIDGET_REGISTRY } from "./WidgetRegistry";
+import { WIDGET_REGISTRY } from "../WidgetRegistry";
 
 export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   const [units, setUnits] = useState<any[]>([]);
