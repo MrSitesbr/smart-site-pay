@@ -172,11 +172,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   return (
     <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
-      {/* Barra Lateral de Widgets (Estilo Elementor) */}
+      {/* Barra Lateral de Widgets (Estilo Dev) */}
       <div className="w-[300px] bg-white border-r flex flex-col shadow-xl z-30">
-        <div className="p-4 bg-brand-blue-dark text-white flex items-center justify-between">
-          <h2 className="font-black uppercase tracking-widest text-[10px]">Elementos</h2>
-          <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:bg-white/10">
+        <div className="p-4 bg-brand-blue-dark text-white flex items-center justify-between h-14">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <Layout className="w-4 h-4 flex-shrink-0" />
+            <h2 className="font-black uppercase tracking-widest text-[10px] truncate">Construtor Dev</h2>
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 flex-shrink-0">
             <Search className="w-3 h-3" />
           </Button>
         </div>

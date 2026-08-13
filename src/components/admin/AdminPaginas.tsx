@@ -98,7 +98,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
         <Button 
           variant="ghost" 
           size="sm" 
-          className="absolute top-3 left-4 z-[60] text-white hover:bg-white/10"
+          className="absolute top-2 left-2 z-[60] text-white bg-brand-blue-dark/50 hover:bg-brand-blue-dark/80 backdrop-blur-sm rounded-lg px-3 py-1"
           onClick={() => setIsBuilding(false)}
         >
           <ChevronLeft className="w-4 h-4 mr-2" /> Voltar
