@@ -33,3 +33,4 @@ The user is reporting that when clicking "Sair" (Exit) in the admin, they see th
 3.  Click on "Home" and verify it opens the Visual Editor directly.
 4.  Verify the Home page now has at least 5 sections visible in the editor.
 5.  Click "Sair" and verify it returns to the page list.
+
