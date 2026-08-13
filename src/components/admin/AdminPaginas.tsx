@@ -181,7 +181,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
         <p className="text-muted-foreground font-medium">
           {mode === 'fixos' 
             ? 'Selecione um elemento global para editar o layout e conteúdo que aparece em todo o site.' 
-            : 'Selecione uma página para editar suas seções de conteúdo no estilo Elementor.'}
+            : 'Selecione uma página para editar suas seções de conteúdo no estilo Dev.'}
         </p>
       </div>
       
