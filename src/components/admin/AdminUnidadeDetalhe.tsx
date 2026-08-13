@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "./ImageUpload";
+import { MediaPickerModal } from "./MediaPickerModal";
 import { 
   ArrowLeft, 
   Building2, 
@@ -39,6 +40,8 @@ export default function AdminUnidadeDetalhe() {
   const [editingUnidade, setEditingUnidade] = useState<any>(null);
   const [editingSala, setEditingSala] = useState<any>(null);
   const [allPlanos, setAllPlanos] = useState<any[]>([]);
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<'unidade' | 'sala' | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -313,7 +316,12 @@ export default function AdminUnidadeDetalhe() {
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Galeria de Fotos</label>
+                  <Button variant="outline" size="sm" onClick={() => { setMediaTarget('unidade'); setIsMediaPickerOpen(true); }} className="h-8 text-xs">
+                    <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
+                  </Button>
+                </div>
                 <ImageUpload 
                   value={editingUnidade?.galeria || []} 
                   onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls})}
@@ -386,13 +394,18 @@ export default function AdminUnidadeDetalhe() {
                   onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
                 />
               </div>
-            <div className="space-y-2 col-span-2">
-              <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
-              <ImageUpload 
-                value={editingSala?.galeria || []} 
-                onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
-              />
-            </div>
+              <div className="space-y-2 col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Galeria de Fotos</label>
+                  <Button variant="outline" size="sm" onClick={() => { setMediaTarget('sala'); setIsMediaPickerOpen(true); }} className="h-8 text-xs">
+                    <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
+                  </Button>
+                </div>
+                <ImageUpload 
+                  value={editingSala?.galeria || []} 
+                  onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -434,6 +447,22 @@ export default function AdminUnidadeDetalhe() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <MediaPickerModal 
+        isOpen={isMediaPickerOpen}
+        onClose={() => { setIsMediaPickerOpen(false); setMediaTarget(null); }}
+        onSelect={(url) => {
+          if (mediaTarget === 'unidade') {
+            const current = editingUnidade?.galeria || [];
+            setEditingUnidade({...editingUnidade, galeria: [...current, url]});
+          } else if (mediaTarget === 'sala') {
+            const current = editingSala?.galeria || [];
+            setEditingSala({...editingSala, galeria: [...current, url]});
+          }
+          setIsMediaPickerOpen(false);
+          setMediaTarget(null);
+        }}
+      />
     </div>
   );
 }
