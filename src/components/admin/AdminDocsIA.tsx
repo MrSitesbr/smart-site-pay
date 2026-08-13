@@ -119,7 +119,7 @@ Sempre responda APENAS o JSON da propriedade "layout", sem explicações.`;
               <li>Copie o <strong>Prompt Mestre</strong> acima.</li>
               <li>Cole na sua IA de preferência e peça para ela criar uma página (ex: "Crie uma página de Preços com 5 seções").</li>
               <li>Copie o JSON gerado pela IA.</li>
-              <li>No painel administrativo, vá em <strong>Marketing / Site > Páginas</strong>.</li>
+              <li>No painel administrativo, vá em <strong>Marketing / Site &gt; Páginas</strong>.</li>
               <li>Abra o <strong>Editor Visual</strong> da página desejada.</li>
               <li>Clique no botão <strong>Importar JSON</strong> na barra superior e cole o código.</li>
               <li>O sistema irá renderizar automaticamente as seções mantendo todas as integrações com o banco de dados.</li>
