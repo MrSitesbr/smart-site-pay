@@ -26,6 +26,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const [isSaving, setIsSaving] = useState(false);
 
   const handleElementClick = (type: 'section' | 'column' | 'widget', id: string, data: any) => {
+    console.log("Element clicked in Builder:", { type, id, data });
     setSelectedElement({ type, id, data });
   };
 
