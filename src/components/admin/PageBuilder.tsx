@@ -57,16 +57,19 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const deleteElement = () => {
     if (!selectedElement) return;
     
+    console.log("Deleting element:", selectedElement);
     let newLayout = [...layout];
     
     if (selectedElement.type === 'section') {
       newLayout = newLayout.filter(s => s.id !== selectedElement.id);
     } else if (selectedElement.type === 'widget') {
-      newLayout.forEach(section => {
-        section.columns.forEach(column => {
-          column.widgets = column.widgets.filter(w => w.id !== selectedElement.id);
-        });
-      });
+      newLayout = newLayout.map(section => ({
+        ...section,
+        columns: section.columns.map(column => ({
+          ...column,
+          widgets: column.widgets.filter(w => w.id !== selectedElement.id)
+        }))
+      }));
     }
     
     setLayout(newLayout);
