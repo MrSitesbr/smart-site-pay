@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { PageRenderer } from "@/components/PageRenderer";
 import { getPageContent } from "@/lib/cms";
 import { SectionData } from "@/types/page-builder";
+import { supabase } from "@/integrations/supabase/client";
 
 const DynamicPage = () => {
   const [layout, setLayout] = useState<SectionData[]>([]);
