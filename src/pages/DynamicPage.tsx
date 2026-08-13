@@ -19,7 +19,7 @@ const DynamicPage = ({ isAdmin = false }: { isAdmin?: boolean }) => {
       const pageData = await getPageContent(location.pathname);
       
       if (pageData && pageData.site_sections) {
-        // Find the specific dynamic layout section for this page
+        // Filtra apenas seções visíveis e prioriza 'dynamic-layout'
         const dynamicSection = pageData.site_sections.find((s: any) => 
           s.section_key === 'dynamic-layout' && s.is_visible
         );
@@ -27,12 +27,6 @@ const DynamicPage = ({ isAdmin = false }: { isAdmin?: boolean }) => {
         if (dynamicSection?.content?.layout) {
           setLayout(dynamicSection.content.layout);
         } else {
-          // If no dynamic layout is found, check if there's any visible section at all
-          // This prevents showing an empty page if sections aren't migrated yet
-          const anyVisible = pageData.site_sections.some((s: any) => s.is_visible);
-          if (!anyVisible && !isAdmin) {
-             console.warn("No visible sections found for", location.pathname);
-          }
           setLayout([]);
         }
       } else {
