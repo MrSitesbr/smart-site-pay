@@ -4,7 +4,7 @@ import {
   Plus, Save, Layout, Layers, Eye, Smartphone, Monitor, 
   ChevronLeft, History, Redo, Undo, Search, Settings,
   Grid3X3, Columns, MousePointer2, Type, Image as ImageIcon,
-  Download, Upload
+  Download, Upload, FileCode, PCCase
 } from "lucide-react";
 import { PageRenderer } from "@/components/PageRenderer";
 import { Inspector } from "./Inspector";
@@ -12,6 +12,14 @@ import { WIDGET_REGISTRY } from "./WidgetRegistry";
 import { SectionData, ColumnData, WidgetData, WidgetType } from "@/types/page-builder";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PageBuilderProps {
   pageId: string;
@@ -24,6 +32,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const [selectedElement, setSelectedElement] = useState<{type: 'section' | 'column' | 'widget', id: string, data: any} | null>(null);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [isSaving, setIsSaving] = useState(false);
+  const [importJsonText, setImportJsonText] = useState('');
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleElementClick = (type: 'section' | 'column' | 'widget', id: string, data: any) => {
     console.log("Element clicked in Builder:", { type, id, data });
@@ -155,35 +165,49 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     toast.success("Layout exportado com sucesso!");
   };
 
-  const handleImportJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const processImport = (content: string) => {
+    try {
+      const importedLayout = JSON.parse(content);
+      
+      // Basic validation
+      if (Array.isArray(importedLayout)) {
+        setLayout(importedLayout);
+        toast.success("Layout importado com sucesso!");
+      } else if (importedLayout.id && importedLayout.columns) {
+        // It's a single section
+        setLayout([...layout, importedLayout]);
+        toast.success("Seção importada com sucesso!");
+      } else {
+        toast.error("Formato JSON inválido.");
+      }
+      setIsImportModalOpen(false);
+      setImportJsonText('');
+    } catch (err) {
+      console.error("Erro na importação:", err);
+      toast.error("Erro ao processar arquivo JSON.");
+    }
+  };
+
+  const handleImportJSONFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string;
-        const importedLayout = JSON.parse(content);
-        
-        // Basic validation
-        if (Array.isArray(importedLayout)) {
-          setLayout(importedLayout);
-          toast.success("Layout importado com sucesso!");
-        } else if (importedLayout.id && importedLayout.columns) {
-          // It's a single section
-          setLayout([...layout, importedLayout]);
-          toast.success("Seção importada com sucesso!");
-        } else {
-          toast.error("Formato JSON inválido.");
-        }
-      } catch (err) {
-        console.error("Erro na importação:", err);
-        toast.error("Erro ao processar arquivo JSON.");
-      }
+      const content = e.target?.result as string;
+      processImport(content);
     };
     reader.readAsText(file);
     // Reset input
     event.target.value = '';
+  };
+
+  const handleImportJSONText = () => {
+    if (!importJsonText.trim()) {
+      toast.error("Insira o código JSON.");
+      return;
+    }
+    processImport(importJsonText);
   };
 
   return (
@@ -304,23 +328,68 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
               >
                 <Download className="w-3 h-3 mr-1" /> EXPORTAR
               </Button>
-              <div className="relative">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="font-bold text-[10px] h-8"
-                  onClick={() => document.getElementById('import-json-input')?.click()}
-                >
-                  <Upload className="w-3 h-3 mr-1" /> IMPORTAR
-                </Button>
-                <input 
-                  id="import-json-input"
-                  type="file" 
-                  accept=".json" 
-                  className="hidden" 
-                  onChange={handleImportJSON}
-                />
-              </div>
+              <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="font-bold text-[10px] h-8"
+                  >
+                    <Upload className="w-3 h-3 mr-1" /> IMPORTAR
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle className="text-brand-blue-dark">Importar Layout</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-6 py-4">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <FileCode className="w-4 h-4" /> Colar Código JSON
+                      </h4>
+                      <Textarea 
+                        placeholder='{"id": "...", "columns": [...]}' 
+                        className="min-h-[200px] font-mono text-xs"
+                        value={importJsonText}
+                        onChange={(e) => setImportJsonText(e.target.value)}
+                      />
+                      <Button onClick={handleImportJSONText} className="w-full bg-brand-blue-dark">
+                        IMPORTAR CÓDIGO
+                      </Button>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground font-bold">ou</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <Upload className="w-4 h-4" /> Carregar do Computador
+                      </h4>
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-2 border-dashed h-24 flex flex-col gap-2 hover:bg-slate-50 transition-colors"
+                        onClick={() => document.getElementById('import-json-input')?.click()}
+                      >
+                        <Upload className="w-6 h-6 text-brand-orange" />
+                        <span className="font-bold text-xs">SELECIONAR ARQUIVO .JSON</span>
+                      </Button>
+                      <input 
+                        id="import-json-input"
+                        type="file" 
+                        accept=".json" 
+                        className="hidden" 
+                        onChange={handleImportJSONFile}
+                      />
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <Button variant="outline" className="font-bold text-xs" onClick={() => window.open(`/preview/${pageId}`, '_blank')}>
