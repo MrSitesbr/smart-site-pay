@@ -114,14 +114,20 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
       styles: { ...registry.defaultStyles }
     };
 
-    newLayout.forEach(section => {
-      const column = section.columns.find(c => c.id === columnId);
-      if (column) {
-        column.widgets.push(newWidget);
-      }
-    });
+    const updatedLayout = newLayout.map(section => ({
+      ...section,
+      columns: section.columns.map(column => {
+        if (column.id === columnId) {
+          return {
+            ...column,
+            widgets: [...column.widgets, newWidget]
+          };
+        }
+        return column;
+      })
+    }));
 
-    setLayout(newLayout);
+    setLayout(updatedLayout);
     toast.success(`Widget ${registry.label} adicionado.`);
   };
 
