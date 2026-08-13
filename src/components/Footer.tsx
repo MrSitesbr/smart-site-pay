@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
 import { getPageContent } from "@/lib/cms";
 
@@ -12,9 +13,52 @@ const Footer = () => {
   }, []);
 
   const loadCms = async () => {
+    // Load Navigation Menus for Footer
+    const { data: navData } = await supabase
+      .from('navigation_menus')
+      .select('*, items:navigation_items(*)')
+      .eq('slug', 'footer-nav')
+      .single();
+
+    const { data: servData } = await supabase
+      .from('navigation_menus')
+      .select('*, items:navigation_items(*)')
+      .eq('slug', 'footer-services')
+      .single();
+
+    const organizedCols = [];
+
+    if (navData) {
+      organizedCols.push({
+        title: navData.name,
+        links: navData.items.sort((a: any, b: any) => a.order_index - b.order_index).map((i: any) => ({
+          label: i.label,
+          href: i.url,
+          route: !i.is_external && !i.url.startsWith('#')
+        }))
+      });
+    }
+
+    if (servData) {
+      organizedCols.push({
+        title: servData.name,
+        links: servData.items.sort((a: any, b: any) => a.order_index - b.order_index).map((i: any) => ({
+          label: i.label,
+          href: i.url,
+          route: !i.is_external && !i.url.startsWith('#')
+        }))
+      });
+    }
+
+    if (organizedCols.length > 0) {
+      setCmsContent(prev => ({ ...prev, columns: organizedCols }));
+    }
+
+    // Load Global Footer Content
     const data = await getPageContent("global-footer");
     if (data && data.site_sections && data.site_sections.length > 0) {
-      setCmsContent(data.site_sections[0].content);
+      const content = data.site_sections[0].content;
+      setCmsContent(prev => ({ ...prev, ...content }));
     }
   };
 
@@ -41,7 +85,7 @@ const Footer = () => {
     },
   ];
 
-  const cols = defaultCols;
+  const cols = cmsContent?.columns || defaultCols;
   const description = cmsContent?.description || "O seu espaço de trabalho e networking na Praia Grande.";
   const phone = cmsContent?.phone || "(13) 98805-0358";
   const email = cmsContent?.email || "contato@coworking013.com.br";
