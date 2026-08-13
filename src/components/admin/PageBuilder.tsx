@@ -31,24 +31,30 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   };
 
   const updateElement = (newData: any) => {
-    const newLayout = [...layout];
-    
-    if (selectedElement?.type === 'section') {
-      const idx = newLayout.findIndex(s => s.id === selectedElement.id);
-      if (idx !== -1) newLayout[idx] = newData;
-    } else if (selectedElement?.type === 'column') {
-      newLayout.forEach(section => {
-        const idx = section.columns.findIndex(c => c.id === selectedElement.id);
-        if (idx !== -1) section.columns[idx] = newData;
-      });
-    } else if (selectedElement?.type === 'widget') {
-      newLayout.forEach(section => {
-        section.columns.forEach(column => {
-          const idx = column.widgets.findIndex(w => w.id === selectedElement.id);
-          if (idx !== -1) column.widgets[idx] = newData;
-        });
-      });
-    }
+    const newLayout = layout.map(section => {
+      if (selectedElement?.type === 'section' && section.id === selectedElement.id) {
+        return newData;
+      }
+      
+      return {
+        ...section,
+        columns: section.columns.map(column => {
+          if (selectedElement?.type === 'column' && column.id === selectedElement.id) {
+            return newData;
+          }
+          
+          return {
+            ...column,
+            widgets: column.widgets.map(widget => {
+              if (selectedElement?.type === 'widget' && widget.id === selectedElement.id) {
+                return newData;
+              }
+              return widget;
+            })
+          };
+        })
+      };
+    });
     
     setLayout(newLayout);
     setSelectedElement({ ...selectedElement!, data: newData });
