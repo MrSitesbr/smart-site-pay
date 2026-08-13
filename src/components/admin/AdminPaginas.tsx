@@ -177,15 +177,37 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-3xl font-black text-brand-blue-dark">
-          {mode === 'fixos' ? 'Fixos (Cabeçalho e Rodapé)' : 'Páginas do Site'}
-        </h2>
-        <p className="text-muted-foreground font-medium">
-          {mode === 'fixos' 
-            ? 'Selecione um elemento global para editar o layout e conteúdo que aparece em todo o site.' 
-            : 'Selecione uma página para editar suas seções de conteúdo no estilo Dev.'}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-3xl font-black text-brand-blue-dark">
+            {mode === 'fixos' ? 'Fixos (Cabeçalho e Rodapé)' : 'Páginas do Site'}
+          </h2>
+          <p className="text-muted-foreground font-medium">
+            {mode === 'fixos' 
+              ? 'Selecione um elemento global para editar o layout e conteúdo que aparece em todo o site.' 
+              : 'Selecione uma página para editar suas seções de conteúdo no estilo Dev.'}
+          </p>
+        </div>
+        {mode === 'pages' && (
+          <Button 
+            onClick={() => {
+              const name = prompt("Nome da nova página:");
+              const route = prompt("Rota da nova página (ex: /nova-pagina):");
+              if (name && route) {
+                supabase.from('site_pages').insert({ name, route, is_global: false }).then(({ error }) => {
+                  if (error) toast.error("Erro ao criar página: " + error.message);
+                  else {
+                    toast.success("Página criada com sucesso!");
+                    loadPages();
+                  }
+                });
+              }
+            }}
+            className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold"
+          >
+            <Plus className="w-4 h-4 mr-2" /> CRIAR NOVA PÁGINA
+          </Button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
