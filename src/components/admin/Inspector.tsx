@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
-  ChevronUp, ChevronDown, X
+  ChevronUp, ChevronDown, X, Download, Upload
 } from "lucide-react";
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
 
