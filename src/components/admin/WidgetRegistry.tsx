@@ -118,5 +118,17 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
     icon: ImageIcon,
     defaultContent: { title: "O espaço ideal", services: [{ title: "Serviço", description: "Descrição", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f" }] },
     defaultStyles: {}
+  },
+  global_header: {
+    label: "Bloco Header",
+    icon: LayoutIcon,
+    defaultContent: { type: 'main' },
+    defaultStyles: {}
+  },
+  global_footer: {
+    label: "Bloco Footer",
+    icon: LayoutIcon,
+    defaultContent: { type: 'main' },
+    defaultStyles: {}
   }
 };

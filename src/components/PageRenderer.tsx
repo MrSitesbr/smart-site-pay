@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UnitsWidget, PlansWidget, RoomsWidget } from "./admin/layout/CoworkingWidgets";
+import { UnitsWidget, PlansWidget, RoomsWidget, GlobalHeaderWidget, GlobalFooterWidget } from "./admin/layout/CoworkingWidgets";
 import { ContactForm } from "./ContactForm";
 import ReservaDialog from "./ReservaDialog";
 
@@ -319,6 +319,12 @@ const WidgetRenderer: React.FC<{
             </div>
           </div>
         );
+
+      case 'global_header':
+        return <GlobalHeaderWidget content={content} styles={styles} />;
+      
+      case 'global_footer':
+        return <GlobalFooterWidget content={content} styles={styles} />;
 
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;

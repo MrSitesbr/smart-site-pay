@@ -106,9 +106,9 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       title: "Marketing / Site", 
       icon: Globe,
       items: [
-        { title: "Páginas", id: "paginas" },
-        { title: "Menus", id: "menus" },
-        { title: "Fixos", id: "paginas_fixos" },
+        { title: "Header & Footer (Fixos)", id: "paginas_fixos" },
+        { title: "Páginas do Site", id: "paginas" },
+        { title: "Menus de Navegação", id: "menus" },
         { title: "Artigos (Blog)", id: "artigos" },
         { title: "Serviços", id: "servicos" },
         { title: "Mídias", id: "midias" },

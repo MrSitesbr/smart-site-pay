@@ -165,3 +165,27 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
     </div>
   );
 };
+
+export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
+  return (
+    <div className="bg-brand-blue-dark py-4 px-8 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+         <div className="w-8 h-8 bg-brand-orange rounded-lg"></div>
+         <span className="text-white font-black">HEADER</span>
+      </div>
+      <div className="flex gap-4 text-white/60 text-xs font-bold uppercase">
+         <span>Início</span>
+         <span>Serviços</span>
+         <span>Contato</span>
+      </div>
+    </div>
+  );
+};
+
+export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
+  return (
+    <div className="bg-[#1a1a1a] py-8 px-8 border-t border-white/10 text-center">
+      <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Global Footer Section</span>
+    </div>
+  );
+};

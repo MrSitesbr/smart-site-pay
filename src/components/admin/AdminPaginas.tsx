@@ -180,11 +180,11 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-3xl font-black text-brand-blue-dark">
-            {mode === 'fixos' ? 'Fixos (Cabeçalho e Rodapé)' : 'Páginas do Site'}
+            {mode === 'fixos' ? 'Cabeçalho e Rodapé (Fixos)' : 'Páginas do Site'}
           </h2>
           <p className="text-muted-foreground font-medium">
             {mode === 'fixos' 
-              ? 'Selecione um elemento global para editar o layout e conteúdo que aparece em todo o site.' 
+              ? 'Edite o cabeçalho e rodapé que aparecem em todas as páginas do site usando o editor visual.' 
               : 'Selecione uma página para editar suas seções de conteúdo no estilo Dev.'}
           </p>
         </div>
