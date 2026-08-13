@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type WidgetType = 'heading' | 'text' | 'image' | 'button' | 'form' | 'gallery' | 'container' | 'video' | 'map' | 'spacer' | 'units_grid' | 'plans_grid' | 'rooms_grid' | 'popup';
+export type WidgetType = 'heading' | 'text' | 'image' | 'button' | 'form' | 'gallery' | 'container' | 'video' | 'map' | 'spacer' | 'units_grid' | 'plans_grid' | 'rooms_grid' | 'popup' | 'hero' | 'features' | 'ideal_para';
 
 export interface WidgetData {
   id: string;
