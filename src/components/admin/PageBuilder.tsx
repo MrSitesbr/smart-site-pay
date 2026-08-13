@@ -172,7 +172,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   return (
     <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
-      {/* Barra Lateral de Widgets (Estilo Elementor) */}
+      {/* Barra Lateral de Widgets (Estilo Dev) */}
       <div className="w-[300px] bg-white border-r flex flex-col shadow-xl z-30">
         <div className="p-4 bg-brand-blue-dark text-white flex items-center justify-between">
           <h2 className="font-black uppercase tracking-widest text-[10px]">Elementos</h2>
