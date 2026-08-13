@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { PageRenderer } from "@/components/PageRenderer";
 import { getPageContent } from "@/lib/cms";
 import { SectionData } from "@/types/page-builder";
+import { supabase } from "@/integrations/supabase/client";
 
 const DynamicPage = () => {
   const [layout, setLayout] = useState<SectionData[]>([]);
@@ -15,7 +16,9 @@ const DynamicPage = () => {
   useEffect(() => {
     const loadContent = async () => {
       setLoading(true);
+      // Desativar cache para carregamento em tempo real
       const pageData = await getPageContent(location.pathname);
+      
       if (pageData && pageData.site_sections) {
         const dynamicSection = pageData.site_sections.find((s: any) => s.section_key === 'dynamic-layout');
         if (dynamicSection?.content?.layout) {
@@ -30,6 +33,26 @@ const DynamicPage = () => {
     };
 
     loadContent();
+    
+    // Inscrição em tempo real para mudanças na tabela site_sections
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'site_sections'
+        },
+        () => {
+          loadContent();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [location.pathname]);
 
   return (

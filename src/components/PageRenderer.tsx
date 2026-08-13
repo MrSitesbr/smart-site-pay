@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnitsWidget, PlansWidget, RoomsWidget } from "./admin/layout/CoworkingWidgets";
+import { ContactForm } from "./ContactForm";
+import ReservaDialog from "./ReservaDialog";
 
 interface PageRendererProps {
   layout: SectionData[];
@@ -198,22 +200,16 @@ const WidgetRenderer: React.FC<{
           <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl">
             {content.formType === 'reserva' ? (
               <div className="text-white">
-                <h3 className="text-xl font-bold mb-4">Reserva de Espaço</h3>
-                <p className="text-sm opacity-80 mb-6 italic">Funcionalidade de formulário modular</p>
-                {/* Mock del formulario */}
-                <div className="space-y-4">
-                  <div className="h-10 bg-white/20 rounded-lg"></div>
-                  <div className="h-10 bg-white/20 rounded-lg"></div>
-                  <div className="h-12 bg-brand-orange rounded-lg"></div>
+                <h3 className="text-xl font-bold mb-4">{content.title || 'Solicitar Reserva'}</h3>
+                <div className="flex flex-col gap-4">
+                   <p className="text-sm opacity-80">Selecione o melhor dia e horário para seu coworking.</p>
+                   <ReservaDialogWrapper buttonText={content.buttonText || "Abrir Calendário"} />
                 </div>
               </div>
             ) : (
               <div className="text-white">
-                <h3 className="text-xl font-bold mb-4">Contato</h3>
-                <div className="space-y-4">
-                  <div className="h-10 bg-white/20 rounded-lg"></div>
-                  <div className="h-12 bg-brand-orange rounded-lg"></div>
-                </div>
+                <h3 className="text-xl font-bold mb-6">{content.title || 'Fale Conosco'}</h3>
+                <ContactForm />
               </div>
             )}
           </div>
@@ -288,5 +284,20 @@ const WidgetRenderer: React.FC<{
         </div>
       )}
     </div>
+  );
+};
+
+const ReservaDialogWrapper: React.FC<{ buttonText: string }> = ({ buttonText }) => {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      <Button 
+        onClick={() => setOpen(true)}
+        className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-bold py-6 rounded-xl"
+      >
+        {buttonText}
+      </Button>
+      <ReservaDialog open={open} onOpenChange={setOpen} />
+    </>
   );
 };
