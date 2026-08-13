@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
 import { getPageContent } from "@/lib/cms";
 
