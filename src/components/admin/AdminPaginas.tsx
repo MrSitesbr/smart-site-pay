@@ -45,7 +45,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     const data = await getPageContent(route);
     if (data) {
       setSelectedPage(data);
-      setIsBuilding(true);
+      setIsBuilding(true); // Abre direto no editor
     } else {
       toast.error("Erro ao carregar dados da página.");
     }
