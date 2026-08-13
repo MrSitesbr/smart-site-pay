@@ -14,17 +14,41 @@ export default function AdminDocsIA() {
           widgets: [
             {
               id: "wid_hero_013",
-              type: "hero",
+              type: "heading",
               content: {
-                title: "O Futuro do Trabalho é <span class='text-brand-orange'>Coworking 013</span>",
-                subtitle: "Infraestrutura de alta performance, networking estratégico e flexibilidade total para sua empresa decolar no coração da inovação.",
-                image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80",
-                cta: "RESERVAR AGORA"
+                text: "O Futuro do Trabalho é <span class='text-brand-orange'>Coworking 013</span>",
+                level: "h1"
               },
               styles: { 
-                padding: "py-32", 
+                fontSize: "64px",
+                color: "#FFFFFF",
+                fontWeight: "900",
                 textAlign: "center",
-                overlay: "bg-black/40"
+                margin: { bottom: 20 }
+              }
+            },
+            {
+              id: "wid_sub_hero",
+              type: "text",
+              content: {
+                text: "Infraestrutura de alta performance, networking estratégico e flexibilidade total para sua empresa decolar no coração da inovação."
+              },
+              styles: {
+                fontSize: "20px",
+                color: "#E2E8F0",
+                textAlign: "center",
+                margin: { bottom: 40 }
+              }
+            },
+            {
+              id: "wid_btn_hero",
+              type: "button",
+              content: {
+                text: "CONHECER UNIDADES",
+                url: "/unidades"
+              },
+              styles: {
+                alignment: "center"
               }
             }
           ]
@@ -32,59 +56,65 @@ export default function AdminDocsIA() {
       ],
       settings: { 
         fullWidth: true, 
-        padding: { top: 0, bottom: 0, left: 0, right: 0 },
-        backgroundColor: "#0F172A"
+        padding: { top: 120, bottom: 120, left: 20, right: 20 },
+        backgroundColor: "#0F172A",
+        backgroundImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80",
+        overlayOpacity: 0.6
       }
     },
     {
-      id: "sec_stats_performance",
+      id: "sec_units_live",
       columns: [
         {
-          id: "col_stats_1",
-          widthPercentage: 33.33,
+          id: "col_units_header",
+          widthPercentage: 100,
           widgets: [
             {
-              id: "wid_stat_1",
-              type: "text_block",
-              content: {
-                title: "24/7",
-                text: "<p class='text-brand-orange font-bold text-lg'>Acesso Total</p><p class='text-sm opacity-70'>Trabalhe no seu ritmo, sem limites de horário.</p>"
-              }
-            }
-          ]
-        },
-        {
-          id: "col_stats_2",
-          widthPercentage: 33.33,
-          widgets: [
+              id: "wid_units_title",
+              type: "heading",
+              content: { text: "Nossas <span class='text-brand-orange'>Unidades</span>", level: "h2" },
+              styles: { textAlign: "center", fontSize: "42px", fontWeight: "bold", margin: { bottom: 40 } }
+            },
             {
-              id: "wid_stat_2",
-              type: "text_block",
-              content: {
-                title: "1Gbps",
-                text: "<p class='text-brand-orange font-bold text-lg'>Ultra Velocidade</p><p class='text-sm opacity-70'>Link dedicado de fibra óptica para máxima produtividade.</p>"
-              }
-            }
-          ]
-        },
-        {
-          id: "col_stats_3",
-          widthPercentage: 33.33,
-          widgets: [
-            {
-              id: "wid_stat_3",
-              type: "text_block",
-              content: {
-                title: "+500",
-                text: "<p class='text-brand-orange font-bold text-lg'>Empresas</p><p class='text-sm opacity-70'>Faça parte do ecossistema mais vibrante da região.</p>"
-              }
+              id: "wid_units_grid",
+              type: "units_grid",
+              content: { limit: 3 },
+              styles: {}
             }
           ]
         }
       ],
       settings: { 
         fullWidth: false, 
-        padding: { top: 80, bottom: 80, left: 20, right: 20 },
+        padding: { top: 80, bottom: 80, left: 0, right: 0 },
+        backgroundColor: "#FFFFFF"
+      }
+    },
+    {
+      id: "sec_plans_live",
+      columns: [
+        {
+          id: "col_plans",
+          widthPercentage: 100,
+          widgets: [
+            {
+              id: "wid_plans_title",
+              type: "heading",
+              content: { text: "Escolha seu <span class='text-brand-orange'>Plano</span>", level: "h2" },
+              styles: { textAlign: "center", fontSize: "42px", fontWeight: "bold", margin: { bottom: 40 } }
+            },
+            {
+              id: "wid_plans_grid",
+              type: "plans_grid",
+              content: { limit: 3 },
+              styles: {}
+            }
+          ]
+        }
+      ],
+      settings: { 
+        fullWidth: false, 
+        padding: { top: 80, bottom: 80, left: 0, right: 0 },
         backgroundColor: "#F8FAFC"
       }
     }
@@ -111,14 +141,16 @@ Cada Widget deve ter:
 - styles: objeto com estilos (ex: { padding, textAlign })
 
 Widgets Disponíveis e seus conteúdos:
-1. hero: { title, subtitle, image, cta }
-2. features: { title, items: [{ title, description, icon }] }
-3. text_block: { title, text (HTML) }
-4. units_grid: { title, subtitle, limit }
-5. plans_grid: { title, subtitle, limit }
-6. rooms_grid: { title, subtitle, limit }
-7. contact_form: { title, subtitle }
-8. popup: { triggerText, title, html, actionType: 'login'|'whatsapp'|'register' }
+1. heading: { text: "HTML", level: "h1"|"h2"|"h3" }
+2. text: { text: "HTML formatado" }
+3. image: { url: "URL", alt: "descrição" }
+4. button: { text: "Rótulo", url: "Link" }
+5. units_grid: { limit: number }
+6. plans_grid: { limit: number }
+7. rooms_grid: { limit: number }
+8. contact_form: { title: "String", subtitle: "String" }
+9. popup: { triggerText: "Abrir", title: "Título", html: "Conteúdo", actionType: 'login'|'whatsapp'|'register' }
+10. form: { formType: "reserva" }
 
 Sempre responda APENAS o JSON (ARRAY de seções), sem explicações.`;
 
