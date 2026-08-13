@@ -6,27 +6,87 @@ import { toast } from "sonner";
 export default function AdminDocsIA() {
   const schemaExemplo = [
     {
-      id: "hero_exemplo",
+      id: "sec_hero_premium",
       columns: [
         {
           id: "col_hero",
           widthPercentage: 100,
           widgets: [
             {
-              id: "wid_hero_1",
+              id: "wid_hero_013",
               type: "hero",
               content: {
-                title: "Título da Hero",
-                subtitle: "Subtítulo atraente",
-                image: "URL_DA_IMAGEM",
-                cta: "Botão de Ação"
+                title: "O Futuro do Trabalho é <span class='text-brand-orange'>Coworking 013</span>",
+                subtitle: "Infraestrutura de alta performance, networking estratégico e flexibilidade total para sua empresa decolar no coração da inovação.",
+                image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80",
+                cta: "RESERVAR AGORA"
               },
-              styles: { padding: "py-24", background: "bg-white" }
+              styles: { 
+                padding: "py-32", 
+                textAlign: "center",
+                overlay: "bg-black/40"
+              }
             }
           ]
         }
       ],
-      settings: { fullWidth: true, padding: { top: 60, bottom: 60, left: 0, right: 0 } }
+      settings: { 
+        fullWidth: true, 
+        padding: { top: 0, bottom: 0, left: 0, right: 0 },
+        backgroundColor: "#0F172A"
+      }
+    },
+    {
+      id: "sec_stats_performance",
+      columns: [
+        {
+          id: "col_stats_1",
+          widthPercentage: 33.33,
+          widgets: [
+            {
+              id: "wid_stat_1",
+              type: "text_block",
+              content: {
+                title: "24/7",
+                text: "<p class='text-brand-orange font-bold text-lg'>Acesso Total</p><p class='text-sm opacity-70'>Trabalhe no seu ritmo, sem limites de horário.</p>"
+              }
+            }
+          ]
+        },
+        {
+          id: "col_stats_2",
+          widthPercentage: 33.33,
+          widgets: [
+            {
+              id: "wid_stat_2",
+              type: "text_block",
+              content: {
+                title: "1Gbps",
+                text: "<p class='text-brand-orange font-bold text-lg'>Ultra Velocidade</p><p class='text-sm opacity-70'>Link dedicado de fibra óptica para máxima produtividade.</p>"
+              }
+            }
+          ]
+        },
+        {
+          id: "col_stats_3",
+          widthPercentage: 33.33,
+          widgets: [
+            {
+              id: "wid_stat_3",
+              type: "text_block",
+              content: {
+                title: "+500",
+                text: "<p class='text-brand-orange font-bold text-lg'>Empresas</p><p class='text-sm opacity-70'>Faça parte do ecossistema mais vibrante da região.</p>"
+              }
+            }
+          ]
+        }
+      ],
+      settings: { 
+        fullWidth: false, 
+        padding: { top: 80, bottom: 80, left: 20, right: 20 },
+        backgroundColor: "#F8FAFC"
+      }
     }
   ];
 
