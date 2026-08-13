@@ -26,28 +26,35 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const [isSaving, setIsSaving] = useState(false);
 
   const handleElementClick = (type: 'section' | 'column' | 'widget', id: string, data: any) => {
+    console.log("Element clicked in Builder:", { type, id, data });
     setSelectedElement({ type, id, data });
   };
 
   const updateElement = (newData: any) => {
-    const newLayout = [...layout];
-    
-    if (selectedElement?.type === 'section') {
-      const idx = newLayout.findIndex(s => s.id === selectedElement.id);
-      if (idx !== -1) newLayout[idx] = newData;
-    } else if (selectedElement?.type === 'column') {
-      newLayout.forEach(section => {
-        const idx = section.columns.findIndex(c => c.id === selectedElement.id);
-        if (idx !== -1) section.columns[idx] = newData;
-      });
-    } else if (selectedElement?.type === 'widget') {
-      newLayout.forEach(section => {
-        section.columns.forEach(column => {
-          const idx = column.widgets.findIndex(w => w.id === selectedElement.id);
-          if (idx !== -1) column.widgets[idx] = newData;
-        });
-      });
-    }
+    const newLayout = layout.map(section => {
+      if (selectedElement?.type === 'section' && section.id === selectedElement.id) {
+        return newData;
+      }
+      
+      return {
+        ...section,
+        columns: section.columns.map(column => {
+          if (selectedElement?.type === 'column' && column.id === selectedElement.id) {
+            return newData;
+          }
+          
+          return {
+            ...column,
+            widgets: column.widgets.map(widget => {
+              if (selectedElement?.type === 'widget' && widget.id === selectedElement.id) {
+                return newData;
+              }
+              return widget;
+            })
+          };
+        })
+      };
+    });
     
     setLayout(newLayout);
     setSelectedElement({ ...selectedElement!, data: newData });
@@ -56,16 +63,19 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const deleteElement = () => {
     if (!selectedElement) return;
     
+    console.log("Deleting element:", selectedElement);
     let newLayout = [...layout];
     
     if (selectedElement.type === 'section') {
       newLayout = newLayout.filter(s => s.id !== selectedElement.id);
     } else if (selectedElement.type === 'widget') {
-      newLayout.forEach(section => {
-        section.columns.forEach(column => {
-          column.widgets = column.widgets.filter(w => w.id !== selectedElement.id);
-        });
-      });
+      newLayout = newLayout.map(section => ({
+        ...section,
+        columns: section.columns.map(column => ({
+          ...column,
+          widgets: column.widgets.filter(w => w.id !== selectedElement.id)
+        }))
+      }));
     }
     
     setLayout(newLayout);
@@ -104,14 +114,20 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
       styles: { ...registry.defaultStyles }
     };
 
-    newLayout.forEach(section => {
-      const column = section.columns.find(c => c.id === columnId);
-      if (column) {
-        column.widgets.push(newWidget);
-      }
-    });
+    const updatedLayout = newLayout.map(section => ({
+      ...section,
+      columns: section.columns.map(column => {
+        if (column.id === columnId) {
+          return {
+            ...column,
+            widgets: [...column.widgets, newWidget]
+          };
+        }
+        return column;
+      })
+    }));
 
-    setLayout(newLayout);
+    setLayout(updatedLayout);
     toast.success(`Widget ${registry.label} adicionado.`);
   };
 
