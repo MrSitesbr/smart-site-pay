@@ -47,11 +47,17 @@ const DEFAULTS = {
   ]
 };
 
+const normalizeContent = (content?: any) => ({
+  ...DEFAULTS,
+  ...(content || {}),
+  services: Array.isArray(content?.services) ? content.services.filter(Boolean) : DEFAULTS.services,
+});
+
 const IdealParaSection = ({ content, settings }: { content?: any, settings?: any }) => {
-  const [localContent, setLocalContent] = useState<any>({ ...DEFAULTS, ...(content || {}) });
+  const [localContent, setLocalContent] = useState<any>(() => normalizeContent(content));
 
   useEffect(() => {
-    if (content) setLocalContent({ ...DEFAULTS, ...content });
+    if (content) setLocalContent(normalizeContent(content));
   }, [content]);
 
 
@@ -95,7 +101,7 @@ const IdealParaSection = ({ content, settings }: { content?: any, settings?: any
 
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {content.services.map((service, i) => (
+          {localContent.services.map((service: any, i: number) => (
             <Link key={i} to={service.href} className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
               <div className="relative h-64 overflow-hidden">
                 <img src={service.image} alt={service.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
