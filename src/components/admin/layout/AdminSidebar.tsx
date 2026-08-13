@@ -119,6 +119,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: Settings,
       items: [
         { title: "Configurações Gerais", id: "configuracoes" },
+        { title: "Documentação IA", id: "docs_ia" },
       ]
     },
   ];
