@@ -74,7 +74,7 @@ const IdealParaSection = ({ content, settings }: { content?: any, settings?: any
       if (data && data.site_sections) {
         const section = data.site_sections.find((s: any) => s.section_key === 'features');
         if (section && section.content) {
-          setLocalContent(prev => ({ ...prev, ...section.content }));
+          setLocalContent(normalizeContent(section.content));
         }
       }
     };
