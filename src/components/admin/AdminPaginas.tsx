@@ -173,7 +173,10 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     );
   }
 
-  const filteredPages = pages.filter(p => mode === 'fixos' ? p.is_global : !p.is_global);
+  const filteredPages = pages.filter(p => {
+    const isGlobal = p.is_global === true;
+    return mode === 'fixos' ? isGlobal : !isGlobal;
+  });
 
   return (
     <div className="space-y-6">
