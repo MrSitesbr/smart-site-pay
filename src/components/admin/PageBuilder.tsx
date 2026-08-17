@@ -79,7 +79,7 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
   );
 };
 
-import { GripVertical } from "lucide-react";
+import { GripVertical, Columns as ColumnsIcon } from "lucide-react";
 
 // Navigator Component for Elementor-like tree view
 const Navigator = ({ layout, selectedId, onSelect }: any) => {
@@ -105,7 +105,7 @@ const Navigator = ({ layout, selectedId, onSelect }: any) => {
                     onClick={() => onSelect('column', col.id, col)}
                     className={`flex items-center gap-2 px-3 py-1 rounded text-[9px] font-bold cursor-pointer transition-colors ${selectedId === col.id ? 'bg-blue-600 text-white' : 'hover:bg-white/5 text-white/50'}`}
                   >
-                    <Columns className="w-3 h-3" /> COLUNA
+                    <ColumnsIcon className="w-3 h-3" /> COLUNA
                   </div>
                   <div className="ml-3 border-l border-white/10 pl-2 space-y-1">
                     {(col.widgets || []).map((wid: any) => (
@@ -128,8 +128,6 @@ const Navigator = ({ layout, selectedId, onSelect }: any) => {
     </div>
   );
 };
-
-import { Columns } from "lucide-react";
 
 export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout = [], onSave }) => {
   const [layout, setLayout] = useState<SectionData[]>(initialLayout);
