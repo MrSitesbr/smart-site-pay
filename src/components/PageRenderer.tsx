@@ -63,6 +63,11 @@ const SectionRenderer: React.FC<{
     background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : undefined,
   };
 
+  // Ensure background color is applied even if backgroundType is 'color' (compatibility fix)
+  if (settings.backgroundType === 'color' && settings.backgroundColor && !sectionStyle.background) {
+    sectionStyle.backgroundColor = settings.backgroundColor;
+  }
+
   const getShapeDivider = () => {
     if (!settings.shapeDivider || settings.shapeDivider === 'none') return null;
     
