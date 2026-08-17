@@ -81,6 +81,56 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
 
 import { GripVertical } from "lucide-react";
 
+// Navigator Component for Elementor-like tree view
+const Navigator = ({ layout, selectedId, onSelect }: any) => {
+  return (
+    <div className="w-64 bg-slate-800 text-white h-full flex flex-col border-l border-white/5">
+      <div className="p-4 bg-slate-900 flex items-center gap-2 border-b border-white/5">
+        <Layers className="w-4 h-4 text-brand-orange" />
+        <span className="text-[10px] font-black uppercase tracking-widest">Navegador</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1">
+        {layout.map((section: any) => (
+          <div key={section.id} className="space-y-1">
+            <div 
+              onClick={() => onSelect('section', section.id, section)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${selectedId === section.id ? 'bg-brand-orange text-white' : 'hover:bg-white/5 text-white/60'}`}
+            >
+              <Layout className="w-3 h-3" /> SEÇÃO
+            </div>
+            <div className="ml-3 border-l border-white/10 pl-2 space-y-1">
+              {(section.columns || []).map((col: any) => (
+                <div key={col.id} className="space-y-1">
+                  <div 
+                    onClick={() => onSelect('column', col.id, col)}
+                    className={`flex items-center gap-2 px-3 py-1 rounded text-[9px] font-bold cursor-pointer transition-colors ${selectedId === col.id ? 'bg-blue-600 text-white' : 'hover:bg-white/5 text-white/50'}`}
+                  >
+                    <Columns className="w-3 h-3" /> COLUNA
+                  </div>
+                  <div className="ml-3 border-l border-white/10 pl-2 space-y-1">
+                    {(col.widgets || []).map((wid: any) => (
+                      <div 
+                        key={wid.id}
+                        onClick={() => onSelect('widget', wid.id, wid)}
+                        className={`flex items-center gap-2 px-3 py-1 rounded text-[8px] font-medium cursor-pointer transition-colors ${selectedId === wid.id ? 'bg-green-600 text-white' : 'hover:bg-white/5 text-white/40'}`}
+                      >
+                        <MousePointer2 className="w-2.5 h-2.5" /> {wid.type.toUpperCase()}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {layout.length === 0 && <div className="text-[8px] text-white/20 text-center py-4 italic">Nenhum elemento</div>}
+      </div>
+    </div>
+  );
+};
+
+import { Columns } from "lucide-react";
+
 export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout = [], onSave }) => {
   const [layout, setLayout] = useState<SectionData[]>(initialLayout);
   const [selectedElement, setSelectedElement] = useState<{type: 'section' | 'column' | 'widget', id: string, data: any} | null>(null);
@@ -481,16 +531,23 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         </div>
       </div>
 
-      {/* Inspector Sidebar */}
-      {selectedElement && (
-        <Inspector 
-          type={selectedElement.type}
-          data={selectedElement.data}
-          onUpdate={updateElement}
-          onClose={() => setSelectedElement(null)}
-          onDelete={deleteElement}
+      {/* Inspector & Navigator Sidebar */}
+      <div className="flex h-full">
+        {selectedElement && (
+          <Inspector 
+            type={selectedElement.type}
+            data={selectedElement.data}
+            onUpdate={updateElement}
+            onClose={() => setSelectedElement(null)}
+            onDelete={deleteElement}
+          />
+        )}
+        <Navigator 
+          layout={layout} 
+          selectedId={selectedElement?.id} 
+          onSelect={handleElementClick} 
         />
-      )}
+      </div>
     </div>
   );
 };
