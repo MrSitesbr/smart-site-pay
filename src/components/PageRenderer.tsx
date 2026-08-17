@@ -320,11 +320,38 @@ const WidgetRenderer: React.FC<{
           </div>
         );
 
-      case 'global_header':
-        return <GlobalHeaderWidget content={content} styles={styles} />;
-      
       case 'global_footer':
         return <GlobalFooterWidget content={content} styles={styles} />;
+
+      case 'inner_section':
+        return (
+          <div className="grid gap-4" style={{ gridTemplateColumns: (content.columns || []).map((c: any) => `${c.widthPercentage}%`).join(' ') }}>
+            {(content.columns || []).map((col: any) => (
+              <div key={col.id} className="flex flex-col gap-4">
+                {(col.widgets || []).map((w: any) => (
+                  <WidgetRenderer 
+                    key={w.id} 
+                    widget={w} 
+                    isAdmin={isAdmin} 
+                    onElementClick={onElementClick} 
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 'icon_box':
+        const IconComponent = (require('lucide-react') as any)[content.icon || 'Check'] || LayoutIcon;
+        return (
+          <div style={widgetStyle} className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-brand-orange transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange mb-4 group-hover:scale-110 transition-transform">
+              <IconComponent className="w-6 h-6" />
+            </div>
+            <h4 className="text-lg font-black text-brand-blue-dark mb-2 uppercase tracking-tight">{content.title}</h4>
+            <p className="text-sm text-muted-foreground font-medium leading-relaxed">{content.description}</p>
+          </div>
+        );
 
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;

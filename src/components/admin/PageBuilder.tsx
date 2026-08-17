@@ -269,17 +269,15 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(layout);
-      toast.success("Página publicada com sucesso!");
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar página.");
-    } finally {
-      setIsSaving(false);
-    }
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(layout, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = `layout-pagina-${pageId}.json`;
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    toast.success("Layout exportado com sucesso!");
   };
 
   return (
@@ -423,8 +421,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="font-bold text-[10px] h-8" onClick={() => setIsBuilding(false)}>
-              <FileCode className="w-3 h-3 mr-1" /> JSON
+            <Button variant="outline" size="sm" className="font-bold text-[10px] h-8" onClick={handleExportJSON}>
+              <Download className="w-3 h-3 mr-1" /> EXPORTAR
             </Button>
             <Button variant="secondary" size="sm" className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold h-8" onClick={handleSave} disabled={isSaving}>
               {isSaving ? "SALVANDO..." : "PUBLICAR"}
