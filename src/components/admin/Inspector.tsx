@@ -10,9 +10,11 @@ import {
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
   ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon,
-  Plus, Star, List, Layout, Search, Layers
+  Plus, Star, List, Layout, Search, Layers, Code
 } from "lucide-react";
 import { MediaPickerModal } from "./MediaPickerModal";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
 
 interface InspectorProps {
@@ -27,6 +29,11 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
   const [activeTab, setActiveTab] = useState('content');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<string | null>(null);
+  const [showHtmlMode, setShowHtmlMode] = useState<Record<string, boolean>>({});
+
+  const toggleHtmlMode = (fieldId: string) => {
+    setShowHtmlMode(prev => ({ ...prev, [fieldId]: !prev[fieldId] }));
+  };
 
   const openPicker = (path: string) => {
     setPickerTarget(path);
@@ -73,12 +80,41 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                 <>
                   {data.type === 'heading' || data.type === 'text' || data.type === 'button' ? (
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto</Label>
-                      <Textarea 
-                        value={data.content.text || ''} 
-                        onChange={(e) => handleChange('content.text', e.target.value)}
-                        className="min-h-[100px] text-sm"
-                      />
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto</Label>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-[8px] font-bold"
+                          onClick={() => toggleHtmlMode('main-text')}
+                        >
+                          <Code className="w-3 h-3 mr-1" /> {showHtmlMode['main-text'] ? 'VISUAL' : 'HTML'}
+                        </Button>
+                      </div>
+                      
+                      {showHtmlMode['main-text'] ? (
+                        <Textarea 
+                          value={data.content.text || ''} 
+                          onChange={(e) => handleChange('content.text', e.target.value)}
+                          className="min-h-[200px] text-sm font-mono"
+                        />
+                      ) : (
+                        <div className="bg-white rounded-md border overflow-hidden">
+                          <ReactQuill 
+                            theme="snow" 
+                            value={data.content.text || ''} 
+                            onChange={(content) => handleChange('content.text', content)}
+                            modules={{
+                              toolbar: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['link', 'clean']
+                              ]
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   ) : null}
 
@@ -158,12 +194,41 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         <Input value={data.content.title || ''} onChange={(e) => handleChange('content.title', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conteúdo (HTML)</Label>
-                        <Textarea 
-                          value={data.content.content || ''} 
-                          onChange={(e) => handleChange('content.content', e.target.value)}
-                          className="min-h-[100px]"
-                        />
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conteúdo (HTML)</Label>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[8px] font-bold"
+                            onClick={() => toggleHtmlMode('popup-content')}
+                          >
+                            <Code className="w-3 h-3 mr-1" /> {showHtmlMode['popup-content'] ? 'VISUAL' : 'HTML'}
+                          </Button>
+                        </div>
+
+                        {showHtmlMode['popup-content'] ? (
+                          <Textarea 
+                            value={data.content.content || ''} 
+                            onChange={(e) => handleChange('content.content', e.target.value)}
+                            className="min-h-[150px] font-mono text-sm"
+                          />
+                        ) : (
+                          <div className="bg-white rounded-md border overflow-hidden">
+                            <ReactQuill 
+                              theme="snow" 
+                              value={data.content.content || ''} 
+                              onChange={(content) => handleChange('content.content', content)}
+                              modules={{
+                                toolbar: [
+                                  [{ 'header': [1, 2, 3, false] }],
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                  ['link', 'clean']
+                                ]
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Ação</Label>
@@ -269,15 +334,50 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                           handleChange('content.items', newItems);
                         }} 
                       />
-                      <Textarea 
-                        placeholder="Depoimento"
-                        value={item.text} 
-                        onChange={(e) => {
-                          const newItems = [...data.content.items];
-                          newItems[idx].text = e.target.value;
-                          handleChange('content.items', newItems);
-                        }} 
-                      />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Depoimento</Label>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[8px] font-bold"
+                            onClick={() => toggleHtmlMode(`testimonial-${idx}`)}
+                          >
+                            <Code className="w-3 h-3 mr-1" /> {showHtmlMode[`testimonial-${idx}`] ? 'VISUAL' : 'HTML'}
+                          </Button>
+                        </div>
+
+                        {showHtmlMode[`testimonial-${idx}`] ? (
+                          <Textarea 
+                            placeholder="Depoimento"
+                            value={item.text} 
+                            onChange={(e) => {
+                              const newItems = [...data.content.items];
+                              newItems[idx].text = e.target.value;
+                              handleChange('content.items', newItems);
+                            }} 
+                            className="min-h-[100px] font-mono text-xs"
+                          />
+                        ) : (
+                          <div className="bg-white rounded-md border overflow-hidden">
+                            <ReactQuill 
+                              theme="snow" 
+                              value={item.text || ''} 
+                              onChange={(content) => {
+                                const newItems = [...data.content.items];
+                                newItems[idx].text = content;
+                                handleChange('content.items', newItems);
+                              }}
+                              modules={{
+                                toolbar: [
+                                  ['bold', 'italic', 'underline'],
+                                  ['clean']
+                                ]
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <Button variant="ghost" size="sm" className="w-full" onClick={() => {
                         const newItems = data.content.items.filter((_: any, i: number) => i !== idx);
                         handleChange('content.items', newItems);
