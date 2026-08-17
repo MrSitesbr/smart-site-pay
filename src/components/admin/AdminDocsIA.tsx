@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { BookOpen, Layout, Settings2, Palette, FileText, ImageIcon, MousePointer2, FormInput, Grid, MapPin, Video, Maximize2, MessageSquare, Zap, Layers, LogIn, Navigation, CreditCard, Armchair, Building2 } from "lucide-react";
+import { BookOpen, Layout, Settings2, Palette, FileText, ImageIcon, MousePointer2, FormInput, Grid, MapPin, Video, Maximize2, MessageSquare, Zap, Layers, LogIn, Navigation, CreditCard, Armchair, Building2, Edit3 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AdminDocsIA() {
