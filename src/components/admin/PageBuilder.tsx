@@ -363,6 +363,35 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     toast.success("Layout exportado com sucesso!");
   };
 
+  const handleImportJSON = (jsonText: string) => {
+    try {
+      const newLayout = JSON.parse(jsonText);
+      if (Array.isArray(newLayout)) {
+        setLayout(newLayout);
+        pushToHistory(newLayout);
+        setIsImportModalOpen(false);
+        setImportJsonText('');
+        toast.success("Layout importado com sucesso!");
+      } else {
+        toast.error("Formato JSON inválido. Deve ser um array de seções.");
+      }
+    } catch (error) {
+      toast.error("Erro ao processar JSON.");
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      handleImportJSON(text);
+    };
+    reader.readAsText(file);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -527,6 +556,69 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           </div>
 
           <div className="flex items-center gap-3">
+            <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="font-bold text-[10px] h-8">
+                  <Upload className="w-3 h-3 mr-1" /> IMPORTAR
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col overflow-hidden p-0">
+                <DialogHeader className="p-6 border-b">
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileCode className="w-5 h-5 text-brand-orange" />
+                    Importar Layout JSON
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                      Opção 1: Upload de Arquivo
+                    </label>
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors border-slate-200">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-3 text-slate-400" />
+                          <p className="mb-1 text-sm text-slate-500 font-medium">Clique para selecionar</p>
+                          <p className="text-xs text-slate-400 uppercase tracking-tighter">JSON formatado</p>
+                        </div>
+                        <input type="file" className="hidden" accept=".json" onChange={handleFileUpload} />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-slate-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground font-black tracking-widest text-[9px]">OU</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                      Opção 2: Colar Código JSON
+                    </label>
+                    <Textarea 
+                      placeholder='[{"id": "sec_...", "columns": [...]}]'
+                      className="font-mono text-[11px] h-48 bg-slate-900 text-green-400 border-none focus-visible:ring-brand-orange"
+                      value={importJsonText}
+                      onChange={(e) => setImportJsonText(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 border-t flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>Cancelar</Button>
+                  <Button 
+                    className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold"
+                    onClick={() => handleImportJSON(importJsonText)}
+                  >
+                    PROCESSAR JSON
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             <Button variant="outline" size="sm" className="font-bold text-[10px] h-8" onClick={handleExportJSON}>
               <Download className="w-3 h-3 mr-1" /> EXPORTAR
             </Button>
