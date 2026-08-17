@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Plus, Save, Layout, Eye, Smartphone, Monitor, 
@@ -442,11 +442,16 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 items={layout.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <PageRenderer 
-                  layout={layout} 
-                  isAdmin={true} 
-                  onElementClick={handleElementClick}
-                />
+                <div className="flex flex-col">
+                  {layout.map((section) => (
+                    <SortableSection 
+                      key={section.id} 
+                      section={section} 
+                      isAdmin={true} 
+                      onElementClick={handleElementClick} 
+                    />
+                  ))}
+                </div>
               </SortableContext>
             </DndContext>
 

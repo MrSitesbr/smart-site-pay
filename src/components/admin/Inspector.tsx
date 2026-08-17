@@ -130,6 +130,22 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       />
                     </div>
                   )}
+                  {data.type === 'icon_box' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Título</Label>
+                        <Input value={data.content.title || ''} onChange={(e) => handleChange('content.title', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descrição</Label>
+                        <Textarea value={data.content.description || ''} onChange={(e) => handleChange('content.description', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícone (Nome Lucide)</Label>
+                        <Input value={data.content.icon || 'Check'} onChange={(e) => handleChange('content.icon', e.target.value)} placeholder="Check, Star, Heart, etc." />
+                      </div>
+                    </div>
+                  )}
                   {data.type === 'popup' && (
                     <div className="space-y-4">
                       <div className="space-y-2">
