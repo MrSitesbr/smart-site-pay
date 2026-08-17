@@ -158,14 +158,60 @@ export default function AdminDocsIA() {
       <div className="bg-brand-orange p-1 rounded-[3rem]">
         <div className="bg-brand-blue-dark rounded-[2.9rem] p-12 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/10 rounded-full -mr-48 -mt-48 blur-3xl" />
-          <div className="relative z-10 max-w-2xl">
-            <h3 className="text-3xl font-black mb-4 uppercase tracking-tighter">Pronto para importar?</h3>
-            <p className="text-white/70 font-medium mb-8 text-lg">
-              Utilize esta estrutura para orientar outras IAs a gerarem seções compatíveis em JSON. O motor Dev interpretará exatamente estas hierarquias para renderizar o site.
-            </p>
-            <div className="flex gap-4">
-              <div className="flex-1 p-6 bg-white/5 rounded-3xl border border-white/10 font-mono text-[10px] text-brand-orange">
-                {`// Exemplo de Hierarquia JSON\n{\n  "type": "section",\n  "settings": { "fullWidth": true },\n  "columns": [\n    { "widthPercentage": 100, "widgets": [...] }\n  ]\n}`}
+          <div className="relative z-10 space-y-8">
+            <div className="max-w-2xl">
+              <h3 className="text-3xl font-black mb-4 uppercase tracking-tighter text-white">Pronto para importar?</h3>
+              <p className="text-white/70 font-medium mb-8 text-lg">
+                Utilize esta estrutura para orientar outras IAs a gerarem seções compatíveis em JSON. O motor Dev interpretará exatamente estas hierarquias para renderizar o site.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h4 className="text-brand-orange font-black uppercase tracking-widest text-sm">Prompt Mestre para IA</h4>
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto">
+                  {`Atue como um Engenheiro de UI especializado no Construtor Dev (Elementor-based).
+Gere um JSON de página seguindo esta hierarquia:
+1. SectionData { id, settings: { fullWidth, backgroundType, padding, margin }, columns }
+2. ColumnData { id, widthPercentage, widgets, settings }
+3. WidgetData { id, type, content, styles, settings }
+
+Tipos de Widgets suportados: 
+heading, text (WYSIWYG), image, button, form, gallery, video, map, 
+spacer, units_grid, plans_grid, rooms_grid, icon_box, social_icons, testimonials, accordion.
+
+Padrão de Estilos: Use objetos JSON para 'styles' (fontSize, color, fontWeight, borderRadius).
+Padrão de Conteúdo: Campos como 'text', 'title', 'url', 'image'.
+Mantenha os IDs únicos (UUID v4).`}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-brand-orange font-black uppercase tracking-widest text-sm">Exemplo de Estrutura JSON</h4>
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 font-mono text-[11px] text-brand-orange leading-relaxed overflow-x-auto">
+                  {`{
+  "sections": [
+    {
+      "id": "sec-001",
+      "settings": { "fullWidth": true, "padding": { "top": 80, "bottom": 80 } },
+      "columns": [
+        {
+          "id": "col-001",
+          "widthPercentage": 100,
+          "widgets": [
+            {
+              "id": "wid-001",
+              "type": "heading",
+              "content": { "text": "Bem-vindo ao Coworking 013", "tag": "h2" },
+              "styles": { "color": "#002B49", "fontSize": "48px", "textAlign": "center" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`}
+                </div>
               </div>
             </div>
           </div>
