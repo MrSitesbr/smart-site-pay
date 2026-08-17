@@ -472,7 +472,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                     </div>
                   )}
 
-                  {(data.settings.backgroundType === 'classic' || data.settings.backgroundType === 'color') && (
+                  {(data.settings.backgroundType === 'classic' || data.settings.backgroundType === 'color' || !data.settings.backgroundType) && (
                     <>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor de Fundo</Label>
@@ -492,15 +492,17 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
-                        <div className="flex gap-2">
-                          <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
-                          <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
-                            <ImageIcon className="w-4 h-4" />
-                          </Button>
+                      {(data.settings.backgroundType === 'classic' || !data.settings.backgroundType) && (
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
+                          <div className="flex gap-2">
+                            <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
+                            <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
+                              <ImageIcon className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {data.settings.backgroundImage && (
                         <div className="space-y-4 p-3 border rounded-lg bg-muted/10">
