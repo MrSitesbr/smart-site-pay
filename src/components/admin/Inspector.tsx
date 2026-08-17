@@ -182,6 +182,15 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                   {data.type === 'global_header' || data.type === 'global_footer' ? (
                     <div className="space-y-4">
                       <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícone do Logo (URL)</Label>
+                        <div className="flex gap-2">
+                          <Input value={data.content.logo_icon || ''} onChange={(e) => handleChange('content.logo_icon', e.target.value)} />
+                          <Button variant="outline" size="icon" onClick={() => openPicker('content.logo_icon')}>
+                            <ImageIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logo Texto Superior</Label>
                         <Input value={data.content.logo_text_top || 'CoWorking'} onChange={(e) => handleChange('content.logo_text_top', e.target.value)} />
                       </div>
