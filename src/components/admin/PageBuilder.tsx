@@ -10,6 +10,7 @@ import { Inspector } from "./Inspector";
 import { WIDGET_REGISTRY } from "./WidgetRegistry";
 import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DndContext, 
   closestCenter,
@@ -378,7 +379,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         // Deep clone to avoid mutations
         const clonedLayout = JSON.parse(JSON.stringify(newLayout));
         
-        // Function to process all image URLs in the layout and convert to Base64 (internal server storage)
+        // Function to process all image URLs in the layout, convert to Base64 AND sync to media_library
         const processImages = async (obj: any) => {
           if (!obj || typeof obj !== 'object') return;
           
@@ -406,12 +407,37 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 if (base64.startsWith('data:image/')) {
                   obj[key] = base64;
                   console.log(`Sucesso ao converter para Base64: ${val.substring(0, 50)}...`);
+                  
+                  // SYNC TO MEDIA LIBRARY
+                  try {
+                    const filename = val.split('/').pop()?.split('?')[0] || 'imported-image.jpg';
+                    const mimeType = blob.type || 'image/jpeg';
+                    
+                    // Check if already exists in media_library to avoid duplicates (optional but good)
+                    const { data: existing } = await supabase
+                      .from('media_library')
+                      .select('id')
+                      .eq('filename', filename)
+                      .limit(1);
+
+                    if (!existing || existing.length === 0) {
+                      await supabase.from('media_library').insert({
+                        filename,
+                        file_type: 'image',
+                        mime_type: mimeType,
+                        url: base64,
+                        size_bytes: blob.size
+                      });
+                      console.log(`Sincronizado com Biblioteca de Mídia: ${filename}`);
+                    }
+                  } catch (syncErr) {
+                    console.error("Erro ao sincronizar com biblioteca:", syncErr);
+                  }
                 } else {
                   console.warn(`O download não retornou uma imagem válida: ${val}`);
                 }
               } catch (e) {
                 console.error(`Falha crítica ao baixar imagem: ${val}`, e);
-                // Fallback: Tenta via proxy ou apenas mantém se falhar
               }
             } else if (typeof val === 'object') {
               await processImages(val);

@@ -17,6 +17,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InspectorProps {
   type: 'section' | 'column' | 'widget';
@@ -66,6 +67,29 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
         if (base64.startsWith('data:image/')) {
           finalValue = base64;
           toast.success("Imagem sincronizada com o servidor!");
+          
+          // SYNC TO MEDIA LIBRARY ALSO FROM INSPECTOR
+          try {
+            const filename = value.split('/').pop()?.split('?')[0] || 'pasted-image.jpg';
+            const { data: existing } = await supabase
+              .from('media_library')
+              .select('id')
+              .eq('filename', filename)
+              .limit(1);
+
+            if (!existing || existing.length === 0) {
+              await supabase.from('media_library').insert({
+                filename,
+                file_type: 'image',
+                mime_type: blob.type || 'image/jpeg',
+                url: base64,
+                size_bytes: blob.size
+              });
+              console.log("Sincronizado via Inspetor");
+            }
+          } catch (syncErr) {
+            console.error(syncErr);
+          }
         }
       } catch (e) {
         console.warn("Não foi possível baixar a imagem externa, mantendo link original.", e);
