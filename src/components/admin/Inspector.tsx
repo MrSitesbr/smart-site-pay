@@ -10,9 +10,11 @@ import {
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
   ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon,
-  Plus, Star, List, Layout, Search, Layers
+  Plus, Star, List, Layout, Search, Layers, Code
 } from "lucide-react";
 import { MediaPickerModal } from "./MediaPickerModal";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
 
 interface InspectorProps {
