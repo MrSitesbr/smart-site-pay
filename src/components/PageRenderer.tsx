@@ -58,6 +58,26 @@ const SectionRenderer: React.FC<{
     marginBottom: settings.margin?.bottom ? `${settings.margin.bottom}px` : undefined,
     position: 'relative',
     zIndex: settings.zIndex,
+    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : undefined,
+  };
+
+  const getShapeDivider = () => {
+    if (!settings.shapeDivider || settings.shapeDivider === 'none') return null;
+    
+    const shapes: Record<string, React.ReactNode> = {
+      tilt: (
+        <svg className="absolute bottom-0 left-0 w-full h-[100px] overflow-hidden leading-none z-10" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M1200 120L0 120 0 0z" fill={settings.backgroundColor || "#ffffff"} fillOpacity="0.1" />
+        </svg>
+      ),
+      curve: (
+        <svg className="absolute bottom-0 left-0 w-full h-[100px] overflow-hidden leading-none z-10" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M600 112.7L1200 8L1200 120L0 120L0 8L600 112.7Z" fill={settings.backgroundColor || "#ffffff"} fillOpacity="0.1" />
+        </svg>
+      )
+    };
+    
+    return shapes[settings.shapeDivider];
   };
 
   const overlayStyle: React.CSSProperties = {
@@ -71,7 +91,7 @@ const SectionRenderer: React.FC<{
   return (
     <section 
       style={sectionStyle} 
-      className={`relative ${settings.fullWidth ? 'w-full' : 'container mx-auto px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''}`}
+      className={`relative ${settings.fullWidth ? 'w-full' : 'container mx-auto px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
@@ -80,6 +100,7 @@ const SectionRenderer: React.FC<{
       }}
     >
       {settings.backgroundImage && <div style={overlayStyle} />}
+      {getShapeDivider()}
       
       <div className={`relative z-10 grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
            style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr' }}>
@@ -116,6 +137,8 @@ const ColumnRenderer: React.FC<{
     paddingBottom: settings.padding?.bottom ? `${settings.padding.bottom}px` : undefined,
     paddingLeft: settings.padding?.left ? `${settings.padding.left}px` : undefined,
     paddingRight: settings.padding?.right ? `${settings.padding.right}px` : undefined,
+    border: settings.borderWidth ? `${settings.borderWidth}px solid ${settings.borderColor || '#eee'}` : undefined,
+    borderRadius: settings.borderRadius ? `${settings.borderRadius}px` : undefined,
   };
 
   return (
@@ -164,7 +187,12 @@ const WidgetRenderer: React.FC<{
     marginBottom: styles.margin?.bottom ? `${styles.margin.bottom}px` : undefined,
     paddingTop: styles.padding?.top ? `${styles.padding.top}px` : undefined,
     paddingBottom: styles.padding?.bottom ? `${styles.padding.bottom}px` : undefined,
+    paddingLeft: styles.padding?.left ? `${styles.padding.left}px` : undefined,
+    paddingRight: styles.padding?.right ? `${styles.padding.right}px` : undefined,
     borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined,
+    textShadow: styles.textShadow,
+    zIndex: styles.zIndex,
+    animation: (styles.animation && styles.animation !== 'none') ? `${styles.animation} 0.8s ease-out forwards` : undefined,
   };
 
   const renderWidgetContent = () => {
