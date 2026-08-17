@@ -162,6 +162,25 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       </div>
                     </div>
                   )}
+                  {data.type === 'global_header' || data.type === 'global_footer' ? (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logo Texto Superior</Label>
+                        <Input value={data.content.logo_text_top || 'CoWorking'} onChange={(e) => handleChange('content.logo_text_top', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logo Texto Inferior</Label>
+                        <Input value={data.content.logo_text_bottom || '013'} onChange={(e) => handleChange('content.logo_text_bottom', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Telefone</Label>
+                        <Input value={data.content.phone || '(13) 98805-0358'} onChange={(e) => handleChange('content.phone', e.target.value)} />
+                      </div>
+                      <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <p className="text-[10px] font-bold text-blue-800 uppercase tracking-tighter">Nota: Os menus são carregados automaticamente das configurações de "Menus" no admin.</p>
+                      </div>
+                    </div>
+                  ) : null}
                 </>
               )}
 

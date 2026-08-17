@@ -167,41 +167,66 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
 };
 
 export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
-  const logoTop = content?.logo_text_top || "CoWorking";
-  const logoBottom = content?.logo_text_bottom || "013";
-  const phone = content?.phone || "(13) 98805-0358";
+  const [cmsData, setCmsData] = useState<any>(null);
+
+  useEffect(() => {
+    const loadHeaderData = async () => {
+      // Prioritize content from the widget instance, fallback to global settings
+      const { data: menuData } = await supabase
+        .from('navigation_menus')
+        .select('*, items:navigation_items(*)')
+        .eq('slug', 'main-header')
+        .single();
+
+      const organizedLinks = menuData?.items
+        ? menuData.items
+            .filter((i: any) => !i.parent_id)
+            .sort((a: any, b: any) => a.order_index - b.order_index)
+            .map((root: any) => ({
+              label: root.label,
+              href: root.url
+            }))
+        : [];
+
+      setCmsData({
+        links: organizedLinks,
+        phone: content?.phone || "(13) 98805-0358",
+        logoTop: content?.logo_text_top || "CoWorking",
+        logoBottom: content?.logo_text_bottom || "013"
+      });
+    };
+    loadHeaderData();
+  }, [content]);
+
+  if (!cmsData) return <div className="h-20 bg-[#002f5e] animate-pulse rounded-xl" />;
   
   return (
-    <div className="bg-[#002f5e] py-6 px-8 flex items-center justify-between shadow-lg">
+    <div className="bg-[#002f5e] py-6 px-8 flex items-center justify-between shadow-lg rounded-xl overflow-hidden">
       <div className="flex items-center gap-2">
-         <div className="h-10 w-10 flex items-center justify-center">
-            <svg viewBox="0 0 100 100" className="w-full h-full fill-white">
-              <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="none" stroke="currentColor" strokeWidth="5"/>
-              <text x="50" y="65" textAnchor="middle" className="font-black text-4xl" fill="white">013</text>
-            </svg>
-         </div>
+         <img src="/logo-icon.png" alt="Logo" className="h-10 w-auto object-contain" onError={(e) => {
+           // Fallback if logo file isn't at root
+           (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
+         }} />
          <div className="flex flex-col leading-[0.8] items-start">
             <span className="text-[14px] font-bold tracking-tight text-orange-500 uppercase">
-              {logoTop}
+              {cmsData.logoTop}
             </span>
             <span className="text-3xl font-black text-white tracking-tighter -mt-1">
-              {logoBottom}
+              {cmsData.logoBottom}
             </span>
          </div>
       </div>
       <div className="hidden md:flex gap-8 text-white/80 text-xs font-black uppercase tracking-widest items-center">
-         <span className="hover:text-orange-500 cursor-pointer transition-colors">Início</span>
-         <span className="hover:text-orange-500 cursor-pointer transition-colors flex items-center gap-1">Serviços</span>
-         <span className="hover:text-orange-500 cursor-pointer transition-colors">Unidades</span>
-         <span className="hover:text-orange-500 cursor-pointer transition-colors">Institucional</span>
-         <span className="hover:text-orange-500 cursor-pointer transition-colors">Contato</span>
+         {cmsData.links.map((link: any, i: number) => (
+           <span key={i} className="hover:text-orange-500 cursor-pointer transition-colors">{link.label}</span>
+         ))}
       </div>
       <div className="flex items-center gap-4">
          <div className="hidden lg:flex items-center gap-2 text-white text-xs font-bold">
-            <span className="text-primary">📞</span> {phone}
+            <span className="text-orange-500">📞</span> {cmsData.phone}
          </div>
-         <button className="bg-secondary text-secondary-foreground font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg">
-            Reservar
+         <button className="bg-[#0066cc] text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg flex items-center gap-2">
+            <span className="text-xs">📅</span> Reservar
          </button>
       </div>
     </div>
@@ -209,27 +234,40 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
 };
 
 export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
-  const logoTop = content?.logo_text_top || "CoWorking";
-  const logoBottom = content?.logo_text_bottom || "013";
-  const phone = content?.phone || "(13) 98805-0358";
+  const [footerData, setFooterData] = useState<any>(null);
+
+  useEffect(() => {
+    const loadFooterData = async () => {
+      const { data: menuNav } = await supabase.from('navigation_menus').select('*, items:navigation_items(*)').eq('slug', 'footer-nav').single();
+      const { data: menuServ } = await supabase.from('navigation_menus').select('*, items:navigation_items(*)').eq('slug', 'footer-services').single();
+
+      setFooterData({
+        nav: menuNav?.items || [],
+        services: menuServ?.items || [],
+        phone: content?.phone || "(13) 98805-0358",
+        logoTop: content?.logo_text_top || "CoWorking",
+        logoBottom: content?.logo_text_bottom || "013"
+      });
+    };
+    loadFooterData();
+  }, [content]);
+
+  if (!footerData) return <div className="h-64 bg-[#0b0b0b] animate-pulse" />;
   
   return (
-    <div className="bg-[#0b0b0b] py-16 px-8 border-t border-white/5">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+    <div className="bg-[#0b0b0b] py-16 px-8 border-t border-white/5 rounded-xl mt-8">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-left">
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-             <div className="h-8 w-8 flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="w-full h-full fill-white">
-                  <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="none" stroke="currentColor" strokeWidth="5"/>
-                  <text x="50" y="65" textAnchor="middle" className="font-black text-4xl" fill="white">013</text>
-                </svg>
-             </div>
+             <img src="/logo-icon.png" alt="Logo" className="h-8 w-auto object-contain" onError={(e) => {
+               (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
+             }} />
              <div className="flex flex-col leading-[0.8] items-start">
                 <span className="text-[12px] font-bold tracking-tight text-orange-500 uppercase">
-                  {logoTop}
+                  {footerData.logoTop}
                 </span>
                 <span className="text-2xl font-black text-white tracking-tighter -mt-1">
-                  {logoBottom}
+                  {footerData.logoBottom}
                 </span>
              </div>
           </div>
@@ -241,18 +279,32 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
         <div>
           <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Menu</h4>
           <ul className="space-y-3 text-white/40 text-xs font-bold uppercase tracking-widest">
-            <li className="hover:text-orange-500 cursor-pointer transition-colors">Home</li>
-            <li className="hover:text-orange-500 cursor-pointer transition-colors">Sobre Nós</li>
-            <li className="hover:text-orange-500 cursor-pointer transition-colors">Contato</li>
+            {footerData.nav.map((item: any) => (
+              <li key={item.id} className="hover:text-orange-500 cursor-pointer transition-colors">{item.label}</li>
+            ))}
+            {footerData.nav.length === 0 && (
+              <>
+                <li className="hover:text-orange-500 cursor-pointer transition-colors">Home</li>
+                <li className="hover:text-orange-500 cursor-pointer transition-colors">Sobre Nós</li>
+                <li className="hover:text-orange-500 cursor-pointer transition-colors">Contato</li>
+              </>
+            )}
           </ul>
         </div>
 
         <div>
           <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Serviços</h4>
           <ul className="space-y-3 text-white/40 text-xs font-bold uppercase tracking-widest">
-            <li className="hover:text-orange-500 cursor-pointer transition-colors">Privativo</li>
-            <li className="hover:text-orange-500 cursor-pointer transition-colors">Virtual</li>
-            <li className="hover:text-orange-500 cursor-pointer transition-colors">Salas</li>
+            {footerData.services.map((item: any) => (
+              <li key={item.id} className="hover:text-orange-500 cursor-pointer transition-colors">{item.label}</li>
+            ))}
+            {footerData.services.length === 0 && (
+              <>
+                <li className="hover:text-orange-500 cursor-pointer transition-colors">Privativo</li>
+                <li className="hover:text-orange-500 cursor-pointer transition-colors">Virtual</li>
+                <li className="hover:text-orange-500 cursor-pointer transition-colors">Salas</li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -260,7 +312,7 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
           <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Contato</h4>
           <p className="text-white/40 text-xs font-bold uppercase tracking-widest leading-relaxed">
             Santos - SP<br />
-            {phone}<br />
+            {footerData.phone}<br />
             contato@coworking013.com.br
           </p>
         </div>
