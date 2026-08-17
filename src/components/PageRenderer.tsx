@@ -48,8 +48,10 @@ const SectionRenderer: React.FC<{
   const sectionStyle: React.CSSProperties = {
     backgroundColor: settings.backgroundColor,
     backgroundImage: settings.backgroundImage ? `url(${settings.backgroundImage})` : undefined,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    backgroundSize: settings.backgroundSize || 'cover',
+    backgroundPosition: settings.backgroundPosition || 'center',
+    backgroundAttachment: settings.backgroundAttachment || 'scroll',
+    backgroundRepeat: settings.backgroundRepeat || 'no-repeat',
     paddingTop: settings.padding?.top ? `${settings.padding.top}px` : undefined,
     paddingBottom: settings.padding?.bottom ? `${settings.padding.bottom}px` : undefined,
     paddingLeft: settings.padding?.left ? `${settings.padding.left}px` : undefined,
@@ -99,6 +101,16 @@ const SectionRenderer: React.FC<{
         }
       }}
     >
+      {settings.backgroundType === 'video' && settings.backgroundVideoUrl && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <iframe
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] h-[300%] max-w-none"
+            src={`https://www.youtube.com/embed/${settings.backgroundVideoUrl.split('v=')[1]?.split('&')[0] || settings.backgroundVideoUrl.split('/').pop()}?autoplay=1&mute=1&loop=1&playlist=${settings.backgroundVideoUrl.split('v=')[1]?.split('&')[0] || settings.backgroundVideoUrl.split('/').pop()}&controls=0&showinfo=0&rel=0&enablejsapi=1`}
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+          ></iframe>
+        </div>
+      )}
       {settings.backgroundImage && <div style={overlayStyle} />}
       {getShapeDivider()}
       
