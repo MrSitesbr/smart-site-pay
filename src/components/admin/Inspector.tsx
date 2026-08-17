@@ -511,34 +511,112 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
             </TabsContent>
 
             <TabsContent value="advanced" className="mt-0 space-y-6">
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Espaçamento Interno (Padding)</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[8px] font-bold">TOP</Label>
-                    <Input 
-                      type="number" 
-                      value={data.settings?.padding?.top || data.styles?.padding?.top || 0} 
-                      onChange={(e) => type === 'widget' ? handleChange('styles.padding.top', parseInt(e.target.value)) : handleChange('settings.padding.top', parseInt(e.target.value))} 
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Margem Externa (Margin)</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold">TOP</Label>
+                      <Input 
+                        type="number" 
+                        value={type === 'widget' ? (data.styles?.margin?.top || 0) : (data.settings?.margin?.top || 0)} 
+                        onChange={(e) => type === 'widget' ? handleChange('styles.margin.top', parseInt(e.target.value)) : handleChange('settings.margin.top', parseInt(e.target.value))} 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold">BOTTOM</Label>
+                      <Input 
+                        type="number" 
+                        value={type === 'widget' ? (data.styles?.margin?.bottom || 0) : (data.settings?.margin?.bottom || 0)} 
+                        onChange={(e) => type === 'widget' ? handleChange('styles.margin.bottom', parseInt(e.target.value)) : handleChange('settings.margin.bottom', parseInt(e.target.value))} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Espaçamento Interno (Padding)</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold">TOP</Label>
+                      <Input 
+                        type="number" 
+                        value={type === 'widget' ? (data.styles?.padding?.top || 0) : (data.settings?.padding?.top || 0)} 
+                        onChange={(e) => type === 'widget' ? handleChange('styles.padding.top', parseInt(e.target.value)) : handleChange('settings.padding.top', parseInt(e.target.value))} 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold">BOT</Label>
+                      <Input 
+                        type="number" 
+                        value={type === 'widget' ? (data.styles?.padding?.bottom || 0) : (data.settings?.padding?.bottom || 0)} 
+                        onChange={(e) => type === 'widget' ? handleChange('styles.padding.bottom', parseInt(e.target.value)) : handleChange('settings.padding.bottom', parseInt(e.target.value))} 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold">LEF</Label>
+                      <Input 
+                        type="number" 
+                        value={type === 'widget' ? (data.styles?.padding?.left || 0) : (data.settings?.padding?.left || 0)} 
+                        onChange={(e) => type === 'widget' ? handleChange('styles.padding.left', parseInt(e.target.value)) : handleChange('settings.padding.left', parseInt(e.target.value))} 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold">RIG</Label>
+                      <Input 
+                        type="number" 
+                        value={type === 'widget' ? (data.styles?.padding?.right || 0) : (data.settings?.padding?.right || 0)} 
+                        onChange={(e) => type === 'widget' ? handleChange('styles.padding.right', parseInt(e.target.value)) : handleChange('settings.padding.right', parseInt(e.target.value))} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Efeitos e Visibilidade</Label>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Animação de Entrada</Label>
+                    <Select value={data.settings?.animation || data.styles?.animation || 'none'} onValueChange={(v) => type === 'widget' ? handleChange('styles.animation', v) : handleChange('settings.animation', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        <SelectItem value="fadeIn">Fade In</SelectItem>
+                        <SelectItem value="fadeInUp">Fade In Up</SelectItem>
+                        <SelectItem value="zoomIn">Zoom In</SelectItem>
+                        <SelectItem value="slideInLeft">Slide In Left</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Ocultar no Mobile</Label>
+                    <input 
+                      type="checkbox" 
+                      checked={type === 'widget' ? (data.styles?.hideMobile || false) : (data.settings?.hideMobile || false)} 
+                      onChange={(e) => type === 'widget' ? handleChange('styles.hideMobile', e.target.checked) : handleChange('settings.hideMobile', e.target.checked)}
+                      className="w-4 h-4 accent-brand-orange"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-[8px] font-bold">BOTTOM</Label>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Z-Index (Camadas)</Label>
                     <Input 
                       type="number" 
-                      value={data.settings?.padding?.bottom || data.styles?.padding?.bottom || 0} 
-                      onChange={(e) => type === 'widget' ? handleChange('styles.padding.bottom', parseInt(e.target.value)) : handleChange('settings.padding.bottom', parseInt(e.target.value))} 
+                      value={type === 'widget' ? (data.styles?.zIndex || 0) : (data.settings?.zIndex || 0)} 
+                      onChange={(e) => type === 'widget' ? handleChange('styles.zIndex', parseInt(e.target.value)) : handleChange('settings.zIndex', parseInt(e.target.value))} 
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">CSS Customizado / Classes</Label>
+                  <Input 
+                    placeholder="my-custom-class" 
+                    value={type === 'widget' ? (data.styles?.className || '') : (data.settings?.className || '')} 
+                    onChange={(e) => type === 'widget' ? handleChange('styles.className', e.target.value) : handleChange('settings.className', e.target.value)} 
+                  />
                 </div>
               </div>
-
-              {type === 'widget' && (
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Z-Index</Label>
-                  <Input type="number" value={data.styles?.zIndex || 0} onChange={(e) => handleChange('styles.zIndex', parseInt(e.target.value))} />
-                </div>
-              )}
             </TabsContent>
           </div>
         </Tabs>
