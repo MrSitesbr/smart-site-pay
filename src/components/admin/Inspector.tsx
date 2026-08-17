@@ -176,8 +176,23 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Telefone</Label>
                         <Input value={data.content.phone || '(13) 98805-0358'} onChange={(e) => handleChange('content.phone', e.target.value)} />
                       </div>
+                      {data.type === 'global_header' && (
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Slug do Menu</Label>
+                          <Select value={data.content.menu_slug || 'main-header'} onValueChange={(v) => handleChange('content.menu_slug', v)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="main-header">Menu Principal</SelectItem>
+                              <SelectItem value="footer-nav">Menu Footer</SelectItem>
+                              <SelectItem value="footer-services">Menu Serviços</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                        <p className="text-[10px] font-bold text-blue-800 uppercase tracking-tighter">Nota: Os menus são carregados automaticamente das configurações de "Menus" no admin.</p>
+                        <p className="text-[10px] font-bold text-blue-800 uppercase tracking-tighter">
+                          DICA: Use a aba "ESTILO" para mudar a cor de fundo deste bloco.
+                        </p>
                       </div>
                     </div>
                   ) : null}

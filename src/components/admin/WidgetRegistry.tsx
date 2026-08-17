@@ -122,13 +122,13 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
   global_header: {
     label: "Bloco Header",
     icon: LayoutIcon,
-    defaultContent: { type: 'main' },
-    defaultStyles: {}
+    defaultContent: { type: 'main', menu_slug: 'main-header', logo_text_top: 'CoWorking', logo_text_bottom: '013', phone: '(13) 98805-0358' },
+    defaultStyles: { backgroundColor: '#002f5e' }
   },
   global_footer: {
     label: "Bloco Footer",
     icon: LayoutIcon,
-    defaultContent: { type: 'main' },
-    defaultStyles: {}
+    defaultContent: { type: 'main', logo_text_top: 'CoWorking', logo_text_bottom: '013', phone: '(13) 98805-0358' },
+    defaultStyles: { backgroundColor: '#0b0b0b' }
   }
 };
