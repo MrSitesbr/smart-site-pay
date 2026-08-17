@@ -334,15 +334,50 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                           handleChange('content.items', newItems);
                         }} 
                       />
-                      <Textarea 
-                        placeholder="Depoimento"
-                        value={item.text} 
-                        onChange={(e) => {
-                          const newItems = [...data.content.items];
-                          newItems[idx].text = e.target.value;
-                          handleChange('content.items', newItems);
-                        }} 
-                      />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Depoimento</Label>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[8px] font-bold"
+                            onClick={() => toggleHtmlMode(`testimonial-${idx}`)}
+                          >
+                            <Code className="w-3 h-3 mr-1" /> {showHtmlMode[`testimonial-${idx}`] ? 'VISUAL' : 'HTML'}
+                          </Button>
+                        </div>
+
+                        {showHtmlMode[`testimonial-${idx}`] ? (
+                          <Textarea 
+                            placeholder="Depoimento"
+                            value={item.text} 
+                            onChange={(e) => {
+                              const newItems = [...data.content.items];
+                              newItems[idx].text = e.target.value;
+                              handleChange('content.items', newItems);
+                            }} 
+                            className="min-h-[100px] font-mono text-xs"
+                          />
+                        ) : (
+                          <div className="bg-white rounded-md border overflow-hidden">
+                            <ReactQuill 
+                              theme="snow" 
+                              value={item.text || ''} 
+                              onChange={(content) => {
+                                const newItems = [...data.content.items];
+                                newItems[idx].text = content;
+                                handleChange('content.items', newItems);
+                              }}
+                              modules={{
+                                toolbar: [
+                                  ['bold', 'italic', 'underline'],
+                                  ['clean']
+                                ]
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                       <Button variant="ghost" size="sm" className="w-full" onClick={() => {
                         const newItems = data.content.items.filter((_: any, i: number) => i !== idx);
                         handleChange('content.items', newItems);
