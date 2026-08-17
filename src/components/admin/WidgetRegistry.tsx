@@ -2,7 +2,7 @@ import {
   Type, Image as ImageIcon, MousePointer2, Layout as LayoutIcon, 
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Italic, 
   Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2, 
-  Building2, CreditCard, Armchair, MessageSquare
+  Building2, CreditCard, Armchair, MessageSquare, Box
 } from "lucide-react";
 import { WidgetType } from "@/types/page-builder";
 
@@ -130,5 +130,22 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
     icon: LayoutIcon,
     defaultContent: { type: 'main', logo_text_top: 'CoWorking', logo_text_bottom: '013', phone: '(13) 98805-0358' },
     defaultStyles: { backgroundColor: '#0b0b0b' }
+  },
+  inner_section: {
+    label: "Seção Interna",
+    icon: Columns,
+    defaultContent: {
+      columns: [
+        { id: `col_inner_${Math.random().toString(36).substr(2, 9)}`, widthPercentage: 50, widgets: [] },
+        { id: `col_inner_${Math.random().toString(36).substr(2, 9)}`, widthPercentage: 50, widgets: [] }
+      ]
+    },
+    defaultStyles: {}
+  },
+  icon_box: {
+    label: "Caixa de Ícone",
+    icon: Box,
+    defaultContent: { title: "Título do Recurso", description: "Breve descrição sobre esta vantagem competitiva.", icon: "Check" },
+    defaultStyles: { iconColor: "#ff6b00", alignment: "center" }
   }
 };
