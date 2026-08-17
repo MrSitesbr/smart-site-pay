@@ -16,6 +16,7 @@ import { MediaPickerModal } from "./MediaPickerModal";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
+import { toast } from "sonner";
 
 interface InspectorProps {
   type: 'section' | 'column' | 'widget';
