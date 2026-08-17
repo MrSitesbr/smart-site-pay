@@ -64,8 +64,13 @@ const SectionRenderer: React.FC<{
   };
 
   // Ensure background color is applied even if backgroundType is 'color' (compatibility fix)
-  if (settings.backgroundType === 'color' && settings.backgroundColor && !sectionStyle.background) {
+  if ((settings.backgroundType === 'color' || settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundColor) {
     sectionStyle.backgroundColor = settings.backgroundColor;
+  }
+  
+  // Also ensure classic type respects image
+  if ((settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundImage) {
+    sectionStyle.backgroundImage = `url(${settings.backgroundImage})`;
   }
 
   const getShapeDivider = () => {
