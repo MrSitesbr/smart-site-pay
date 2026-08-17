@@ -4,7 +4,7 @@ import {
   Plus, Save, Layout, Layers, Eye, Smartphone, Monitor, 
   ChevronLeft, History, Redo, Undo, Search, Settings,
   Grid3X3, Columns, MousePointer2, Type, Image as ImageIcon,
-  Download, Upload, FileCode
+  Download, Upload, FileCode, Trash2
 } from "lucide-react";
 import { PageRenderer } from "@/components/PageRenderer";
 import { Inspector } from "./Inspector";
