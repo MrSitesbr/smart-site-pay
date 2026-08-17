@@ -29,6 +29,11 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
   const [activeTab, setActiveTab] = useState('content');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<string | null>(null);
+  const [showHtmlMode, setShowHtmlMode] = useState<Record<string, boolean>>({});
+
+  const toggleHtmlMode = (fieldId: string) => {
+    setShowHtmlMode(prev => ({ ...prev, [fieldId]: !prev[fieldId] }));
+  };
 
   const openPicker = (path: string) => {
     setPickerTarget(path);
