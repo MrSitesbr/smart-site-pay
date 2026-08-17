@@ -54,7 +54,9 @@ const Navbar = () => {
     // 2. Load Global Header Content
     const data = await getPageContent("global-header");
     if (data && data.site_sections) {
-      const headerSection = data.site_sections.find((s: any) => s.section_key === 'navbar' && s.is_visible);
+      const headerSection = data.site_sections.find((s: any) => 
+        (s.section_key === 'dynamic-layout' || s.section_key === 'navbar') && s.is_visible
+      );
       if (headerSection) {
         const content = headerSection.content;
         setCmsContent(prev => ({ ...prev, ...content }));

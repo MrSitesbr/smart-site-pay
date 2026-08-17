@@ -190,9 +190,9 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
 
       setCmsData({
         links: organizedLinks,
-        phone: content?.phone || "(13) 98805-0358",
-        logoTop: content?.logo_text_top || "CoWorking",
-        logoBottom: content?.logo_text_bottom || "013"
+        phone: content?.phone || content?.layout?.[0]?.columns?.[0]?.widgets?.[0]?.content?.phone || "(13) 98805-0358",
+        logoTop: content?.logo_text_top || content?.layout?.[0]?.columns?.[0]?.widgets?.[0]?.content?.logo_text_top || "CoWorking",
+        logoBottom: content?.logo_text_bottom || content?.layout?.[0]?.columns?.[0]?.widgets?.[0]?.content?.logo_text_bottom || "013"
       });
     };
     loadHeaderData();
