@@ -158,14 +158,54 @@ export default function AdminDocsIA() {
       <div className="bg-brand-orange p-1 rounded-[3rem]">
         <div className="bg-brand-blue-dark rounded-[2.9rem] p-12 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/10 rounded-full -mr-48 -mt-48 blur-3xl" />
-          <div className="relative z-10 max-w-2xl">
-            <h3 className="text-3xl font-black mb-4 uppercase tracking-tighter">Pronto para importar?</h3>
-            <p className="text-white/70 font-medium mb-8 text-lg">
-              Utilize esta estrutura para orientar outras IAs a gerarem seções compatíveis em JSON. O motor Dev interpretará exatamente estas hierarquias para renderizar o site.
-            </p>
-            <div className="flex gap-4">
-              <div className="flex-1 p-6 bg-white/5 rounded-3xl border border-white/10 font-mono text-[10px] text-brand-orange">
-                {`// Exemplo de Hierarquia JSON\n{\n  "type": "section",\n  "settings": { "fullWidth": true },\n  "columns": [\n    { "widthPercentage": 100, "widgets": [...] }\n  ]\n}`}
+          <div className="relative z-10 space-y-8">
+            <div className="max-w-2xl">
+              <h3 className="text-3xl font-black mb-4 uppercase tracking-tighter">Prompt Mestre para IAs Externas</h3>
+              <p className="text-white/70 font-medium mb-8 text-lg">
+                Copie o prompt abaixo para que qualquer IA (ChatGPT, Claude, etc.) gere seções e widgets 100% compatíveis com o novo motor de renderização visual do Coworking 013.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h4 className="text-brand-orange font-black uppercase text-xs tracking-widest">Instrução de Comportamento</h4>
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-sm text-white/90 leading-relaxed font-medium">
+                  "Você é um engenheiro de software especialista no motor visual do Coworking 013. Sua tarefa é gerar JSONs de seções que seguem a hierarquia: Seção > Colunas > Widgets. 
+                  IMPORTANTE: Para widgets de texto (heading, text, testimonials, popup), o campo 'text' ou 'content' deve ser enviado como HTML formatado (ex: &lt;h2&gt;Título&lt;/h2&gt;&lt;p&gt;Corpo do texto&lt;/p&gt;), pois o sistema agora utiliza um editor visual WYSIWYG que renderiza HTML diretamente."
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-brand-orange font-black uppercase text-xs tracking-widest">Exemplo de Estrutura JSON (v2.0)</h4>
+                <div className="p-6 bg-black/40 rounded-3xl border border-white/10 font-mono text-[10px] text-emerald-400 overflow-x-auto">
+                  <pre>{`{
+  "id": "sec_123",
+  "type": "section",
+  "settings": { 
+    "fullWidth": true,
+    "backgroundType": "classic",
+    "backgroundColor": "#ffffff"
+  },
+  "columns": [
+    {
+      "id": "col_123",
+      "widthPercentage": 100,
+      "widgets": [
+        {
+          "id": "wid_123",
+          "type": "text",
+          "content": {
+            "text": "<h2>Bem-vindo</h2><p>Texto rico com <strong>negrito</strong> e links.</p>"
+          },
+          "settings": {
+            "advanced": { "margin": "0 0 20px 0" }
+          }
+        }
+      ]
+    }
+  ]
+}`}</pre>
+                </div>
               </div>
             </div>
           </div>
