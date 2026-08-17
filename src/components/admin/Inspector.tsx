@@ -239,11 +239,32 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       className="w-4 h-4 accent-brand-orange"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sobreposição (Overlay) - Opacidade</Label>
+                    <Input 
+                      type="number" 
+                      step="0.1" 
+                      min="0" 
+                      max="1" 
+                      value={data.settings.overlayOpacity || 0} 
+                      onChange={(e) => handleChange('settings.overlayOpacity', parseFloat(e.target.value))} 
+                    />
+                  </div>
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="style" className="mt-0 space-y-6">
+              {type === 'widget' && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tamanho da Fonte (px/rem)</Label>
+                  <Input 
+                    value={data.styles?.fontSize || ''} 
+                    onChange={(e) => handleChange('styles.fontSize', e.target.value)} 
+                    placeholder="ex: 16px ou 1.2rem"
+                  />
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor Principal</Label>
