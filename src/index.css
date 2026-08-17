@@ -160,3 +160,23 @@ div[style*="Edit with Lovable"],
   position: absolute !important;
   z-index: -9999 !important;
 }
+
+/* Custom styles for React Quill to fit Inspector */
+.quill {
+  @apply bg-white;
+}
+.ql-editor {
+  min-height: 120px;
+  max-height: 400px;
+  font-size: 0.875rem;
+}
+.ql-toolbar.ql-snow {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 4px;
+}
+.ql-container.ql-snow {
+  border: none;
+}
