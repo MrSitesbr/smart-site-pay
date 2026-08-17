@@ -1,234 +1,125 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileCode, Copy, Sparkles, BookOpen } from "lucide-react";
-import { toast } from "sonner";
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { BookOpen, CheckCircle2, Layout, Zap, Edit3, Layers, Smartphone, MousePointer2 } from "lucide-react";
 
 export default function AdminDocsIA() {
-  const schemaExemplo = [
+  const sections = [
     {
-      id: "sec_hero_premium",
-      columns: [
-        {
-          id: "col_hero",
-          widthPercentage: 100,
-          widgets: [
-            {
-              id: "wid_hero_013",
-              type: "heading",
-              content: {
-                text: "O Futuro do Trabalho é <span class='text-brand-orange'>Coworking 013</span>",
-                level: "h1"
-              },
-              styles: { 
-                fontSize: "64px",
-                color: "#FFFFFF",
-                fontWeight: "900",
-                textAlign: "center",
-                margin: { bottom: 20 }
-              }
-            },
-            {
-              id: "wid_sub_hero",
-              type: "text",
-              content: {
-                text: "Infraestrutura de alta performance, networking estratégico e flexibilidade total para sua empresa decolar no coração da inovação."
-              },
-              styles: {
-                fontSize: "20px",
-                color: "#E2E8F0",
-                textAlign: "center",
-                margin: { bottom: 40 }
-              }
-            },
-            {
-              id: "wid_btn_hero",
-              type: "button",
-              content: {
-                text: "CONHECER UNIDADES",
-                url: "/unidades"
-              },
-              styles: {
-                alignment: "center"
-              }
-            }
-          ]
-        }
-      ],
-      settings: { 
-        fullWidth: true, 
-        padding: { top: 120, bottom: 120, left: 20, right: 20 },
-        backgroundColor: "#0F172A",
-        backgroundImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80",
-        overlayOpacity: 0.6
-      }
+      title: "1. Infraestrutura Visual",
+      icon: <Layout className="w-5 h-5 text-brand-orange" />,
+      items: [
+        "Arrastar e Soltar (Drag & Drop): Movimentação fluida de seções e widgets.",
+        "Redimensionamento de Colunas: Alças visuais para ajuste de largura (%).",
+        "Navegador de Elementos: Árvore hierárquica para gestão de camadas.",
+        "Controles Responsivos: Ajustes individuais para Mobile/Tablet/Desktop."
+      ]
     },
     {
-      id: "sec_units_live",
-      columns: [
-        {
-          id: "col_units_header",
-          widthPercentage: 100,
-          widgets: [
-            {
-              id: "wid_units_title",
-              type: "heading",
-              content: { text: "Nossas <span class='text-brand-orange'>Unidades</span>", level: "h2" },
-              styles: { textAlign: "center", fontSize: "42px", fontWeight: "bold", margin: { bottom: 40 } }
-            },
-            {
-              id: "wid_units_grid",
-              type: "units_grid",
-              content: { limit: 3 },
-              styles: {}
-            }
-          ]
-        }
-      ],
-      settings: { 
-        fullWidth: false, 
-        padding: { top: 80, bottom: 80, left: 0, right: 0 },
-        backgroundColor: "#FFFFFF"
-      }
+      title: "2. Estilização Avançada",
+      icon: <Palette className="w-5 h-5 text-brand-orange" />,
+      items: [
+        "Fundos Complexos: Gradientes, Vídeos e Overlays de cor.",
+        "Tipografia Elementor: Altura de linha, espaçamento e sombras customizadas.",
+        "Bordas e Sombras: Arredondamento individual e Box Shadows avançados.",
+        "Animações de Entrada: Fade, Slide e Zoom para elementos."
+      ]
     },
     {
-      id: "sec_plans_live",
-      columns: [
-        {
-          id: "col_plans",
-          widthPercentage: 100,
-          widgets: [
-            {
-              id: "wid_plans_title",
-              type: "heading",
-              content: { text: "Escolha seu <span class='text-brand-orange'>Plano</span>", level: "h2" },
-              styles: { textAlign: "center", fontSize: "42px", fontWeight: "bold", margin: { bottom: 40 } }
-            },
-            {
-              id: "wid_plans_grid",
-              type: "plans_grid",
-              content: { limit: 3 },
-              styles: {}
-            }
-          ]
-        }
-      ],
-      settings: { 
-        fullWidth: false, 
-        padding: { top: 80, bottom: 80, left: 0, right: 0 },
-        backgroundColor: "#F8FAFC"
-      }
+      title: "3. Widgets Dinâmicos",
+      icon: <Zap className="w-5 h-5 text-brand-orange" />,
+      items: [
+        "Seção Interna (Inner Section): Colunas aninhadas para layouts complexos.",
+        "Carrossel de Testemunhos: Slider dinâmico integrado.",
+        "Caixa de Ícone Coworking: Bloco modular com ícones e chamadas.",
+        "Filtros de CRM: Widgets que listam Unidades e Salas com filtros reais."
+      ]
+    },
+    {
+      title: "4. Produtividade",
+      icon: <Edit3 className="w-5 h-5 text-brand-orange" />,
+      items: [
+        "Sistema de Undo/Redo: Histórico de edições completo.",
+        "Biblioteca de Modelos: Salvar e importar seções JSON pré-moldadas.",
+        "Visualização em Tempo Real: Feedback instantâneo no canvas."
+      ]
     }
   ];
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copiado para a área de transferência!");
-  };
-
-  const promptBase = `Você é uma IA especialista em design de interfaces para Coworking. 
-Sua tarefa é gerar seções de página no formato JSON compatível com o "Construtor Dev".
-
-A estrutura deve ser uma LISTA (ARRAY) de seções.
-Cada seção deve seguir rigorosamente este schema:
-- id: string única
-- columns: Array de objetos { id, widthPercentage, widgets: Widget[] }
-- settings: { fullWidth: boolean, padding: { top, bottom, left, right }, backgroundColor }
-
-Cada Widget deve ter:
-- id: string única
-- type: 'hero' | 'features' | 'text_block' | 'ideal_para' | 'units_grid' | 'plans_grid' | 'rooms_grid' | 'contact_form' | 'popup'
-- content: objeto com campos específicos do widget
-- styles: objeto com estilos (ex: { padding, textAlign })
-
-Widgets Disponíveis e seus conteúdos:
-1. heading: { text: "HTML", level: "h1"|"h2"|"h3" }
-2. text: { text: "HTML formatado" }
-3. image: { url: "URL", alt: "descrição" }
-4. button: { text: "Rótulo", url: "Link" }
-5. units_grid: { limit: number }
-6. plans_grid: { limit: number }
-7. rooms_grid: { limit: number }
-8. contact_form: { title: "String", subtitle: "String" }
-9. popup: { triggerText: "Abrir", title: "Título", html: "Conteúdo", actionType: 'login'|'whatsapp'|'register' }
-10. form: { formType: "reserva" }
-
-Sempre responda APENAS o JSON (ARRAY de seções), sem explicações.`;
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-3xl font-black text-brand-blue-dark">Documentação para IA</h2>
-        <p className="text-muted-foreground font-medium">Instruções para que outras IAs gerem conteúdo compatível com o Construtor Dev.</p>
+    <div className="space-y-8 p-4 max-w-5xl mx-auto">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-3xl font-black text-brand-blue-dark flex items-center gap-3">
+          <BookOpen className="w-8 h-8 text-brand-orange" />
+          Roteiro de Evolução: Construtor Dev
+        </h2>
+        <p className="text-muted-foreground font-medium">
+          Plano de ação para tornar o editor visual identico às funcionalidades do Elementor Pro.
+        </p>
       </div>
 
-      <div className="grid gap-6">
-        <Card className="border-none shadow-sm bg-brand-blue-dark text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-brand-orange" />
-              Prompt Mestre para Geração de Conteúdo
-            </CardTitle>
-            <CardDescription className="text-white/70">
-              Copie este prompt e cole no ChatGPT, Claude ou qualquer outra IA para gerar páginas completas.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <pre className="bg-black/20 p-4 rounded-xl text-xs overflow-x-auto whitespace-pre-wrap font-mono">
-              {promptBase}
-            </pre>
-            <Button 
-              onClick={() => copyToClipboard(promptBase)}
-              className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-bold"
-            >
-              <Copy className="w-4 h-4 mr-2" /> COPIAR PROMPT MESTRE
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-brand-blue-dark">
-              <FileCode className="w-5 h-5" />
-              Exemplo de JSON de Importação
-            </CardTitle>
-            <CardDescription>
-              Este é o formato que o sistema espera receber ao importar uma página ou seção.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <pre className="bg-muted p-4 rounded-xl text-xs overflow-x-auto font-mono">
-              {JSON.stringify(schemaExemplo, null, 2)}
-            </pre>
-            <Button 
-              variant="outline"
-              onClick={() => copyToClipboard(JSON.stringify(schemaExemplo, null, 2))}
-              className="w-full border-brand-blue-dark/20 text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white"
-            >
-              <Copy className="w-4 h-4 mr-2" /> COPIAR JSON DE EXEMPLO
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-brand-blue-dark">
-              <BookOpen className="w-5 h-5" />
-              Como utilizar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="prose prose-sm max-w-none text-muted-foreground">
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Copie o <strong>Prompt Mestre</strong> acima.</li>
-              <li>Cole na sua IA de preferência e peça para ela criar uma página (ex: "Crie uma página de Preços com 5 seções").</li>
-              <li>Copie o JSON gerado pela IA.</li>
-              <li>No painel administrativo, vá em <strong>Marketing / Site &gt; Páginas</strong>.</li>
-              <li>Abra o <strong>Editor Visual</strong> da página desejada.</li>
-              <li>Clique no botão <strong>Importar JSON</strong> na barra superior e cole o código.</li>
-              <li>O sistema irá renderizar automaticamente as seções mantendo todas as integrações com o banco de dados.</li>
-            </ol>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {sections.map((section, idx) => (
+          <Card key={idx} className="border-none shadow-sm hover:shadow-md transition-all">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg text-brand-blue-dark">
+                {section.icon}
+                {section.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {section.items.map((item, i) => (
+                  <li key={i} className="flex gap-3 text-sm text-muted-foreground font-medium leading-tight">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      <Card className="bg-brand-blue-dark text-white border-none shadow-lg overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32" />
+        <CardHeader>
+          <CardTitle className="uppercase tracking-widest text-xs font-black text-brand-orange">
+            Nota para Desenvolvedores
+          </CardTitle>
+          <CardDescription className="text-white/60 font-medium">
+            Este plano serve como diretriz técnica para as próximas sprints de desenvolvimento do editor visual.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="relative z-10 flex gap-4">
+          <div className="flex-1 p-4 bg-white/10 rounded-xl border border-white/10 text-xs font-mono">
+            {`// Prioridade 1: Drag & Drop (dnd-kit)\n// Prioridade 2: Column Resizing\n// Prioridade 3: Global Typography Settings`}
+          </div>
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+// Helper icons missing from lucide-react if any
+function Palette(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.76-.12 2.58-.35 1.02-.28 1.42-1.4 1.03-2.34-.36-.88-.04-1.92.79-2.43.83-.51 1.91-.42 2.65.23.63.55 1.54.49 2.1-.14.65-.74 1.06-1.74 1.06-2.83 0-5.5-4.5-10-10-10z" />
+    </svg>
   );
 }
