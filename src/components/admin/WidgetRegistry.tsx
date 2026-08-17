@@ -3,7 +3,7 @@ import {
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Italic, 
   Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2, 
   Building2, CreditCard, Armchair, MessageSquare, Box, 
-  List, CheckSquare, Facebook, Instagram, Linkedin, Search, 
+  List, CheckSquare, Search, 
   ArrowRightCircle, Star
 } from "lucide-react";
 import { WidgetType } from "@/types/page-builder";
@@ -164,7 +164,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
   },
   social_icons: {
     label: "Ícones Sociais",
-    icon: Facebook,
+    icon: LayoutIcon,
     defaultContent: { 
       platforms: [
         { name: "Facebook", url: "#", icon: "Facebook" },
