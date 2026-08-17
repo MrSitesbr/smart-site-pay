@@ -215,6 +215,76 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                 </>
               )}
 
+              {type === 'widget' && data.type === 'icon_list' && (
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Itens da Lista</Label>
+                  {(data.content.items || []).map((item: any, idx: number) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input 
+                        value={item.text} 
+                        onChange={(e) => {
+                          const newItems = [...data.content.items];
+                          newItems[idx].text = e.target.value;
+                          handleChange('content.items', newItems);
+                        }} 
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        const newItems = data.content.items.filter((_: any, i: number) => i !== idx);
+                        handleChange('content.items', newItems);
+                      }}>
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full text-[10px] font-bold" onClick={() => {
+                    const newItems = [...(data.content.items || []), { text: "Novo Item", icon: "Check" }];
+                    handleChange('content.items', newItems);
+                  }}>
+                    <Plus className="w-3 h-3 mr-1" /> ADICIONAR ITEM
+                  </Button>
+                </div>
+              )}
+
+              {type === 'widget' && data.type === 'testimonials' && (
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Depoimentos</Label>
+                  {(data.content.items || []).map((item: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-muted/20 rounded-lg space-y-2">
+                      <Input 
+                        placeholder="Nome"
+                        value={item.name} 
+                        onChange={(e) => {
+                          const newItems = [...data.content.items];
+                          newItems[idx].name = e.target.value;
+                          handleChange('content.items', newItems);
+                        }} 
+                      />
+                      <Textarea 
+                        placeholder="Depoimento"
+                        value={item.text} 
+                        onChange={(e) => {
+                          const newItems = [...data.content.items];
+                          newItems[idx].text = e.target.value;
+                          handleChange('content.items', newItems);
+                        }} 
+                      />
+                      <Button variant="ghost" size="sm" className="w-full" onClick={() => {
+                        const newItems = data.content.items.filter((_: any, i: number) => i !== idx);
+                        handleChange('content.items', newItems);
+                      }}>
+                        <Trash2 className="w-3 h-3 text-red-500 mr-1" /> EXCLUIR
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full text-[10px] font-bold" onClick={() => {
+                    const newItems = [...(data.content.items || []), { name: "Novo Cliente", text: "Excelente!", role: "Empresário", rating: 5 }];
+                    handleChange('content.items', newItems);
+                  }}>
+                    <Plus className="w-3 h-3 mr-1" /> ADICIONAR DEPOIMENTO
+                  </Button>
+                </div>
+              )}
+
               {type === 'column' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
