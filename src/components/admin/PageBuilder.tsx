@@ -363,6 +363,35 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     toast.success("Layout exportado com sucesso!");
   };
 
+  const handleImportJSON = (jsonText: string) => {
+    try {
+      const newLayout = JSON.parse(jsonText);
+      if (Array.isArray(newLayout)) {
+        setLayout(newLayout);
+        pushToHistory(newLayout);
+        setIsImportModalOpen(false);
+        setImportJsonText('');
+        toast.success("Layout importado com sucesso!");
+      } else {
+        toast.error("Formato JSON inválido. Deve ser um array de seções.");
+      }
+    } catch (error) {
+      toast.error("Erro ao processar JSON.");
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      handleImportJSON(text);
+    };
+    reader.readAsText(file);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
