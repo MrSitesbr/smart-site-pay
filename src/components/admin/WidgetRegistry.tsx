@@ -2,7 +2,9 @@ import {
   Type, Image as ImageIcon, MousePointer2, Layout as LayoutIcon, 
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Italic, 
   Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2, 
-  Building2, CreditCard, Armchair, MessageSquare, Box
+  Building2, CreditCard, Armchair, MessageSquare, Box, 
+  List, CheckSquare, Facebook, Instagram, Linkedin, Search, 
+  ArrowRightCircle, Star
 } from "lucide-react";
 import { WidgetType } from "@/types/page-builder";
 
@@ -147,5 +149,50 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
     icon: Box,
     defaultContent: { title: "Título do Recurso", description: "Breve descrição sobre esta vantagem competitiva.", icon: "Check" },
     defaultStyles: { iconColor: "#ff6b00", alignment: "center" }
+  },
+  icon_list: {
+    label: "Lista com Ícones",
+    icon: List,
+    defaultContent: { 
+      items: [
+        { text: "Item da lista 1", icon: "Check" },
+        { text: "Item da lista 2", icon: "Check" },
+        { text: "Item da lista 3", icon: "Check" }
+      ] 
+    },
+    defaultStyles: { iconColor: "#ff6b00" }
+  },
+  social_icons: {
+    label: "Ícones Sociais",
+    icon: Facebook,
+    defaultContent: { 
+      platforms: [
+        { name: "Facebook", url: "#", icon: "Facebook" },
+        { name: "Instagram", url: "#", icon: "Instagram" },
+        { name: "LinkedIn", url: "#", icon: "Linkedin" }
+      ] 
+    },
+    defaultStyles: { alignment: "center", iconSize: 24 }
+  },
+  testimonials: {
+    label: "Depoimentos",
+    icon: Star,
+    defaultContent: { 
+      items: [
+        { name: "Cliente Nome", text: "Excelente espaço de trabalho!", role: "CEO na Empresa", rating: 5 }
+      ] 
+    },
+    defaultStyles: {}
+  },
+  accordion: {
+    label: "Acordeão (FAQ)",
+    icon: List,
+    defaultContent: { 
+      items: [
+        { title: "Pergunta 1?", content: "Resposta detalhada aqui." },
+        { title: "Pergunta 2?", content: "Resposta detalhada aqui." }
+      ] 
+    },
+    defaultStyles: {}
   }
 };
