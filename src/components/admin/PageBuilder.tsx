@@ -388,7 +388,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             // Check if it's a URL to an external image
             if (typeof val === 'string' && 
                 (val.startsWith('http://') || val.startsWith('https://')) && 
-                (val.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || val.includes('wp-content/uploads'))) {
+                (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br'))) {
               
               try {
                 const response = await fetch(val);
