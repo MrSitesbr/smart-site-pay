@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Instagram, Linkedin, Youtube, MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
+import { MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoIcon from "@/assets/logo-icon.png.asset.json";
@@ -122,7 +122,7 @@ const Footer = () => {
               {description}
             </p>
             <div className="flex gap-3">
-              {[Instagram, MessageCircle, Youtube, Linkedin].map((Icon, i) => (
+              {[MessageCircle, LayoutDashboard].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
