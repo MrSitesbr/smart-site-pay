@@ -1,6 +1,31 @@
 import React from 'react';
 
-export type WidgetType = 'heading' | 'text' | 'image' | 'button' | 'form' | 'gallery' | 'container' | 'video' | 'map' | 'spacer' | 'units_grid' | 'plans_grid' | 'rooms_grid' | 'popup' | 'hero' | 'features' | 'ideal_para' | 'global_header' | 'global_footer';
+export type WidgetType = 
+  | 'heading' 
+  | 'text' 
+  | 'image' 
+  | 'button' 
+  | 'form' 
+  | 'gallery' 
+  | 'container' 
+  | 'video' 
+  | 'map' 
+  | 'spacer' 
+  | 'units_grid' 
+  | 'plans_grid' 
+  | 'rooms_grid' 
+  | 'popup' 
+  | 'hero' 
+  | 'features' 
+  | 'ideal_para' 
+  | 'global_header' 
+  | 'global_footer' 
+  | 'inner_section' 
+  | 'icon_box'
+  | 'icon_list'
+  | 'social_icons'
+  | 'testimonials'
+  | 'accordion';
 
 export interface WidgetData {
   id: string;

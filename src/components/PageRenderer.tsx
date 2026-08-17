@@ -3,11 +3,15 @@ import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon } from "lucide-react";
+import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon, Check, Star, HelpCircle, MapPin, Calendar, Clock, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnitsWidget, PlansWidget, RoomsWidget, GlobalHeaderWidget, GlobalFooterWidget } from "./admin/layout/CoworkingWidgets";
 import { ContactForm } from "./ContactForm";
 import ReservaDialog from "./ReservaDialog";
+
+const LUCIDE_ICONS: Record<string, any> = {
+  Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout: LayoutIcon
+};
 
 interface PageRendererProps {
   layout: SectionData[];
@@ -320,11 +324,101 @@ const WidgetRenderer: React.FC<{
           </div>
         );
 
-      case 'global_header':
-        return <GlobalHeaderWidget content={content} styles={styles} />;
-      
       case 'global_footer':
         return <GlobalFooterWidget content={content} styles={styles} />;
+
+      case 'inner_section':
+        return (
+          <div className="grid gap-4" style={{ gridTemplateColumns: (content.columns || []).map((c: any) => `${c.widthPercentage}%`).join(' ') }}>
+            {(content.columns || []).map((col: any) => (
+              <div key={col.id} className="flex flex-col gap-4">
+                {(col.widgets || []).map((w: any) => (
+                  <WidgetRenderer 
+                    key={w.id} 
+                    widget={w} 
+                    isAdmin={isAdmin} 
+                    onElementClick={onElementClick} 
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 'icon_box':
+        const IconComponent = LUCIDE_ICONS[content.icon || 'Check'] || LUCIDE_ICONS.Info;
+        return (
+          <div style={widgetStyle} className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-brand-orange transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange mb-4 group-hover:scale-110 transition-transform">
+              <IconComponent className="w-6 h-6" />
+            </div>
+            <h4 className="text-lg font-black text-brand-blue-dark mb-2 uppercase tracking-tight">{content.title}</h4>
+            <p className="text-sm text-muted-foreground font-medium leading-relaxed">{content.description}</p>
+          </div>
+        );
+      case 'icon_list':
+        return (
+          <ul style={widgetStyle} className="space-y-3">
+            {(content.items || []).map((item: any, idx: number) => {
+              const ItemIcon = LUCIDE_ICONS[item.icon || 'Check'] || LUCIDE_ICONS.Check;
+              return (
+                <li key={idx} className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="text-brand-orange"><ItemIcon className="w-4 h-4" /></span>
+                  {item.text}
+                </li>
+              );
+            })}
+          </ul>
+        );
+      
+      case 'social_icons':
+        return (
+          <div style={{ ...widgetStyle, justifyContent: styles.alignment === 'center' ? 'center' : styles.alignment === 'right' ? 'flex-end' : 'flex-start' }} className="flex gap-4">
+            {(content.platforms || []).map((p: any, idx: number) => {
+              // Note: Facebook/Instagram/Linkedin are not in Lucide 0.447.0
+              // Fallback to Info or generic icon if not found
+              const PlatformIcon = LUCIDE_ICONS[p.icon] || LUCIDE_ICONS.Info;
+              return (
+                <a key={idx} href={p.url} className="text-muted-foreground hover:text-brand-orange transition-colors">
+                  <PlatformIcon size={styles.iconSize || 24} />
+                </a>
+              );
+            })}
+          </div>
+        );
+
+      case 'testimonials':
+        return (
+          <div style={widgetStyle} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {(content.items || []).map((item: any, idx: number) => (
+              <div key={idx} className="p-6 bg-white/5 rounded-2xl border border-white/10 italic text-sm text-muted-foreground">
+                <div className="flex gap-1 mb-4 text-brand-orange">
+                  {[...Array(item.rating || 5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
+                </div>
+                <p className="mb-4">"{item.text}"</p>
+                <div className="font-bold text-brand-blue-dark not-italic">{item.name}</div>
+                <div className="text-[10px] uppercase tracking-widest opacity-50 not-italic">{item.role}</div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'accordion':
+        return (
+          <div style={widgetStyle} className="space-y-2">
+            {(content.items || []).map((item: any, idx: number) => (
+              <details key={idx} className="group bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                <summary className="p-4 cursor-pointer font-bold text-sm text-brand-blue-dark flex justify-between items-center list-none">
+                  {item.title}
+                  <span className="transition-transform group-open:rotate-180">▼</span>
+                </summary>
+                <div className="p-4 pt-0 text-sm text-muted-foreground leading-relaxed">
+                  {item.content}
+                </div>
+              </details>
+            ))}
+          </div>
+        );
 
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;

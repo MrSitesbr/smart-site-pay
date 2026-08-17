@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
-  ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon
+  ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon,
+  Plus, Star, List, Layout, Search, Layers
 } from "lucide-react";
 import { MediaPickerModal } from "./MediaPickerModal";
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
@@ -130,6 +131,22 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       />
                     </div>
                   )}
+                  {data.type === 'icon_box' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Título</Label>
+                        <Input value={data.content.title || ''} onChange={(e) => handleChange('content.title', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Descrição</Label>
+                        <Textarea value={data.content.description || ''} onChange={(e) => handleChange('content.description', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícone (Nome Lucide)</Label>
+                        <Input value={data.content.icon || 'Check'} onChange={(e) => handleChange('content.icon', e.target.value)} placeholder="Check, Star, Heart, etc." />
+                      </div>
+                    </div>
+                  )}
                   {data.type === 'popup' && (
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -165,6 +182,15 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                   {data.type === 'global_header' || data.type === 'global_footer' ? (
                     <div className="space-y-4">
                       <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícone do Logo (URL)</Label>
+                        <div className="flex gap-2">
+                          <Input value={data.content.logo_icon || ''} onChange={(e) => handleChange('content.logo_icon', e.target.value)} />
+                          <Button variant="outline" size="icon" onClick={() => openPicker('content.logo_icon')}>
+                            <ImageIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logo Texto Superior</Label>
                         <Input value={data.content.logo_text_top || 'CoWorking'} onChange={(e) => handleChange('content.logo_text_top', e.target.value)} />
                       </div>
@@ -199,6 +225,76 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                 </>
               )}
 
+              {type === 'widget' && data.type === 'icon_list' && (
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Itens da Lista</Label>
+                  {(data.content.items || []).map((item: any, idx: number) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input 
+                        value={item.text} 
+                        onChange={(e) => {
+                          const newItems = [...data.content.items];
+                          newItems[idx].text = e.target.value;
+                          handleChange('content.items', newItems);
+                        }} 
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        const newItems = data.content.items.filter((_: any, i: number) => i !== idx);
+                        handleChange('content.items', newItems);
+                      }}>
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full text-[10px] font-bold" onClick={() => {
+                    const newItems = [...(data.content.items || []), { text: "Novo Item", icon: "Check" }];
+                    handleChange('content.items', newItems);
+                  }}>
+                    <Plus className="w-3 h-3 mr-1" /> ADICIONAR ITEM
+                  </Button>
+                </div>
+              )}
+
+              {type === 'widget' && data.type === 'testimonials' && (
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Depoimentos</Label>
+                  {(data.content.items || []).map((item: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-muted/20 rounded-lg space-y-2">
+                      <Input 
+                        placeholder="Nome"
+                        value={item.name} 
+                        onChange={(e) => {
+                          const newItems = [...data.content.items];
+                          newItems[idx].name = e.target.value;
+                          handleChange('content.items', newItems);
+                        }} 
+                      />
+                      <Textarea 
+                        placeholder="Depoimento"
+                        value={item.text} 
+                        onChange={(e) => {
+                          const newItems = [...data.content.items];
+                          newItems[idx].text = e.target.value;
+                          handleChange('content.items', newItems);
+                        }} 
+                      />
+                      <Button variant="ghost" size="sm" className="w-full" onClick={() => {
+                        const newItems = data.content.items.filter((_: any, i: number) => i !== idx);
+                        handleChange('content.items', newItems);
+                      }}>
+                        <Trash2 className="w-3 h-3 text-red-500 mr-1" /> EXCLUIR
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full text-[10px] font-bold" onClick={() => {
+                    const newItems = [...(data.content.items || []), { name: "Novo Cliente", text: "Excelente!", role: "Empresário", rating: 5 }];
+                    handleChange('content.items', newItems);
+                  }}>
+                    <Plus className="w-3 h-3 mr-1" /> ADICIONAR DEPOIMENTO
+                  </Button>
+                </div>
+              )}
+
               {type === 'column' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -223,11 +319,32 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       className="w-4 h-4 accent-brand-orange"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sobreposição (Overlay) - Opacidade</Label>
+                    <Input 
+                      type="number" 
+                      step="0.1" 
+                      min="0" 
+                      max="1" 
+                      value={data.settings.overlayOpacity || 0} 
+                      onChange={(e) => handleChange('settings.overlayOpacity', parseFloat(e.target.value))} 
+                    />
+                  </div>
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="style" className="mt-0 space-y-6">
+              {type === 'widget' && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tamanho da Fonte (px/rem)</Label>
+                  <Input 
+                    value={data.styles?.fontSize || ''} 
+                    onChange={(e) => handleChange('styles.fontSize', e.target.value)} 
+                    placeholder="ex: 16px ou 1.2rem"
+                  />
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor Principal</Label>

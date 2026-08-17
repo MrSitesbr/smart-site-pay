@@ -210,7 +210,7 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
         {/* Coluna 1: Logo */}
         <div className="flex items-center gap-2 justify-start">
-           <img src="/logo-icon.png" alt="Logo" className="h-10 w-auto object-contain" onError={(e) => {
+           <img src={content?.logo_icon || "/logo-icon.png"} alt="Logo" className="h-10 w-auto object-contain" onError={(e) => {
              (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
            }} />
            <div className="flex flex-col leading-[0.8] items-start">
@@ -275,7 +275,7 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-left">
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-             <img src="/logo-icon.png" alt="Logo" className="h-8 w-auto object-contain" onError={(e) => {
+             <img src={content?.logo_icon || "/logo-icon.png"} alt="Logo" className="h-8 w-auto object-contain" onError={(e) => {
                (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
              }} />
              <div className="flex flex-col leading-[0.8] items-start">
