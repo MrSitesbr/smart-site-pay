@@ -168,15 +168,27 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
 
 export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   return (
-    <div className="bg-brand-blue-dark py-4 px-8 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-         <div className="w-8 h-8 bg-brand-orange rounded-lg"></div>
-         <span className="text-white font-black">HEADER</span>
+    <div className="bg-[#002f5e] py-6 px-8 flex items-center justify-between shadow-lg">
+      <div className="flex items-center gap-3">
+         <div className="w-10 h-10 bg-white/10 rounded-xl backdrop-blur-sm flex items-center justify-center border border-white/20">
+            <span className="text-white font-black text-xl">013</span>
+         </div>
+         <div className="flex flex-col leading-none">
+            <span className="text-orange-500 font-bold text-[10px] uppercase tracking-tighter">CoWorking</span>
+            <span className="text-white font-black text-2xl tracking-tighter">013</span>
+         </div>
       </div>
-      <div className="flex gap-4 text-white/60 text-xs font-bold uppercase">
-         <span>Início</span>
-         <span>Serviços</span>
-         <span>Contato</span>
+      <div className="hidden md:flex gap-8 text-white/80 text-xs font-black uppercase tracking-widest items-center">
+         <span className="hover:text-orange-500 cursor-pointer transition-colors">Início</span>
+         <span className="hover:text-orange-500 cursor-pointer transition-colors flex items-center gap-1">Serviços</span>
+         <span className="hover:text-orange-500 cursor-pointer transition-colors">Unidades</span>
+         <span className="hover:text-orange-500 cursor-pointer transition-colors">Institucional</span>
+         <span className="hover:text-orange-500 cursor-pointer transition-colors">Contato</span>
+      </div>
+      <div className="flex items-center gap-4">
+         <button className="bg-orange-500 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20">
+            Reservar Agora
+         </button>
       </div>
     </div>
   );
@@ -184,8 +196,49 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
 
 export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   return (
-    <div className="bg-[#1a1a1a] py-8 px-8 border-t border-white/10 text-center">
-      <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Global Footer Section</span>
+    <div className="bg-[#0b0b0b] py-16 px-8 border-t border-white/5">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 bg-orange-500 rounded-lg"></div>
+             <span className="text-white font-black text-xl">013</span>
+          </div>
+          <p className="text-white/40 text-xs font-medium leading-relaxed">
+            O melhor espaço de coworking da Baixada Santista. Produtividade e networking em um só lugar.
+          </p>
+        </div>
+        
+        <div>
+          <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Menu</h4>
+          <ul className="space-y-3 text-white/40 text-xs font-bold uppercase tracking-widest">
+            <li className="hover:text-orange-500 cursor-pointer transition-colors">Home</li>
+            <li className="hover:text-orange-500 cursor-pointer transition-colors">Sobre Nós</li>
+            <li className="hover:text-orange-500 cursor-pointer transition-colors">Contato</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Serviços</h4>
+          <ul className="space-y-3 text-white/40 text-xs font-bold uppercase tracking-widest">
+            <li className="hover:text-orange-500 cursor-pointer transition-colors">Privativo</li>
+            <li className="hover:text-orange-500 cursor-pointer transition-colors">Virtual</li>
+            <li className="hover:text-orange-500 cursor-pointer transition-colors">Salas</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Contato</h4>
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest leading-relaxed">
+            Santos - SP<br />
+            (13) 98805-0358<br />
+            contato@coworking013.com.br
+          </p>
+        </div>
+      </div>
+      
+      <div className="mt-16 pt-8 border-t border-white/5 text-center">
+        <span className="text-white/20 text-[9px] font-bold uppercase tracking-[0.3em]">© 2026 CoWorking 013 - Todos os direitos reservados</span>
+      </div>
     </div>
   );
 };
