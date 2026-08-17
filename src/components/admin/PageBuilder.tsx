@@ -480,6 +480,16 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             <div className="h-4 w-[1px] bg-muted" />
             <div className="flex gap-1">
               <Button 
+                variant={showNavigator ? 'secondary' : 'ghost'} 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => setShowNavigator(!showNavigator)}
+                title="Alternar Navegador"
+              >
+                <Layers className="w-4 h-4" />
+              </Button>
+              <div className="h-4 w-[1px] bg-muted mx-1 self-center" />
+              <Button 
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8" 
