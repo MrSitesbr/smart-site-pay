@@ -82,48 +82,81 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
 import { GripVertical, Columns as ColumnsIcon } from "lucide-react";
 
 // Navigator Component for Elementor-like tree view
-const Navigator = ({ layout, selectedId, onSelect }: any) => {
+const Navigator = ({ layout, selectedId, onSelect, onLayoutChange }: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = layout.findIndex((s: any) => s.id === active.id);
+      const newIndex = layout.findIndex((s: any) => s.id === over.id);
+      const newLayout = arrayMove(layout, oldIndex, newIndex);
+      onLayoutChange(newLayout);
+    }
+  };
+
   return (
-    <div className="w-64 bg-slate-800 text-white h-full flex flex-col border-l border-white/5">
-      <div className="p-4 bg-slate-900 flex items-center gap-2 border-b border-white/5">
-        <Layers className="w-4 h-4 text-brand-orange" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Navegador</span>
+    <div className="w-64 bg-slate-800 text-white h-full flex flex-col border-l border-white/5 shadow-2xl">
+      <div className="p-4 bg-slate-900 flex items-center justify-between border-b border-white/5 h-14">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-brand-orange" />
+          <span className="text-[10px] font-black uppercase tracking-widest">Navegador</span>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1">
-        {layout.map((section: any) => (
-          <div key={section.id} className="space-y-1">
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={layout.map((s: any) => s.id)} strategy={verticalListSortingStrategy}>
+            {layout.map((section: any) => (
+              <SortableNavItem 
+                key={section.id} 
+                section={section} 
+                selectedId={selectedId} 
+                onSelect={onSelect} 
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+        {layout.length === 0 && <div className="text-[8px] text-white/20 text-center py-4 italic">Nenhum elemento</div>}
+      </div>
+    </div>
+  );
+};
+
+const SortableNavItem = ({ section, selectedId, onSelect }: any) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="space-y-1">
+      <div 
+        onClick={() => onSelect('section', section.id, section)}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-bold cursor-pointer transition-colors group ${selectedId === section.id ? 'bg-brand-orange text-white' : 'hover:bg-white/5 text-white/60'}`}
+      >
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 -ml-1 opacity-20 group-hover:opacity-100">
+          <GripVertical className="w-3 h-3" />
+        </div>
+        <Layout className="w-3 h-3" /> SEÇÃO
+      </div>
+      <div className="ml-3 border-l border-white/10 pl-2 space-y-1">
+        {(section.columns || []).map((col: any) => (
+          <div key={col.id} className="space-y-1">
             <div 
-              onClick={() => onSelect('section', section.id, section)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${selectedId === section.id ? 'bg-brand-orange text-white' : 'hover:bg-white/5 text-white/60'}`}
+              onClick={() => onSelect('column', col.id, col)}
+              className={`flex items-center gap-2 px-3 py-1 rounded text-[9px] font-bold cursor-pointer transition-colors ${selectedId === col.id ? 'bg-blue-600 text-white' : 'hover:bg-white/5 text-white/50'}`}
             >
-              <Layout className="w-3 h-3" /> SEÇÃO
+              <ColumnsIcon className="w-3 h-3" /> COLUNA
             </div>
             <div className="ml-3 border-l border-white/10 pl-2 space-y-1">
-              {(section.columns || []).map((col: any) => (
-                <div key={col.id} className="space-y-1">
-                  <div 
-                    onClick={() => onSelect('column', col.id, col)}
-                    className={`flex items-center gap-2 px-3 py-1 rounded text-[9px] font-bold cursor-pointer transition-colors ${selectedId === col.id ? 'bg-blue-600 text-white' : 'hover:bg-white/5 text-white/50'}`}
-                  >
-                    <ColumnsIcon className="w-3 h-3" /> COLUNA
-                  </div>
-                  <div className="ml-3 border-l border-white/10 pl-2 space-y-1">
-                    {(col.widgets || []).map((wid: any) => (
-                      <div 
-                        key={wid.id}
-                        onClick={() => onSelect('widget', wid.id, wid)}
-                        className={`flex items-center gap-2 px-3 py-1 rounded text-[8px] font-medium cursor-pointer transition-colors ${selectedId === wid.id ? 'bg-green-600 text-white' : 'hover:bg-white/5 text-white/40'}`}
-                      >
-                        <MousePointer2 className="w-2.5 h-2.5" /> {wid.type.toUpperCase()}
-                      </div>
-                    ))}
-                  </div>
+              {(col.widgets || []).map((wid: any) => (
+                <div 
+                  key={wid.id}
+                  onClick={() => onSelect('widget', wid.id, wid)}
+                  className={`flex items-center gap-2 px-3 py-1 rounded text-[8px] font-medium cursor-pointer transition-colors ${selectedId === wid.id ? 'bg-green-600 text-white' : 'hover:bg-white/5 text-white/40'}`}
+                >
+                  <MousePointer2 className="w-2.5 h-2.5" /> {wid.type.toUpperCase()}
                 </div>
               ))}
             </div>
           </div>
         ))}
-        {layout.length === 0 && <div className="text-[8px] text-white/20 text-center py-4 italic">Nenhum elemento</div>}
       </div>
     </div>
   );
