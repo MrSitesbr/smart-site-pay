@@ -49,7 +49,7 @@ export interface SectionData {
     fullWidth?: boolean;
     backgroundColor?: string;
     backgroundImage?: string;
-    backgroundType?: 'classic' | 'gradient' | 'video';
+    backgroundType?: 'classic' | 'gradient' | 'video' | 'color';
     backgroundGradient?: string;
     backgroundVideoUrl?: string;
     backgroundPosition?: 'center center' | 'center top' | 'center bottom' | 'left center' | 'left top' | 'left bottom' | 'right center' | 'right top' | 'right bottom';
