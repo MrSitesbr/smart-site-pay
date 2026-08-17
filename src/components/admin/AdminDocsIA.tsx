@@ -175,4 +175,3 @@ export default function AdminDocsIA() {
   );
 }
 
-import { Edit3, Palette } from 'lucide-react';
