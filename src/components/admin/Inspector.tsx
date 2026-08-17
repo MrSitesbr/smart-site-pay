@@ -460,33 +460,106 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor de Fundo</Label>
-                    <div className="flex items-center gap-2">
+                  {data.settings.backgroundType === 'video' && (
+                    <div className="space-y-2 p-3 bg-muted/20 rounded-lg">
+                      <Label className="text-[10px] font-black uppercase tracking-widest">URL Vídeo YouTube</Label>
                       <Input 
-                        type="color" 
-                        className="w-10 h-10 p-1"
-                        value={data.settings?.backgroundColor || "#ffffff"} 
-                        onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
-                      />
-                      <Input 
-                        value={data.settings?.backgroundColor || ""} 
-                        onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
-                        placeholder="#ffffff"
-                        className="flex-1"
+                        placeholder="https://www.youtube.com/watch?v=..." 
+                        value={data.settings.backgroundVideoUrl || ''} 
+                        onChange={(e) => handleChange('settings.backgroundVideoUrl', e.target.value)} 
                       />
                     </div>
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
-                    <div className="flex gap-2">
-                      <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
-                      <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
-                        <ImageIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  {data.settings.backgroundType === 'classic' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor de Fundo</Label>
+                        <div className="flex items-center gap-2">
+                          <Input 
+                            type="color" 
+                            className="w-10 h-10 p-1"
+                            value={data.settings?.backgroundColor || "#ffffff"} 
+                            onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
+                          />
+                          <Input 
+                            value={data.settings?.backgroundColor || ""} 
+                            onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
+                            placeholder="#ffffff"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
+                        <div className="flex gap-2">
+                          <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
+                          <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
+                            <ImageIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {data.settings.backgroundImage && (
+                        <div className="space-y-4 p-3 border rounded-lg bg-muted/10">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Posição da Imagem</Label>
+                            <Select value={data.settings.backgroundPosition || 'center center'} onValueChange={(v) => handleChange('settings.backgroundPosition', v)}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="center center">Centro Centro</SelectItem>
+                                <SelectItem value="center top">Centro Topo</SelectItem>
+                                <SelectItem value="center bottom">Centro Base</SelectItem>
+                                <SelectItem value="left center">Esquerda Centro</SelectItem>
+                                <SelectItem value="left top">Esquerda Topo</SelectItem>
+                                <SelectItem value="left bottom">Esquerda Base</SelectItem>
+                                <SelectItem value="right center">Direita Centro</SelectItem>
+                                <SelectItem value="right top">Direita Topo</SelectItem>
+                                <SelectItem value="right bottom">Direita Base</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Anexo (Attachment)</Label>
+                            <Select value={data.settings.backgroundAttachment || 'scroll'} onValueChange={(v) => handleChange('settings.backgroundAttachment', v)}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="scroll">Padrão (Rola com a página)</SelectItem>
+                                <SelectItem value="fixed">Fixo (Paralaxe/Efeito Fixo)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Repetir</Label>
+                            <Select value={data.settings.backgroundRepeat || 'no-repeat'} onValueChange={(v) => handleChange('settings.backgroundRepeat', v)}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="no-repeat">Não Repetir</SelectItem>
+                                <SelectItem value="repeat">Repetir</SelectItem>
+                                <SelectItem value="repeat-x">Repetir Horizontal</SelectItem>
+                                <SelectItem value="repeat-y">Repetir Vertical</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tamanho (Size)</Label>
+                            <Select value={data.settings.backgroundSize || 'cover'} onValueChange={(v) => handleChange('settings.backgroundSize', v)}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="cover">Preencher (Cover)</SelectItem>
+                                <SelectItem value="contain">Conter (Contain)</SelectItem>
+                                <SelectItem value="auto">Automático</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                   
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Divisor de Forma (Bottom Shape)</Label>

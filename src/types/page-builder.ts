@@ -50,6 +50,12 @@ export interface SectionData {
     backgroundColor?: string;
     backgroundImage?: string;
     backgroundType?: 'classic' | 'gradient' | 'video';
+    backgroundGradient?: string;
+    backgroundVideoUrl?: string;
+    backgroundPosition?: 'center center' | 'center top' | 'center bottom' | 'left center' | 'left top' | 'left bottom' | 'right center' | 'right top' | 'right bottom';
+    backgroundAttachment?: 'scroll' | 'fixed';
+    backgroundRepeat?: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y';
+    backgroundSize?: 'cover' | 'contain' | 'auto';
     padding?: { top: number; bottom: number; left: number; right: number };
     margin?: { top: number; bottom: number };
     overlayOpacity?: number;
