@@ -3,11 +3,15 @@ import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon } from "lucide-react";
+import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon, Check, Star, HelpCircle, MapPin, Calendar, Clock, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnitsWidget, PlansWidget, RoomsWidget, GlobalHeaderWidget, GlobalFooterWidget } from "./admin/layout/CoworkingWidgets";
 import { ContactForm } from "./ContactForm";
 import ReservaDialog from "./ReservaDialog";
+
+const LUCIDE_ICONS: Record<string, any> = {
+  Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout: LayoutIcon
+};
 
 interface PageRendererProps {
   layout: SectionData[];
@@ -342,7 +346,7 @@ const WidgetRenderer: React.FC<{
         );
       
       case 'icon_box':
-        const IconComponent = (require('lucide-react') as any)[content.icon || 'Check'] || LayoutIcon;
+        const IconComponent = LUCIDE_ICONS[content.icon || 'Check'] || LUCIDE_ICONS.Info;
         return (
           <div style={widgetStyle} className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-brand-orange transition-all group">
             <div className="w-12 h-12 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange mb-4 group-hover:scale-110 transition-transform">
