@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Type, Palette, Maximize2, Trash2, MoveUp, MoveDown, 
   Settings2, AlignLeft, AlignCenter, AlignRight, Bold,
-  ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon
+  ChevronUp, ChevronDown, X, Download, Upload, Image as ImageIcon,
+  Plus, Star, List, Layout, Search, Layers
 } from "lucide-react";
 import { MediaPickerModal } from "./MediaPickerModal";
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
