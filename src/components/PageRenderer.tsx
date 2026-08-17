@@ -100,6 +100,7 @@ const SectionRenderer: React.FC<{
       }}
     >
       {settings.backgroundImage && <div style={overlayStyle} />}
+      {getShapeDivider()}
       
       <div className={`relative z-10 grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
            style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr' }}>
@@ -136,6 +137,8 @@ const ColumnRenderer: React.FC<{
     paddingBottom: settings.padding?.bottom ? `${settings.padding.bottom}px` : undefined,
     paddingLeft: settings.padding?.left ? `${settings.padding.left}px` : undefined,
     paddingRight: settings.padding?.right ? `${settings.padding.right}px` : undefined,
+    border: settings.borderWidth ? `${settings.borderWidth}px solid ${settings.borderColor || '#eee'}` : undefined,
+    borderRadius: settings.borderRadius ? `${settings.borderRadius}px` : undefined,
   };
 
   return (
@@ -184,7 +187,12 @@ const WidgetRenderer: React.FC<{
     marginBottom: styles.margin?.bottom ? `${styles.margin.bottom}px` : undefined,
     paddingTop: styles.padding?.top ? `${styles.padding.top}px` : undefined,
     paddingBottom: styles.padding?.bottom ? `${styles.padding.bottom}px` : undefined,
+    paddingLeft: styles.padding?.left ? `${styles.padding.left}px` : undefined,
+    paddingRight: styles.padding?.right ? `${styles.padding.right}px` : undefined,
     borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined,
+    textShadow: styles.textShadow,
+    zIndex: styles.zIndex,
+    display: styles.hideMobile ? 'none' : undefined, // Simplistic, should be media query in index.css
   };
 
   const renderWidgetContent = () => {
