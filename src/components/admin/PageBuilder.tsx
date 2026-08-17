@@ -170,6 +170,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const [importJsonText, setImportJsonText] = useState('');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   
+  const [showNavigator, setShowNavigator] = useState(true);
+  
   // History for Undo/Redo
   const [history, setHistory] = useState<SectionData[][]>([initialLayout]);
   const [historyIndex, setHistoryIndex] = useState(0);
