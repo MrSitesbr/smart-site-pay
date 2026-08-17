@@ -58,6 +58,26 @@ const SectionRenderer: React.FC<{
     marginBottom: settings.margin?.bottom ? `${settings.margin.bottom}px` : undefined,
     position: 'relative',
     zIndex: settings.zIndex,
+    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : undefined,
+  };
+
+  const getShapeDivider = () => {
+    if (!settings.shapeDivider || settings.shapeDivider === 'none') return null;
+    
+    const shapes: Record<string, React.ReactNode> = {
+      tilt: (
+        <svg className="absolute bottom-0 left-0 w-full h-[100px] overflow-hidden leading-none z-10" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M1200 120L0 120 0 0z" fill={settings.backgroundColor || "#ffffff"} fillOpacity="0.1" />
+        </svg>
+      ),
+      curve: (
+        <svg className="absolute bottom-0 left-0 w-full h-[100px] overflow-hidden leading-none z-10" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M600 112.7L1200 8L1200 120L0 120L0 8L600 112.7Z" fill={settings.backgroundColor || "#ffffff"} fillOpacity="0.1" />
+        </svg>
+      )
+    };
+    
+    return shapes[settings.shapeDivider];
   };
 
   const overlayStyle: React.CSSProperties = {
