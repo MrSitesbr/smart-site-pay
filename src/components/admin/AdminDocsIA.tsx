@@ -170,7 +170,7 @@ export default function AdminDocsIA() {
               <div className="space-y-4">
                 <h4 className="text-brand-orange font-black uppercase text-xs tracking-widest">Instrução de Comportamento</h4>
                 <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-sm text-white/90 leading-relaxed font-medium">
-                  "Você é um engenheiro de software especialista no motor visual do Coworking 013. Sua tarefa é gerar JSONs de seções que seguem a hierarquia: Seção > Colunas > Widgets. 
+                  "Você é um engenheiro de software especialista no motor visual do Coworking 013. Sua tarefa é gerar JSONs de seções que seguem a hierarquia: Seção &gt; Colunas &gt; Widgets. 
                   IMPORTANTE: Para widgets de texto (heading, text, testimonials, popup), o campo 'text' ou 'content' deve ser enviado como HTML formatado (ex: &lt;h2&gt;Título&lt;/h2&gt;&lt;p&gt;Corpo do texto&lt;/p&gt;), pois o sistema agora utiliza um editor visual WYSIWYG que renderiza HTML diretamente."
                 </div>
               </div>
