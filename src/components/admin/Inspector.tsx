@@ -80,12 +80,41 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                 <>
                   {data.type === 'heading' || data.type === 'text' || data.type === 'button' ? (
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto</Label>
-                      <Textarea 
-                        value={data.content.text || ''} 
-                        onChange={(e) => handleChange('content.text', e.target.value)}
-                        className="min-h-[100px] text-sm"
-                      />
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto</Label>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-[8px] font-bold"
+                          onClick={() => toggleHtmlMode('main-text')}
+                        >
+                          <Code className="w-3 h-3 mr-1" /> {showHtmlMode['main-text'] ? 'VISUAL' : 'HTML'}
+                        </Button>
+                      </div>
+                      
+                      {showHtmlMode['main-text'] ? (
+                        <Textarea 
+                          value={data.content.text || ''} 
+                          onChange={(e) => handleChange('content.text', e.target.value)}
+                          className="min-h-[200px] text-sm font-mono"
+                        />
+                      ) : (
+                        <div className="bg-white rounded-md border overflow-hidden">
+                          <ReactQuill 
+                            theme="snow" 
+                            value={data.content.text || ''} 
+                            onChange={(content) => handleChange('content.text', content)}
+                            modules={{
+                              toolbar: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['link', 'clean']
+                              ]
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   ) : null}
 
