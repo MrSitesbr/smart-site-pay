@@ -167,15 +167,26 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
 };
 
 export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
+  const logoTop = content?.logo_text_top || "CoWorking";
+  const logoBottom = content?.logo_text_bottom || "013";
+  const phone = content?.phone || "(13) 98805-0358";
+  
   return (
     <div className="bg-[#002f5e] py-6 px-8 flex items-center justify-between shadow-lg">
-      <div className="flex items-center gap-3">
-         <div className="w-10 h-10 bg-white/10 rounded-xl backdrop-blur-sm flex items-center justify-center border border-white/20">
-            <span className="text-white font-black text-xl">013</span>
+      <div className="flex items-center gap-2">
+         <div className="h-10 w-10 flex items-center justify-center">
+            <svg viewBox="0 0 100 100" className="w-full h-full fill-white">
+              <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="none" stroke="currentColor" strokeWidth="5"/>
+              <text x="50" y="65" textAnchor="middle" className="font-black text-4xl" fill="white">013</text>
+            </svg>
          </div>
-         <div className="flex flex-col leading-none">
-            <span className="text-orange-500 font-bold text-[10px] uppercase tracking-tighter">CoWorking</span>
-            <span className="text-white font-black text-2xl tracking-tighter">013</span>
+         <div className="flex flex-col leading-[0.8] items-start">
+            <span className="text-[14px] font-bold tracking-tight text-orange-500 uppercase">
+              {logoTop}
+            </span>
+            <span className="text-3xl font-black text-white tracking-tighter -mt-1">
+              {logoBottom}
+            </span>
          </div>
       </div>
       <div className="hidden md:flex gap-8 text-white/80 text-xs font-black uppercase tracking-widest items-center">
@@ -186,8 +197,11 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
          <span className="hover:text-orange-500 cursor-pointer transition-colors">Contato</span>
       </div>
       <div className="flex items-center gap-4">
-         <button className="bg-orange-500 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20">
-            Reservar Agora
+         <div className="hidden lg:flex items-center gap-2 text-white text-xs font-bold">
+            <span className="text-primary">📞</span> {phone}
+         </div>
+         <button className="bg-secondary text-secondary-foreground font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg">
+            Reservar
          </button>
       </div>
     </div>
@@ -195,13 +209,29 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
 };
 
 export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
+  const logoTop = content?.logo_text_top || "CoWorking";
+  const logoBottom = content?.logo_text_bottom || "013";
+  const phone = content?.phone || "(13) 98805-0358";
+  
   return (
     <div className="bg-[#0b0b0b] py-16 px-8 border-t border-white/5">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-orange-500 rounded-lg"></div>
-             <span className="text-white font-black text-xl">013</span>
+          <div className="flex items-center gap-2">
+             <div className="h-8 w-8 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-full h-full fill-white">
+                  <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="none" stroke="currentColor" strokeWidth="5"/>
+                  <text x="50" y="65" textAnchor="middle" className="font-black text-4xl" fill="white">013</text>
+                </svg>
+             </div>
+             <div className="flex flex-col leading-[0.8] items-start">
+                <span className="text-[12px] font-bold tracking-tight text-orange-500 uppercase">
+                  {logoTop}
+                </span>
+                <span className="text-2xl font-black text-white tracking-tighter -mt-1">
+                  {logoBottom}
+                </span>
+             </div>
           </div>
           <p className="text-white/40 text-xs font-medium leading-relaxed">
             O melhor espaço de coworking da Baixada Santista. Produtividade e networking em um só lugar.
@@ -230,7 +260,7 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
           <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-6">Contato</h4>
           <p className="text-white/40 text-xs font-bold uppercase tracking-widest leading-relaxed">
             Santos - SP<br />
-            (13) 98805-0358<br />
+            {phone}<br />
             contato@coworking013.com.br
           </p>
         </div>
