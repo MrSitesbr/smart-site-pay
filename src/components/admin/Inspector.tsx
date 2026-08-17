@@ -335,30 +335,142 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
             </TabsContent>
 
             <TabsContent value="style" className="mt-0 space-y-6">
-              {type === 'widget' && (
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tamanho da Fonte (px/rem)</Label>
-                  <Input 
-                    value={data.styles?.fontSize || ''} 
-                    onChange={(e) => handleChange('styles.fontSize', e.target.value)} 
-                    placeholder="ex: 16px ou 1.2rem"
-                  />
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor Principal</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      type="color" 
-                      className="w-10 h-10 p-1"
-                      value={data.styles?.color || data.settings?.backgroundColor || "#000000"} 
-                      onChange={(e) => type === 'widget' ? handleChange('styles.color', e.target.value) : handleChange('settings.backgroundColor', e.target.value)} 
-                    />
+              {type === 'section' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Fundo</Label>
+                    <Select value={data.settings.backgroundType || 'classic'} onValueChange={(v) => handleChange('settings.backgroundType', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="classic">Clássico (Cor/Imagem)</SelectItem>
+                        <SelectItem value="gradient">Gradiente</SelectItem>
+                        <SelectItem value="video">Vídeo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {data.settings.backgroundType === 'gradient' && (
+                    <div className="space-y-2 p-3 bg-muted/20 rounded-lg">
+                      <Label className="text-[10px] font-black uppercase tracking-widest">Gradiente CSS</Label>
+                      <Input 
+                        placeholder="linear-gradient(45deg, #000, #333)" 
+                        value={data.settings.backgroundGradient || ''} 
+                        onChange={(e) => handleChange('settings.backgroundGradient', e.target.value)} 
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor de Fundo</Label>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        type="color" 
+                        className="w-10 h-10 p-1"
+                        value={data.settings?.backgroundColor || "#ffffff"} 
+                        onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
+                      />
+                      <Input 
+                        value={data.settings?.backgroundColor || ""} 
+                        onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
+                        placeholder="#ffffff"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
+                    <div className="flex gap-2">
+                      <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
+                      <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
+                        <ImageIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Divisor de Forma (Bottom Shape)</Label>
+                    <Select value={data.settings.shapeDivider || 'none'} onValueChange={(v) => handleChange('settings.shapeDivider', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum</SelectItem>
+                        <SelectItem value="tilt">Inclinação</SelectItem>
+                        <SelectItem value="curve">Curva</SelectItem>
+                        <SelectItem value="waves">Ondas</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+              )}
 
-                {type === 'widget' && (
+              {type === 'column' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor de Fundo</Label>
+                    <Input 
+                      type="color" 
+                      className="w-full h-10 p-1"
+                      value={data.settings?.backgroundColor || "#transparent"} 
+                      onChange={(e) => handleChange('settings.backgroundColor', e.target.value)} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Borda</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input type="number" placeholder="Largura" onChange={(e) => handleChange('settings.borderWidth', parseInt(e.target.value))} />
+                      <Input type="color" className="p-1 h-10 w-full" onChange={(e) => handleChange('settings.borderColor', e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {type === 'widget' && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipografia</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[8px] font-bold">TAMANHO (PX)</Label>
+                        <Input 
+                          type="number"
+                          value={parseInt(data.styles?.fontSize) || 16} 
+                          onChange={(e) => handleChange('styles.fontSize', `${e.target.value}px`)} 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[8px] font-bold">PESO</Label>
+                        <Select value={data.styles?.fontWeight || 'normal'} onValueChange={(v) => handleChange('styles.fontWeight', v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="light">300</SelectItem>
+                            <SelectItem value="normal">400</SelectItem>
+                            <SelectItem value="medium">500</SelectItem>
+                            <SelectItem value="bold">700</SelectItem>
+                            <SelectItem value="black">900</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor do Texto</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="color" 
+                        className="w-10 h-10 p-1"
+                        value={data.styles?.color || "#000000"} 
+                        onChange={(e) => handleChange('styles.color', e.target.value)} 
+                      />
+                      <Input 
+                        value={data.styles?.color || ""} 
+                        onChange={(e) => handleChange('styles.color', e.target.value)} 
+                        placeholder="#000000"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Alinhamento</Label>
                     <div className="flex bg-muted p-1 rounded-lg">
@@ -385,17 +497,14 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       </Button>
                     </div>
                   </div>
-                )}
-              </div>
-
-              {type === 'section' && (
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem de Fundo</Label>
-                  <div className="flex gap-2">
-                    <Input value={data.settings.backgroundImage || ''} onChange={(e) => handleChange('settings.backgroundImage', e.target.value)} />
-                    <Button variant="outline" size="icon" onClick={() => openPicker('settings.backgroundImage')}>
-                      <ImageIcon className="w-4 h-4" />
-                    </Button>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sombra do Texto</Label>
+                    <Input 
+                      placeholder="0px 0px 10px rgba(0,0,0,0.5)" 
+                      value={data.styles?.textShadow || ''} 
+                      onChange={(e) => handleChange('styles.textShadow', e.target.value)} 
+                    />
                   </div>
                 </div>
               )}
