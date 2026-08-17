@@ -365,15 +365,31 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   const handleImportJSON = (jsonText: string) => {
     try {
-      const newLayout = JSON.parse(jsonText);
+      let newLayout = JSON.parse(jsonText);
+      
+      // Support for Elementor/Standard wrapped formats
+      if (newLayout.sections && Array.isArray(newLayout.sections)) {
+        newLayout = newLayout.sections;
+      }
+
       if (Array.isArray(newLayout)) {
-        setLayout(newLayout);
-        pushToHistory(newLayout);
+        // Ensure every section has a default background if missing
+        const sanitizedLayout = newLayout.map(section => ({
+          ...section,
+          settings: {
+            backgroundColor: '#ffffff',
+            backgroundType: 'classic',
+            ...(section.settings || {})
+          }
+        }));
+
+        setLayout(sanitizedLayout);
+        pushToHistory(sanitizedLayout);
         setIsImportModalOpen(false);
         setImportJsonText('');
         toast.success("Layout importado com sucesso!");
       } else {
-        toast.error("Formato JSON inválido. Deve ser um array de seções.");
+        toast.error("Formato JSON inválido. Deve ser um array de seções ou conter a chave 'sections'.");
       }
     } catch (error) {
       toast.error("Erro ao processar JSON.");
