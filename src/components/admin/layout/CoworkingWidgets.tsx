@@ -171,11 +171,12 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
 
   useEffect(() => {
     const loadHeaderData = async () => {
-      // Prioritize content from the widget instance, fallback to global settings
+      // Prioritize menu from content settings, fallback to main-header slug
+      const menuSlug = content?.menu_slug || 'main-header';
       const { data: menuData } = await supabase
         .from('navigation_menus')
         .select('*, items:navigation_items(*)')
-        .eq('slug', 'main-header')
+        .eq('slug', menuSlug)
         .single();
 
       const organizedLinks = menuData?.items
@@ -190,44 +191,55 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
 
       setCmsData({
         links: organizedLinks,
-        phone: content?.phone || content?.layout?.[0]?.columns?.[0]?.widgets?.[0]?.content?.phone || "(13) 98805-0358",
-        logoTop: content?.logo_text_top || content?.layout?.[0]?.columns?.[0]?.widgets?.[0]?.content?.logo_text_top || "CoWorking",
-        logoBottom: content?.logo_text_bottom || content?.layout?.[0]?.columns?.[0]?.widgets?.[0]?.content?.logo_text_bottom || "013"
+        phone: content?.phone || "(13) 98805-0358",
+        logoTop: content?.logo_text_top || "CoWorking",
+        logoBottom: content?.logo_text_bottom || "013",
+        backgroundColor: styles?.backgroundColor || "#002f5e"
       });
     };
     loadHeaderData();
-  }, [content]);
+  }, [content, styles]);
 
   if (!cmsData) return <div className="h-20 bg-[#002f5e] animate-pulse rounded-xl" />;
   
   return (
-    <div className="bg-[#002f5e] py-6 px-8 flex items-center justify-between shadow-lg rounded-xl overflow-hidden">
-      <div className="flex items-center gap-2">
-         <img src="/logo-icon.png" alt="Logo" className="h-10 w-auto object-contain" onError={(e) => {
-           // Fallback if logo file isn't at root
-           (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
-         }} />
-         <div className="flex flex-col leading-[0.8] items-start">
-            <span className="text-[14px] font-bold tracking-tight text-orange-500 uppercase">
-              {cmsData.logoTop}
-            </span>
-            <span className="text-3xl font-black text-white tracking-tighter -mt-1">
-              {cmsData.logoBottom}
-            </span>
-         </div>
-      </div>
-      <div className="hidden md:flex gap-8 text-white/80 text-xs font-black uppercase tracking-widest items-center">
-         {cmsData.links.map((link: any, i: number) => (
-           <span key={i} className="hover:text-orange-500 cursor-pointer transition-colors">{link.label}</span>
-         ))}
-      </div>
-      <div className="flex items-center gap-4">
-         <div className="hidden lg:flex items-center gap-2 text-white text-xs font-bold">
-            <span className="text-orange-500">📞</span> {cmsData.phone}
-         </div>
-         <button className="bg-[#0066cc] text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg flex items-center gap-2">
-            <span className="text-xs">📅</span> Reservar
-         </button>
+    <div 
+      className="py-6 px-8 shadow-lg rounded-xl overflow-hidden"
+      style={{ backgroundColor: cmsData.backgroundColor }}
+    >
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        {/* Coluna 1: Logo */}
+        <div className="flex items-center gap-2 justify-start">
+           <img src="/logo-icon.png" alt="Logo" className="h-10 w-auto object-contain" onError={(e) => {
+             (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
+           }} />
+           <div className="flex flex-col leading-[0.8] items-start">
+              <span className="text-[14px] font-bold tracking-tight text-orange-500 uppercase">
+                {cmsData.logoTop}
+              </span>
+              <span className="text-3xl font-black text-white tracking-tighter -mt-1">
+                {cmsData.logoBottom}
+              </span>
+           </div>
+        </div>
+
+        {/* Coluna 2: Menu */}
+        <div className="flex gap-6 text-white/80 text-[10px] font-black uppercase tracking-widest items-center justify-center">
+           {cmsData.links.map((link: any, i: number) => (
+             <span key={i} className="hover:text-orange-500 cursor-pointer transition-colors whitespace-nowrap">{link.label}</span>
+           ))}
+           {cmsData.links.length === 0 && <span className="text-[8px] opacity-50 italic">Nenhum menu selecionado</span>}
+        </div>
+
+        {/* Coluna 3: Contato e Reserva */}
+        <div className="flex items-center gap-4 justify-end">
+           <div className="hidden lg:flex items-center gap-2 text-white text-xs font-bold whitespace-nowrap">
+              <span className="text-orange-500">📞</span> {cmsData.phone}
+           </div>
+           <button className="bg-[#0066cc] text-white font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-full hover:bg-orange-600 transition-all shadow-lg flex items-center gap-2 whitespace-nowrap">
+              <span className="text-xs">📅</span> Reservar
+           </button>
+        </div>
       </div>
     </div>
   );
