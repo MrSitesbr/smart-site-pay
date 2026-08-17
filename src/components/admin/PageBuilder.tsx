@@ -4,7 +4,7 @@ import {
   Plus, Save, Layout, Layers, Eye, Smartphone, Monitor, 
   ChevronLeft, History, Redo, Undo, Search, Settings,
   Grid3X3, Columns, MousePointer2, Type, Image as ImageIcon,
-  Download, Upload, FileCode
+  Download, Upload, FileCode, Trash2
 } from "lucide-react";
 import { PageRenderer } from "@/components/PageRenderer";
 import { Inspector } from "./Inspector";
@@ -337,6 +337,21 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" className="h-8 w-8"><Undo className="w-4 h-4" /></Button>
               <Button variant="ghost" size="icon" className="h-8 w-8"><Redo className="w-4 h-4" /></Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                title="Limpar Página"
+                onClick={() => {
+                  if (confirm("Deseja realmente limpar toda a página? Esta ação não pode ser desfeita.")) {
+                    setLayout([]);
+                    setSelectedElement(null);
+                    toast.success("Página limpa.");
+                  }
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           </div>
 
