@@ -355,6 +355,7 @@ const WidgetRenderer: React.FC<{
             <h4 className="text-lg font-black text-brand-blue-dark mb-2 uppercase tracking-tight">{content.title}</h4>
             <p className="text-sm text-muted-foreground font-medium leading-relaxed">{content.description}</p>
           </div>
+        );
       case 'icon_list':
         return (
           <ul style={widgetStyle} className="space-y-3">
