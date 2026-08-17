@@ -194,12 +194,41 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         <Input value={data.content.title || ''} onChange={(e) => handleChange('content.title', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conteúdo (HTML)</Label>
-                        <Textarea 
-                          value={data.content.content || ''} 
-                          onChange={(e) => handleChange('content.content', e.target.value)}
-                          className="min-h-[100px]"
-                        />
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Conteúdo (HTML)</Label>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-[8px] font-bold"
+                            onClick={() => toggleHtmlMode('popup-content')}
+                          >
+                            <Code className="w-3 h-3 mr-1" /> {showHtmlMode['popup-content'] ? 'VISUAL' : 'HTML'}
+                          </Button>
+                        </div>
+
+                        {showHtmlMode['popup-content'] ? (
+                          <Textarea 
+                            value={data.content.content || ''} 
+                            onChange={(e) => handleChange('content.content', e.target.value)}
+                            className="min-h-[150px] font-mono text-sm"
+                          />
+                        ) : (
+                          <div className="bg-white rounded-md border overflow-hidden">
+                            <ReactQuill 
+                              theme="snow" 
+                              value={data.content.content || ''} 
+                              onChange={(content) => handleChange('content.content', content)}
+                              modules={{
+                                toolbar: [
+                                  [{ 'header': [1, 2, 3, false] }],
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                  ['link', 'clean']
+                                ]
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Ação</Label>
