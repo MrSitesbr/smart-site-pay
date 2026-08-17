@@ -388,21 +388,30 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             // Check if it's a URL to an external image
             if (typeof val === 'string' && 
                 (val.startsWith('http://') || val.startsWith('https://')) && 
-                (val.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || val.includes('wp-content/uploads'))) {
+                (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br'))) {
               
               try {
-                const response = await fetch(val);
+                console.log(`Tentando baixar imagem externa: ${val}`);
+                const response = await fetch(val, { mode: 'cors' });
+                if (!response.ok) throw new Error(`Status HTTP: ${response.status}`);
+                
                 const blob = await response.blob();
                 const base64 = await new Promise<string>((resolve, reject) => {
                   const reader = new FileReader();
                   reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = reject;
+                  reader.onerror = () => reject(new Error("Erro ao ler blob como DataURL"));
                   reader.readAsDataURL(blob);
                 });
-                obj[key] = base64;
+                
+                if (base64.startsWith('data:image/')) {
+                  obj[key] = base64;
+                  console.log(`Sucesso ao converter para Base64: ${val.substring(0, 50)}...`);
+                } else {
+                  console.warn(`O download não retornou uma imagem válida: ${val}`);
+                }
               } catch (e) {
-                console.error(`Falha ao baixar imagem: ${val}`, e);
-                // Keep original URL as fallback if download fails
+                console.error(`Falha crítica ao baixar imagem: ${val}`, e);
+                // Fallback: Tenta via proxy ou apenas mantém se falhar
               }
             } else if (typeof val === 'object') {
               await processImages(val);

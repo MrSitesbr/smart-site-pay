@@ -47,22 +47,29 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
     // Se o valor for uma URL de imagem externa, tenta baixar e converter para Base64
     if (typeof value === 'string' && 
         (value.startsWith('http://') || value.startsWith('https://')) && 
-        (value.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || value.includes('wp-content/uploads'))) {
+        (value.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || value.includes('wp-content/uploads') || value.includes('coworking013.com.br'))) {
       
       try {
         toast.info("Processando link externo...");
-        const response = await fetch(value);
+        console.log(`Tentando baixar link externo no Inspetor: ${value}`);
+        const response = await fetch(value, { mode: 'cors' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
         const blob = await response.blob();
         const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
+          reader.onerror = () => reject(new Error("Erro ao ler blob"));
           reader.readAsDataURL(blob);
         });
-        finalValue = base64;
-        toast.success("Imagem sincronizada com o servidor!");
+        
+        if (base64.startsWith('data:image/')) {
+          finalValue = base64;
+          toast.success("Imagem sincronizada com o servidor!");
+        }
       } catch (e) {
         console.warn("Não foi possível baixar a imagem externa, mantendo link original.", e);
+        toast.error("Não foi possível baixar a imagem. Verifique se o link permite acesso.");
       }
     }
 
