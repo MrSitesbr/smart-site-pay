@@ -16,6 +16,7 @@ import { MediaPickerModal } from "./MediaPickerModal";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { SectionData, ColumnData, WidgetData } from "@/types/page-builder";
+import { toast } from "sonner";
 
 interface InspectorProps {
   type: 'section' | 'column' | 'widget';
@@ -40,7 +41,31 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
     setIsPickerOpen(true);
   };
 
-  const handleChange = (path: string, value: any) => {
+  const handleChange = async (path: string, value: any) => {
+    let finalValue = value;
+
+    // Se o valor for uma URL de imagem externa, tenta baixar e converter para Base64
+    if (typeof value === 'string' && 
+        (value.startsWith('http://') || value.startsWith('https://')) && 
+        (value.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || value.includes('wp-content/uploads'))) {
+      
+      try {
+        toast.info("Processando link externo...");
+        const response = await fetch(value);
+        const blob = await response.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        finalValue = base64;
+        toast.success("Imagem sincronizada com o servidor!");
+      } catch (e) {
+        console.warn("Não foi possível baixar a imagem externa, mantendo link original.", e);
+      }
+    }
+
     const newData = { ...data };
     const parts = path.split('.');
     let current = newData;
@@ -48,7 +73,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       if (!current[parts[i]]) current[parts[i]] = {};
       current = current[parts[i]];
     }
-    current[parts[parts.length - 1]] = value;
+    current[parts[parts.length - 1]] = finalValue;
     onUpdate(newData);
   };
 

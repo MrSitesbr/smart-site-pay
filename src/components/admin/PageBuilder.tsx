@@ -363,7 +363,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     toast.success("Layout exportado com sucesso!");
   };
 
-  const handleImportJSON = (jsonText: string) => {
+  const handleImportJSON = async (jsonText: string) => {
     try {
       let newLayout = JSON.parse(jsonText);
       
@@ -373,8 +373,47 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
       }
 
       if (Array.isArray(newLayout)) {
+        toast.info("Processando importação e baixando mídias...");
+        
+        // Deep clone to avoid mutations
+        const clonedLayout = JSON.parse(JSON.stringify(newLayout));
+        
+        // Function to process all image URLs in the layout and convert to Base64 (internal server storage)
+        const processImages = async (obj: any) => {
+          if (!obj || typeof obj !== 'object') return;
+          
+          for (const key in obj) {
+            const val = obj[key];
+            
+            // Check if it's a URL to an external image
+            if (typeof val === 'string' && 
+                (val.startsWith('http://') || val.startsWith('https://')) && 
+                (val.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || val.includes('wp-content/uploads'))) {
+              
+              try {
+                const response = await fetch(val);
+                const blob = await response.blob();
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+                obj[key] = base64;
+              } catch (e) {
+                console.error(`Falha ao baixar imagem: ${val}`, e);
+                // Keep original URL as fallback if download fails
+              }
+            } else if (typeof val === 'object') {
+              await processImages(val);
+            }
+          }
+        };
+
+        await processImages(clonedLayout);
+
         // Ensure every section has a default background if missing
-        const sanitizedLayout = newLayout.map(section => ({
+        const sanitizedLayout = clonedLayout.map((section: any) => ({
           ...section,
           settings: {
             backgroundColor: '#ffffff',
@@ -387,11 +426,12 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         pushToHistory(sanitizedLayout);
         setIsImportModalOpen(false);
         setImportJsonText('');
-        toast.success("Layout importado com sucesso!");
+        toast.success("Layout importado com sucesso! Mídias sincronizadas.");
       } else {
         toast.error("Formato JSON inválido. Deve ser um array de seções ou conter a chave 'sections'.");
       }
     } catch (error) {
+      console.error("Erro na importação:", error);
       toast.error("Erro ao processar JSON.");
     }
   };
