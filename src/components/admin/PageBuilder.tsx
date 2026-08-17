@@ -585,11 +585,17 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             onDelete={deleteElement}
           />
         )}
-        <Navigator 
-          layout={layout} 
-          selectedId={selectedElement?.id} 
-          onSelect={handleElementClick} 
-        />
+        {showNavigator && (
+          <Navigator 
+            layout={layout} 
+            selectedId={selectedElement?.id} 
+            onSelect={handleElementClick} 
+            onLayoutChange={(newLayout: SectionData[]) => {
+              setLayout(newLayout);
+              pushToHistory(newLayout);
+            }}
+          />
+        )}
       </div>
     </div>
   );
