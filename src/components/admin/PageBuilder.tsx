@@ -379,73 +379,84 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         // Deep clone to avoid mutations
         const clonedLayout = JSON.parse(JSON.stringify(newLayout));
         
-        // Function to process all image URLs in the layout, convert to Base64 AND sync to media_library
-        const processImages = async (obj: any) => {
+        // Scan for all unique image URLs first
+        const foundUrls = new Set<string>();
+        const scanImages = (obj: any) => {
           if (!obj || typeof obj !== 'object') return;
-          
           for (const key in obj) {
             const val = obj[key];
-            
-            // Check if it's a URL to an external image
             if (typeof val === 'string' && 
                 (val.startsWith('http://') || val.startsWith('https://')) && 
                 (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br'))) {
-              
-              try {
-                console.log(`Tentando baixar imagem externa: ${val}`);
-                const response = await fetch(val, { mode: 'cors' });
-                if (!response.ok) throw new Error(`Status HTTP: ${response.status}`);
-                
-                const blob = await response.blob();
-                const base64 = await new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = () => reject(new Error("Erro ao ler blob como DataURL"));
-                  reader.readAsDataURL(blob);
-                });
-                
-                if (base64.startsWith('data:image/')) {
-                  obj[key] = base64;
-                  console.log(`Sucesso ao converter para Base64: ${val.substring(0, 50)}...`);
-                  
-                  // SYNC TO MEDIA LIBRARY
-                  try {
-                    const filename = val.split('/').pop()?.split('?')[0] || 'imported-image.jpg';
-                    const mimeType = blob.type || 'image/jpeg';
-                    
-                    // Check if already exists in media_library to avoid duplicates (optional but good)
-                    const { data: existing } = await supabase
-                      .from('media_library')
-                      .select('id')
-                      .eq('filename', filename)
-                      .limit(1);
-
-                    if (!existing || existing.length === 0) {
-                      await supabase.from('media_library').insert({
-                        filename,
-                        file_type: 'image',
-                        mime_type: mimeType,
-                        url: base64,
-                        size_bytes: blob.size
-                      });
-                      console.log(`Sincronizado com Biblioteca de Mídia: ${filename}`);
-                    }
-                  } catch (syncErr) {
-                    console.error("Erro ao sincronizar com biblioteca:", syncErr);
-                  }
-                } else {
-                  console.warn(`O download não retornou uma imagem válida: ${val}`);
-                }
-              } catch (e) {
-                console.error(`Falha crítica ao baixar imagem: ${val}`, e);
-              }
+              foundUrls.add(val);
             } else if (typeof val === 'object') {
-              await processImages(val);
+              scanImages(val);
             }
           }
         };
+        scanImages(clonedLayout);
 
-        await processImages(clonedLayout);
+        const urlMap = new Map<string, string>();
+        const totalImages = foundUrls.size;
+        let processedImages = 0;
+
+        if (totalImages > 0) {
+          toast.info(`Localizadas ${totalImages} imagens. Iniciando download...`);
+          
+          for (const url of foundUrls) {
+            try {
+              console.log(`[Import] Baixando ${processedImages + 1}/${totalImages}: ${url}`);
+              const response = await fetch(url, { mode: 'cors' });
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              
+              const blob = await response.blob();
+              const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = () => reject(new Error("Erro ao ler blob"));
+                reader.readAsDataURL(blob);
+              });
+              
+              if (base64.startsWith('data:image/')) {
+                urlMap.set(url, base64);
+                
+                // SYNC TO MEDIA LIBRARY
+                const filename = url.split('/').pop()?.split('?')[0] || `imported-${Date.now()}.jpg`;
+                const { data: existing } = await supabase
+                  .from('media_library')
+                  .select('id')
+                  .eq('filename', filename)
+                  .limit(1);
+
+                if (!existing || existing.length === 0) {
+                  await supabase.from('media_library').insert({
+                    filename,
+                    file_type: 'image',
+                    mime_type: blob.type || 'image/jpeg',
+                    url: base64,
+                    size_bytes: blob.size
+                  });
+                }
+              }
+            } catch (e) {
+              console.error(`Falha ao baixar imagem: ${url}`, e);
+            }
+            processedImages++;
+          }
+        }
+
+        // Replace URLs in the layout
+        const replaceUrls = (obj: any) => {
+          if (!obj || typeof obj !== 'object') return;
+          for (const key in obj) {
+            if (typeof obj[key] === 'string' && urlMap.has(obj[key])) {
+              obj[key] = urlMap.get(obj[key]);
+            } else if (typeof obj[key] === 'object') {
+              replaceUrls(obj[key]);
+            }
+          }
+        };
+        replaceUrls(clonedLayout);
 
         // Ensure every section has a default background if missing
         const sanitizedLayout = clonedLayout.map((section: any) => ({
@@ -457,11 +468,15 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           }
         }));
 
-        setLayout(sanitizedLayout);
-        pushToHistory(sanitizedLayout);
-        setIsImportModalOpen(false);
-        setImportJsonText('');
-        toast.success("Layout importado com sucesso! Mídias sincronizadas.");
+        // Final UI Refresh ("Choque" na página)
+        setLayout([]); 
+        setTimeout(() => {
+          setLayout(sanitizedLayout);
+          pushToHistory(sanitizedLayout);
+          setIsImportModalOpen(false);
+          setImportJsonText('');
+          toast.success("Importação concluída com sucesso!");
+        }, 100);
       } else {
         toast.error("Formato JSON inválido. Deve ser um array de seções ou conter a chave 'sections'.");
       }
