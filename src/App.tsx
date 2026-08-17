@@ -33,6 +33,9 @@ const App = () => (
           <Route path="/auditorio-modular" element={<DynamicPage />} />
           <Route path="/consultorio-privativo" element={<DynamicPage />} />
           <Route path="/endereco-virtual" element={<DynamicPage />} />
+          <Route path="/servicos" element={<DynamicPage />} />
+          <Route path="/contatos" element={<DynamicPage />} />
+          <Route path="/contato" element={<DynamicPage />} />
           
           {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />
