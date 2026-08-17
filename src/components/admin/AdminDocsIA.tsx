@@ -158,94 +158,14 @@ export default function AdminDocsIA() {
       <div className="bg-brand-orange p-1 rounded-[3rem]">
         <div className="bg-brand-blue-dark rounded-[2.9rem] p-12 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/10 rounded-full -mr-48 -mt-48 blur-3xl" />
-          <div className="relative z-10 space-y-8">
-            <div className="max-w-4xl">
-              <h3 className="text-3xl font-black mb-4 uppercase tracking-tighter">Prompt Mestre para IAs Externas</h3>
-              <p className="text-white/70 font-medium mb-8 text-lg">
-                Utilize o prompt e os exemplos abaixo para orientar outras IAs (ChatGPT, Claude, etc.) a gerarem seções e widgets 100% compatíveis com o motor visual do Coworking 013.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-8">
-              <div className="space-y-4">
-                <h4 className="text-brand-orange font-black uppercase text-xs tracking-widest">Prompt de Configuração do Sistema</h4>
-                <div className="p-8 bg-white/5 rounded-[2rem] border border-white/10 text-sm text-white/90 leading-relaxed font-medium">
-                  <p className="mb-4">"Você é o <strong>Arquiteto de Layouts do Coworking 013</strong>. Sua função é gerar exclusivamente código JSON válido para o construtor de páginas 'Dev'.</p>
-                  
-                  <p className="mb-4"><strong>REGRAS DE OURO:</strong><br />
-                  1. Hierarquia obrigatória: Section (Pai) &gt; Columns (Filhos) &gt; Widgets (Conteúdo).<br />
-                  2. Todo campo de texto rico ('text' ou 'content') DEVE ser HTML válido formatado para o editor WYSIWYG.<br />
-                  3. Use IDs únicos no formato 'sec_XYZ', 'col_XYZ', 'wid_XYZ'.<br />
-                  4. Design System: Use as cores do brand (Orange: #f97316, Blue Dark: #1e3a8a, Gray Light: #f1f5f9)."</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="text-brand-orange font-black uppercase text-xs tracking-widest">Exemplo 01: Seção Hero (Banner)</h4>
-                  <div className="p-6 bg-black/40 rounded-[2rem] border border-white/10 font-mono text-[10px] text-emerald-400 overflow-x-auto h-[350px]">
-                    <pre>{`{
-  "id": "sec_hero",
-  "type": "section",
-  "settings": { 
-    "fullWidth": true,
-    "backgroundType": "classic",
-    "backgroundColor": "#1e3a8a"
-  },
-  "columns": [
-    {
-      "id": "col_hero",
-      "widthPercentage": 100,
-      "widgets": [
-        {
-          "id": "wid_title",
-          "type": "heading",
-          "content": {
-            "text": "<h1 style='color:white'>Trabalhe com <span>Inovação</span></h1>",
-            "level": "h1"
-          }
-        },
-        {
-          "id": "wid_btn",
-          "type": "button",
-          "content": {
-            "text": "Reservar Estação",
-            "link": "/reservas"
-          }
-        }
-      ]
-    }
-  ]
-}`}</pre>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-brand-orange font-black uppercase text-xs tracking-widest">Exemplo 02: Grade Dinâmica de Unidades</h4>
-                  <div className="p-6 bg-black/40 rounded-[2rem] border border-white/10 font-mono text-[10px] text-blue-400 overflow-x-auto h-[350px]">
-                    <pre>{`{
-  "id": "sec_units",
-  "type": "section",
-  "settings": { "fullWidth": false },
-  "columns": [
-    {
-      "id": "col_units",
-      "widthPercentage": 100,
-      "widgets": [
-        {
-          "id": "wid_grid",
-          "type": "units_grid",
-          "content": {
-            "limit": 3,
-            "title": "<h2>Nossas Unidades</h2>"
-          }
-        }
-      ]
-    }
-  ]
-}`}</pre>
-                  </div>
-                </div>
+          <div className="relative z-10 max-w-2xl">
+            <h3 className="text-3xl font-black mb-4 uppercase tracking-tighter">Pronto para importar?</h3>
+            <p className="text-white/70 font-medium mb-8 text-lg">
+              Utilize esta estrutura para orientar outras IAs a gerarem seções compatíveis em JSON. O motor Dev interpretará exatamente estas hierarquias para renderizar o site.
+            </p>
+            <div className="flex gap-4">
+              <div className="flex-1 p-6 bg-white/5 rounded-3xl border border-white/10 font-mono text-[10px] text-brand-orange">
+                {`// Exemplo de Hierarquia JSON\n{\n  "type": "section",\n  "settings": { "fullWidth": true },\n  "columns": [\n    { "widthPercentage": 100, "widgets": [...] }\n  ]\n}`}
               </div>
             </div>
           </div>
