@@ -10,6 +10,7 @@ import { Inspector } from "./Inspector";
 import { WIDGET_REGISTRY } from "./WidgetRegistry";
 import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DndContext, 
   closestCenter,
