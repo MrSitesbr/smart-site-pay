@@ -443,6 +443,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="classic">Clássico (Cor/Imagem)</SelectItem>
+                        <SelectItem value="color">Cor Sólida</SelectItem>
                         <SelectItem value="gradient">Gradiente</SelectItem>
                         <SelectItem value="video">Vídeo</SelectItem>
                       </SelectContent>
@@ -471,7 +472,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                     </div>
                   )}
 
-                  {data.settings.backgroundType === 'classic' && (
+                  {(data.settings.backgroundType === 'classic' || data.settings.backgroundType === 'color') && (
                     <>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cor de Fundo</Label>
