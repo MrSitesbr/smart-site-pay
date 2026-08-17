@@ -19,10 +19,17 @@ const DynamicPage = ({ isAdmin = false }: { isAdmin?: boolean }) => {
       const pageData = await getPageContent(location.pathname);
       
       if (pageData && pageData.site_sections) {
-        // Filtra apenas seções visíveis e prioriza 'dynamic-layout'
-        const dynamicSection = pageData.site_sections.find((s: any) => 
+        // Filtra seções visíveis e prioriza 'dynamic-layout'
+        // Se não houver 'dynamic-layout', tenta usar a primeira seção que contenha um layout
+        let dynamicSection = pageData.site_sections.find((s: any) => 
           s.section_key === 'dynamic-layout' && s.is_visible
         );
+
+        if (!dynamicSection) {
+          dynamicSection = pageData.site_sections.find((s: any) => 
+            s.is_visible && s.content?.layout
+          );
+        }
         
         if (dynamicSection?.content?.layout) {
           setLayout(dynamicSection.content.layout);
