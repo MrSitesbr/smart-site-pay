@@ -193,7 +193,12 @@ Mantenha os IDs únicos (UUID v4).`}
   "sections": [
     {
       "id": "sec-001",
-      "settings": { "fullWidth": true, "padding": { "top": 80, "bottom": 80 } },
+      "settings": { 
+        "fullWidth": true, 
+        "padding": { "top": 80, "bottom": 80 },
+        "backgroundColor": "#FFFFFF",
+        "backgroundType": "classic"
+      },
       "columns": [
         {
           "id": "col-001",
@@ -202,7 +207,7 @@ Mantenha os IDs únicos (UUID v4).`}
             {
               "id": "wid-001",
               "type": "heading",
-              "content": { "text": "Bem-vindo ao Coworking 013", "tag": "h2" },
+              "content": { "text": "Bem-vindo ao Coworking 013" },
               "styles": { "color": "#002B49", "fontSize": "48px", "textAlign": "center" }
             }
           ]
