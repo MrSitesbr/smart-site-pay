@@ -280,6 +280,19 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     toast.success("Layout exportado com sucesso!");
   };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(layout);
+      toast.success("Página publicada com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar página.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
       {/* Sidebar - Widget Panel */}
