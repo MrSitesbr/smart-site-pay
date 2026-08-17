@@ -258,16 +258,20 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
         services: menuServ?.items || [],
         phone: content?.phone || "(13) 98805-0358",
         logoTop: content?.logo_text_top || "CoWorking",
-        logoBottom: content?.logo_text_bottom || "013"
+        logoBottom: content?.logo_text_bottom || "013",
+        backgroundColor: styles?.backgroundColor || "#0b0b0b"
       });
     };
     loadFooterData();
-  }, [content]);
+  }, [content, styles]);
 
   if (!footerData) return <div className="h-64 bg-[#0b0b0b] animate-pulse" />;
   
   return (
-    <div className="bg-[#0b0b0b] py-16 px-8 border-t border-white/5 rounded-xl mt-8">
+    <div 
+      className="py-16 px-8 border-t border-white/5 rounded-xl mt-8"
+      style={{ backgroundColor: footerData.backgroundColor }}
+    >
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-left">
         <div className="space-y-6">
           <div className="flex items-center gap-2">
@@ -294,13 +298,6 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
             {footerData.nav.map((item: any) => (
               <li key={item.id} className="hover:text-orange-500 cursor-pointer transition-colors">{item.label}</li>
             ))}
-            {footerData.nav.length === 0 && (
-              <>
-                <li className="hover:text-orange-500 cursor-pointer transition-colors">Home</li>
-                <li className="hover:text-orange-500 cursor-pointer transition-colors">Sobre Nós</li>
-                <li className="hover:text-orange-500 cursor-pointer transition-colors">Contato</li>
-              </>
-            )}
           </ul>
         </div>
 
@@ -310,13 +307,6 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
             {footerData.services.map((item: any) => (
               <li key={item.id} className="hover:text-orange-500 cursor-pointer transition-colors">{item.label}</li>
             ))}
-            {footerData.services.length === 0 && (
-              <>
-                <li className="hover:text-orange-500 cursor-pointer transition-colors">Privativo</li>
-                <li className="hover:text-orange-500 cursor-pointer transition-colors">Virtual</li>
-                <li className="hover:text-orange-500 cursor-pointer transition-colors">Salas</li>
-              </>
-            )}
           </ul>
         </div>
 
