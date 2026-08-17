@@ -91,7 +91,7 @@ const SectionRenderer: React.FC<{
   return (
     <section 
       style={sectionStyle} 
-      className={`relative ${settings.fullWidth ? 'w-full' : 'container mx-auto px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''}`}
+      className={`relative ${settings.fullWidth ? 'w-full' : 'container mx-auto px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
@@ -192,7 +192,7 @@ const WidgetRenderer: React.FC<{
     borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined,
     textShadow: styles.textShadow,
     zIndex: styles.zIndex,
-    display: styles.hideMobile ? 'none' : undefined, // Simplistic, should be media query in index.css
+    animation: (styles.animation && styles.animation !== 'none') ? `${styles.animation} 0.8s ease-out forwards` : undefined,
   };
 
   const renderWidgetContent = () => {
