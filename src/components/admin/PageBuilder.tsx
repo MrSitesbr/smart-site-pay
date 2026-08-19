@@ -428,7 +428,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                   .select('id')
                   .eq('filename', filename)
                   .limit(1);
-
+  
                 if (!existing || existing.length === 0) {
                   await supabase.from('media_library').insert({
                     filename,
@@ -439,6 +439,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                   });
                 }
               }
+              // Progress delay to avoid browser lock and show status
+              await new Promise(r => setTimeout(r, 200));
             } catch (e) {
               console.error(`Falha ao baixar imagem: ${url}`, e);
             }
@@ -690,11 +692,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
                   toast.info(`Sincronizando ${urls.size} imagens...`);
                   const map = new Map<string, string>();
+                  
+                  // Process sequences to avoid UI freezing and show actual progress
+                  let count = 0;
                   for (const url of urls) {
                     try {
-                      console.log(`[Sync] Processando: ${url}`);
-                      // We use a proxy-like approach or just direct fetch if CORS allows.
-                      // Since it's Base64 conversion, we must ensure we can fetch it.
+                      count++;
+                      console.log(`[Sync] Processando ${count}/${urls.size}: ${url}`);
+                      
                       const res = await fetch(url, { method: 'GET', credentials: 'omit' });
                       if (!res.ok) throw new Error(`Status ${res.status} ao buscar ${url}`);
                       
@@ -725,6 +730,9 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                           console.log(`[Sync] Sucesso ao salvar ${filename}`);
                         }
                       }
+                      
+                      // Add a small delay between each download to ensure the UI updates and avoid being blocked by the server
+                      await new Promise(r => setTimeout(r, 300));
                     } catch (e) { 
                       console.error(`Erro ao sincronizar ${url}:`, e); 
                     }
