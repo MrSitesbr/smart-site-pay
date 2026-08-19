@@ -120,8 +120,8 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: Settings,
       items: [
         { title: "Configurações Gerais", id: "configuracoes" },
+        { title: "Proxy de Mídia (Forçar Sinc)", id: "media_proxy" },
         { title: "Roteiro Construtor Dev", id: "docs_ia" },
-        { title: "Proxy de Mídia", id: "media_proxy" },
       ]
     },
   ];
