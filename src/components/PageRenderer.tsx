@@ -69,12 +69,14 @@ const SectionRenderer: React.FC<{
     // Force background color to show by ensuring no other conflicting styles if only color is intended
     if (settings.backgroundType === 'color' || (settings.backgroundType === 'classic' && !settings.backgroundImage)) {
       sectionStyle.backgroundImage = 'none';
+      sectionStyle.background = settings.backgroundColor; // Force via background shorthand too
     }
   }
   
   // Also ensure classic type respects image
   if ((settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundImage) {
     sectionStyle.backgroundImage = `url(${settings.backgroundImage})`;
+    sectionStyle.background = undefined; // Clear gradient if image is present
   }
 
   const getShapeDivider = () => {
