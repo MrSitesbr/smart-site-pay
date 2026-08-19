@@ -30,6 +30,7 @@ import AdminSEO from "@/components/admin/AdminSEO";
 import AdminMenus from "@/components/admin/AdminMenus";
 import AdminMidias from "@/components/admin/AdminMidias";
 import AdminDocsIA from "@/components/admin/AdminDocsIA";
+import AdminHeaderFooterSimple from "@/components/admin/AdminHeaderFooterSimple";
 
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -353,7 +354,7 @@ export default function Admin() {
             {activeTab === "unidades" && <AdminUnidades />}
             {activeTab === "paginas" && <AdminPaginas mode="pages" />}
             {activeTab === "menus" && <AdminMenus />}
-            {activeTab === "paginas_fixos" && <AdminPaginas mode="fixos" />}
+            {activeTab === "paginas_fixos" && <AdminHeaderFooterSimple />}
             {activeTab === "seo" && <AdminSEO />}
             {activeTab === "midias" && <AdminMidias />}
             {activeTab === "configuracoes" && <AdminSettings />}
