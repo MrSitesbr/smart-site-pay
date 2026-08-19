@@ -53,8 +53,8 @@ export default function AdminHeaderFooterSimple() {
 
       if (headerData) {
         setHeaderSectionId(headerData.id);
-        if (headerData.content) {
-          setHeaderContent(prev => ({ ...prev, ...headerData.content }));
+        if (headerData.content && typeof headerData.content === 'object' && !Array.isArray(headerData.content)) {
+          setHeaderContent(prev => ({ ...prev, ...(headerData.content as object) }));
         }
       }
 
@@ -68,8 +68,8 @@ export default function AdminHeaderFooterSimple() {
 
       if (footerData) {
         setFooterSectionId(footerData.id);
-        if (footerData.content) {
-          setFooterContent(prev => ({ ...prev, ...footerData.content }));
+        if (footerData.content && typeof footerData.content === 'object' && !Array.isArray(footerData.content)) {
+          setFooterContent(prev => ({ ...prev, ...(footerData.content as object) }));
         }
       }
     } catch (error) {
