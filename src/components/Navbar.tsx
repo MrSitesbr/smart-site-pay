@@ -86,6 +86,7 @@ const Navbar = () => {
   const logoBottom = cmsContent?.logo_text_bottom || "013";
   const phone = cmsContent?.phone || "(13) 98805-0358";
   const phoneHref = cmsContent?.phone_href || "tel:13988050358";
+  const logoIconUrl = cmsContent?.logo_icon || logoIcon.url;
 
   return (
     <nav
@@ -97,7 +98,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <Link to="/" className="flex items-center gap-2 group relative z-10">
-          <img src={logoIcon.url} alt="Logo" className="h-10 w-auto object-contain" />
+          <img src={logoIconUrl} alt="Logo" className="h-10 w-auto object-contain" />
           <div className="flex flex-col leading-[0.8] items-start">
             <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
               {logoTop}
