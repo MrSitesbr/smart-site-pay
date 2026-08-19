@@ -101,6 +101,7 @@ const Footer = () => {
   const workingHoursSat = cmsContent?.working_hours_sat || "Sáb: 08h às 12h";
   const logoTop = cmsContent?.logo_text_top || "CoWorking";
   const logoBottom = cmsContent?.logo_text_bottom || "013";
+  const logoIconUrl = cmsContent?.logo_icon || logoIcon.url;
 
   return (
     <footer className="bg-brand-blue-dark text-white pt-16 pb-6">
@@ -108,7 +109,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src={logoIcon.url} alt="Logo" className="h-8 w-auto object-contain" />
+              <img src={logoIconUrl} alt="Logo" className="h-8 w-auto object-contain" />
               <div className="flex flex-col leading-[0.8] items-start">
                 <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
                   {logoTop}
