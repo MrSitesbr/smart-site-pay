@@ -121,6 +121,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       items: [
         { title: "Configurações Gerais", id: "configuracoes" },
         { title: "Roteiro Construtor Dev", id: "docs_ia" },
+        { title: "Proxy de Mídia", id: "media_proxy" },
       ]
     },
   ];
