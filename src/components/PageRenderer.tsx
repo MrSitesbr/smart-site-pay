@@ -66,6 +66,10 @@ const SectionRenderer: React.FC<{
   // Ensure background color is applied even if backgroundType is 'color' (compatibility fix)
   if ((settings.backgroundType === 'color' || settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundColor) {
     sectionStyle.backgroundColor = settings.backgroundColor;
+    // Force background color to show by ensuring no other conflicting styles if only color is intended
+    if (settings.backgroundType === 'color' || (settings.backgroundType === 'classic' && !settings.backgroundImage)) {
+      sectionStyle.backgroundImage = 'none';
+    }
   }
   
   // Also ensure classic type respects image
