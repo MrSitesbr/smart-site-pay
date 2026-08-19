@@ -30,6 +30,7 @@ import AdminSEO from "@/components/admin/AdminSEO";
 import AdminMenus from "@/components/admin/AdminMenus";
 import AdminMidias from "@/components/admin/AdminMidias";
 import AdminDocsIA from "@/components/admin/AdminDocsIA";
+import AdminMediaProxy from "@/components/admin/AdminMediaProxy";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
