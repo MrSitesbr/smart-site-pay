@@ -665,15 +665,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Removed SINCRONIZAR MÍDIAS button as requested */}
-                  setLayout(updatedLayout);
-                  pushToHistory(updatedLayout);
-                  toast.success("Imagens sincronizadas e movidas para a biblioteca local!");
-                }, 100);
-              }}
-            >
-              <Download className="w-3 h-3 mr-1" /> SINCRONIZAR MÍDIAS
-            </Button>
+            {/* Media Sync button moved to individual image fields in Inspector */}
 
             <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
               <DialogTrigger asChild>
