@@ -60,7 +60,7 @@ const SectionRenderer: React.FC<{
     marginBottom: settings.margin?.bottom ? `${settings.margin.bottom}px` : undefined,
     position: 'relative',
     zIndex: settings.zIndex,
-    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : undefined,
+    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : (settings.backgroundType === 'color' ? settings.backgroundColor : undefined),
   };
 
   // Ensure background color is applied even if backgroundType is 'color' (compatibility fix)
