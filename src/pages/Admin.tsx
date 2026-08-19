@@ -358,6 +358,7 @@ export default function Admin() {
             {activeTab === "midias" && <AdminMidias />}
             {activeTab === "configuracoes" && <AdminSettings />}
             {activeTab === "docs_ia" && <AdminDocsIA />}
+            {activeTab === "media_proxy" && <AdminMediaProxy />}
           </main>
         </div>
       </div>
