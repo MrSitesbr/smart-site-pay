@@ -387,8 +387,9 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             const val = obj[key];
             if (typeof val === 'string' && 
                 (val.startsWith('http://') || val.startsWith('https://')) && 
-                (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br') || val.includes('data:image/'))) {
-              if (!val.startsWith('data:')) foundUrls.add(val);
+                (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br')) &&
+                !val.startsWith('data:') && !val.includes('localhost')) {
+              foundUrls.add(val);
             } else if (typeof val === 'object') {
               scanImages(val);
             }
@@ -406,8 +407,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           for (const url of foundUrls) {
             try {
               console.log(`[Import] Baixando ${processedImages + 1}/${totalImages}: ${url}`);
-              const response = await fetch(url, { mode: 'cors' });
-              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              const response = await fetch(url, { method: 'GET', credentials: 'omit' });
+              if (!response.ok) throw new Error(`HTTP ${response.status} ao buscar ${url}`);
               
               const blob = await response.blob();
               const base64 = await new Promise<string>((resolve, reject) => {
