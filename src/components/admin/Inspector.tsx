@@ -251,14 +251,20 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                   {data.type === 'global_header' || data.type === 'global_footer' ? (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícone do Logo (URL)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">URL da Imagem do Logo</Label>
                         <div className="flex gap-2">
-                          <Input value={data.content.logo_icon || ''} onChange={(e) => handleChange('content.logo_icon', e.target.value)} />
-
+                          <Input 
+                            value={data.content.logo_icon || ''} 
+                            onChange={(e) => handleChange('content.logo_icon', e.target.value)} 
+                            placeholder="Ex: /logo.png ou data:image/..."
+                          />
                           <Button variant="outline" size="icon" onClick={() => openPicker('content.logo_icon')}>
                             <ImageIcon className="w-4 h-4" />
                           </Button>
                         </div>
+                        <p className="text-[9px] text-muted-foreground mt-1 italic">
+                          DICA: Use o ícone de imagem para selecionar da sua biblioteca.
+                        </p>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Logo Texto Superior</Label>

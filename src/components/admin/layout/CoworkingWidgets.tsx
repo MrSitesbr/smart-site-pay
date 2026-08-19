@@ -211,7 +211,9 @@ export const GlobalHeaderWidget: React.FC<{ content: any; styles: any }> = ({ co
         {/* Coluna 1: Logo */}
         <div className="flex items-center gap-2 justify-start">
            <img src={content?.logo_icon || "/logo-icon.png"} alt="Logo" className="h-10 w-auto object-contain" onError={(e) => {
-             (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
+             if (!(e.target as HTMLImageElement).src.includes('logo-icon.png')) {
+               (e.target as HTMLImageElement).src = "/logo-icon.png";
+             }
            }} />
            <div className="flex flex-col leading-[0.8] items-start">
               <span className="text-[14px] font-bold tracking-tight text-orange-500 uppercase">
@@ -276,7 +278,9 @@ export const GlobalFooterWidget: React.FC<{ content: any; styles: any }> = ({ co
         <div className="space-y-6">
           <div className="flex items-center gap-2">
              <img src={content?.logo_icon || "/logo-icon.png"} alt="Logo" className="h-8 w-auto object-contain" onError={(e) => {
-               (e.target as HTMLImageElement).src = "https://smart-site-pay.lovable.app/assets/logo-icon.png";
+               if (!(e.target as HTMLImageElement).src.includes('logo-icon.png')) {
+                 (e.target as HTMLImageElement).src = "/logo-icon.png";
+               }
              }} />
              <div className="flex flex-col leading-[0.8] items-start">
                 <span className="text-[12px] font-bold tracking-tight text-orange-500 uppercase">
