@@ -48,7 +48,8 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
     // Se o valor for uma URL de imagem externa, tenta baixar e converter para Base64
     if (typeof value === 'string' && 
         (value.startsWith('http://') || value.startsWith('https://')) && 
-        (value.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || value.includes('wp-content/uploads') || value.includes('coworking013.com.br'))) {
+        (value.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || value.includes('wp-content/uploads') || value.includes('coworking013.com.br')) &&
+        !value.includes('localhost') && !value.startsWith('data:')) {
       
       try {
         toast.info("Processando link externo...");
