@@ -56,11 +56,11 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       
       const response = await fetch(url, { 
         method: 'GET',
-        mode: 'cors',
+        mode: 'cors', // Revertendo para cors para obter o blob utilizável
         credentials: 'omit'
       }).catch(err => {
         console.error("[Sync] Fetch failed (possibly CORS):", err);
-        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente fazer o upload manual.");
+        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente usar o Proxy de Mídia em Configurações.");
       });
 
       if (!response.ok) throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
@@ -112,7 +112,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       console.error("[Sync] Critical Error:", e);
       // Detailed error messages for the user
       if (e.message?.includes('Failed to fetch')) {
-        toast.error("Erro de CORS: O servidor da imagem bloqueou o download. Tente fazer o upload manual.");
+        toast.error("Erro de CORS: O servidor da imagem bloqueou o download. Tente usar o 'Proxy de Mídia' em Configurações para forçar a sincronização.");
       } else {
         toast.error(`Falha ao sincronizar: ${e.message || "Erro desconhecido"}`);
       }
