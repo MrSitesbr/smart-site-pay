@@ -112,7 +112,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       console.error("[Sync] Critical Error:", e);
       // Detailed error messages for the user
       if (e.message?.includes('Failed to fetch')) {
-        toast.error("Erro de CORS: O servidor da imagem bloqueou o download. Tente fazer o upload manual.");
+        toast.error("Erro de CORS: O servidor da imagem bloqueou o download. Tente usar o 'Proxy de Mídia' em Configurações para forçar a sincronização.");
       } else {
         toast.error(`Falha ao sincronizar: ${e.message || "Erro desconhecido"}`);
       }
