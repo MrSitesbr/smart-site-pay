@@ -401,45 +401,49 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         const totalImages = foundUrls.size;
         let processedImages = 0;
 
+        const syncToLibrary = async (url: string, base64: string, mimeType: string, size: number) => {
+          const filename = url.split('/').pop()?.split('?')[0] || `imported-${Date.now()}.jpg`;
+          const { error: upsertError } = await supabase.from('media_library').upsert({
+            filename,
+            file_type: 'image',
+            mime_type: mimeType || 'image/jpeg',
+            url: base64,
+            size_bytes: size || 0
+          }, { onConflict: 'filename' });
+          if (upsertError) console.error("[Import] Erro ao salvar na biblioteca:", upsertError);
+        };
+
         if (totalImages > 0) {
           toast.info(`Localizadas ${totalImages} imagens. Iniciando download...`);
           
           for (const url of foundUrls) {
             try {
-              console.log(`[Import] Baixando ${processedImages + 1}/${totalImages}: ${url}`);
-              const response = await fetch(url, { method: 'GET', credentials: 'omit' });
-              if (!response.ok) throw new Error(`HTTP ${response.status} ao buscar ${url}`);
+              console.log(`[Import] Baixando ${processedImages + 1}/${totalImages} via Proxy: ${url}`);
               
-              const blob = await response.blob();
-              const base64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = () => reject(new Error("Erro ao ler blob"));
-                reader.readAsDataURL(blob);
+              const { data: proxyData, error: proxyError } = await supabase.functions.invoke('proxy-image', {
+                body: { url }
               });
-              
-              if (base64.startsWith('data:image/')) {
-                urlMap.set(url, base64);
-                
-                // SYNC TO MEDIA LIBRARY
-                const filename = url.split('/').pop()?.split('?')[0] || `imported-${Date.now()}.jpg`;
-                const { data: existing } = await supabase
-                  .from('media_library')
-                  .select('id')
-                  .eq('filename', filename)
-                  .limit(1);
-  
-                if (!existing || existing.length === 0) {
-                  await supabase.from('media_library').insert({
-                    filename,
-                    file_type: 'image',
-                    mime_type: blob.type || 'image/jpeg',
-                    url: base64,
-                    size_bytes: blob.size
+
+              if (proxyError || !proxyData?.base64) {
+                console.warn(`[Import] Proxy falhou para ${url}, tentando direto:`, proxyError);
+                const response = await fetch(url, { method: 'GET', credentials: 'omit' });
+                if (response.ok) {
+                  const blob = await response.blob();
+                  const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = () => reject(new Error("Erro ao ler blob"));
+                    reader.readAsDataURL(blob);
                   });
+                  if (base64.startsWith('data:image/')) {
+                    urlMap.set(url, base64);
+                    await syncToLibrary(url, base64, blob.type, blob.size);
+                  }
                 }
+              } else {
+                urlMap.set(url, proxyData.base64);
+                await syncToLibrary(url, proxyData.base64, proxyData.contentType, proxyData.size);
               }
-              // Progress delay to avoid browser lock and show status
               await new Promise(r => setTimeout(r, 200));
             } catch (e) {
               console.error(`Falha ao baixar imagem: ${url}`, e);

@@ -49,73 +49,75 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
     }
 
     try {
-      toast.info("Sincronizando imagem externa...");
+      toast.info("Sincronizando imagem via servidor (ignorando CORS)...");
       
-      // Detailed logging for debugging
-      console.log(`[Sync] Attempting to sync external URL: ${url}`);
+      console.log(`[Sync] Attempting to sync via Edge Function Proxy: ${url}`);
       
-      const response = await fetch(url, { 
-        method: 'GET',
-        mode: 'cors', // Revertendo para cors para obter o blob utilizável
-        credentials: 'omit'
-      }).catch(err => {
-        console.error("[Sync] Fetch failed (possibly CORS):", err);
-        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente usar o Proxy de Mídia em Configurações.");
+      const { data: proxyData, error: proxyError } = await supabase.functions.invoke('proxy-image', {
+        body: { url }
       });
 
-      if (!response.ok) throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
-      
-      const blob = await response.blob();
-      console.log(`[Sync] Fetched blob of type ${blob.type}, size ${blob.size}`);
-      
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Erro ao converter blob para Base64"));
-        reader.readAsDataURL(blob);
-      });
-      
-      if (base64.startsWith('data:image/')) {
-        const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
-        
-        console.log(`[Sync] Upserting to media_library: ${filename}`);
-        
-        const { error: upsertError } = await supabase.from('media_library').upsert({
-          filename,
-          file_type: 'image',
-          mime_type: blob.type || 'image/jpeg',
-          url: base64,
-          size_bytes: blob.size
-        }, { onConflict: 'filename' });
+      if (proxyError || !proxyData?.base64) {
+        console.error("[Sync] Proxy failed, falling back to direct fetch:", proxyError);
+        const response = await fetch(url, { 
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit'
+        }).catch(err => {
+          throw new Error("O servidor da imagem bloqueou o acesso direto (CORS). Tente usar o Proxy de Mídia em Configurações.");
+        });
 
-        if (upsertError) {
-          console.error("[Sync] Supabase Upsert Error:", upsertError);
-          throw upsertError;
-        }
-
-        // Update layout data
-        const newData = { ...data };
-        const parts = path.split('.');
-        let current = newData;
-        for (let i = 0; i < parts.length - 1; i++) {
-          if (!current[parts[i]]) current[parts[i]] = {};
-          current = current[parts[i]];
-        }
-        current[parts[parts.length - 1]] = base64;
-        onUpdate(newData);
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
         
-        toast.success("Imagem sincronizada com sucesso!");
+        const blob = await response.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Erro ao converter blob"));
+          reader.readAsDataURL(blob);
+        });
+        
+        await processSyncResult(base64, url, blob.type, blob.size, path);
       } else {
-        throw new Error("O conteúdo baixado não parece ser uma imagem válida.");
+        const mimeType = proxyData.contentType || 'image/jpeg';
+        const size = proxyData.size || 0;
+        await processSyncResult(proxyData.base64, url, mimeType, size, path);
       }
     } catch (e: any) {
       console.error("[Sync] Critical Error:", e);
-      // Detailed error messages for the user
-      if (e.message?.includes('Failed to fetch')) {
-        toast.error("Erro de CORS: O servidor da imagem bloqueou o download. Tente usar o 'Proxy de Mídia' em Configurações para forçar a sincronização.");
-      } else {
-        toast.error(`Falha ao sincronizar: ${e.message || "Erro desconhecido"}`);
+      toast.error(`Falha ao sincronizar: ${e.message || "Erro desconhecido"}`);
+    }
+  };
+
+  const processSyncResult = async (base64: string, url: string, mimeType: string, size: number, path: string) => {
+    if (base64.startsWith('data:image/')) {
+      const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
+      
+      console.log(`[Sync] Upserting to media_library: ${filename}`);
+      
+      const { error: upsertError } = await supabase.from('media_library').upsert({
+        filename,
+        file_type: 'image',
+        mime_type: mimeType,
+        url: base64,
+        size_bytes: size
+      }, { onConflict: 'filename' });
+
+      if (upsertError) throw upsertError;
+
+      const newData = { ...data };
+      const parts = path.split('.');
+      let current = newData;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]]) current[parts[i]] = {};
+        current = current[parts[i]];
       }
+      current[parts[parts.length - 1]] = base64;
+      onUpdate(newData);
+      
+      toast.success("Imagem sincronizada com sucesso!");
+    } else {
+      throw new Error("O conteúdo baixado não parece ser uma imagem válida.");
     }
   };
 
