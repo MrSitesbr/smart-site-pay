@@ -106,7 +106,7 @@ const SectionRenderer: React.FC<{
 
   return (
     <section 
-      style={sectionStyle} 
+      style={{...sectionStyle, width: '100%', maxWidth: '100vw'}} 
       className={`relative ${settings.fullWidth ? 'w-full' : 'container mx-auto px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
