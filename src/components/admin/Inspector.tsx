@@ -51,19 +51,19 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
     try {
       toast.info("Sincronizando imagem externa...");
       
-      // Use proxy logic or a safer fetch for CORS issues if needed
-      // For now, adding generic error handling and logs
-      console.log(`[Sync] Attempting to fetch: ${url}`);
+      // Detailed logging for debugging
+      console.log(`[Sync] Attempting to sync external URL: ${url}`);
       
       const response = await fetch(url, { 
         method: 'GET',
-        credentials: 'omit',
-        mode: 'cors'
+        mode: 'cors',
+        credentials: 'omit'
+      }).catch(err => {
+        console.error("[Sync] Fetch failed (possibly CORS):", err);
+        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente fazer o upload manual.");
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
-      }
+
+      if (!response.ok) throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
       
       const blob = await response.blob();
       console.log(`[Sync] Fetched blob of type ${blob.type}, size ${blob.size}`);
