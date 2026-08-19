@@ -691,9 +691,11 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                   const map = new Map<string, string>();
                   for (const url of urls) {
                     try {
-                      console.log(`[Sync] Baixando: ${url}`);
-                      const res = await fetch(url, { mode: 'cors' });
-                      if (!res.ok) throw new Error(`Status ${res.status}`);
+                      console.log(`[Sync] Processando: ${url}`);
+                      // We use a proxy-like approach or just direct fetch if CORS allows.
+                      // Since it's Base64 conversion, we must ensure we can fetch it.
+                      const res = await fetch(url, { method: 'GET', credentials: 'omit' });
+                      if (!res.ok) throw new Error(`Status ${res.status} ao buscar ${url}`);
                       
                       const blob = await res.blob();
                       const b64 = await new Promise<string>((r, reject) => {
