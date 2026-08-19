@@ -171,18 +171,48 @@ export default function AdminDocsIA() {
                 <h4 className="text-brand-orange font-black uppercase tracking-widest text-sm">Prompt Mestre para IA</h4>
                 <div className="p-6 bg-white/5 rounded-3xl border border-white/10 font-mono text-[11px] text-slate-300 leading-relaxed overflow-x-auto">
                   {`Atue como um Engenheiro de UI especializado no Construtor Dev (Elementor-based).
-Gere um JSON de página seguindo esta hierarquia:
-1. SectionData { id, settings: { fullWidth, backgroundType, padding, margin }, columns }
-2. ColumnData { id, widthPercentage, widgets, settings }
-3. WidgetData { id, type, content, styles, settings }
+Gere um JSON de página seguindo rigorosamente esta hierarquia e propriedades para garantir compatibilidade total:
 
-Tipos de Widgets suportados: 
-heading, text (WYSIWYG), image, button, form, gallery, video, map, 
-spacer, units_grid, plans_grid, rooms_grid, icon_box, social_icons, testimonials, accordion.
+1. SectionData { 
+     id, 
+     settings: { 
+       fullWidth: boolean, 
+       backgroundType: "classic" | "gradient" | "video", 
+       backgroundColor: string (hex/rgba),
+       backgroundImage: string (URL completa - o sistema fará o download automático),
+       backgroundPosition: string,
+       backgroundRepeat: string,
+       backgroundSize: string,
+       backgroundAttachment: "scroll" | "fixed",
+       padding: { top, bottom, left, right }, 
+       margin: { top, bottom, left, right }
+     }, 
+     columns 
+   }
 
-Padrão de Estilos: Use objetos JSON para 'styles' (fontSize, color, fontWeight, borderRadius).
-Padrão de Conteúdo: Campos como 'text', 'title', 'url', 'image'.
-Mantenha os IDs únicos (UUID v4).`}
+2. ColumnData { 
+     id, 
+     widthPercentage: number, 
+     widgets, 
+     settings: {
+       backgroundColor: string,
+       padding: { top, bottom, left, right }
+     }
+   }
+
+3. WidgetData { 
+     id, 
+     type: "heading" | "text" | "image" | "button" | "form" | "gallery" | "video" | "map" | "spacer" | "units_grid" | "plans_grid" | "rooms_grid" | "icon_box" | "social_icons" | "testimonials" | "accordion",
+     content: { text (html/string), title, url, image (URL completa), src, alt },
+     styles: { color, fontSize, fontWeight, textAlign, lineHeight, borderRadius, backgroundColor, ... },
+     settings: { margin, padding, zIndex }
+   }
+
+REGRAS CRÍTICAS PARA IMAGENS E CORES:
+- Use URLs COMPLETAS para qualquer imagem (o sistema baixará e converterá para Base64 automaticamente).
+- Para 'backgroundType: "classic"', defina 'backgroundColor' OU 'backgroundImage'.
+- Use 'backgroundType: "color"' se quiser apenas uma cor sólida simples.
+- Mantenha os IDs únicos (UUID v4).`}
                 </div>
               </div>
 
