@@ -60,17 +60,23 @@ const SectionRenderer: React.FC<{
     marginBottom: settings.margin?.bottom ? `${settings.margin.bottom}px` : undefined,
     position: 'relative',
     zIndex: settings.zIndex,
-    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : undefined,
+    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : (settings.backgroundType === 'color' ? settings.backgroundColor : undefined),
   };
 
   // Ensure background color is applied even if backgroundType is 'color' (compatibility fix)
   if ((settings.backgroundType === 'color' || settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundColor) {
     sectionStyle.backgroundColor = settings.backgroundColor;
+    // Force background color to show by ensuring no other conflicting styles if only color is intended
+    if (settings.backgroundType === 'color' || (settings.backgroundType === 'classic' && !settings.backgroundImage)) {
+      sectionStyle.backgroundImage = 'none';
+      sectionStyle.background = settings.backgroundColor; // Force via background shorthand too
+    }
   }
   
   // Also ensure classic type respects image
   if ((settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundImage) {
     sectionStyle.backgroundImage = `url(${settings.backgroundImage})`;
+    sectionStyle.background = undefined; // Clear gradient if image is present
   }
 
   const getShapeDivider = () => {
@@ -102,7 +108,7 @@ const SectionRenderer: React.FC<{
 
   return (
     <section 
-      style={sectionStyle} 
+      style={{...sectionStyle, width: '100%', maxWidth: '100vw'}} 
       className={`relative ${settings.fullWidth ? 'w-full' : 'container mx-auto px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
@@ -124,8 +130,8 @@ const SectionRenderer: React.FC<{
       {settings.backgroundImage && <div style={overlayStyle} />}
       {getShapeDivider()}
       
-      <div className={`relative z-10 grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
-           style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr' }}>
+      <div className={`relative z-10 w-full grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
+           style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr', width: '100%' }}>
         {columns.filter(Boolean).map((column) => (
           <ColumnRenderer 
             key={column.id} 
@@ -229,7 +235,7 @@ const WidgetRenderer: React.FC<{
       case 'image':
         return (
           <img 
-            src={content.url} 
+            src={content.url || content.image} 
             alt={content.alt || ''} 
             className="w-full h-auto" 
             style={{ borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined }} 

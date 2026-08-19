@@ -387,8 +387,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             const val = obj[key];
             if (typeof val === 'string' && 
                 (val.startsWith('http://') || val.startsWith('https://')) && 
-                (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br'))) {
-              foundUrls.add(val);
+                (val.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || val.includes('wp-content/uploads') || val.includes('coworking013.com.br') || val.includes('data:image/'))) {
+              if (!val.startsWith('data:')) foundUrls.add(val);
             } else if (typeof val === 'object') {
               scanImages(val);
             }
@@ -463,7 +463,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           ...section,
           settings: {
             backgroundColor: '#ffffff',
-            backgroundType: 'classic',
+            backgroundType: (section.settings?.backgroundImage || section.settings?.backgroundColor) ? 'classic' : 'color',
             ...(section.settings || {})
           }
         }));
