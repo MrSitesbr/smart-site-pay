@@ -674,8 +674,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                     for (const k in o) {
                       const v = o[k];
                       if (typeof v === 'string' && 
-                          (v.startsWith('http') || v.includes('wp-content') || v.includes('coworking013.com.br')) && 
-                          !v.startsWith('data:')) {
+                          (v.startsWith('http') || v.includes('wp-content') || v.includes('coworking013.com.br') || v.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i)) && 
+                          !v.startsWith('data:') && !v.includes('localhost')) {
                         urls.add(v);
                       } else if (typeof v === 'object') find(v);
                     }
@@ -706,13 +706,21 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                       if (b64.startsWith('data:image/')) {
                         map.set(url, b64);
                         const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
-                        await supabase.from('media_library').upsert({
+                        
+                        console.log(`[Sync] Salvando na biblioteca: ${filename}`);
+                        const { error: upsertError } = await supabase.from('media_library').upsert({
                           filename,
                           file_type: 'image',
                           mime_type: blob.type || 'image/jpeg',
                           url: b64,
                           size_bytes: blob.size
                         }, { onConflict: 'filename' });
+
+                        if (upsertError) {
+                          console.error(`[Sync] Erro no upsert para ${filename}:`, upsertError);
+                        } else {
+                          console.log(`[Sync] Sucesso ao salvar ${filename}`);
+                        }
                       }
                     } catch (e) { 
                       console.error(`Erro ao sincronizar ${url}:`, e); 
