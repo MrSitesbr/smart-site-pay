@@ -42,62 +42,56 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
     setIsPickerOpen(true);
   };
 
-  const handleChange = async (path: string, value: any) => {
-    let finalValue = value;
-
-    // Se o valor for uma URL de imagem externa, tenta baixar e converter para Base64
-    if (typeof value === 'string' && 
-        (value.startsWith('http://') || value.startsWith('https://')) && 
-        (value.match(/\.(jpeg|jpg|gif|png|webp|svg|avif)/i) || value.includes('wp-content/uploads') || value.includes('coworking013.com.br')) &&
-        !value.includes('localhost') && !value.startsWith('data:')) {
-      
-      try {
-        toast.info("Processando link externo...");
-        console.log(`Tentando baixar link externo no Inspetor: ${value}`);
-        const response = await fetch(value, { mode: 'cors' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const blob = await response.blob();
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error("Erro ao ler blob"));
-          reader.readAsDataURL(blob);
-        });
-        
-        if (base64.startsWith('data:image/')) {
-          finalValue = base64;
-          toast.success("Imagem sincronizada com o servidor!");
-          
-          // SYNC TO MEDIA LIBRARY ALSO FROM INSPECTOR
-          try {
-            const filename = value.split('/').pop()?.split('?')[0] || 'pasted-image.jpg';
-            const { data: existing } = await supabase
-              .from('media_library')
-              .select('id')
-              .eq('filename', filename)
-              .limit(1);
-
-            if (!existing || existing.length === 0) {
-              await supabase.from('media_library').insert({
-                filename,
-                file_type: 'image',
-                mime_type: blob.type || 'image/jpeg',
-                url: base64,
-                size_bytes: blob.size
-              });
-              console.log("Sincronizado via Inspetor");
-            }
-          } catch (syncErr) {
-            console.error(syncErr);
-          }
-        }
-      } catch (e) {
-        console.warn("Não foi possível baixar a imagem externa, mantendo link original.", e);
-        toast.error("Não foi possível baixar a imagem. Verifique se o link permite acesso.");
-      }
+  const handleSyncImage = async (path: string, url: string) => {
+    if (!url || !url.startsWith('http') || url.startsWith('data:') || url.includes('localhost')) {
+      toast.error("URL inválida para sincronização.");
+      return;
     }
 
+    try {
+      toast.info("Sincronizando imagem externa...");
+      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Erro ao ler blob"));
+        reader.readAsDataURL(blob);
+      });
+      
+      if (base64.startsWith('data:image/')) {
+        // Sync to library
+        const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
+        await supabase.from('media_library').upsert({
+          filename,
+          file_type: 'image',
+          mime_type: blob.type || 'image/jpeg',
+          url: base64,
+          size_bytes: blob.size
+        }, { onConflict: 'filename' });
+
+        // Update layout data
+        const newData = { ...data };
+        const parts = path.split('.');
+        let current = newData;
+        for (let i = 0; i < parts.length - 1; i++) {
+          if (!current[parts[i]]) current[parts[i]] = {};
+          current = current[parts[i]];
+        }
+        current[parts[parts.length - 1]] = base64;
+        onUpdate(newData);
+        
+        toast.success("Imagem sincronizada com sucesso!");
+      }
+    } catch (e) {
+      console.error("Erro na sincronização:", e);
+      toast.error("Falha ao sincronizar imagem.");
+    }
+  };
+
+  const handleChange = (path: string, value: any) => {
     const newData = { ...data };
     const parts = path.split('.');
     let current = newData;
@@ -105,7 +99,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       if (!current[parts[i]]) current[parts[i]] = {};
       current = current[parts[i]];
     }
-    current[parts[parts.length - 1]] = finalValue;
+    current[parts[parts.length - 1]] = value;
     onUpdate(newData);
   };
 
@@ -194,6 +188,17 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem</Label>
                       <div className="flex gap-2">
                         <Input value={data.content.url || ''} onChange={(e) => handleChange('content.url', e.target.value)} />
+                        {data.content.url && data.content.url.startsWith('http') && !data.content.url.startsWith('data:') && (
+                          <Button 
+                            variant="secondary" 
+                            size="icon" 
+                            title="Sincronizar imagem externa" 
+                            className="bg-brand-orange text-white hover:bg-brand-orange/90"
+                            onClick={() => handleSyncImage('content.url', data.content.url)}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button variant="outline" size="icon" onClick={() => openPicker('content.url')}>
                           <ImageIcon className="w-4 h-4" />
                         </Button>
@@ -307,6 +312,17 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícone do Logo (URL)</Label>
                         <div className="flex gap-2">
                           <Input value={data.content.logo_icon || ''} onChange={(e) => handleChange('content.logo_icon', e.target.value)} />
+                          {data.content.logo_icon && data.content.logo_icon.startsWith('http') && !data.content.logo_icon.startsWith('data:') && (
+                            <Button 
+                              variant="secondary" 
+                              size="icon" 
+                              title="Sincronizar ícone" 
+                              className="bg-brand-orange text-white hover:bg-brand-orange/90"
+                              onClick={() => handleSyncImage('content.logo_icon', data.content.logo_icon)}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button variant="outline" size="icon" onClick={() => openPicker('content.logo_icon')}>
                             <ImageIcon className="w-4 h-4" />
                           </Button>
