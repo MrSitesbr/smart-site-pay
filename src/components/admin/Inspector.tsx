@@ -56,11 +56,11 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       
       const response = await fetch(url, { 
         method: 'GET',
-        mode: 'cors',
+        mode: 'no-cors', // Test alternative mode
         credentials: 'omit'
       }).catch(err => {
         console.error("[Sync] Fetch failed (possibly CORS):", err);
-        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente fazer o upload manual.");
+        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente usar o Proxy de Mídia em Configurações.");
       });
 
       if (!response.ok) throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
