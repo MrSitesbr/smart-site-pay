@@ -124,8 +124,8 @@ const SectionRenderer: React.FC<{
       {settings.backgroundImage && <div style={overlayStyle} />}
       {getShapeDivider()}
       
-      <div className={`relative z-10 grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
-           style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr' }}>
+      <div className={`relative z-10 w-full grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
+           style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr', width: '100%' }}>
         {columns.filter(Boolean).map((column) => (
           <ColumnRenderer 
             key={column.id} 
@@ -229,7 +229,7 @@ const WidgetRenderer: React.FC<{
       case 'image':
         return (
           <img 
-            src={content.url} 
+            src={content.url || content.image} 
             alt={content.alt || ''} 
             className="w-full h-auto" 
             style={{ borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined }} 
