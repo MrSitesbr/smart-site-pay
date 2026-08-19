@@ -50,27 +50,48 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
 
     try {
       toast.info("Sincronizando imagem externa...");
-      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      // Detailed logging for debugging
+      console.log(`[Sync] Attempting to sync external URL: ${url}`);
+      
+      const response = await fetch(url, { 
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit'
+      }).catch(err => {
+        console.error("[Sync] Fetch failed (possibly CORS):", err);
+        throw new Error("O servidor da imagem bloqueou o acesso direto (Erro de CORS). Tente fazer o upload manual.");
+      });
+
+      if (!response.ok) throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
       
       const blob = await response.blob();
+      console.log(`[Sync] Fetched blob of type ${blob.type}, size ${blob.size}`);
+      
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Erro ao ler blob"));
+        reader.onerror = () => reject(new Error("Erro ao converter blob para Base64"));
         reader.readAsDataURL(blob);
       });
       
       if (base64.startsWith('data:image/')) {
-        // Sync to library
         const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
-        await supabase.from('media_library').upsert({
+        
+        console.log(`[Sync] Upserting to media_library: ${filename}`);
+        
+        const { error: upsertError } = await supabase.from('media_library').upsert({
           filename,
           file_type: 'image',
           mime_type: blob.type || 'image/jpeg',
           url: base64,
           size_bytes: blob.size
         }, { onConflict: 'filename' });
+
+        if (upsertError) {
+          console.error("[Sync] Supabase Upsert Error:", upsertError);
+          throw upsertError;
+        }
 
         // Update layout data
         const newData = { ...data };
@@ -84,10 +105,17 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
         onUpdate(newData);
         
         toast.success("Imagem sincronizada com sucesso!");
+      } else {
+        throw new Error("O conteúdo baixado não parece ser uma imagem válida.");
       }
-    } catch (e) {
-      console.error("Erro na sincronização:", e);
-      toast.error("Falha ao sincronizar imagem.");
+    } catch (e: any) {
+      console.error("[Sync] Critical Error:", e);
+      // Detailed error messages for the user
+      if (e.message?.includes('Failed to fetch')) {
+        toast.error("Erro de CORS: O servidor da imagem bloqueou o download. Tente fazer o upload manual.");
+      } else {
+        toast.error(`Falha ao sincronizar: ${e.message || "Erro desconhecido"}`);
+      }
     }
   };
 
