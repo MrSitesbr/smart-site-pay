@@ -56,7 +56,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
       
       const response = await fetch(url, { 
         method: 'GET',
-        mode: 'no-cors', // Test alternative mode
+        mode: 'cors', // Revertendo para cors para obter o blob utilizável
         credentials: 'omit'
       }).catch(err => {
         console.error("[Sync] Fetch failed (possibly CORS):", err);
