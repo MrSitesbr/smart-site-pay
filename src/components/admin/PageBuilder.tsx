@@ -401,6 +401,18 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         const totalImages = foundUrls.size;
         let processedImages = 0;
 
+        const syncToLibrary = async (url: string, base64: string, mimeType: string, size: number) => {
+          const filename = url.split('/').pop()?.split('?')[0] || `imported-${Date.now()}.jpg`;
+          const { error: upsertError } = await supabase.from('media_library').upsert({
+            filename,
+            file_type: 'image',
+            mime_type: mimeType || 'image/jpeg',
+            url: base64,
+            size_bytes: size || 0
+          }, { onConflict: 'filename' });
+          if (upsertError) console.error("[Import] Erro ao salvar na biblioteca:", upsertError);
+        };
+
         if (totalImages > 0) {
           toast.info(`Localizadas ${totalImages} imagens. Iniciando download...`);
           
@@ -439,18 +451,6 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             processedImages++;
           }
         }
-
-        const syncToLibrary = async (url: string, base64: string, mimeType: string, size: number) => {
-          const filename = url.split('/').pop()?.split('?')[0] || `imported-${Date.now()}.jpg`;
-          const { error: upsertError } = await supabase.from('media_library').upsert({
-            filename,
-            file_type: 'image',
-            mime_type: mimeType || 'image/jpeg',
-            url: base64,
-            size_bytes: size || 0
-          }, { onConflict: 'filename' });
-          if (upsertError) console.error("[Import] Erro ao salvar na biblioteca:", upsertError);
-        };
 
         // Replace URLs in the layout
         const replaceUrls = (obj: any) => {
