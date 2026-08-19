@@ -673,7 +673,9 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                     if (!o || typeof o !== 'object') return;
                     for (const k in o) {
                       const v = o[k];
-                      if (typeof v === 'string' && (v.startsWith('http') || v.includes('wp-content')) && !v.startsWith('data:')) {
+                      if (typeof v === 'string' && 
+                          (v.startsWith('http') || v.includes('wp-content') || v.includes('coworking013.com.br')) && 
+                          !v.startsWith('data:')) {
                         urls.add(v);
                       } else if (typeof v === 'object') find(v);
                     }
@@ -689,33 +691,45 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                   const map = new Map<string, string>();
                   for (const url of urls) {
                     try {
+                      console.log(`[Sync] Baixando: ${url}`);
                       const res = await fetch(url, { mode: 'cors' });
+                      if (!res.ok) throw new Error(`Status ${res.status}`);
+                      
                       const blob = await res.blob();
-                      const b64 = await new Promise<string>((r) => {
+                      const b64 = await new Promise<string>((r, reject) => {
                         const reader = new FileReader();
                         reader.onload = () => r(reader.result as string);
+                        reader.onerror = () => reject(new Error("Erro no FileReader"));
                         reader.readAsDataURL(blob);
                       });
                       
-                      map.set(url, b64);
-                      const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
-                      await supabase.from('media_library').upsert({
-                        filename,
-                        file_type: 'image',
-                        mime_type: blob.type || 'image/jpeg',
-                        url: b64,
-                        size_bytes: blob.size
-                      }, { onConflict: 'filename' });
-                    } catch (e) { console.error(e); }
+                      if (b64.startsWith('data:image/')) {
+                        map.set(url, b64);
+                        const filename = url.split('/').pop()?.split('?')[0] || `sync-${Date.now()}.jpg`;
+                        await supabase.from('media_library').upsert({
+                          filename,
+                          file_type: 'image',
+                          mime_type: blob.type || 'image/jpeg',
+                          url: b64,
+                          size_bytes: blob.size
+                        }, { onConflict: 'filename' });
+                      }
+                    } catch (e) { 
+                      console.error(`Erro ao sincronizar ${url}:`, e); 
+                    }
                   }
 
                   const replace = (o: any) => {
                     if (!o || typeof o !== 'object') return;
                     for (const k in o) {
-                      if (typeof o[k] === 'string' && map.has(o[k])) o[k] = map.get(o[k]);
-                      else if (typeof o[k] === 'object') replace(o[k]);
+                      if (typeof o[k] === 'string' && map.has(o[k])) {
+                        o[k] = map.get(o[k]);
+                      } else if (typeof o[k] === 'object') {
+                        replace(o[k]);
+                      }
                     }
                   };
+                  
                   const cloned = JSON.parse(JSON.stringify(obj));
                   replace(cloned);
                   return cloned;
@@ -726,7 +740,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 setTimeout(() => {
                   setLayout(updatedLayout);
                   pushToHistory(updatedLayout);
-                  toast.success("Todas as imagens foram sincronizadas e movidas para a biblioteca local!");
+                  toast.success("Imagens sincronizadas e movidas para a biblioteca local!");
                 }, 100);
               }}
             >
