@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { MediaPickerModal } from "./MediaPickerModal";
+import { ArtigoIAModal, type ArtigoIAConfig } from "./ArtigoIAModal";
 
 // Configuração básica do editor
 const modules = {
@@ -35,6 +36,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(artigoId ? true : false);
   const [generatingIA, setGeneratingIA] = useState(false);
+  const [iaModalOpen, setIaModalOpen] = useState(false);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<'content' | 'featured'>('featured');
   
@@ -46,6 +48,11 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     author: "Equipe 013",
     status: "Rascunho",
     image_url: "",
+    seo_metadata: {
+      title: "",
+      description: "",
+      keywords: ""
+    }
   });
 
   const quillRef = useRef<ReactQuill>(null);
@@ -204,7 +211,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={generateWithMistral}
+            onClick={() => setIaModalOpen(true)}
             disabled={generatingIA}
             className="bg-transparent border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-bold"
           >
@@ -330,20 +337,65 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
             </Card>
 
             <Card className="p-6 border-none shadow-sm space-y-4">
-              <h3 className="font-bold text-brand-blue-dark border-b pb-2">SEO & Resumo</h3>
-              <div className="space-y-2">
-                <Label>Resumo (Excerpt)</Label>
-                <Textarea 
-                  value={artigo.excerpt}
-                  onChange={e => setArtigo({...artigo, excerpt: e.target.value})}
-                  className="text-xs h-24"
-                  placeholder="Breve descrição para redes sociais e buscas..."
-                />
+              <h3 className="font-bold text-brand-blue-dark border-b pb-2">SEO & Metadados</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Título SEO</Label>
+                  <Input 
+                    value={(artigo.seo_metadata as any)?.title || ""}
+                    onChange={e => setArtigo({
+                      ...artigo, 
+                      seo_metadata: { ...(artigo.seo_metadata as any), title: e.target.value }
+                    })}
+                    placeholder="Título para o Google..."
+                    className="text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Palavras-Chave (Keywords)</Label>
+                  <Input 
+                    value={(artigo.seo_metadata as any)?.keywords || ""}
+                    onChange={e => setArtigo({
+                      ...artigo, 
+                      seo_metadata: { ...(artigo.seo_metadata as any), keywords: e.target.value }
+                    })}
+                    placeholder="coworking, escritorio, santus..."
+                    className="text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Meta Descrição</Label>
+                  <Textarea 
+                    value={(artigo.seo_metadata as any)?.description || artigo.excerpt}
+                    onChange={e => setArtigo({
+                      ...artigo, 
+                      seo_metadata: { ...(artigo.seo_metadata as any), description: e.target.value }
+                    })}
+                    className="text-xs h-24"
+                    placeholder="Breve descrição para o Google..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Resumo Interno (Excerpt)</Label>
+                  <Textarea 
+                    value={artigo.excerpt}
+                    onChange={e => setArtigo({...artigo, excerpt: e.target.value})}
+                    className="text-xs h-20"
+                    placeholder="Exibido na listagem do blog..."
+                  />
+                </div>
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      <ArtigoIAModal 
+        isOpen={iaModalOpen}
+        onClose={() => setIaModalOpen(false)}
+        onGenerate={generateWithMistral}
+        loading={generatingIA}
+      />
 
       <MediaPickerModal 
         isOpen={mediaPickerOpen} 
