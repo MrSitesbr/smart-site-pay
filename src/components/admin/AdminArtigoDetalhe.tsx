@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { MediaPickerModal } from "./MediaPickerModal";
 import { ArtigoIAModal, type ArtigoIAConfig } from "./ArtigoIAModal";
 
 // Configuração básica do editor
-const modules = {
+const getModules = () => ({
   toolbar: [
     [{ 'header': [1, 2, 3, false] }],
     ['bold', 'italic', 'underline', 'strike'],
@@ -24,7 +24,7 @@ const modules = {
     ['link', 'image', 'video'],
     ['clean']
   ],
-};
+});
 
 interface AdminArtigoDetalheProps {
   artigoId?: string;
@@ -56,6 +56,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
   });
 
   const quillRef = useRef<ReactQuill>(null);
+  const modules = useMemo(() => getModules(), []);
 
   useEffect(() => {
     if (artigoId) {
