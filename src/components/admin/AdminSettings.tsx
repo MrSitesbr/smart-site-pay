@@ -207,6 +207,42 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-none shadow-sm max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-brand-blue-dark">
+            <ShieldCheck className="w-5 h-5" />
+            Mistral AI
+          </CardTitle>
+          <CardDescription>
+            Configure a chave de API da Mistral para geração de artigos com IA.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleUpdateMistral} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="mistral-key">Mistral API Key</Label>
+              <Input
+                id="mistral-key"
+                type="password"
+                placeholder="Insira sua chave da Mistral"
+                value={mistralKey}
+                onChange={(e) => setMistralKey(e.target.value)}
+                className="border-brand-blue-dark/10"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Salvar Configuração
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
+
   );
 }
