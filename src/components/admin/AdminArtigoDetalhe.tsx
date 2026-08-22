@@ -410,7 +410,6 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
 
       {iaModalOpen && (
         <ArtigoIAModal 
-          key={modalKey}
           isOpen={iaModalOpen}
           onClose={() => setIaModalOpen(false)}
           onGenerate={generateWithMistral}
