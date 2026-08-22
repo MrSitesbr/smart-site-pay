@@ -286,19 +286,28 @@ export default function AdminMenus() {
                               className="bg-white text-sm"
                             />
                             <Select 
-                              value={sub.url} 
+                              value={pages.some(p => p.route === sub.url) ? sub.url : (sub.url === '#' ? '#' : 'external')} 
                               onValueChange={(val) => updateItem(sub.id, { url: val }, item.id)}
                             >
                               <SelectTrigger className="w-[140px] bg-white text-sm">
                                 <SelectValue placeholder="Link" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="#">(Nenhum)</SelectItem>
                                 {pages.map(p => (
                                   <SelectItem key={p.route} value={p.route}>{p.name}</SelectItem>
                                 ))}
                                 <SelectItem value="external">Link Externo</SelectItem>
                               </SelectContent>
                             </Select>
+                            {(!pages.some(p => p.route === sub.url) && sub.url !== '#' && sub.url !== '') && (
+                              <Input 
+                                value={sub.url === 'external' ? '' : sub.url}
+                                placeholder="https://..." 
+                                onChange={(e) => updateItem(sub.id, { url: e.target.value }, item.id)}
+                                className="w-[150px] bg-white text-sm"
+                              />
+                            )}
                             <Select 
                               value={sub.target} 
                               onValueChange={(val) => updateItem(sub.id, { target: val }, item.id)}
