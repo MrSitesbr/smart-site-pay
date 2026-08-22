@@ -58,7 +58,7 @@ export default function AdminMenus() {
     if (error) toast.error("Erro ao carregar itens do menu");
     else {
       // Organize hierarchy
-      const items = data || [];
+      const items = (data || []).map(i => ({ ...i, target: i.target || '_self' }));
       const rootItems = items.filter(i => !i.parent_id);
       const withSub = rootItems.map(root => ({
         ...root,
@@ -80,7 +80,8 @@ export default function AdminMenus() {
       label: 'Novo Item',
       url: '/',
       order_index: menuItems.length,
-      parent_id
+      parent_id,
+      target: '_self'
     };
 
     if (!parent_id) {
@@ -136,6 +137,7 @@ export default function AdminMenus() {
           menu_id: selectedMenu.id,
           label: item.label,
           url: item.url,
+          target: item.target,
           order_index: idx++
         }).select().single();
 
@@ -149,6 +151,7 @@ export default function AdminMenus() {
               parent_id: root.id,
               label: sub.label,
               url: sub.url,
+              target: sub.target,
               order_index: sIdx++
             });
           }
@@ -231,7 +234,7 @@ export default function AdminMenus() {
                         value={item.url} 
                         onValueChange={(val) => updateItem(item.id, { url: val })}
                       >
-                        <SelectTrigger className="w-[200px] bg-white">
+                        <SelectTrigger className="w-[150px] bg-white">
                           <SelectValue placeholder="Selecione Link" />
                         </SelectTrigger>
                         <SelectContent>
@@ -240,6 +243,18 @@ export default function AdminMenus() {
                             <SelectItem key={p.route} value={p.route}>{p.name}</SelectItem>
                           ))}
                           <SelectItem value="external">Link Externo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select 
+                        value={item.target} 
+                        onValueChange={(val) => updateItem(item.id, { target: val })}
+                      >
+                        <SelectTrigger className="w-[120px] bg-white">
+                          <SelectValue placeholder="Janela" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_self">Mesma Aba</SelectItem>
+                          <SelectItem value="_blank">Nova Aba</SelectItem>
                         </SelectContent>
                       </Select>
                       {item.url === 'external' && (
@@ -273,7 +288,7 @@ export default function AdminMenus() {
                               value={sub.url} 
                               onValueChange={(val) => updateItem(sub.id, { url: val }, item.id)}
                             >
-                              <SelectTrigger className="w-[180px] bg-white text-sm">
+                              <SelectTrigger className="w-[140px] bg-white text-sm">
                                 <SelectValue placeholder="Link" />
                               </SelectTrigger>
                               <SelectContent>
@@ -281,6 +296,18 @@ export default function AdminMenus() {
                                   <SelectItem key={p.route} value={p.route}>{p.name}</SelectItem>
                                 ))}
                                 <SelectItem value="external">Link Externo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Select 
+                              value={sub.target} 
+                              onValueChange={(val) => updateItem(sub.id, { target: val }, item.id)}
+                            >
+                              <SelectTrigger className="w-[110px] bg-white text-sm">
+                                <SelectValue placeholder="Janela" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="_self">Mesma Aba</SelectItem>
+                                <SelectItem value="_blank">Nova Aba</SelectItem>
                               </SelectContent>
                             </Select>
                             <Button onClick={() => removeItem(sub.id, item.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 h-8 w-8">
