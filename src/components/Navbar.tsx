@@ -215,19 +215,33 @@ const Navbar = () => {
                 <>
                   <div className="py-3 text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{link.label}</div>
                   {link.submenu.map((sub: any) => (
-                    <Link
-                      key={sub.href}
-                      to={sub.href}
-                      onClick={() => setIsOpen(false)}
-                      className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
-                    >
-                      {sub.label}
-                    </Link>
+                    sub.route ? (
+                      <Link
+                        key={sub.href}
+                        to={sub.href}
+                        target={sub.target}
+                        onClick={() => setIsOpen(false)}
+                        className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
+                      >
+                        {sub.label}
+                      </Link>
+                    ) : (
+                      <a
+                        key={sub.href}
+                        href={sub.href}
+                        target={sub.target}
+                        onClick={() => setIsOpen(false)}
+                        className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
+                      >
+                        {sub.label}
+                      </a>
+                    )
                   ))}
                 </>
-              ) : link.route || link.href.startsWith('/') ? (
+              ) : link.route ? (
                 <Link
                   to={link.href}
+                  target={link.target}
                   onClick={() => setIsOpen(false)}
                   className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
                 >
@@ -236,6 +250,7 @@ const Navbar = () => {
               ) : (
                 <a
                   href={link.href}
+                  target={link.target}
                   onClick={() => setIsOpen(false)}
                   className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
                 >
