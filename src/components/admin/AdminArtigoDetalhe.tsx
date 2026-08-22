@@ -225,11 +225,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => {
-              console.log("Abrindo modal da IA...");
-              setIaModalOpen(false);
-              setTimeout(() => setIaModalOpen(true), 50);
-            }}
+            onClick={() => setIaModalOpen(true)}
             disabled={generatingIA}
             className="bg-transparent border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-bold"
           >
@@ -408,12 +404,14 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         </div>
       </div>
 
-      <ArtigoIAModal 
-        isOpen={iaModalOpen}
-        onClose={() => setIaModalOpen(false)}
-        onGenerate={generateWithMistral}
-        loading={generatingIA}
-      />
+      {iaModalOpen && (
+        <ArtigoIAModal 
+          isOpen={iaModalOpen}
+          onClose={() => setIaModalOpen(false)}
+          onGenerate={generateWithMistral}
+          loading={generatingIA}
+        />
+      )}
 
       <MediaPickerModal 
         isOpen={mediaPickerOpen} 
