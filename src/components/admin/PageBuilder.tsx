@@ -13,9 +13,9 @@ const DropIndicator = () => (
 // Draggable Palette Widget Component
 const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id: `palette_${type}_${Math.random()}`,
+    id: `palette_${type}`,
     data: {
-      type: 'widget',
+      type: 'palette_widget',
       widgetType: type
     }
   });
@@ -26,7 +26,7 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
       {...attributes}
       {...listeners}
       onClick={onAdd}
-      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group transition-all duration-200 select-none ${
+      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group duration-200 select-none ${
         isSpecial 
           ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
           : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
@@ -408,22 +408,17 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const type = active.data.current?.type || (layout.find(s => s.id === active.id) ? 'section' : 'widget');
+    const type = active.data.current?.type || 'widget';
     setActiveDrag({ 
       id: active.id as string, 
       type,
-      data: active.data.current?.section || active.data.current?.widget || {}
+      data: active.data.current?.section || active.data.current?.widget || active.data.current || {}
     });
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) {
-      setDropIndicator(null);
-      return;
-    }
-
-    if (active.id === over.id) {
       setDropIndicator(null);
       return;
     }
@@ -435,8 +430,19 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     if (activeRect && overRect) {
       const overCenter = overRect.top + overRect.height / 2;
       const cursorY = activeRect.top + activeRect.height / 2;
-      const position = cursorY < overCenter ? 'before' : 'after';
       
+      // If over a column and it's a widget drag, we want to drop "inside"
+      const overType = over.data.current?.type || (layout.find(s => s.id === over.id) ? 'section' : 'widget');
+      
+      if (overType === 'column') {
+        setDropIndicator({
+          position: 'inside',
+          targetId: over.id as string
+        });
+        return;
+      }
+
+      const position = cursorY < overCenter ? 'before' : 'after';
       setDropIndicator({
         position,
         targetId: over.id as string
@@ -446,10 +452,36 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    const dragData = active.data.current;
     setActiveDrag(null);
     setDropIndicator(null);
 
-    if (over && active.id !== over.id) {
+    if (!over) return;
+
+    // Handle dropping palette widget into canvas
+    if (dragData?.type === 'palette_widget') {
+      const widgetType = dragData.widgetType;
+      
+      // Find the target column or widget
+      let targetColumnId = '';
+      const overData = over.data.current;
+      
+      if (overData?.type === 'column') {
+        targetColumnId = over.id as string;
+      } else if (overData?.type === 'widget') {
+        // Find which column this widget belongs to
+        layout.forEach(s => s.columns.forEach(c => {
+          if (c.widgets.some(w => w.id === over.id)) targetColumnId = c.id;
+        }));
+      }
+
+      if (targetColumnId) {
+        addWidget(targetColumnId, widgetType);
+        return;
+      }
+    }
+
+    if (active.id !== over.id) {
       const oldIndex = layout.findIndex(s => s.id === active.id);
       const newIndex = layout.findIndex(s => s.id === over.id);
       
@@ -813,23 +845,40 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 </div>
               </SortableContext>
               
-              <DragOverlay dropAnimation={{
-                sideEffects: defaultDropAnimationSideEffects({
-                  styles: {
-                    active: {
-                      opacity: '0.5',
+              <DragOverlay 
+                dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: {
+                      active: {
+                        opacity: '0.5',
+                      },
                     },
-                  },
-                }),
-              }}>
-                {activeDrag ? (
-                  <div className="bg-white border-2 border-brand-orange rounded-lg shadow-2xl p-4 w-[300px] opacity-80 pointer-events-none">
-                    <div className="flex items-center gap-2">
-                      <Layout className="w-4 h-4 text-brand-orange" />
-                      <span className="text-xs font-bold uppercase">{activeDrag.type === 'section' ? 'Movendo Seção' : 'Movendo Widget'}</span>
-                    </div>
+                  }),
+                }}
+              >
+                {activeDrag && (
+                  <div className="z-[9999] pointer-events-none opacity-80 scale-105 transition-transform duration-200">
+                    {activeDrag.type === 'section' ? (
+                      <div className="bg-brand-orange text-white p-4 rounded-lg shadow-2xl border-2 border-white/20 min-w-[300px] flex items-center gap-3">
+                        <Layout className="w-5 h-5" />
+                        <span className="font-bold uppercase tracking-widest text-xs">Movendo Seção</span>
+                      </div>
+                    ) : activeDrag.type === 'palette_widget' ? (
+                      <div className="bg-brand-blue-dark text-white p-4 rounded-xl shadow-2xl border-2 border-brand-orange min-w-[150px] flex flex-col items-center gap-2">
+                        {WIDGET_REGISTRY[activeDrag.data.widgetType as WidgetType]?.icon && 
+                          React.createElement(WIDGET_REGISTRY[activeDrag.data.widgetType as WidgetType].icon, { className: "w-6 h-6 text-brand-orange" })}
+                        <span className="font-bold uppercase tracking-tighter text-[10px]">
+                          {WIDGET_REGISTRY[activeDrag.data.widgetType as WidgetType]?.label}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="bg-blue-600 text-white p-3 rounded-lg shadow-2xl border-2 border-white/20 min-w-[200px] flex items-center gap-2">
+                        <MousePointer2 className="w-4 h-4" />
+                        <span className="font-bold uppercase tracking-widest text-[10px]">Movendo Elemento</span>
+                      </div>
+                    )}
                   </div>
-                ) : null}
+                )}
               </DragOverlay>
             </DndContext>
 
