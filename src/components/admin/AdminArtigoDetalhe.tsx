@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ReactQuill, { Quill } from 'react-quill';
+import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { MediaPickerModal } from "./MediaPickerModal";
 
@@ -36,6 +36,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
   const [fetching, setFetching] = useState(artigoId ? true : false);
   const [generatingIA, setGeneratingIA] = useState(false);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<'content' | 'featured'>('featured');
   
   const [artigo, setArtigo] = useState({
     title: "",
@@ -113,7 +114,6 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
 
     setGeneratingIA(true);
     try {
-      // 1. Buscar API Key no global_settings
       const { data: settingsData } = await supabase
         .from('site_sections')
         .select('content')
@@ -127,7 +127,6 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         return;
       }
 
-      // 2. Chamar API da Mistral
       const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -150,10 +149,10 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
       });
 
       const data = await response.json();
-      const content = data.choices[0].message.content;
+      const aiContent = data.choices[0].message.content;
       
-      if (content) {
-        setArtigo(prev => ({ ...prev, content: prev.content + "\n" + content }));
+      if (aiContent) {
+        setArtigo(prev => ({ ...prev, content: prev.content + "\n" + aiContent }));
         toast.success("Conteúdo gerado com sucesso pela IA!");
       }
     } catch (error) {
@@ -176,7 +175,6 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
 
   return (
     <div className="fixed inset-0 z-[60] bg-[#f8f9fa] flex flex-col">
-      {/* Header */}
       <header className="h-16 bg-brand-blue-dark text-white flex items-center justify-between px-6 shadow-md shrink-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={onBack} className="text-white hover:bg-white/10">
@@ -210,11 +208,8 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-auto p-8">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* Editor Area */}
           <div className="lg:col-span-3 space-y-6">
             <Card className="p-6 border-none shadow-sm space-y-4">
               <div className="space-y-2">
@@ -232,9 +227,12 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
                   <Label className="text-brand-blue-dark font-bold">Conteúdo do Artigo</Label>
                   <Button 
                     variant="ghost" 
-                    size="xs" 
+                    size="sm" 
                     className="text-xs h-7 text-brand-orange hover:bg-brand-orange/5"
-                    onClick={() => setMediaPickerOpen(true)}
+                    onClick={() => {
+                      setMediaTarget('content');
+                      setMediaPickerOpen(true);
+                    }}
                   >
                     <ImageIcon className="w-3.5 h-3.5 mr-1.5" /> Inserir Mídia
                   </Button>
@@ -253,7 +251,6 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
             </Card>
           </div>
 
-          {/* Sidebar Area */}
           <div className="space-y-6">
             <Card className="p-6 border-none shadow-sm space-y-4">
               <h3 className="font-bold text-brand-blue-dark border-b pb-2">Status & Publicação</h3>
@@ -291,7 +288,10 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
               <h3 className="font-bold text-brand-blue-dark border-b pb-2">Imagem de Destaque</h3>
               <div 
                 className="aspect-video bg-muted rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden group relative"
-                onClick={() => setMediaPickerOpen(true)}
+                onClick={() => {
+                  setMediaTarget('featured');
+                  setMediaPickerOpen(true);
+                }}
               >
                 {artigo.image_url ? (
                   <>
@@ -332,14 +332,15 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
       </div>
 
       <MediaPickerModal 
-        open={mediaPickerOpen} 
-        onOpenChange={setMediaPickerOpen}
-        onSelect={(media) => {
-          // Se estamos com o editor em foco, inserimos no conteúdo, senão na imagem de destaque
-          handleInsertImage(media.url);
-          if (!artigo.image_url) {
-            setArtigo(prev => ({ ...prev, image_url: media.url }));
+        isOpen={mediaPickerOpen} 
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(url) => {
+          if (mediaTarget === 'content') {
+            handleInsertImage(url);
+          } else {
+            setArtigo(prev => ({ ...prev, image_url: url }));
           }
+          setMediaPickerOpen(false);
         }}
       />
     </div>
