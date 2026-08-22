@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Phone, Calendar, ChevronDown } from "lucide-react";
+import { Menu, X, Phone, Calendar, ChevronDown, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 const logoIconUrlDefault = "/assets/logo.png";
 import ReservaDialog from "@/components/ReservaDialog";
 import { getPageContent } from "@/lib/cms";
@@ -34,17 +40,19 @@ const Navbar = () => {
       const organized = rootItems.map((root: any) => ({
         label: root.label,
         href: root.url,
-        route: !root.is_external && !root.url.startsWith('#'),
+        target: root.target || '_self',
+        route: !root.is_external && !root.url.startsWith('#') && !root.url.startsWith('http'),
         submenu: items
           .filter((i: any) => i.parent_id === root.id)
           .sort((a: any, b: any) => a.order_index - b.order_index)
           .map((sub: any) => ({
             label: sub.label,
             href: sub.url,
-            route: !sub.is_external && !sub.url.startsWith('#')
+            target: sub.target || '_self',
+            route: !sub.is_external && !sub.url.startsWith('#') && !sub.url.startsWith('http')
           }))
       }));
-      // If organized has items, use it. If organized[0].submenu is empty, set submenu to null for consistency
+      
       organized.forEach((item: any) => {
         if (item.submenu && item.submenu.length === 0) item.submenu = undefined;
       });
@@ -113,31 +121,46 @@ const Navbar = () => {
 
         <div className="hidden lg:flex items-center gap-8">
           {links.map((link: any) => (
-            <div key={link.label} className="relative group">
+            <div key={link.label} className="relative">
               {link.submenu ? (
-                <>
-                  <button
-                    className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                      scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
-                    }`}
-                  >
-                    {link.label} <ChevronDown className="w-4 h-4" />
-                  </button>
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`flex items-center gap-1 text-sm font-medium transition-colors outline-none ${
+                        scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
+                      }`}
+                    >
+                      {link.label} <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56 p-2 rounded-xl border border-slate-100 shadow-xl">
                     {link.submenu.map((sub: any) => (
-                      <Link
-                        key={sub.href}
-                        to={sub.href}
-                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-orange-500 transition-colors"
-                      >
-                        {sub.label}
-                      </Link>
+                      <DropdownMenuItem key={sub.href} asChild>
+                        {sub.route ? (
+                          <Link
+                            to={sub.href}
+                            target={sub.target}
+                            className="w-full cursor-pointer px-3 py-2 text-sm text-slate-700 hover:text-orange-500 rounded-lg transition-colors"
+                          >
+                            {sub.label}
+                          </Link>
+                        ) : (
+                          <a
+                            href={sub.href}
+                            target={sub.target}
+                            className="w-full cursor-pointer px-3 py-2 text-sm text-slate-700 hover:text-orange-500 rounded-lg transition-colors"
+                          >
+                            {sub.label}
+                          </a>
+                        )}
+                      </DropdownMenuItem>
                     ))}
-                  </div>
-                </>
-              ) : link.route || link.href.startsWith('/') ? (
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : link.route ? (
                 <Link
                   to={link.href}
+                  target={link.target}
                   className={`text-sm font-medium transition-colors ${
                     scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
                   }`}
@@ -147,6 +170,7 @@ const Navbar = () => {
               ) : (
                 <a
                   href={link.href}
+                  target={link.target}
                   className={`text-sm font-medium transition-colors ${
                     scrolled ? "text-foreground hover:text-orange-500" : "text-white hover:text-orange-500"
                   }`}
@@ -191,19 +215,33 @@ const Navbar = () => {
                 <>
                   <div className="py-3 text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">{link.label}</div>
                   {link.submenu.map((sub: any) => (
-                    <Link
-                      key={sub.href}
-                      to={sub.href}
-                      onClick={() => setIsOpen(false)}
-                      className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
-                    >
-                      {sub.label}
-                    </Link>
+                    sub.route ? (
+                      <Link
+                        key={sub.href}
+                        to={sub.href}
+                        target={sub.target}
+                        onClick={() => setIsOpen(false)}
+                        className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
+                      >
+                        {sub.label}
+                      </Link>
+                    ) : (
+                      <a
+                        key={sub.href}
+                        href={sub.href}
+                        target={sub.target}
+                        onClick={() => setIsOpen(false)}
+                        className="block py-2 pl-4 text-sm font-medium text-foreground hover:text-orange-500"
+                      >
+                        {sub.label}
+                      </a>
+                    )
                   ))}
                 </>
-              ) : link.route || link.href.startsWith('/') ? (
+              ) : link.route ? (
                 <Link
                   to={link.href}
+                  target={link.target}
                   onClick={() => setIsOpen(false)}
                   className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
                 >
@@ -212,6 +250,7 @@ const Navbar = () => {
               ) : (
                 <a
                   href={link.href}
+                  target={link.target}
                   onClick={() => setIsOpen(false)}
                   className="block py-3 text-sm font-medium text-foreground hover:text-orange-500"
                 >

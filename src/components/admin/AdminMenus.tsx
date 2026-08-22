@@ -13,6 +13,7 @@ interface MenuItem {
   url: string;
   order_index: number;
   parent_id?: string | null;
+  target: string;
   items?: MenuItem[];
 }
 
@@ -57,7 +58,7 @@ export default function AdminMenus() {
     if (error) toast.error("Erro ao carregar itens do menu");
     else {
       // Organize hierarchy
-      const items = data || [];
+      const items = (data || []).map((i: any) => ({ ...i, target: i.target || '_self' }));
       const rootItems = items.filter(i => !i.parent_id);
       const withSub = rootItems.map(root => ({
         ...root,
@@ -79,7 +80,8 @@ export default function AdminMenus() {
       label: 'Novo Item',
       url: '/',
       order_index: menuItems.length,
-      parent_id
+      parent_id,
+      target: '_self'
     };
 
     if (!parent_id) {
@@ -135,8 +137,9 @@ export default function AdminMenus() {
           menu_id: selectedMenu.id,
           label: item.label,
           url: item.url,
+          target: item.target,
           order_index: idx++
-        }).select().single();
+        } as any).select().single();
 
         if (rootErr) throw rootErr;
 
@@ -148,8 +151,9 @@ export default function AdminMenus() {
               parent_id: root.id,
               label: sub.label,
               url: sub.url,
+              target: sub.target,
               order_index: sIdx++
-            });
+            } as any);
           }
         }
       }
@@ -227,10 +231,10 @@ export default function AdminMenus() {
                         className="font-bold bg-white"
                       />
                       <Select 
-                        value={item.url} 
+                        value={pages.some(p => p.route === item.url) ? item.url : (item.url === '#' ? '#' : 'external')} 
                         onValueChange={(val) => updateItem(item.id, { url: val })}
                       >
-                        <SelectTrigger className="w-[200px] bg-white">
+                        <SelectTrigger className="w-[150px] bg-white">
                           <SelectValue placeholder="Selecione Link" />
                         </SelectTrigger>
                         <SelectContent>
@@ -241,8 +245,21 @@ export default function AdminMenus() {
                           <SelectItem value="external">Link Externo</SelectItem>
                         </SelectContent>
                       </Select>
-                      {item.url === 'external' && (
+                      <Select 
+                        value={item.target} 
+                        onValueChange={(val) => updateItem(item.id, { target: val })}
+                      >
+                        <SelectTrigger className="w-[120px] bg-white">
+                          <SelectValue placeholder="Janela" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_self">Mesma Aba</SelectItem>
+                          <SelectItem value="_blank">Nova Aba</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {(!pages.some(p => p.route === item.url) && item.url !== '#' && item.url !== '') && (
                         <Input 
+                          value={item.url === 'external' ? '' : item.url}
                           placeholder="https://..." 
                           onChange={(e) => updateItem(item.id, { url: e.target.value })}
                           className="w-[200px] bg-white"
@@ -269,17 +286,38 @@ export default function AdminMenus() {
                               className="bg-white text-sm"
                             />
                             <Select 
-                              value={sub.url} 
+                              value={pages.some(p => p.route === sub.url) ? sub.url : (sub.url === '#' ? '#' : 'external')} 
                               onValueChange={(val) => updateItem(sub.id, { url: val }, item.id)}
                             >
-                              <SelectTrigger className="w-[180px] bg-white text-sm">
+                              <SelectTrigger className="w-[140px] bg-white text-sm">
                                 <SelectValue placeholder="Link" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="#">(Nenhum)</SelectItem>
                                 {pages.map(p => (
                                   <SelectItem key={p.route} value={p.route}>{p.name}</SelectItem>
                                 ))}
                                 <SelectItem value="external">Link Externo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {(!pages.some(p => p.route === sub.url) && sub.url !== '#' && sub.url !== '') && (
+                              <Input 
+                                value={sub.url === 'external' ? '' : sub.url}
+                                placeholder="https://..." 
+                                onChange={(e) => updateItem(sub.id, { url: e.target.value }, item.id)}
+                                className="w-[150px] bg-white text-sm"
+                              />
+                            )}
+                            <Select 
+                              value={sub.target} 
+                              onValueChange={(val) => updateItem(sub.id, { target: val }, item.id)}
+                            >
+                              <SelectTrigger className="w-[110px] bg-white text-sm">
+                                <SelectValue placeholder="Janela" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="_self">Mesma Aba</SelectItem>
+                                <SelectItem value="_blank">Nova Aba</SelectItem>
                               </SelectContent>
                             </Select>
                             <Button onClick={() => removeItem(sub.id, item.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 h-8 w-8">
