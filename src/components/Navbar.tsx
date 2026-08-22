@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Phone, Calendar, ChevronDown } from "lucide-react";
+import { Menu, X, Phone, Calendar, ChevronDown, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 const logoIconUrlDefault = "/assets/logo.png";
 import ReservaDialog from "@/components/ReservaDialog";
 import { getPageContent } from "@/lib/cms";
