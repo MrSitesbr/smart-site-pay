@@ -227,7 +227,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
             variant="outline" 
             size="sm" 
             onClick={() => {
-              console.log("Opening IA Modal");
+              console.log("Button clicked, current state:", iaModalOpen);
               setIaModalOpen(true);
             }}
             disabled={generatingIA}
