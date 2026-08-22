@@ -801,7 +801,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                       )}
                       <SortableSection 
                         section={section} 
-                        isAdmin={true} 
+                        isAdmin={isAdmin} 
                         onElementClick={handleElementClick}
                         activeId={activeDrag?.id}
                       />
