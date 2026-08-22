@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X, Phone, Calendar, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import logoIcon from "@/assets/logo-icon.png.asset.json";
+const logoIconUrlDefault = "/assets/logo.png";
 import ReservaDialog from "@/components/ReservaDialog";
 import { getPageContent } from "@/lib/cms";
 
@@ -86,7 +86,7 @@ const Navbar = () => {
   const logoBottom = cmsContent?.logo_text_bottom || "013";
   const phone = cmsContent?.phone || "(13) 98805-0358";
   const phoneHref = cmsContent?.phone_href || "tel:13988050358";
-  const logoIconUrl = cmsContent?.logo_icon || logoIcon.url;
+  const logoIconUrl = cmsContent?.logo_icon || logoIconUrlDefault;
 
   return (
     <nav
