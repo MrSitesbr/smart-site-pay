@@ -230,7 +230,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
             className="bg-transparent border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-bold"
           >
             {generatingIA ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-            GERAR COM MISTRAL AI
+            GERAR C/ IA
           </Button>
           <Button 
             onClick={handleSave} 
@@ -404,12 +404,14 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         </div>
       </div>
 
-      <ArtigoIAModal 
-        isOpen={iaModalOpen}
-        onClose={() => setIaModalOpen(false)}
-        onGenerate={generateWithMistral}
-        loading={generatingIA}
-      />
+      {iaModalOpen && (
+        <ArtigoIAModal 
+          isOpen={iaModalOpen}
+          onClose={() => setIaModalOpen(false)}
+          onGenerate={generateWithMistral}
+          loading={generatingIA}
+        />
+      )}
 
       <MediaPickerModal 
         isOpen={mediaPickerOpen} 
