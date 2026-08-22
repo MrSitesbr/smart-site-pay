@@ -40,17 +40,19 @@ const Navbar = () => {
       const organized = rootItems.map((root: any) => ({
         label: root.label,
         href: root.url,
-        route: !root.is_external && !root.url.startsWith('#'),
+        target: root.target || '_self',
+        route: !root.is_external && !root.url.startsWith('#') && !root.url.startsWith('http'),
         submenu: items
           .filter((i: any) => i.parent_id === root.id)
           .sort((a: any, b: any) => a.order_index - b.order_index)
           .map((sub: any) => ({
             label: sub.label,
             href: sub.url,
-            route: !sub.is_external && !sub.url.startsWith('#')
+            target: sub.target || '_self',
+            route: !sub.is_external && !sub.url.startsWith('#') && !sub.url.startsWith('http')
           }))
       }));
-      // If organized has items, use it. If organized[0].submenu is empty, set submenu to null for consistency
+      
       organized.forEach((item: any) => {
         if (item.submenu && item.submenu.length === 0) item.submenu = undefined;
       });
