@@ -156,7 +156,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
       Tamanho solicitado: ${iaConfig.tamanho}. 
       Use formatação HTML básica (h2, p, strong, ul, li).
       IMPORTANTE: Para separar os parágrafos, você DEVE usar a tag <p> para cada parágrafo. Nunca use apenas quebras de linha simples; garanta que cada bloco de texto esteja envolvido em <p>...</p> para manter o espaçamento correto no editor.
-      IMAGENS: Você deve sugerir UMA imagem principal de banco de imagens gratuito (Unsplash) que combine com o tema. 
+      IMAGENS: Você deve sugerir UMA imagem principal de banco de imagens gratuito (Unsplash) que combine com o tema e a insira no campo sugestao_imagem_url. Além disso, se o artigo for longo, sugira imagens adicionais no corpo do texto usando a tag HTML <img src="https://images.unsplash.com/photo-XXXX" alt="descrição" />.
       Retorne no formato JSON: { 
         "titulo": "...", 
         "conteudo": "...", 

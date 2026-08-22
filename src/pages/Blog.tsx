@@ -53,11 +53,14 @@ export default function Blog() {
               {articles.map((article) => (
                 <Card key={article.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow flex flex-col">
                   {article.image_url && (
-                    <div className="aspect-video overflow-hidden">
+                    <div className="aspect-video overflow-hidden bg-slate-200 flex items-center justify-center">
                       <img 
-                        src={article.image_url} 
+                        src={article.image_url || "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80"} 
                         alt={article.title} 
                         className="w-full h-full object-cover transition-transform hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80";
+                        }}
                       />
                     </div>
                   )}
