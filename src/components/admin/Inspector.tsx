@@ -430,6 +430,17 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                       className="w-4 h-4 accent-brand-orange"
                     />
                   </div>
+                  {!data.settings.fullWidth && (
+                    <div className="space-y-2 p-3 bg-muted/20 rounded-lg">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Largura Máxima (px)</Label>
+                      <Input 
+                        type="number" 
+                        value={data.settings.maxWidth || 1400} 
+                        onChange={(e) => handleChange('settings.maxWidth', parseInt(e.target.value))} 
+                      />
+                      <p className="text-[9px] text-muted-foreground italic">Padrão: 1400px</p>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sobreposição (Overlay) - Opacidade</Label>
                     <Input 
