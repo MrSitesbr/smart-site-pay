@@ -32,7 +32,7 @@ export function ArtigoIAModal({ isOpen, onClose, onGenerate, loading }: ArtigoIA
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-brand-blue-dark">
