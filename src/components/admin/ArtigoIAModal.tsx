@@ -31,6 +31,7 @@ export function ArtigoIAModal({ isOpen, onClose, onGenerate, loading }: ArtigoIA
     onGenerate(config);
   };
 
+  console.log("ArtigoIAModal render, isOpen:", isOpen);
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-[500px]">
