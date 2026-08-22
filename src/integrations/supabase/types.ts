@@ -299,6 +299,7 @@ export type Database = {
           menu_id: string
           order_index: number | null
           parent_id: string | null
+          target: string | null
           updated_at: string | null
           url: string
         }
@@ -311,6 +312,7 @@ export type Database = {
           menu_id: string
           order_index?: number | null
           parent_id?: string | null
+          target?: string | null
           updated_at?: string | null
           url: string
         }
@@ -323,6 +325,7 @@ export type Database = {
           menu_id?: string
           order_index?: number | null
           parent_id?: string | null
+          target?: string | null
           updated_at?: string | null
           url?: string
         }
