@@ -13,6 +13,7 @@ interface MenuItem {
   url: string;
   order_index: number;
   parent_id?: string | null;
+  target: string;
   items?: MenuItem[];
 }
 
