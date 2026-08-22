@@ -405,12 +405,14 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         </div>
       </div>
 
-      <ArtigoIAModal 
-        isOpen={iaModalOpen}
-        onClose={() => setIaModalOpen(false)}
-        onGenerate={generateWithMistral}
-        loading={generatingIA}
-      />
+      {iaModalOpen && (
+        <ArtigoIAModal 
+          isOpen={iaModalOpen}
+          onClose={() => setIaModalOpen(false)}
+          onGenerate={generateWithMistral}
+          loading={generatingIA}
+        />
+      )}
 
       <MediaPickerModal 
         isOpen={mediaPickerOpen} 
