@@ -153,7 +153,7 @@ const SectionRenderer: React.FC<{
             column={column} 
             isAdmin={isAdmin} 
             onElementClick={onElementClick}
-            isOver={isAdmin && activeDragId ? (dropIndicator?.targetId === column.id) : false}
+            isOver={isAdmin && activeDragId ? (dropIndicator?.targetId === column.id || (dropIndicator?.targetId === section.id && dropIndicator?.position === 'inside')) : false}
             activeDragId={activeDragId}
             dropIndicator={dropIndicator}
           />
