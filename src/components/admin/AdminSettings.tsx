@@ -12,6 +12,62 @@ export default function AdminSettings() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [mistralKey, setMistralKey] = useState("");
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    const { data } = await supabase
+      .from('site_sections')
+      .select('content')
+      .eq('section_key', 'global_settings')
+      .single();
+    
+    if (data && data.content && typeof data.content === 'object') {
+      const content = data.content as any;
+      if (content.mistral_api_key) setMistralKey(content.mistral_api_key);
+    }
+  };
+
+  const handleUpdateMistral = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { data: existing } = await supabase
+        .from('site_sections')
+        .select('id, content')
+        .eq('section_key', 'global_settings')
+        .single();
+
+      const newContent = existing?.content ? { ...(existing.content as any), mistral_api_key: mistralKey } : { mistral_api_key: mistralKey };
+
+      if (existing) {
+        await supabase
+          .from('site_sections')
+          .update({ content: newContent })
+          .eq('id', existing.id);
+      } else {
+        // Busca uma página qualquer para vincular
+        const { data: page } = await supabase.from('site_pages').select('id').limit(1).single();
+        if (page) {
+          await supabase.from('site_sections').insert({
+            page_id: page.id,
+            section_key: 'global_settings',
+            content: newContent,
+            order_index: 999
+          });
+        }
+      }
+      toast({ title: "Configurações salvas", description: "Chave da Mistral AI atualizada." });
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleUpdateEmail = async (e: React.FormEvent) => {
     e.preventDefault();
