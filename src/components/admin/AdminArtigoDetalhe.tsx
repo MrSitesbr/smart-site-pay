@@ -149,10 +149,24 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
       });
 
       const data = await response.json();
-      const aiContent = data.choices[0].message.content;
+      let aiContent = data.choices[0].message.content;
       
       if (aiContent) {
-        setArtigo(prev => ({ ...prev, content: prev.content + "\n" + aiContent }));
+        // Limpeza de artefatos da IA (markdown blocks e 'null' no início)
+        aiContent = aiContent.replace(/^null\s*/i, '');
+        aiContent = aiContent.replace(/```html\s*([\s\S]*?)\s*```/gi, '$1');
+        aiContent = aiContent.replace(/```\s*([\s\S]*?)\s*```/gi, '$1');
+        
+        // Melhoria na separação de parágrafos (garantir que quebras de linha duplas virem novos parágrafos HTML)
+        // Se a IA retornar texto puro com quebras de linha
+        if (!aiContent.includes('<p>') && !aiContent.includes('<div>')) {
+          aiContent = aiContent
+            .split(/\n\s*\n/)
+            .map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+            .join('');
+        }
+
+        setArtigo(prev => ({ ...prev, content: prev.content + (prev.content ? "<br/><br/>" : "") + aiContent }));
         toast.success("Conteúdo gerado com sucesso pela IA!");
       }
     } catch (error) {
