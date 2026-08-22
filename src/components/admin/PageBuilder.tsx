@@ -26,16 +26,16 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
       {...attributes}
       {...listeners}
       onClick={onAdd}
-      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group transition-all duration-200 ${
+      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group transition-all duration-200 select-none ${
         isSpecial 
           ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
           : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
       } ${isDragging ? 'opacity-30 scale-95' : 'opacity-100'}`}
     >
-      <config.icon className={`w-5 h-5 mb-1.5 transition-colors group-hover:scale-110 ${
+      <config.icon className={`w-5 h-5 mb-1.5 pointer-events-none transition-colors group-hover:scale-110 ${
         isSpecial ? 'text-brand-orange' : 'text-brand-blue-dark group-hover:text-brand-orange'
       }`} />
-      <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${
+      <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none pointer-events-none select-none ${
         isSpecial ? 'text-white/90' : 'text-muted-foreground'
       }`}>
         {config.label}
