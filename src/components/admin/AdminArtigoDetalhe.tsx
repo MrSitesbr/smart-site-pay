@@ -37,6 +37,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
   const [fetching, setFetching] = useState(artigoId ? true : false);
   const [generatingIA, setGeneratingIA] = useState(false);
   const [iaModalOpen, setIaModalOpen] = useState(false);
+  const [modalKey, setModalKey] = useState(0);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<'content' | 'featured'>('featured');
   
@@ -225,7 +226,10 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setIaModalOpen(true)}
+            onClick={() => {
+              setModalKey(prev => prev + 1);
+              setIaModalOpen(true);
+            }}
             disabled={generatingIA}
             className="bg-transparent border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-bold"
           >
@@ -406,6 +410,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
 
       {iaModalOpen && (
         <ArtigoIAModal 
+          key={modalKey}
           isOpen={iaModalOpen}
           onClose={() => setIaModalOpen(false)}
           onGenerate={generateWithMistral}
