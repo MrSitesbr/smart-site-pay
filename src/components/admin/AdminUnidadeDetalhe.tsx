@@ -86,7 +86,8 @@ export default function AdminUnidadeDetalhe() {
       endereco: editingUnidade.endereco,
       descricao: editingUnidade.descricao,
       foto_url: editingUnidade.galeria?.[0] || '',
-      galeria: editingUnidade.galeria || []
+      galeria: editingUnidade.galeria || [],
+      servicos_infra: editingUnidade.servicos_infra || []
     };
 
     const { error } = await supabase.from('unidades').update(payload).eq('id', id);
@@ -344,6 +345,40 @@ export default function AdminUnidadeDetalhe() {
                 placeholder="Descreva os diferenciais desta unidade..."
                 rows={4}
               />
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-sm font-medium">Serviços de Infraestrutura</label>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { id: 'wifi', nome: 'Internet Fibra', icone: 'Wifi' },
+                  { id: 'cafe', nome: 'Café e Água', icone: 'Coffee' },
+                  { id: 'print', nome: 'Impressões', icone: 'Printer' }
+                ].map(servico => (
+                  <label key={servico.id} className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                      checked={(editingUnidade?.servicos_infra || []).some((s: any) => s.id === servico.id)}
+                      onChange={(e) => {
+                        const current = editingUnidade?.servicos_infra || [];
+                        if (e.target.checked) {
+                          setEditingUnidade({
+                            ...editingUnidade, 
+                            servicos_infra: [...current, { ...servico, descricao: `Disponível na unidade ${editingUnidade.nome}` }]
+                          });
+                        } else {
+                          setEditingUnidade({
+                            ...editingUnidade, 
+                            servicos_infra: current.filter((s: any) => s.id !== servico.id)
+                          });
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-bold text-slate-700">{servico.nome}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
