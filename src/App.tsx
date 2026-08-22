@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import DynamicPage from "./pages/DynamicPage";
 import Blog from "./pages/Blog";
 import ArtigoIndividual from "./pages/ArtigoIndividual";
@@ -16,10 +16,14 @@ import AdminSalaDetalhe from "./components/admin/AdminSalaDetalhe";
 import AdminPlanoDetalhe from "./components/admin/AdminPlanoDetalhe";
 import AdminClienteCorpDetalhe from "./components/admin/AdminClienteCorpDetalhe";
 import AuthAdmin from "./pages/AuthAdmin";
-import UnidadeDetalhe from "./pages/UnidadeDetalhe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const DynamicPageWrapper = () => {
+  const { unidadeId } = useParams<{ unidadeId: string }>();
+  return <DynamicPage unidadeId={unidadeId} />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,7 +34,7 @@ const App = () => (
         <Routes>
           {/* Main Dynamic Pages */}
           <Route path="/" element={<DynamicPage />} />
-          <Route path="/unidades/:unidadeId" element={<DynamicPage />} />
+          <Route path="/unidades/:unidadeId" element={<DynamicPageWrapper />} />
           <Route path="/institucional" element={<DynamicPage />} />
           <Route path="/unidades" element={<DynamicPage />} />
           <Route path="/escritorio-privativo" element={<DynamicPage />} />
@@ -42,7 +46,7 @@ const App = () => (
           <Route path="/contato" element={<DynamicPage />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<ArtigoIndividual />} />
-          <Route path="/unidades/:id" element={<UnidadeDetalhe />} />
+          
           
           {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />
