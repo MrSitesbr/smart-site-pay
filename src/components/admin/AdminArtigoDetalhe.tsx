@@ -115,10 +115,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     }
   };
 
-  const generateWithMistral = async () => {
-    const topic = prompt("Sobre qual tema você deseja gerar um artigo de cauda longa (Começo, Meio e Fim)?");
-    if (!topic) return;
-
+  const generateWithMistral = async (iaConfig: ArtigoIAConfig) => {
     setGeneratingIA(true);
     try {
       const { data: settingsData } = await supabase
@@ -134,6 +131,13 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         return;
       }
 
+      const promptSystem = `Você é um redator especialista em SEO e Coworking. 
+      Escreva um artigo completo otimizado para a palavra-chave foco.
+      Tamanho solicitado: ${iaConfig.tamanho}. 
+      Use formatação HTML básica (h2, p, strong, ul, li).
+      Inclua também uma sugestão de Título SEO e Meta Descrição.
+      Retorne no formato JSON: { "titulo": "...", "conteudo": "...", "seo_title": "...", "seo_description": "...", "keywords": "..." }`;
+
       const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -141,44 +145,44 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "mistral-tiny",
+          model: "mistral-medium",
           messages: [
-            {
-              role: "system", 
-              content: "Você é um redator especialista em SEO e Coworking. Escreva um artigo completo de cauda longa com Introdução, Desenvolvimento (com sub-títulos) e Conclusão. Use formatação HTML básica (h2, p, strong, ul, li)."
-            },
-            {
-              role: "user",
-              content: `Escreva um artigo completo sobre o tema: ${topic}`
-            }
-          ]
+            { role: "system", content: promptSystem },
+            { role: "user", content: `Escreva sobre: ${iaConfig.prompt}. Palavras-chave: ${iaConfig.keywords || 'automático'}` }
+          ],
+          response_format: { type: "json_object" }
         })
       });
 
       const data = await response.json();
-      let aiContent = data.choices[0].message.content;
+      const aiResponse = JSON.parse(data.choices[0].message.content);
       
-      if (aiContent) {
-        // Limpeza de artefatos da IA (markdown blocks e 'null' no início)
-        aiContent = aiContent.replace(/^null\s*/i, '');
-        aiContent = aiContent.replace(/```html\s*([\s\S]*?)\s*```/gi, '$1');
-        aiContent = aiContent.replace(/```\s*([\s\S]*?)\s*```/gi, '$1');
+      if (aiResponse) {
+        let aiContent = aiResponse.conteudo;
         
-        // Melhoria na separação de parágrafos (garantir que quebras de linha duplas virem novos parágrafos HTML)
-        // Se a IA retornar texto puro com quebras de linha
+        // Limpeza e formatação
+        aiContent = aiContent.replace(/^null\s*/i, '');
         if (!aiContent.includes('<p>') && !aiContent.includes('<div>')) {
-          aiContent = aiContent
-            .split(/\n\s*\n/)
-            .map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
-            .join('');
+          aiContent = aiContent.split(/\n\s*\n/).map((p: string) => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
         }
 
-        setArtigo(prev => ({ ...prev, content: prev.content + (prev.content ? "<br/><br/>" : "") + aiContent }));
-        toast.success("Conteúdo gerado com sucesso pela IA!");
+        setArtigo(prev => ({ 
+          ...prev, 
+          title: prev.title || aiResponse.titulo,
+          content: prev.content + (prev.content ? "<br/><br/>" : "") + aiContent,
+          seo_metadata: {
+            title: aiResponse.seo_title,
+            description: aiResponse.seo_description,
+            keywords: aiResponse.keywords
+          }
+        }));
+        
+        setIaModalOpen(false);
+        toast.success("Conteúdo e SEO gerados com sucesso!");
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao gerar conteúdo com IA. Verifique sua chave de API.");
+      toast.error("Erro ao gerar conteúdo com IA.");
     } finally {
       setGeneratingIA(false);
     }
