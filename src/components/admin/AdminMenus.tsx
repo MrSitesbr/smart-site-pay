@@ -58,7 +58,7 @@ export default function AdminMenus() {
     if (error) toast.error("Erro ao carregar itens do menu");
     else {
       // Organize hierarchy
-      const items = (data || []).map(i => ({ ...i, target: i.target || '_self' }));
+      const items = (data || []).map((i: any) => ({ ...i, target: i.target || '_self' }));
       const rootItems = items.filter(i => !i.parent_id);
       const withSub = rootItems.map(root => ({
         ...root,
@@ -139,7 +139,7 @@ export default function AdminMenus() {
           url: item.url,
           target: item.target,
           order_index: idx++
-        }).select().single();
+        } as any).select().single();
 
         if (rootErr) throw rootErr;
 
@@ -153,7 +153,7 @@ export default function AdminMenus() {
               url: sub.url,
               target: sub.target,
               order_index: sIdx++
-            });
+            } as any);
           }
         }
       }
