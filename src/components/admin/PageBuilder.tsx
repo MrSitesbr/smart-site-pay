@@ -13,9 +13,9 @@ const DropIndicator = () => (
 // Draggable Palette Widget Component
 const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id: `palette_${type}_${Math.random()}`,
+    id: `palette_${type}`,
     data: {
-      type: 'widget',
+      type: 'palette_widget',
       widgetType: type
     }
   });
@@ -26,7 +26,7 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
       {...attributes}
       {...listeners}
       onClick={onAdd}
-      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group transition-all duration-200 select-none ${
+      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group duration-200 select-none ${
         isSpecial 
           ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
           : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
@@ -408,22 +408,17 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const type = active.data.current?.type || (layout.find(s => s.id === active.id) ? 'section' : 'widget');
+    const type = active.data.current?.type || 'widget';
     setActiveDrag({ 
       id: active.id as string, 
       type,
-      data: active.data.current?.section || active.data.current?.widget || {}
+      data: active.data.current?.section || active.data.current?.widget || active.data.current || {}
     });
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) {
-      setDropIndicator(null);
-      return;
-    }
-
-    if (active.id === over.id) {
       setDropIndicator(null);
       return;
     }
@@ -435,8 +430,19 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     if (activeRect && overRect) {
       const overCenter = overRect.top + overRect.height / 2;
       const cursorY = activeRect.top + activeRect.height / 2;
-      const position = cursorY < overCenter ? 'before' : 'after';
       
+      // If over a column and it's a widget drag, we want to drop "inside"
+      const overType = over.data.current?.type || (layout.find(s => s.id === over.id) ? 'section' : 'widget');
+      
+      if (overType === 'column') {
+        setDropIndicator({
+          position: 'inside',
+          targetId: over.id as string
+        });
+        return;
+      }
+
+      const position = cursorY < overCenter ? 'before' : 'after';
       setDropIndicator({
         position,
         targetId: over.id as string
@@ -446,10 +452,36 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    const dragData = active.data.current;
     setActiveDrag(null);
     setDropIndicator(null);
 
-    if (over && active.id !== over.id) {
+    if (!over) return;
+
+    // Handle dropping palette widget into canvas
+    if (dragData?.type === 'palette_widget') {
+      const widgetType = dragData.widgetType;
+      
+      // Find the target column or widget
+      let targetColumnId = '';
+      const overData = over.data.current;
+      
+      if (overData?.type === 'column') {
+        targetColumnId = over.id as string;
+      } else if (overData?.type === 'widget') {
+        // Find which column this widget belongs to
+        layout.forEach(s => s.columns.forEach(c => {
+          if (c.widgets.some(w => w.id === over.id)) targetColumnId = c.id;
+        }));
+      }
+
+      if (targetColumnId) {
+        addWidget(targetColumnId, widgetType);
+        return;
+      }
+    }
+
+    if (active.id !== over.id) {
       const oldIndex = layout.findIndex(s => s.id === active.id);
       const newIndex = layout.findIndex(s => s.id === over.id);
       
