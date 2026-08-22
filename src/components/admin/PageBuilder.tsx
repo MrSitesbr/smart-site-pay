@@ -1,4 +1,49 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
+
+// Drop Indicator Component
+const DropIndicator = () => (
+  <div className="relative h-1 w-full z-[100] group/indicator animate-in fade-in zoom-in duration-200">
+    <div className="absolute inset-0 bg-brand-orange h-[2px] top-1/2 -translate-y-1/2 shadow-[0_0_8px_rgba(255,107,0,0.5)]"></div>
+    <div className="absolute left-1/2 -translate-x-1/2 -top-3 bg-brand-orange text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20 whitespace-nowrap">
+      SOLTAR AQUI
+    </div>
+  </div>
+);
+
+// Draggable Palette Widget Component
+const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+    id: `palette_${type}_${Math.random()}`,
+    data: {
+      type: 'widget',
+      widgetType: type
+    }
+  });
+
+  return (
+    <div 
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onAdd}
+      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group transition-all duration-200 ${
+        isSpecial 
+          ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
+          : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
+      } ${isDragging ? 'opacity-30 scale-95' : 'opacity-100'}`}
+    >
+      <config.icon className={`w-5 h-5 mb-1.5 transition-colors group-hover:scale-110 ${
+        isSpecial ? 'text-brand-orange' : 'text-brand-blue-dark group-hover:text-brand-orange'
+      }`} />
+      <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${
+        isSpecial ? 'text-white/90' : 'text-muted-foreground'
+      }`}>
+        {config.label}
+      </span>
+    </div>
+  );
+};
+
 import { Button } from "@/components/ui/button";
 import { 
   Plus, Save, Layout, Eye, Smartphone, Monitor, 
@@ -21,7 +66,11 @@ import {
   useSensors,
   DragEndEvent,
   DragOverlay,
-  defaultDropAnimationSideEffects
+  DragStartEvent,
+  DragOverEvent,
+  defaultDropAnimationSideEffects,
+  Active,
+  Over
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -54,17 +103,28 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
     setNodeRef,
     transform,
     transition,
-    isDragging
-  } = useSortable({ id: section.id });
+    isDragging,
+    isOver
+  } = useSortable({ 
+    id: section.id,
+    data: {
+      type: 'section',
+      section
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.3 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group/section-wrap">
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`relative group/section-wrap transition-all duration-200 ${isOver && !isDragging ? 'ring-2 ring-brand-orange ring-inset bg-brand-orange/5' : ''}`}
+    >
       <div 
         {...attributes} 
         {...listeners}
@@ -76,6 +136,8 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
         layout={[section]} 
         isAdmin={isAdmin} 
         onElementClick={onElementClick}
+        activeDragId={activeId}
+        dropIndicator={null}
       />
     </div>
   );
@@ -178,10 +240,13 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const [history, setHistory] = useState<SectionData[][]>([initialLayout]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
+  const [activeDrag, setActiveDrag] = useState<{ id: string; type: string; data: any } | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<{ position: 'before' | 'after' | 'inside'; targetId: string } | null>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -341,16 +406,59 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     toast.success(`Widget ${registry.label} adicionado.`);
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const type = active.data.current?.type || (layout.find(s => s.id === active.id) ? 'section' : 'widget');
+    setActiveDrag({ 
+      id: active.id as string, 
+      type,
+      data: active.data.current?.section || active.data.current?.widget || {}
+    });
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) {
+      setDropIndicator(null);
+      return;
+    }
+
+    if (active.id === over.id) {
+      setDropIndicator(null);
+      return;
+    }
+
+    // Determine position based on mouse relative to over element
+    const overRect = over.rect;
+    const activeRect = active.rect.current?.translated;
+    
+    if (activeRect && overRect) {
+      const overCenter = overRect.top + overRect.height / 2;
+      const cursorY = activeRect.top + activeRect.height / 2;
+      const position = cursorY < overCenter ? 'before' : 'after';
+      
+      setDropIndicator({
+        position,
+        targetId: over.id as string
+      });
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveDrag(null);
+    setDropIndicator(null);
+
     if (over && active.id !== over.id) {
       const oldIndex = layout.findIndex(s => s.id === active.id);
       const newIndex = layout.findIndex(s => s.id === over.id);
       
-      const newLayout = arrayMove(layout, oldIndex, newIndex);
-      setLayout(newLayout);
-      pushToHistory(newLayout);
-      toast.info("Seção reordenada.");
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newLayout = arrayMove(layout, oldIndex, newIndex);
+        setLayout(newLayout);
+        pushToHistory(newLayout);
+        toast.info("Seção reordenada.");
+      }
     }
   };
 
@@ -464,24 +572,21 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
               {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
                 .filter(([type]) => !['units_grid', 'plans_grid', 'rooms_grid', 'global_header', 'global_footer', 'inner_section', 'icon_box'].includes(type))
                 .map(([type, config]) => (
-                <div 
-                  key={type}
-                  className="flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-brand-gray/20 hover:border-brand-orange hover:shadow-md transition-all cursor-move group h-20"
-                  draggable
-                  onDragEnd={() => {
-                    if (layout.length > 0) {
-                      const lastSection = layout[layout.length - 1];
-                      const lastCol = lastSection.columns[lastSection.columns.length - 1];
-                      addWidget(lastCol.id, type);
-                    } else {
-                      addSection(1);
-                    }
-                  }}
-                >
-                  <config.icon className="w-5 h-5 mb-1.5 text-brand-blue-dark group-hover:text-brand-orange transition-colors" />
-                  <span className="text-[9px] font-black uppercase tracking-tighter text-muted-foreground text-center leading-none">{config.label}</span>
-                </div>
-              ))}
+                  <DraggablePaletteWidget 
+                    key={type} 
+                    type={type} 
+                    config={config} 
+                    onAdd={() => {
+                      if (layout.length > 0) {
+                        const lastSection = layout[layout.length - 1];
+                        const lastCol = lastSection.columns[lastSection.columns.length - 1];
+                        addWidget(lastCol.id, type);
+                      } else {
+                        addSection(1);
+                      }
+                    }} 
+                  />
+                ))}
             </div>
           </div>
 
@@ -491,24 +596,22 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
               {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
                 .filter(([type]) => ['units_grid', 'plans_grid', 'rooms_grid', 'popup', 'inner_section', 'icon_box'].includes(type))
                 .map(([type, config]) => (
-                <div 
-                  key={type}
-                  className="flex flex-col items-center justify-center p-3 bg-brand-blue-dark text-white rounded-xl border border-transparent hover:border-brand-orange hover:shadow-lg transition-all cursor-move group h-24 shadow-sm"
-                  draggable
-                  onDragEnd={() => {
-                    if (layout.length > 0) {
-                      const lastSection = layout[layout.length - 1];
-                      const lastCol = lastSection.columns[lastSection.columns.length - 1];
-                      addWidget(lastCol.id, type);
-                    } else {
-                      addSection(1);
-                    }
-                  }}
-                >
-                  <config.icon className="w-6 h-6 mb-2 text-brand-orange group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-tighter text-white/90 text-center leading-none">{config.label}</span>
-                </div>
-              ))}
+                  <DraggablePaletteWidget 
+                    key={type} 
+                    type={type} 
+                    config={config} 
+                    isSpecial 
+                    onAdd={() => {
+                      if (layout.length > 0) {
+                        const lastSection = layout[layout.length - 1];
+                        const lastCol = lastSection.columns[lastSection.columns.length - 1];
+                        addWidget(lastCol.id, type);
+                      } else {
+                        addSection(1);
+                      }
+                    }} 
+                  />
+                ))}
             </div>
           </div>
         </div>
@@ -682,23 +785,52 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             <DndContext 
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
               <SortableContext 
                 items={layout.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex flex-col">
-                  {layout.map((section) => (
-                    <SortableSection 
-                      key={section.id} 
-                      section={section} 
-                      isAdmin={true} 
-                      onElementClick={handleElementClick} 
-                    />
+                <div className="flex flex-col relative">
+                  {layout.map((section, idx) => (
+                    <React.Fragment key={section.id}>
+                      {dropIndicator?.targetId === section.id && dropIndicator.position === 'before' && (
+                        <DropIndicator />
+                      )}
+                      <SortableSection 
+                        section={section} 
+                        isAdmin={true} 
+                        onElementClick={handleElementClick}
+                        activeId={activeDrag?.id}
+                      />
+                      {dropIndicator?.targetId === section.id && dropIndicator.position === 'after' && (
+                        <DropIndicator />
+                      )}
+                    </React.Fragment>
                   ))}
                 </div>
               </SortableContext>
+              
+              <DragOverlay dropAnimation={{
+                sideEffects: defaultDropAnimationSideEffects({
+                  styles: {
+                    active: {
+                      opacity: '0.5',
+                    },
+                  },
+                }),
+              }}>
+                {activeDrag ? (
+                  <div className="bg-white border-2 border-brand-orange rounded-lg shadow-2xl p-4 w-[300px] opacity-80 pointer-events-none">
+                    <div className="flex items-center gap-2">
+                      <Layout className="w-4 h-4 text-brand-orange" />
+                      <span className="text-xs font-bold uppercase">{activeDrag.type === 'section' ? 'Movendo Seção' : 'Movendo Widget'}</span>
+                    </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
             </DndContext>
 
             {layout.length === 0 && (

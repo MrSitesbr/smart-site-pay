@@ -17,10 +17,12 @@ interface PageRendererProps {
   layout: SectionData[];
   isAdmin?: boolean;
   onElementClick?: (type: 'section' | 'column' | 'widget', id: string, data: any) => void;
+  activeDragId?: string | null;
+  dropIndicator?: { position: 'before' | 'after' | 'inside'; targetId: string } | null;
 }
 
 
-export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onElementClick }) => {
+export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onElementClick, activeDragId, dropIndicator }) => {
   if (!layout || !Array.isArray(layout)) return null;
 
   return (
@@ -30,7 +32,9 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onE
           key={section.id} 
           section={section} 
           isAdmin={isAdmin} 
-          onElementClick={onElementClick} 
+          onElementClick={onElementClick}
+          activeDragId={activeDragId}
+          dropIndicator={dropIndicator}
         />
       ))}
     </div>
@@ -41,7 +45,9 @@ const SectionRenderer: React.FC<{
   section: SectionData;
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
-}> = ({ section, isAdmin, onElementClick }) => {
+  activeDragId?: string | null;
+  dropIndicator?: PageRendererProps['dropIndicator'];
+}> = ({ section, isAdmin, onElementClick, activeDragId, dropIndicator }) => {
   const settings = section?.settings || {};
   const columns = Array.isArray(section?.columns) ? section.columns : [];
   
@@ -146,7 +152,10 @@ const SectionRenderer: React.FC<{
             key={column.id} 
             column={column} 
             isAdmin={isAdmin} 
-            onElementClick={onElementClick} 
+            onElementClick={onElementClick}
+            isOver={isAdmin && activeDragId ? (dropIndicator?.targetId === column.id) : false}
+            activeDragId={activeDragId}
+            dropIndicator={dropIndicator}
           />
         ))}
       </div>
@@ -164,7 +173,10 @@ const ColumnRenderer: React.FC<{
   column: ColumnData;
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
-}> = ({ column, isAdmin, onElementClick }) => {
+  isOver?: boolean;
+  activeDragId?: string | null;
+  dropIndicator?: PageRendererProps['dropIndicator'];
+}> = ({ column, isAdmin, onElementClick, isOver, activeDragId, dropIndicator }) => {
   const settings = column?.settings || {};
   const widgets = Array.isArray(column?.widgets) ? column.widgets : [];
   
@@ -181,7 +193,7 @@ const ColumnRenderer: React.FC<{
   return (
     <div 
       style={columnStyle}
-      className={`relative flex flex-col gap-4 ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-blue-500 cursor-pointer group/column p-2' : ''}`}
+      className={`relative flex flex-col gap-4 transition-all duration-200 ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-blue-500 cursor-pointer group/column p-2 min-h-[50px]' : ''} ${isOver ? 'bg-blue-500/5 ring-2 ring-blue-500 ring-inset' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
@@ -194,7 +206,8 @@ const ColumnRenderer: React.FC<{
           key={widget.id} 
           widget={widget} 
           isAdmin={isAdmin} 
-          onElementClick={onElementClick} 
+          onElementClick={onElementClick}
+          isOver={isAdmin && activeDragId ? (dropIndicator?.targetId === widget.id) : false}
         />
       ))}
       
@@ -211,7 +224,8 @@ const WidgetRenderer: React.FC<{
   widget: WidgetData;
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
-}> = ({ widget, isAdmin, onElementClick }) => {
+  isOver?: boolean;
+}> = ({ widget, isAdmin, onElementClick, isOver }) => {
   const content = widget?.content || {};
   const styles = widget?.styles || {};
   
@@ -492,7 +506,7 @@ const WidgetRenderer: React.FC<{
 
   return (
     <div 
-      className={`relative ${isAdmin ? 'hover:outline hover:outline-1 hover:outline-brand-orange cursor-pointer group/widget p-1' : ''}`}
+      className={`relative transition-all duration-200 ${isAdmin ? 'hover:outline hover:outline-1 hover:outline-brand-orange cursor-pointer group/widget p-1' : ''} ${isOver ? 'bg-brand-orange/5 ring-1 ring-brand-orange' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
