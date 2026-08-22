@@ -136,6 +136,7 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
         layout={[section]} 
         isAdmin={isAdmin} 
         onElementClick={onElementClick}
+        activeDragId={activeId}
       />
     </div>
   );
@@ -800,7 +801,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                       <SortableSection 
                         section={section} 
                         isAdmin={true} 
-                        onElementClick={handleElementClick} 
+                        onElementClick={handleElementClick}
+                        activeId={activeDrag?.id}
                       />
                       {dropIndicator?.targetId === section.id && dropIndicator.position === 'after' && (
                         <DropIndicator />
