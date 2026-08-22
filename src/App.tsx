@@ -16,6 +16,7 @@ import AdminSalaDetalhe from "./components/admin/AdminSalaDetalhe";
 import AdminPlanoDetalhe from "./components/admin/AdminPlanoDetalhe";
 import AdminClienteCorpDetalhe from "./components/admin/AdminClienteCorpDetalhe";
 import AuthAdmin from "./pages/AuthAdmin";
+import UnidadeDetalhe from "./pages/UnidadeDetalhe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/contato" element={<DynamicPage />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<ArtigoIndividual />} />
+          <Route path="/unidades/:id" element={<UnidadeDetalhe />} />
           
           {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />

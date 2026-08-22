@@ -42,7 +42,9 @@ export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
           <div className="p-6">
             <h3 className="text-xl font-black text-brand-blue-dark mb-2 uppercase tracking-tight">{unit.nome}</h3>
             <p className="text-muted-foreground text-sm line-clamp-2 mb-4 font-medium">{unit.endereco}</p>
-            <a href={`/unidades/${unit.id}`} className="inline-flex items-center text-brand-orange font-black text-xs uppercase tracking-widest hover:gap-2 transition-all">
+            <a href={`/unidades/${unit.id}`} className="inline-flex items-center text-brand-orange font-black text-xs uppercase tracking-widest hover:gap-2 transition-all" onClick={(e) => {
+              if (window.location.pathname.includes('/admin')) e.preventDefault();
+            }}>
               Ver Detalhes <span className="ml-2">→</span>
             </a>
           </div>
