@@ -257,8 +257,9 @@ export default function AdminMenus() {
                           <SelectItem value="_blank">Nova Aba</SelectItem>
                         </SelectContent>
                       </Select>
-                      {item.url === 'external' && (
+                      {(!pages.some(p => p.route === item.url) && item.url !== '#' && item.url !== '') && (
                         <Input 
+                          value={item.url === 'external' ? '' : item.url}
                           placeholder="https://..." 
                           onChange={(e) => updateItem(item.id, { url: e.target.value })}
                           className="w-[200px] bg-white"
