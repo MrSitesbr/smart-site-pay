@@ -90,7 +90,17 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     setLoading(true);
     try {
       const slug = artigo.slug || artigo.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-      const dataToSave = { ...artigo, slug };
+      
+      // Sanitização básica do metadata para garantir que é um objeto JSON válido
+      const seo_metadata = typeof artigo.seo_metadata === 'string' 
+        ? JSON.parse(artigo.seo_metadata) 
+        : artigo.seo_metadata;
+
+      const dataToSave = { 
+        ...artigo, 
+        slug,
+        seo_metadata: seo_metadata || {} 
+      };
 
       if (artigoId) {
         const { error } = await supabase
