@@ -47,6 +47,7 @@ export interface SectionData {
   columns: ColumnData[];
   settings: {
     fullWidth?: boolean;
+    maxWidth?: number;
     backgroundColor?: string;
     backgroundImage?: string;
     backgroundType?: 'classic' | 'gradient' | 'video' | 'color';
