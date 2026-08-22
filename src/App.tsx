@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DynamicPage from "./pages/DynamicPage";
+import Blog from "./pages/Blog";
+import ArtigoIndividual from "./pages/ArtigoIndividual";
 import Reservar from "./pages/Reservar";
 import Contratar from "./pages/Contratar";
 import Painel from "./pages/Painel";
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/servicos" element={<DynamicPage />} />
           <Route path="/contatos" element={<DynamicPage />} />
           <Route path="/contato" element={<DynamicPage />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<ArtigoIndividual />} />
           
           {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />
