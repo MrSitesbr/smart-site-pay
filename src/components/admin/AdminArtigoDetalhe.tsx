@@ -225,7 +225,11 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setIaModalOpen(true)}
+            onClick={() => {
+              console.log("Abrindo modal da IA...");
+              setIaModalOpen(false);
+              setTimeout(() => setIaModalOpen(true), 50);
+            }}
             disabled={generatingIA}
             className="bg-transparent border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-bold"
           >
