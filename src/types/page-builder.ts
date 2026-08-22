@@ -46,7 +46,8 @@ export interface SectionData {
   id: string;
   columns: ColumnData[];
   settings: {
-    fullWidth?: boolean;
+    layoutType?: 'boxed' | 'full';
+    fullWidth?: boolean; // Deprecated but keeping for compatibility
     maxWidth?: number;
     backgroundColor?: string;
     backgroundImage?: string;

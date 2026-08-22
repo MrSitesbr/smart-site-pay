@@ -111,7 +111,7 @@ const SectionRenderer: React.FC<{
       style={{
         ...sectionStyle, 
         width: '100%', 
-        maxWidth: settings.fullWidth ? '100vw' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
+        maxWidth: (settings.layoutType === 'full' || settings.fullWidth) ? '100%' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
         marginLeft: 'auto',
         marginRight: 'auto'
       }} 

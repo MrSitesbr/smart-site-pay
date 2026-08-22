@@ -421,24 +421,40 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
 
               {type === 'section' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Largura Total</Label>
-                    <input 
-                      type="checkbox" 
-                      checked={data.settings.fullWidth || false} 
-                      onChange={(e) => handleChange('settings.fullWidth', e.target.checked)}
-                      className="w-4 h-4 accent-brand-orange"
-                    />
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Layout className="w-3 h-3" /> Largura do Conteúdo
+                    </Label>
+                    <Select 
+                      value={data.settings.layoutType || (data.settings.fullWidth ? 'full' : 'boxed')} 
+                      onValueChange={(v) => {
+                        handleChange('settings.layoutType', v);
+                        handleChange('settings.fullWidth', v === 'full');
+                      }}
+                    >
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="boxed">Boxed (Caixa)</SelectItem>
+                        <SelectItem value="full">Full Width (Extensão Total)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {!data.settings.fullWidth && (
-                    <div className="space-y-2 p-3 bg-muted/20 rounded-lg">
+
+                  {(data.settings.layoutType === 'boxed' || (!data.settings.layoutType && !data.settings.fullWidth)) && (
+                    <div className="space-y-2 p-3 bg-muted/20 rounded-lg animate-in fade-in slide-in-from-top-1 duration-200">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Largura Máxima (px)</Label>
-                      <Input 
-                        type="number" 
-                        value={data.settings.maxWidth || 1400} 
-                        onChange={(e) => handleChange('settings.maxWidth', parseInt(e.target.value))} 
-                      />
-                      <p className="text-[9px] text-muted-foreground italic">Padrão: 1400px</p>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number" 
+                          value={data.settings.maxWidth || 1400} 
+                          onChange={(e) => handleChange('settings.maxWidth', parseInt(e.target.value))}
+                          className="h-9 text-xs"
+                        />
+                        <span className="text-[10px] font-medium text-muted-foreground">px</span>
+                      </div>
+                      <p className="text-[9px] text-muted-foreground italic">Padrão sugerido: 1400px</p>
                     </div>
                   )}
                   <div className="space-y-2">
