@@ -756,6 +756,7 @@ export type Database = {
           galeria: string[] | null
           id: string
           nome: string
+          servicos_infra: Json | null
         }
         Insert: {
           created_at?: string
@@ -765,6 +766,7 @@ export type Database = {
           galeria?: string[] | null
           id?: string
           nome: string
+          servicos_infra?: Json | null
         }
         Update: {
           created_at?: string
@@ -774,6 +776,7 @@ export type Database = {
           galeria?: string[] | null
           id?: string
           nome?: string
+          servicos_infra?: Json | null
         }
         Relationships: []
       }
