@@ -354,7 +354,15 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   };
 
   const handleExportJSON = () => {
-    const dataStr = JSON.stringify(layout, null, 2);
+    // Wrap layout in an object that includes potential global settings if needed,
+    // though for now the user wants to ensure the structure is clear.
+    const exportData = {
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      sections: layout
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const exportFileDefaultName = `layout-pagina-${pageId}.json`;
     const linkElement = document.createElement('a');
@@ -366,23 +374,27 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
 
   const handleImportJSON = async (jsonText: string) => {
     try {
-      let newLayout = JSON.parse(jsonText);
+      let importedData = JSON.parse(jsonText);
+      let newLayout: SectionData[] = [];
       
-      // Support for Elementor/Standard wrapped formats
-      if (newLayout.sections && Array.isArray(newLayout.sections)) {
-        newLayout = newLayout.sections;
+      // Support for Elementor/Standard wrapped formats or our new export structure
+      if (importedData.sections && Array.isArray(importedData.sections)) {
+        newLayout = importedData.sections;
+      } else if (Array.isArray(importedData)) {
+        newLayout = importedData;
       }
 
-      if (Array.isArray(newLayout)) {
+      if (newLayout.length > 0) {
         const clonedLayout = JSON.parse(JSON.stringify(newLayout));
 
-
-        // Ensure every section has a default background if missing
+        // Ensure every section has a default background and correct layout settings if missing
         const sanitizedLayout = clonedLayout.map((section: any) => ({
           ...section,
           settings: {
             backgroundColor: '#ffffff',
             backgroundType: (section.settings?.backgroundImage || section.settings?.backgroundColor) ? 'classic' : 'color',
+            layoutType: section.settings?.layoutType || (section.settings?.fullWidth ? 'full' : 'boxed'),
+            maxWidth: section.settings?.maxWidth || (section.settings?.layoutType === 'full' || section.settings?.fullWidth ? undefined : 1400),
             ...(section.settings || {})
           }
         }));
