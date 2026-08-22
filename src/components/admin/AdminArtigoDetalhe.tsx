@@ -156,8 +156,15 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
       Tamanho solicitado: ${iaConfig.tamanho}. 
       Use formatação HTML básica (h2, p, strong, ul, li).
       IMPORTANTE: Para separar os parágrafos, você DEVE usar a tag <p> para cada parágrafo. Nunca use apenas quebras de linha simples; garanta que cada bloco de texto esteja envolvido em <p>...</p> para manter o espaçamento correto no editor.
-      Inclua também uma sugestão de Título SEO e Meta Descrição.
-      Retorne no formato JSON: { "titulo": "...", "conteudo": "...", "seo_title": "...", "seo_description": "...", "keywords": "..." }`;
+      IMAGENS: Você deve sugerir UMA imagem principal de banco de imagens gratuito (Unsplash) que combine com o tema. 
+      Retorne no formato JSON: { 
+        "titulo": "...", 
+        "conteudo": "...", 
+        "seo_title": "...", 
+        "seo_description": "...", 
+        "keywords": "...",
+        "sugestao_imagem_url": "https://images.unsplash.com/photo-XXX?auto=format&fit=crop&w=800&q=80" 
+      }`;
 
       const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
@@ -196,6 +203,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           ...prev, 
           title: prev.title || aiResponse.titulo,
           content: prev.content + (prev.content ? "<br/><br/>" : "") + aiContent,
+          image_url: prev.image_url || aiResponse.sugestao_imagem_url || "",
           seo_metadata: {
             title: aiResponse.seo_title,
             description: aiResponse.seo_description,
