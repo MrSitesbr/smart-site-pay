@@ -10,6 +10,7 @@ import { Inspector } from "./Inspector";
 import { WIDGET_REGISTRY } from "./WidgetRegistry";
 import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
 import { toast } from "sonner";
+import { PageSettingsModal } from "./PageSettingsModal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DndContext, 
@@ -589,6 +590,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
+              <div className="h-4 w-[1px] bg-muted mx-1 self-center" />
+              <PageSettingsModal 
+                layout={layout} 
+                onUpdateLayout={(newLayout) => {
+                  setLayout(newLayout);
+                  pushToHistory(newLayout);
+                }} 
+              />
             </div>
           </div>
 
