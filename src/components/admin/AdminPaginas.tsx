@@ -5,8 +5,16 @@ import {
   FileText, Save, X, Plus, GripVertical, ChevronUp, ChevronDown, 
   Trash2, Eye, Layout, Type, Image as ImageIcon, Globe, Search, 
   Map as MapIcon, ChevronRight, Settings2, Palette, Maximize2,
-  ChevronLeft
+  ChevronLeft, AlertTriangle
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getPageContent, updateSectionContent } from "@/lib/cms";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +26,8 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
   const [selectedPage, setSelectedPage] = useState<any>(null);
   const [isBuilding, setIsBuilding] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pageToDelete, setPageToDelete] = useState<any>(null);
 
   useEffect(() => {
     loadPages();
@@ -37,6 +47,33 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
     
     if (data) {
       setPages(data);
+    }
+  };
+  
+  const handleDeletePage = async () => {
+    if (!pageToDelete) return;
+    
+    setLoading(true);
+    try {
+      // Deletar seções primeiro (cascata manual se o banco não tiver)
+      await supabase.from('site_sections').delete().eq('page_id', pageToDelete.id);
+      
+      const { error } = await supabase
+        .from('site_pages')
+        .delete()
+        .eq('id', pageToDelete.id);
+      
+      if (error) throw error;
+      
+      toast.success("Página excluída com sucesso!");
+      setDeleteConfirmOpen(false);
+      setPageToDelete(null);
+      loadPages();
+    } catch (error: any) {
+      console.error("Erro ao excluir página:", error);
+      toast.error("Erro ao excluir: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -220,6 +257,20 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
             className={`group p-8 cursor-pointer border-none shadow-sm hover:shadow-xl transition-all relative overflow-hidden bg-white ${p.is_global ? 'border-l-4 border-l-brand-orange' : ''}`}
             onClick={() => loadPage(p.route)}
           >
+            {!p.is_global && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-20 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPageToDelete(p);
+                  setDeleteConfirmOpen(true);
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-all" />
             <div className="relative z-10">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all ${p.is_global ? 'bg-orange-100 text-brand-orange' : 'bg-orange-50'}`}>
@@ -237,6 +288,37 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
           </Card>
         ))}
       </div>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Excluir Página
+            </DialogTitle>
+            <DialogDescription>
+              Você tem certeza que deseja excluir a página <strong>{pageToDelete?.name}</strong>? 
+              Esta ação é permanente e removerá todo o conteúdo associado a esta rota.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleDeletePage}
+              disabled={loading}
+            >
+              {loading ? "Excluindo..." : "Sim, Excluir Página"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
