@@ -110,14 +110,23 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           .eq('id', artigoId);
         if (error) throw error;
         toast.success("Artigo atualizado!");
+        if (onSave) onSave(); // Notifica o pai para atualizar a lista
+        // Recarrega os dados do banco para garantir que o estado local está sincronizado
+        await fetchArtigo();
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('site_articles')
-          .insert(dataToSave);
+          .insert(dataToSave)
+          .select()
+          .single();
         if (error) throw error;
         toast.success("Artigo criado!");
+        if (onSave) onSave();
+        // Se for um novo artigo, poderíamos redirecionar ou apenas atualizar o estado local se tivermos o ID
+        if (data?.id) {
+           // Se o componente for controlado pelo pai, talvez o pai mude o artigoId prop
+        }
       }
-      onSave();
     } catch (error: any) {
       console.error(error);
       toast.error("Erro ao salvar: " + error.message);
@@ -146,6 +155,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
       Escreva um artigo completo otimizado para a palavra-chave foco.
       Tamanho solicitado: ${iaConfig.tamanho}. 
       Use formatação HTML básica (h2, p, strong, ul, li).
+      IMPORTANTE: Para separar os parágrafos, você DEVE usar a tag <p> para cada parágrafo. Nunca use apenas quebras de linha simples; garanta que cada bloco de texto esteja envolvido em <p>...</p> para manter o espaçamento correto no editor.
       Inclua também uma sugestão de Título SEO e Meta Descrição.
       Retorne no formato JSON: { "titulo": "...", "conteudo": "...", "seo_title": "...", "seo_description": "...", "keywords": "..." }`;
 
@@ -173,8 +183,13 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         
         // Limpeza e formatação
         aiContent = aiContent.replace(/^null\s*/i, '');
+        
+        // Garante que parágrafos simples sejam convertidos para HTML se a IA falhar em enviar tags
         if (!aiContent.includes('<p>') && !aiContent.includes('<div>')) {
-          aiContent = aiContent.split(/\n\s*\n/).map((p: string) => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
+          aiContent = aiContent.split(/\n\s*\n/).map((p: string) => `<p>${p.trim().replace(/\n/g, '<br/>')}</p>`).join('');
+        } else {
+          // Se já tem tags, garante que quebras de linha duplas dentro de parágrafos não sumam
+          aiContent = aiContent.replace(/\n\s*\n/g, '</p><p>');
         }
 
         setArtigo(prev => ({ 

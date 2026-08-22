@@ -94,10 +94,10 @@ export function ArtigoIAModal({ isOpen, onClose, onGenerate, loading }: ArtigoIA
                   value={config.tamanho} 
                   onValueChange={(val: any) => setConfig({ ...config, tamanho: val })}
                 >
-                  <SelectTrigger className="h-12 border-brand-blue-dark/10 rounded-xl">
-                    <SelectValue />
+                  <SelectTrigger className="h-12 border-brand-blue-dark/10 rounded-xl bg-white">
+                    <SelectValue placeholder="Selecione o tamanho" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
+                  <SelectContent className="rounded-xl z-[110]">
                     <SelectItem value="pequeno">Curto (~300 words)</SelectItem>
                     <SelectItem value="medio">Médio (~600 words)</SelectItem>
                     <SelectItem value="grande">Longo (+1200 words)</SelectItem>
