@@ -17,10 +17,12 @@ interface PageRendererProps {
   layout: SectionData[];
   isAdmin?: boolean;
   onElementClick?: (type: 'section' | 'column' | 'widget', id: string, data: any) => void;
+  activeDragId?: string | null;
+  dropIndicator?: { position: 'before' | 'after' | 'inside'; targetId: string } | null;
 }
 
 
-export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onElementClick }) => {
+export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onElementClick, activeDragId, dropIndicator }) => {
   if (!layout || !Array.isArray(layout)) return null;
 
   return (
@@ -30,7 +32,9 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onE
           key={section.id} 
           section={section} 
           isAdmin={isAdmin} 
-          onElementClick={onElementClick} 
+          onElementClick={onElementClick}
+          activeDragId={activeDragId}
+          dropIndicator={dropIndicator}
         />
       ))}
     </div>
@@ -41,7 +45,9 @@ const SectionRenderer: React.FC<{
   section: SectionData;
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
-}> = ({ section, isAdmin, onElementClick }) => {
+  activeDragId?: string | null;
+  dropIndicator?: PageRendererProps['dropIndicator'];
+}> = ({ section, isAdmin, onElementClick, activeDragId, dropIndicator }) => {
   const settings = section?.settings || {};
   const columns = Array.isArray(section?.columns) ? section.columns : [];
   
@@ -146,7 +152,10 @@ const SectionRenderer: React.FC<{
             key={column.id} 
             column={column} 
             isAdmin={isAdmin} 
-            onElementClick={onElementClick} 
+            onElementClick={onElementClick}
+            isOver={isAdmin && activeDragId ? (dropIndicator?.targetId === column.id) : false}
+            activeDragId={activeDragId}
+            dropIndicator={dropIndicator}
           />
         ))}
       </div>
@@ -165,7 +174,9 @@ const ColumnRenderer: React.FC<{
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
   isOver?: boolean;
-}> = ({ column, isAdmin, onElementClick, isOver }) => {
+  activeDragId?: string | null;
+  dropIndicator?: PageRendererProps['dropIndicator'];
+}> = ({ column, isAdmin, onElementClick, isOver, activeDragId, dropIndicator }) => {
   const settings = column?.settings || {};
   const widgets = Array.isArray(column?.widgets) ? column.widgets : [];
   
@@ -195,7 +206,8 @@ const ColumnRenderer: React.FC<{
           key={widget.id} 
           widget={widget} 
           isAdmin={isAdmin} 
-          onElementClick={onElementClick} 
+          onElementClick={onElementClick}
+          isOver={isAdmin && activeDragId ? (dropIndicator?.targetId === widget.id) : false}
         />
       ))}
       
