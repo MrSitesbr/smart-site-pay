@@ -30,6 +30,7 @@ const App = () => (
         <Routes>
           {/* Main Dynamic Pages */}
           <Route path="/" element={<DynamicPage />} />
+          <Route path="/unidades/:unidadeId" element={<DynamicPage />} />
           <Route path="/institucional" element={<DynamicPage />} />
           <Route path="/unidades" element={<DynamicPage />} />
           <Route path="/escritorio-privativo" element={<DynamicPage />} />

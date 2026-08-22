@@ -8,7 +8,7 @@ import { getPageContent } from "@/lib/cms";
 import { SectionData } from "@/types/page-builder";
 import { supabase } from "@/integrations/supabase/client";
 
-const DynamicPage = ({ isAdmin = false }: { isAdmin?: boolean }) => {
+const DynamicPage = ({ isAdmin = false, unidadeId }: { isAdmin?: boolean, unidadeId?: string }) => {
   const [layout, setLayout] = useState<SectionData[]>([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -16,7 +16,7 @@ const DynamicPage = ({ isAdmin = false }: { isAdmin?: boolean }) => {
   useEffect(() => {
     const loadContent = async () => {
       setLoading(true);
-      const pageData = await getPageContent(location.pathname);
+      const pageData = await getPageContent(location.pathname, unidadeId);
       
       if (pageData && pageData.site_sections) {
         // Filtra seções visíveis e prioriza 'dynamic-layout'
@@ -63,7 +63,7 @@ const DynamicPage = ({ isAdmin = false }: { isAdmin?: boolean }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [location.pathname]);
+  }, [location.pathname, unidadeId]);
 
   return (
     <div className="min-h-screen">
