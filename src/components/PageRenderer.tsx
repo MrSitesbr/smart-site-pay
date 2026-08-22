@@ -111,11 +111,8 @@ const SectionRenderer: React.FC<{
       style={{
         ...sectionStyle, 
         width: '100%', 
-        maxWidth: (settings.layoutType === 'full' || settings.fullWidth) ? '100%' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
-        marginLeft: 'auto',
-        marginRight: 'auto'
       }} 
-      className={`relative ${settings.fullWidth ? 'w-full' : 'px-4'} ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
+      className={`relative ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
@@ -136,8 +133,14 @@ const SectionRenderer: React.FC<{
       {settings.backgroundImage && <div style={overlayStyle} />}
       {getShapeDivider()}
       
-      <div className={`relative z-10 w-full grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'}`}
-           style={{ gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr', width: '100%' }}>
+      <div className={`relative z-10 w-full grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'} ${settings.layoutType === 'full' || settings.fullWidth ? '' : 'px-4'}`}
+           style={{ 
+             gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr', 
+             width: '100%',
+             maxWidth: (settings.layoutType === 'full' || settings.fullWidth) ? 'none' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
+             marginLeft: 'auto',
+             marginRight: 'auto'
+           }}>
         {columns.filter(Boolean).map((column) => (
           <ColumnRenderer 
             key={column.id} 
