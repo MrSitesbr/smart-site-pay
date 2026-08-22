@@ -635,6 +635,7 @@ export type Database = {
           id: string
           image_url: string | null
           published_at: string | null
+          seo_metadata: Json | null
           slug: string | null
           status: string | null
           title: string
@@ -647,6 +648,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           published_at?: string | null
+          seo_metadata?: Json | null
           slug?: string | null
           status?: string | null
           title: string
@@ -659,6 +661,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           published_at?: string | null
+          seo_metadata?: Json | null
           slug?: string | null
           status?: string | null
           title?: string
