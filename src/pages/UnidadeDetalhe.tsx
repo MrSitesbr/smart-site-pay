@@ -39,20 +39,22 @@ const UnidadeDetalhe = () => {
       }
 
       // Fallback: If no specific page exists for this unit, we could show a default template
-      // For now, let's try to fetch unit data directly if layout is empty
       const { data: unit } = await supabase.from('unidades').select('*').eq('id', id).single();
       
       if (unit) {
-        // Create a basic layout if none exists in CMS
         const defaultLayout: SectionData[] = [
           {
             id: 'unit-hero',
-            type: 'hero',
-            settings: { fullWidth: true, backgroundColor: '#002f5e' },
+            settings: { 
+              fullWidth: true, 
+              backgroundColor: '#002f5e',
+              padding: { top: 100, bottom: 100, left: 20, right: 20 }
+            },
             columns: [
               {
                 id: 'c1',
                 widthPercentage: 100,
+                settings: {},
                 widgets: [
                   {
                     id: 'w1',
@@ -72,12 +74,14 @@ const UnidadeDetalhe = () => {
           },
           {
             id: 'unit-content',
-            type: 'section',
-            settings: { padding: { top: 80, bottom: 80 } },
+            settings: { 
+              padding: { top: 80, bottom: 80, left: 20, right: 20 } 
+            },
             columns: [
               {
                 id: 'c2',
                 widthPercentage: 100,
+                settings: {},
                 widgets: [
                   {
                     id: 'w3',
@@ -88,7 +92,8 @@ const UnidadeDetalhe = () => {
                   {
                     id: 'w4',
                     type: 'text',
-                    content: { text: unit.descricao || 'Conheça nossa unidade e aproveite a melhor infraestrutura de Santos.' }
+                    content: { text: unit.descricao || 'Conheça nossa unidade e aproveite a melhor infraestrutura de Santos.' },
+                    styles: {}
                   }
                 ]
               }
