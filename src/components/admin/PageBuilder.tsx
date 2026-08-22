@@ -1,4 +1,49 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
+
+// Drop Indicator Component
+const DropIndicator = () => (
+  <div className="relative h-1 w-full z-[100] group/indicator animate-in fade-in zoom-in duration-200">
+    <div className="absolute inset-0 bg-brand-orange h-[2px] top-1/2 -translate-y-1/2 shadow-[0_0_8px_rgba(255,107,0,0.5)]"></div>
+    <div className="absolute left-1/2 -translate-x-1/2 -top-3 bg-brand-orange text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg border border-white/20 whitespace-nowrap">
+      SOLTAR AQUI
+    </div>
+  </div>
+);
+
+// Draggable Palette Widget Component
+const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+    id: `palette_${type}_${Math.random()}`,
+    data: {
+      type: 'widget',
+      widgetType: type
+    }
+  });
+
+  return (
+    <div 
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onAdd}
+      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group transition-all duration-200 ${
+        isSpecial 
+          ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
+          : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
+      } ${isDragging ? 'opacity-30 scale-95' : 'opacity-100'}`}
+    >
+      <config.icon className={`w-5 h-5 mb-1.5 transition-colors group-hover:scale-110 ${
+        isSpecial ? 'text-brand-orange' : 'text-brand-blue-dark group-hover:text-brand-orange'
+      }`} />
+      <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${
+        isSpecial ? 'text-white/90' : 'text-muted-foreground'
+      }`}>
+        {config.label}
+      </span>
+    </div>
+  );
+};
+
 import { Button } from "@/components/ui/button";
 import { 
   Plus, Save, Layout, Eye, Smartphone, Monitor, 
