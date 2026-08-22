@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { MediaPickerModal } from "./MediaPickerModal";
+import { ArtigoIAModal, type ArtigoIAConfig } from "./ArtigoIAModal";
 
 // Configuração básica do editor
 const modules = {
@@ -35,6 +36,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(artigoId ? true : false);
   const [generatingIA, setGeneratingIA] = useState(false);
+  const [iaModalOpen, setIaModalOpen] = useState(false);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<'content' | 'featured'>('featured');
   
@@ -46,6 +48,11 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     author: "Equipe 013",
     status: "Rascunho",
     image_url: "",
+    seo_metadata: {
+      title: "",
+      description: "",
+      keywords: ""
+    }
   });
 
   const quillRef = useRef<ReactQuill>(null);
@@ -83,7 +90,17 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     setLoading(true);
     try {
       const slug = artigo.slug || artigo.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-      const dataToSave = { ...artigo, slug };
+      
+      // Sanitização básica do metadata para garantir que é um objeto JSON válido
+      const seo_metadata = typeof artigo.seo_metadata === 'string' 
+        ? JSON.parse(artigo.seo_metadata) 
+        : artigo.seo_metadata;
+
+      const dataToSave = { 
+        ...artigo, 
+        slug,
+        seo_metadata: seo_metadata || {} 
+      };
 
       if (artigoId) {
         const { error } = await supabase
@@ -108,10 +125,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     }
   };
 
-  const generateWithMistral = async () => {
-    const topic = prompt("Sobre qual tema você deseja gerar um artigo de cauda longa (Começo, Meio e Fim)?");
-    if (!topic) return;
-
+  const generateWithMistral = async (iaConfig: ArtigoIAConfig) => {
     setGeneratingIA(true);
     try {
       const { data: settingsData } = await supabase
@@ -127,6 +141,13 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         return;
       }
 
+      const promptSystem = `Você é um redator especialista em SEO e Coworking. 
+      Escreva um artigo completo otimizado para a palavra-chave foco.
+      Tamanho solicitado: ${iaConfig.tamanho}. 
+      Use formatação HTML básica (h2, p, strong, ul, li).
+      Inclua também uma sugestão de Título SEO e Meta Descrição.
+      Retorne no formato JSON: { "titulo": "...", "conteudo": "...", "seo_title": "...", "seo_description": "...", "keywords": "..." }`;
+
       const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -134,44 +155,44 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "mistral-tiny",
+          model: "mistral-medium",
           messages: [
-            {
-              role: "system", 
-              content: "Você é um redator especialista em SEO e Coworking. Escreva um artigo completo de cauda longa com Introdução, Desenvolvimento (com sub-títulos) e Conclusão. Use formatação HTML básica (h2, p, strong, ul, li)."
-            },
-            {
-              role: "user",
-              content: `Escreva um artigo completo sobre o tema: ${topic}`
-            }
-          ]
+            { role: "system", content: promptSystem },
+            { role: "user", content: `Escreva sobre: ${iaConfig.prompt}. Palavras-chave: ${iaConfig.keywords || 'automático'}` }
+          ],
+          response_format: { type: "json_object" }
         })
       });
 
       const data = await response.json();
-      let aiContent = data.choices[0].message.content;
+      const aiResponse = JSON.parse(data.choices[0].message.content);
       
-      if (aiContent) {
-        // Limpeza de artefatos da IA (markdown blocks e 'null' no início)
-        aiContent = aiContent.replace(/^null\s*/i, '');
-        aiContent = aiContent.replace(/```html\s*([\s\S]*?)\s*```/gi, '$1');
-        aiContent = aiContent.replace(/```\s*([\s\S]*?)\s*```/gi, '$1');
+      if (aiResponse) {
+        let aiContent = aiResponse.conteudo;
         
-        // Melhoria na separação de parágrafos (garantir que quebras de linha duplas virem novos parágrafos HTML)
-        // Se a IA retornar texto puro com quebras de linha
+        // Limpeza e formatação
+        aiContent = aiContent.replace(/^null\s*/i, '');
         if (!aiContent.includes('<p>') && !aiContent.includes('<div>')) {
-          aiContent = aiContent
-            .split(/\n\s*\n/)
-            .map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
-            .join('');
+          aiContent = aiContent.split(/\n\s*\n/).map((p: string) => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
         }
 
-        setArtigo(prev => ({ ...prev, content: prev.content + (prev.content ? "<br/><br/>" : "") + aiContent }));
-        toast.success("Conteúdo gerado com sucesso pela IA!");
+        setArtigo(prev => ({ 
+          ...prev, 
+          title: prev.title || aiResponse.titulo,
+          content: prev.content + (prev.content ? "<br/><br/>" : "") + aiContent,
+          seo_metadata: {
+            title: aiResponse.seo_title,
+            description: aiResponse.seo_description,
+            keywords: aiResponse.keywords
+          }
+        }));
+        
+        setIaModalOpen(false);
+        toast.success("Conteúdo e SEO gerados com sucesso!");
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao gerar conteúdo com IA. Verifique sua chave de API.");
+      toast.error("Erro ao gerar conteúdo com IA.");
     } finally {
       setGeneratingIA(false);
     }
@@ -204,7 +225,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={generateWithMistral}
+            onClick={() => setIaModalOpen(true)}
             disabled={generatingIA}
             className="bg-transparent border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white font-bold"
           >
@@ -330,20 +351,65 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
             </Card>
 
             <Card className="p-6 border-none shadow-sm space-y-4">
-              <h3 className="font-bold text-brand-blue-dark border-b pb-2">SEO & Resumo</h3>
-              <div className="space-y-2">
-                <Label>Resumo (Excerpt)</Label>
-                <Textarea 
-                  value={artigo.excerpt}
-                  onChange={e => setArtigo({...artigo, excerpt: e.target.value})}
-                  className="text-xs h-24"
-                  placeholder="Breve descrição para redes sociais e buscas..."
-                />
+              <h3 className="font-bold text-brand-blue-dark border-b pb-2">SEO & Metadados</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Título SEO</Label>
+                  <Input 
+                    value={(artigo.seo_metadata as any)?.title || ""}
+                    onChange={e => setArtigo({
+                      ...artigo, 
+                      seo_metadata: { ...(artigo.seo_metadata as any), title: e.target.value }
+                    })}
+                    placeholder="Título para o Google..."
+                    className="text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Palavras-Chave (Keywords)</Label>
+                  <Input 
+                    value={(artigo.seo_metadata as any)?.keywords || ""}
+                    onChange={e => setArtigo({
+                      ...artigo, 
+                      seo_metadata: { ...(artigo.seo_metadata as any), keywords: e.target.value }
+                    })}
+                    placeholder="coworking, escritorio, santus..."
+                    className="text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Meta Descrição</Label>
+                  <Textarea 
+                    value={(artigo.seo_metadata as any)?.description || artigo.excerpt}
+                    onChange={e => setArtigo({
+                      ...artigo, 
+                      seo_metadata: { ...(artigo.seo_metadata as any), description: e.target.value }
+                    })}
+                    className="text-xs h-24"
+                    placeholder="Breve descrição para o Google..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Resumo Interno (Excerpt)</Label>
+                  <Textarea 
+                    value={artigo.excerpt}
+                    onChange={e => setArtigo({...artigo, excerpt: e.target.value})}
+                    className="text-xs h-20"
+                    placeholder="Exibido na listagem do blog..."
+                  />
+                </div>
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      <ArtigoIAModal 
+        isOpen={iaModalOpen}
+        onClose={() => setIaModalOpen(false)}
+        onGenerate={generateWithMistral}
+        loading={generatingIA}
+      />
 
       <MediaPickerModal 
         isOpen={mediaPickerOpen} 

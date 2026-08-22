@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, User, ArrowLeft } from "lucide-react";
+import { Helmet } from "react-helmet";
 
 export default function ArtigoIndividual() {
   const { slug } = useParams();
@@ -50,6 +51,16 @@ export default function ArtigoIndividual() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>{(article.seo_metadata as any)?.title || article.title} | Coworking 013</title>
+        <meta name="description" content={(article.seo_metadata as any)?.description || article.excerpt || ""} />
+        {(article.seo_metadata as any)?.keywords && (
+          <meta name="keywords" content={(article.seo_metadata as any)?.keywords} />
+        )}
+        <meta property="og:title" content={(article.seo_metadata as any)?.title || article.title} />
+        <meta property="og:description" content={(article.seo_metadata as any)?.description || article.excerpt || ""} />
+        {article.image_url && <meta property="og:image" content={article.image_url} />}
+      </Helmet>
       <Navbar />
       <main className="pt-32 pb-20">
         <article className="max-w-4xl mx-auto px-6">
