@@ -3,6 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { WIDGET_REGISTRY } from "../WidgetRegistry";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Wifi, Coffee, Printer, Info } from "lucide-react";
+
+const IconMap: Record<string, any> = {
+  Wifi,
+  Coffee,
+  Printer,
+  Info
+};
 
 export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   const [units, setUnits] = useState<any[]>([]);
@@ -42,6 +50,21 @@ export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
           <div className="p-6">
             <h3 className="text-xl font-black text-brand-blue-dark mb-2 uppercase tracking-tight">{unit.nome}</h3>
             <p className="text-muted-foreground text-sm line-clamp-2 mb-4 font-medium">{unit.endereco}</p>
+            
+            {unit.servicos_infra && Array.isArray(unit.servicos_infra) && unit.servicos_infra.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {unit.servicos_infra.map((s: any) => {
+                  const Icon = IconMap[s.icone] || Info;
+                  return (
+                    <div key={s.id} className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded text-[10px] font-bold text-slate-600 border border-slate-100" title={s.descricao}>
+                      <Icon className="w-3 h-3 text-brand-orange" />
+                      {s.nome}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <a href={`/unidades/${unit.id}`} className="inline-flex items-center text-brand-orange font-black text-xs uppercase tracking-widest hover:gap-2 transition-all" onClick={(e) => {
               if (window.location.pathname.includes('/admin')) e.preventDefault();
             }}>
