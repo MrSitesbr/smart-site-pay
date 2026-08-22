@@ -164,7 +164,8 @@ const ColumnRenderer: React.FC<{
   column: ColumnData;
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
-}> = ({ column, isAdmin, onElementClick }) => {
+  isOver?: boolean;
+}> = ({ column, isAdmin, onElementClick, isOver }) => {
   const settings = column?.settings || {};
   const widgets = Array.isArray(column?.widgets) ? column.widgets : [];
   
@@ -181,7 +182,7 @@ const ColumnRenderer: React.FC<{
   return (
     <div 
       style={columnStyle}
-      className={`relative flex flex-col gap-4 ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-blue-500 cursor-pointer group/column p-2' : ''}`}
+      className={`relative flex flex-col gap-4 transition-all duration-200 ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-blue-500 cursor-pointer group/column p-2 min-h-[50px]' : ''} ${isOver ? 'bg-blue-500/5 ring-2 ring-blue-500 ring-inset' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
@@ -211,7 +212,8 @@ const WidgetRenderer: React.FC<{
   widget: WidgetData;
   isAdmin?: boolean;
   onElementClick?: PageRendererProps['onElementClick'];
-}> = ({ widget, isAdmin, onElementClick }) => {
+  isOver?: boolean;
+}> = ({ widget, isAdmin, onElementClick, isOver }) => {
   const content = widget?.content || {};
   const styles = widget?.styles || {};
   
@@ -492,7 +494,7 @@ const WidgetRenderer: React.FC<{
 
   return (
     <div 
-      className={`relative ${isAdmin ? 'hover:outline hover:outline-1 hover:outline-brand-orange cursor-pointer group/widget p-1' : ''}`}
+      className={`relative transition-all duration-200 ${isAdmin ? 'hover:outline hover:outline-1 hover:outline-brand-orange cursor-pointer group/widget p-1' : ''} ${isOver ? 'bg-brand-orange/5 ring-1 ring-brand-orange' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
           e.stopPropagation();
