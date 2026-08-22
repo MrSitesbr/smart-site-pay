@@ -231,7 +231,7 @@ export default function AdminMenus() {
                         className="font-bold bg-white"
                       />
                       <Select 
-                        value={item.url} 
+                        value={pages.some(p => p.route === item.url) ? item.url : (item.url === '#' ? '#' : 'external')} 
                         onValueChange={(val) => updateItem(item.id, { url: val })}
                       >
                         <SelectTrigger className="w-[150px] bg-white">
