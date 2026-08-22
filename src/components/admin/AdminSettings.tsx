@@ -1,17 +1,73 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, Mail, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Mail, Lock, Save } from "lucide-react";
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [mistralKey, setMistralKey] = useState("");
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    const { data } = await supabase
+      .from('site_sections')
+      .select('content')
+      .eq('section_key', 'global_settings')
+      .single();
+    
+    if (data && data.content && typeof data.content === 'object') {
+      const content = data.content as any;
+      if (content.mistral_api_key) setMistralKey(content.mistral_api_key);
+    }
+  };
+
+  const handleUpdateMistral = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { data: existing } = await supabase
+        .from('site_sections')
+        .select('id, content')
+        .eq('section_key', 'global_settings')
+        .single();
+
+      const newContent = existing?.content ? { ...(existing.content as any), mistral_api_key: mistralKey } : { mistral_api_key: mistralKey };
+
+      if (existing) {
+        await supabase
+          .from('site_sections')
+          .update({ content: newContent })
+          .eq('id', existing.id);
+      } else {
+        // Busca uma página qualquer para vincular
+        const { data: page } = await supabase.from('site_pages').select('id').limit(1).single();
+        if (page) {
+          await supabase.from('site_sections').insert({
+            page_id: page.id,
+            section_key: 'global_settings',
+            content: newContent,
+            order_index: 999
+          });
+        }
+      }
+      toast({ title: "Configurações salvas", description: "Chave da Mistral AI atualizada." });
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleUpdateEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,6 +207,42 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-none shadow-sm max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-brand-blue-dark">
+            <ShieldCheck className="w-5 h-5" />
+            Mistral AI
+          </CardTitle>
+          <CardDescription>
+            Configure a chave de API da Mistral para geração de artigos com IA.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleUpdateMistral} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="mistral-key">Mistral API Key</Label>
+              <Input
+                id="mistral-key"
+                type="password"
+                placeholder="Insira sua chave da Mistral"
+                value={mistralKey}
+                onChange={(e) => setMistralKey(e.target.value)}
+                className="border-brand-blue-dark/10"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Salvar Configuração
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
+
   );
 }
