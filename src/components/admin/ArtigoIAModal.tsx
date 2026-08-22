@@ -90,19 +90,21 @@ export function ArtigoIAModal({ isOpen, onClose, onGenerate, loading }: ArtigoIA
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-brand-blue-dark font-bold">Tamanho</Label>
-                <Select 
-                  value={config.tamanho} 
-                  onValueChange={(val: any) => setConfig({ ...config, tamanho: val })}
-                >
-                  <SelectTrigger className="h-12 border-brand-blue-dark/10 rounded-xl bg-white">
-                    <SelectValue placeholder="Selecione o tamanho" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl z-[110]">
-                    <SelectItem value="pequeno">Curto (~300 words)</SelectItem>
-                    <SelectItem value="medio">Médio (~600 words)</SelectItem>
-                    <SelectItem value="grande">Longo (+1200 words)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select 
+                    value={config.tamanho} 
+                    onValueChange={(val: any) => setConfig({ ...config, tamanho: val })}
+                  >
+                    <SelectTrigger className="h-12 border-brand-blue-dark/10 rounded-xl bg-white relative z-10">
+                      <SelectValue placeholder="Selecione o tamanho" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl !z-[9999] bg-white border border-border shadow-2xl">
+                      <SelectItem value="pequeno">Curto (~300 words)</SelectItem>
+                      <SelectItem value="medio">Médio (~600 words)</SelectItem>
+                      <SelectItem value="grande">Longo (+1200 words)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-brand-blue-dark font-bold">Palavras-chave</Label>

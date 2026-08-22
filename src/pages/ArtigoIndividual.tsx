@@ -89,7 +89,7 @@ export default function ArtigoIndividual() {
           )}
 
           <div 
-            className="prose prose-lg max-w-none prose-slate prose-headings:text-brand-blue-dark prose-headings:font-bold prose-a:text-brand-orange"
+            className="prose prose-lg max-w-none prose-slate prose-headings:text-brand-blue-dark prose-headings:font-bold prose-a:text-brand-orange prose-img:rounded-3xl prose-img:shadow-lg"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </article>
