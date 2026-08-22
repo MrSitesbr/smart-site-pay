@@ -137,6 +137,7 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
         isAdmin={isAdmin} 
         onElementClick={onElementClick}
         activeDragId={activeId}
+        dropIndicator={null}
       />
     </div>
   );
