@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, User, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 export default function Blog() {
   const [articles, setArticles] = useState<any[]>([]);
@@ -29,6 +30,10 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Helmet>
+        <title>Blog | CoWorking 013 - Empreendedorismo e Inovação</title>
+        <meta name="description" content="Acompanhe as últimas notícias, dicas e novidades sobre coworking e empreendedorismo em Santos no blog do CoWorking 013." />
+      </Helmet>
       <Navbar />
       <main className="pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
