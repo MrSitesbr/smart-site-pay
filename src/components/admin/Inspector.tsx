@@ -422,14 +422,32 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
               {type === 'section' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <Layout className="w-3 h-3" /> Largura do Conteúdo
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Layout className="w-3 h-3" /> Largura do Conteúdo
+                      </Label>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 text-brand-orange hover:bg-brand-orange/10"
+                        title="Configurações de Layout"
+                        onClick={() => {
+                          toast.info("Configurações de largura aplicadas à seção.");
+                        }}
+                      >
+                        <Settings2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                     <Select 
                       value={data.settings.layoutType || (data.settings.fullWidth ? 'full' : 'boxed')} 
                       onValueChange={(v) => {
                         handleChange('settings.layoutType', v);
                         handleChange('settings.fullWidth', v === 'full');
+                        if (v === 'full') {
+                          handleChange('settings.maxWidth', undefined);
+                        } else if (!data.settings.maxWidth) {
+                          handleChange('settings.maxWidth', 1400);
+                        }
                       }}
                     >
                       <SelectTrigger className="h-9 text-xs">

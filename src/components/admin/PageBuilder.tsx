@@ -354,7 +354,15 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   };
 
   const handleExportJSON = () => {
-    const dataStr = JSON.stringify(layout, null, 2);
+    // Wrap layout in an object that includes potential global settings if needed,
+    // though for now the user wants to ensure the structure is clear.
+    const exportData = {
+      version: "1.0",
+      timestamp: new Date().toISOString(),
+      sections: layout
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const exportFileDefaultName = `layout-pagina-${pageId}.json`;
     const linkElement = document.createElement('a');
