@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import logoIcon from "@/assets/logo-icon.png.asset.json";
+const logoIconUrlDefault = "/assets/logo.png";
 import { getPageContent } from "@/lib/cms";
 
 const Footer = () => {
@@ -101,7 +101,7 @@ const Footer = () => {
   const workingHoursSat = cmsContent?.working_hours_sat || "Sáb: 08h às 12h";
   const logoTop = cmsContent?.logo_text_top || "CoWorking";
   const logoBottom = cmsContent?.logo_text_bottom || "013";
-  const logoIconUrl = cmsContent?.logo_icon || logoIcon.url;
+  const logoIconUrl = cmsContent?.logo_icon || logoIconUrlDefault;
 
   return (
     <footer className="bg-brand-blue-dark text-white pt-16 pb-6">
