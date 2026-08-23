@@ -863,7 +863,10 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 }}
               >
                 {activeDrag && (
-                  <div className="pointer-events-none transform scale-105 shadow-2xl transition-transform duration-200 animate-in zoom-in-95">
+                  <div 
+                    className="fixed pointer-events-none transform shadow-2xl transition-transform duration-200 animate-in zoom-in-95"
+                    style={{ zIndex: 9999, position: 'fixed' }}
+                  >
                     {activeDrag.type === 'section' ? (
                       <div className="bg-brand-orange text-white p-4 rounded-lg shadow-2xl border-2 border-white/20 min-w-[300px] flex items-center gap-3 backdrop-blur-sm opacity-90">
                         <Layout className="w-5 h-5" />
