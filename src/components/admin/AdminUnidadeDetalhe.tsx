@@ -97,7 +97,7 @@ export default function AdminUnidadeDetalhe() {
       .eq('status' as any, 'aguardando')
       .order('priority' as any, { ascending: false });
     
-    if (!error) setWaitingList(data || []);
+    if (!error && data) setWaitingList(data as any as WaitingListEntry[]);
   }
 
   async function fetchClientes() {
