@@ -824,13 +824,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         {/* Scrollable Canvas Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-brand-gray/5">
           <div className={`mx-auto transition-all duration-300 bg-white shadow-2xl min-h-full ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
-            <DndContext 
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
+            <div>
               <SortableContext 
                 items={layout.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
