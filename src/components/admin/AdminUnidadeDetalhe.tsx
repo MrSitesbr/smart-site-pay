@@ -90,7 +90,7 @@ export default function AdminUnidadeDetalhe() {
   }
 
   async function fetchWaitingList() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('waiting_list')
       .select('*, clientes_corp(razao_social, nome_fantasia)')
       .eq('unidade_id', id)
@@ -112,7 +112,7 @@ export default function AdminUnidadeDetalhe() {
   async function handleAddWaitingEntry() {
     if (!newEntry.cliente_id) return toast.error("Selecione um cliente");
 
-    const { error } = await supabase.from('waiting_list').insert([{
+    const { error } = await (supabase as any).from('waiting_list').insert([{
       ...newEntry,
       unidade_id: id,
       status: 'aguardando'
@@ -129,7 +129,7 @@ export default function AdminUnidadeDetalhe() {
 
   async function handleRemoveEntry(entryId: string) {
     if (!confirm("Remover da lista?")) return;
-    const { error } = await supabase.from('waiting_list').update({ status: 'cancelado' }).eq('id', entryId);
+    const { error } = await (supabase as any).from('waiting_list').update({ status: 'cancelado' }).eq('id', entryId);
     if (!error) fetchWaitingList();
   }
 
