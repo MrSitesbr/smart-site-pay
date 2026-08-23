@@ -849,50 +849,6 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 </div>
               </SortableContext>
               
-              <DragOverlay 
-                zIndex={9999}
-                dropAnimation={{
-                  duration: 250,
-                  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-                  sideEffects: defaultDropAnimationSideEffects({
-                    styles: {
-                      active: {
-                        opacity: '0.5',
-                      },
-                    },
-                  }),
-                }}
-              >
-                {activeDrag && (
-                  <div 
-                    className="pointer-events-none transform shadow-2xl transition-transform duration-200 animate-in zoom-in-95 scale-105"
-                    style={{ zIndex: 9999 }}
-                  >
-                    {activeDrag.type === 'section' ? (
-                      <div className="bg-brand-orange text-white p-4 rounded-lg shadow-2xl border-2 border-white/20 min-w-[300px] flex items-center gap-3 backdrop-blur-sm opacity-90">
-                        <Layout className="w-5 h-5" />
-                        <span className="font-bold uppercase tracking-widest text-xs">Movendo Seção</span>
-                      </div>
-                    ) : activeDrag.type === 'palette_widget' ? (
-                      <div className="bg-white text-brand-blue-dark p-4 rounded-xl shadow-2xl border-2 border-brand-orange min-w-[150px] flex flex-col items-center gap-2 relative">
-                        {activeDrag.data.config?.icon && 
-                          React.createElement(activeDrag.data.config.icon, { className: "w-6 h-6 text-brand-orange" })}
-                        <span className="font-bold uppercase tracking-tighter text-[10px]">
-                          {activeDrag.data.config?.label || activeDrag.data.widgetType}
-                        </span>
-                        <div className="absolute -top-2 -right-2 bg-brand-orange text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-bounce">
-                          PEGAR
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-blue-600 text-white p-3 rounded-lg shadow-2xl border-2 border-white/20 min-w-[200px] flex items-center gap-2 opacity-90 backdrop-blur-sm">
-                        <MousePointer2 className="w-4 h-4" />
-                        <span className="font-bold uppercase tracking-widest text-[10px]">Movendo Elemento</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </DragOverlay>
             </div>
 
             {layout.length === 0 && (
