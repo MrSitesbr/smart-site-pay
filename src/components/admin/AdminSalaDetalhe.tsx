@@ -62,16 +62,19 @@ export default function AdminSalaDetalhe() {
   async function handleSaveSala() {
     if (!editingSala.nome) return toast.error("Nome é obrigatório");
     
+    const updatePayload: any = {
+      nome: editingSala.nome,
+      tipo: editingSala.tipo,
+      capacidade: parseInt(editingSala.capacidade) || null,
+      descricao: editingSala.descricao,
+      foto_url: editingSala.galeria?.[0] || '',
+      galeria: editingSala.galeria || [],
+      metadata: editingSala.metadata || {}
+    };
+
     const { error } = await supabase
       .from('salas')
-      .update({
-        nome: editingSala.nome,
-        tipo: editingSala.tipo,
-        capacidade: parseInt(editingSala.capacidade) || null,
-        descricao: editingSala.descricao,
-        foto_url: editingSala.galeria?.[0] || '',
-        galeria: editingSala.galeria || []
-      })
+      .update(updatePayload)
       .eq('id', id);
     
     if (error) {
@@ -150,6 +153,16 @@ export default function AdminSalaDetalhe() {
                 <p className="text-slate-600 leading-relaxed">
                   {sala.descricao || "Sem descrição detalhada cadastrada para esta sala."}
                 </p>
+                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Metragem</p>
+                    <p className="text-brand-blue-dark font-black">{sala.metadata?.metragem || '0'} m²</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {sala.metadata?.tem_janela && <Badge variant="outline" className="text-[10px] border-brand-orange/20 text-brand-orange">Com Janela</Badge>}
+                    {sala.metadata?.tem_lavatorio && <Badge variant="outline" className="text-[10px] border-brand-blue-dark/20 text-brand-blue-dark">Com Lavatório</Badge>}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -233,18 +246,57 @@ export default function AdminSalaDetalhe() {
                   onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
                 />
               </div>
-              <div className="space-y-2 col-span-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Galeria de Fotos</label>
-                  <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
-                    <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
-                  </Button>
-                </div>
-                <ImageUpload 
-                  value={editingSala?.galeria || []} 
-                  onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Metragem (m²)</label>
+                <Input 
+                  type="number"
+                  value={editingSala?.metadata?.metragem || ''} 
+                  onChange={(e) => setEditingSala({
+                    ...editingSala, 
+                    metadata: { ...editingSala.metadata, metragem: parseFloat(e.target.value) }
+                  })}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer">
+                <input 
+                  type="checkbox"
+                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                  checked={editingSala?.metadata?.tem_janela || false}
+                  onChange={(e) => setEditingSala({
+                    ...editingSala,
+                    metadata: { ...editingSala.metadata, tem_janela: e.target.checked }
+                  })}
+                />
+                <span className="text-sm font-medium">Tem Janela</span>
+              </div>
+              <div className="flex items-center gap-2 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer">
+                <input 
+                  type="checkbox"
+                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                  checked={editingSala?.metadata?.tem_lavatorio || false}
+                  onChange={(e) => setEditingSala({
+                    ...editingSala,
+                    metadata: { ...editingSala.metadata, tem_lavatorio: e.target.checked }
+                  })}
+                />
+                <span className="text-sm font-medium">Tem Lavatório</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Galeria de Fotos</label>
+                <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
+                  <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
+                </Button>
+              </div>
+              <ImageUpload 
+                value={editingSala?.galeria || []} 
+                onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
+              />
             </div>
 
             <div className="space-y-2">
