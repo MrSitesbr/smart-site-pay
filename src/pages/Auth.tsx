@@ -57,35 +57,46 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-blue-dark p-4">
-      <Card className="w-full max-w-md p-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+      <Card className="w-full max-w-md p-8 border-orange-500/20 bg-slate-900 text-white shadow-2xl shadow-orange-500/10">
+        <Link to="/" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-orange-500 mb-6 transition-colors">
           <ArrowLeft className="w-3 h-3" /> Voltar ao site
         </Link>
-        <div className="flex flex-col items-center gap-2 mb-6">
+        
+        <div className="flex flex-col items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
-            <img src="/assets/logo.png" alt="Logo" className="h-16 w-auto object-contain" />
-            <div className="flex flex-col leading-none text-left">
-              <span className="font-heading font-bold text-[16px] tracking-tighter text-foreground">
+            <img src="/assets/logo.png" alt="Logo" className="h-20 w-auto object-contain" />
+            <div className="flex flex-col leading-[0.8] text-left">
+              <span className="font-heading font-bold text-[18px] tracking-tighter text-white">
                 CoWorking
               </span>
-              <span className="font-heading font-bold text-[36px] tracking-tighter leading-[0.8] text-primary">
+              <span className="font-heading font-bold text-[42px] tracking-tighter leading-[0.8] text-orange-500">
                 013
               </span>
             </div>
           </div>
-          <h1 className="font-heading font-bold text-xl text-center mt-2">Área do Cliente</h1>
+          <h1 className="font-heading font-bold text-xl text-center mt-2 text-white">Área do Cliente</h1>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">
+
+        <p className="text-sm text-slate-400 mb-8 border-l-2 border-orange-500 pl-4 py-1 italic">
           Acesse suas reservas e contratações.
         </p>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+
+        <form onSubmit={submit} className="space-y-5">
+          <div className="space-y-2">
+            <Label className="text-slate-300">Email</Label>
+            <Input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+              autoComplete="email"
+              className="bg-slate-800 border-slate-700 text-white focus:border-orange-500 focus:ring-orange-500"
+            />
           </div>
-          <div>
-            <Label>Senha</Label>
+
+          <div className="space-y-2">
+            <Label className="text-slate-300">Senha</Label>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
@@ -93,35 +104,38 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="pr-10"
+                className="bg-slate-800 border-slate-700 text-white focus:border-orange-500 focus:ring-orange-500 pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-orange-500 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <label className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3 cursor-pointer">
-            <Checkbox checked={notRobot} onCheckedChange={(v) => setNotRobot(!!v)} />
-            <span className="text-sm font-medium">Não sou um robô</span>
-            <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground">Verificação</span>
+          <label className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-4 cursor-pointer hover:bg-slate-800 transition-colors">
+            <Checkbox 
+              checked={notRobot} 
+              onCheckedChange={(v) => setNotRobot(!!v)}
+              className="border-slate-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+            />
+            <span className="text-sm font-medium text-slate-300">Não sou um robô</span>
+            <span className="ml-auto text-[10px] uppercase tracking-widest text-orange-500 font-bold">Obrigatório</span>
           </label>
 
           <Button
             type="submit"
             disabled={loading || !notRobot}
-            className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-12 font-heading font-black text-lg shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98]"
           >
-            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Entrar
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "ENTRAR"}
           </Button>
 
-          <p className="text-xs text-center text-muted-foreground pt-2">
+          <p className="text-xs text-center text-slate-500 pt-2">
             Ainda não tem conta? Faça sua primeira reserva no site para criar seu acesso.
           </p>
         </form>
