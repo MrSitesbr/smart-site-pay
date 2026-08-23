@@ -16,7 +16,8 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
     id: `palette_${type}`,
     data: {
       type: 'palette_widget',
-      widgetType: type
+      widgetType: type,
+      config: config // Pass config for the overlay
     }
   });
 
@@ -30,7 +31,7 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
         isSpecial 
           ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
           : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
-      } ${isDragging ? 'opacity-30 scale-95' : 'opacity-100'}`}
+      } ${isDragging ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100'}`}
     >
       <config.icon className={`w-5 h-5 mb-1.5 pointer-events-none transition-colors group-hover:scale-110 ${
         isSpecial ? 'text-brand-orange' : 'text-brand-blue-dark group-hover:text-brand-orange'
@@ -414,6 +415,8 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
       type,
       data: active.data.current?.section || active.data.current?.widget || active.data.current || {}
     });
+    // Add visual feedback on start
+    toast.dismiss();
   };
 
   const handleDragOver = (event: DragOverEvent) => {
