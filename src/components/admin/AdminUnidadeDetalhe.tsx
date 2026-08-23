@@ -83,8 +83,54 @@ export default function AdminUnidadeDetalhe() {
       setUnidade(uRes.data);
       setSalas(sRes.data || []);
       setAllPlanos(pRes.data || []);
+      fetchWaitingList();
+      fetchClientes();
     }
     setLoading(false);
+  }
+
+  async function fetchWaitingList() {
+    const { data, error } = await supabase
+      .from('waiting_list')
+      .select('*, clientes_corp(razao_social, nome_fantasia)')
+      .eq('unidade_id', id)
+      .eq('status', 'aguardando')
+      .order('priority', { ascending: false });
+    
+    if (!error) setWaitingList(data || []);
+  }
+
+  async function fetchClientes() {
+    const { data, error } = await supabase
+      .from('clientes_corp')
+      .select('id, razao_social, nome_fantasia')
+      .order('nome_fantasia');
+    
+    if (!error) setClientes(data || []);
+  }
+
+  async function handleAddWaitingEntry() {
+    if (!newEntry.cliente_id) return toast.error("Selecione um cliente");
+
+    const { error } = await supabase.from('waiting_list').insert([{
+      ...newEntry,
+      unidade_id: id,
+      status: 'aguardando'
+    }]);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Adicionado à lista de espera!");
+      setIsWaitingListDialogOpen(false);
+      fetchWaitingList();
+    }
+  }
+
+  async function handleRemoveEntry(entryId: string) {
+    if (!confirm("Remover da lista?")) return;
+    const { error } = await supabase.from('waiting_list').update({ status: 'cancelado' }).eq('id', entryId);
+    if (!error) fetchWaitingList();
   }
 
   async function deleteUnidade() {
