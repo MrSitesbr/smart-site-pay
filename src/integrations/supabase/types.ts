@@ -417,6 +417,7 @@ export type Database = {
           nome: string
           preco: number
           quantidade_horas: number
+          tipo: string | null
           unidade_id: string | null
           validade_dias: number | null
         }
@@ -427,6 +428,7 @@ export type Database = {
           nome: string
           preco: number
           quantidade_horas: number
+          tipo?: string | null
           unidade_id?: string | null
           validade_dias?: number | null
         }
@@ -437,6 +439,7 @@ export type Database = {
           nome?: string
           preco?: number
           quantidade_horas?: number
+          tipo?: string | null
           unidade_id?: string | null
           validade_dias?: number | null
         }
