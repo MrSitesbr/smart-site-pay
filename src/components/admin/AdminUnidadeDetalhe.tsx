@@ -653,7 +653,7 @@ export default function AdminUnidadeDetalhe() {
                 onChange={(e) => setNewEntry({...newEntry, cliente_id: e.target.value})}
               >
                 <option value="">Selecione um cliente...</option>
-                {clientes.map(c => (
+                {clientes.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.nome_fantasia || c.razao_social}</option>
                 ))}
               </select>
