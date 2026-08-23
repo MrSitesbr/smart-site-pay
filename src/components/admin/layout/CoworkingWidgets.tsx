@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { WIDGET_REGISTRY } from "../WidgetRegistry";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wifi, Coffee, Printer, Info } from "lucide-react";
+import { Wifi, Coffee, Printer, Info, Check, Clock } from "lucide-react";
 
 const IconMap: Record<string, any> = {
   Wifi,
