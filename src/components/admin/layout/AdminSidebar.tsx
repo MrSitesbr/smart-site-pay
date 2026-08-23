@@ -134,11 +134,11 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
             alt="Logo" 
             className="h-10 w-auto object-contain"
           />
-          <div className="flex flex-col leading-none text-left">
-            <span className="font-heading font-black text-lg tracking-tighter text-[#eee]">
+          <div className="flex flex-col leading-[0.8] text-left">
+            <span className="font-heading font-bold text-xl tracking-tighter text-[#eee]">
               CoWorking
             </span>
-            <span className="font-heading font-black text-lg tracking-tighter text-brand-orange">
+            <span className="font-heading font-bold text-xl tracking-tighter text-brand-orange">
               013
             </span>
           </div>

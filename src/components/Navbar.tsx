@@ -108,10 +108,10 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-3 group relative z-10">
           <img src={logoIconUrl} alt="Logo" className="h-12 w-auto object-contain" />
           <div className="flex flex-col leading-none">
-            <span className={`font-heading font-black text-xl tracking-tighter ${scrolled ? "text-foreground" : "text-white"}`}>
+            <span className={`font-heading font-bold text-2xl tracking-tighter leading-[0.8] ${scrolled ? "text-foreground" : "text-white"}`}>
               CoWorking
             </span>
-            <span className={`font-heading font-black text-xl tracking-tighter ${scrolled ? "text-primary" : "text-brand-orange"}`}>
+            <span className={`font-heading font-bold text-2xl tracking-tighter leading-[0.8] ${scrolled ? "text-primary" : "text-brand-orange"}`}>
               013
             </span>
           </div>

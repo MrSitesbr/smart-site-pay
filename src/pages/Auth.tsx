@@ -65,16 +65,16 @@ export default function Auth() {
         <div className="flex flex-col items-center gap-2 mb-6">
           <div className="flex items-center gap-3">
             <img src="/assets/logo.png" alt="Logo" className="h-16 w-auto object-contain" />
-            <div className="flex flex-col leading-none text-left">
-              <span className="font-heading font-black text-2xl tracking-tighter text-foreground">
+            <div className="flex flex-col leading-[0.8] text-left">
+              <span className="font-heading font-bold text-2xl tracking-tighter text-foreground">
                 CoWorking
               </span>
-              <span className="font-heading font-black text-2xl tracking-tighter text-primary">
+              <span className="font-heading font-bold text-2xl tracking-tighter text-primary">
                 013
               </span>
             </div>
           </div>
-          <h1 className="font-heading font-black text-xl text-center mt-2">Área do Cliente</h1>
+          <h1 className="font-heading font-bold text-xl text-center mt-2">Área do Cliente</h1>
         </div>
         <p className="text-sm text-muted-foreground mb-6">
           Acesse suas reservas e contratações.
