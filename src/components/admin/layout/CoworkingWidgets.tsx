@@ -83,10 +83,11 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
 
   useEffect(() => {
     const fetchPlans = async () => {
-      const { data, error } = await (supabase as any)
-        .from('planos')
-        .select('*')
-        .filter(content.type ? 'tipo' : 'nome', content.type ? 'eq' : 'neq', content.type || 'IS_NULL')
+      let query = (supabase as any).from('planos').select('*');
+      
+      if (content.type) {
+        query = query.eq('tipo', content.type);
+      }
       
       const { data, error } = await query.limit(content.limit || 6);
       
