@@ -70,7 +70,8 @@ export default function AdminSalaDetalhe() {
         capacidade: parseInt(editingSala.capacidade) || null,
         descricao: editingSala.descricao,
         foto_url: editingSala.galeria?.[0] || '',
-        galeria: editingSala.galeria || []
+        galeria: editingSala.galeria || [],
+        metadata: editingSala.metadata || {}
       })
       .eq('id', id);
     
