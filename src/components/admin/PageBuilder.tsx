@@ -887,8 +887,10 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
           />
         )}
       </div>
+    </div>
 
-      <DragOverlay 
+    <DragOverlay 
+
         zIndex={9999}
         dropAnimation={{
           duration: 250,
