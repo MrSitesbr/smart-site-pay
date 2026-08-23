@@ -249,7 +249,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 3,
+        distance: 2,
       },
     }),
     useSensor(KeyboardSensor, {
