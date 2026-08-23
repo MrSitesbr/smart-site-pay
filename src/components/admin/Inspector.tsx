@@ -161,7 +161,7 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                     </div>
                   )}
 
-                  {(data.type === 'units_grid' || data.type === 'plans_grid' || data.type === 'rooms_grid') && (
+                  {(data.type === 'units_grid' || data.type === 'rooms_grid') && (
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Limite de Itens</Label>
                       <Input 
@@ -170,6 +170,9 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         onChange={(e) => handleChange('content.limit', parseInt(e.target.value))} 
                       />
                     </div>
+                  )}
+
+                  {data.type === 'plans_grid' && (
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Plano</Label>
