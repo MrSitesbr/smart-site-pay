@@ -83,16 +83,21 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
 
   useEffect(() => {
     const fetchPlans = async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('planos')
-        .select('*')
-        .limit(content.limit || 3);
+        .select('*');
+      
+      if (content.type) {
+        query = query.eq('tipo', content.type);
+      }
+      
+      const { data, error } = await query.limit(content.limit || 6);
       
       if (!error && data) setPlans(data);
       setLoading(false);
     };
     fetchPlans();
-  }, [content.limit]);
+  }, [content.limit, content.type]);
 
   if (loading) return <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
     {[1, 2, 3].map(i => <div key={i} className="h-80 bg-muted rounded-3xl"></div>)}
@@ -101,24 +106,37 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {plans.map((plan) => (
-        <div key={plan.id} className="bg-white rounded-[2rem] p-8 shadow-xl border-2 border-transparent hover:border-brand-orange transition-all relative overflow-hidden flex flex-col">
+        <div key={plan.id} className="bg-white rounded-[2rem] p-8 shadow-xl border-2 border-transparent hover:border-brand-orange transition-all relative overflow-hidden flex flex-col min-h-[400px]">
           <div className="mb-6">
-            <h3 className="text-2xl font-black text-brand-blue-dark mb-2 uppercase tracking-tighter">{plan.nome}</h3>
+            <h3 className="text-xl font-black text-brand-blue-dark mb-2 uppercase tracking-tighter leading-tight min-h-[3rem] flex items-center">{plan.nome}</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-brand-orange font-black text-3xl">R$ {plan.preco}</span>
-              <span className="text-muted-foreground text-xs font-bold uppercase">/ mês</span>
+              <span className="text-brand-orange font-black text-3xl">
+                {plan.preco > 0 ? `R$ ${plan.preco}` : 'Sob Consulta'}
+              </span>
+              {plan.preco > 0 && <span className="text-muted-foreground text-xs font-bold uppercase">/ {plan.validade_dias === 30 ? 'mês' : 'período'}</span>}
             </div>
           </div>
           <div className="flex-1 space-y-3 mb-8">
-             <p className="text-muted-foreground text-sm font-medium">{plan.descricao}</p>
-             <div className="h-[1px] bg-brand-gray/20 w-full my-4"></div>
-             <div className="flex items-center gap-2 text-brand-blue-dark font-bold text-xs">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
-                {plan.quantidade_horas} Horas Inclusas
+             <div className="text-muted-foreground text-sm font-medium leading-relaxed">
+               {plan.descricao?.split(',').map((item: string, i: number) => (
+                 <div key={i} className="flex items-start gap-2 mb-1">
+                   <Check className="w-3 h-3 text-brand-orange mt-1 shrink-0" />
+                   <span>{item.trim()}</span>
+                 </div>
+               )) || plan.descricao}
              </div>
+             {plan.quantidade_horas > 0 && (
+               <>
+                 <div className="h-[1px] bg-brand-gray/20 w-full my-4"></div>
+                 <div className="flex items-center gap-2 text-brand-blue-dark font-bold text-xs">
+                    <Clock className="w-3 h-3 text-brand-orange" />
+                    {plan.quantidade_horas} Horas Inclusas
+                 </div>
+               </>
+             )}
           </div>
-          <button className="w-full py-4 bg-brand-blue-dark text-white font-black rounded-2xl hover:bg-brand-orange transition-colors uppercase tracking-widest text-xs">
-            Assinar Agora
+          <button className="w-full py-4 bg-brand-blue-dark text-white font-black rounded-2xl hover:bg-brand-orange transition-colors uppercase tracking-widest text-xs mt-auto">
+            {plan.preco > 0 ? 'Assinar Agora' : 'Consultar'}
           </button>
         </div>
       ))}
