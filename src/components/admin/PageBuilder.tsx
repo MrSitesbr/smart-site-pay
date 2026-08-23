@@ -13,7 +13,8 @@ import {
   defaultDropAnimationSideEffects,
   Active,
   Over,
-  useDraggable
+  useDraggable,
+  rectIntersection
 } from '@dnd-kit/core';
 import {
   arrayMove,
