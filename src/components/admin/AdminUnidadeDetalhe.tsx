@@ -92,7 +92,7 @@ export default function AdminUnidadeDetalhe() {
   async function fetchWaitingList() {
     // @ts-ignore
     const { data, error } = await supabase
-      .from('waiting_list')
+      .from('waiting_list' as any)
       .select('*, clientes_corp(razao_social, nome_fantasia)')
       .eq('unidade_id', id)
       .eq('status', 'aguardando')
