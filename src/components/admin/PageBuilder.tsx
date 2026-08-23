@@ -27,11 +27,11 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
       {...attributes}
       {...listeners}
       onClick={onAdd}
-      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-move group duration-200 select-none ${
+      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing group duration-200 select-none touch-none ${
         isSpecial 
           ? 'bg-brand-blue-dark text-white border-transparent hover:border-brand-orange hover:shadow-lg h-24 shadow-sm' 
           : 'bg-white border-brand-gray/20 hover:border-brand-orange hover:shadow-md h-20'
-      } ${isDragging ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100'}`}
+      } ${isDragging ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 hover:scale-[1.02]'}`}
     >
       <config.icon className={`w-5 h-5 mb-1.5 pointer-events-none transition-colors group-hover:scale-110 ${
         isSpecial ? 'text-brand-orange' : 'text-brand-blue-dark group-hover:text-brand-orange'
@@ -247,7 +247,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 3,
       },
     }),
     useSensor(KeyboardSensor, {
