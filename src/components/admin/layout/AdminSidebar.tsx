@@ -128,10 +128,14 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
   return (
     <Sidebar className="border-r border-brand-blue-dark/10 bg-[#2c3338] text-[#eee]">
       <SidebarContent className="bg-[#2c3338]">
+        <div className="flex items-center justify-center py-6 px-4">
+          <img 
+            src="/assets/logo.png" 
+            alt="Logo" 
+            className="h-10 w-auto object-contain"
+          />
+        </div>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-white/40 px-4 py-4 font-black uppercase text-[10px] tracking-widest">
-            Admin CoWorking
-          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
