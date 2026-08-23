@@ -246,9 +246,49 @@ export default function AdminSalaDetalhe() {
                   onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
                 />
               </div>
-              <div className="space-y-2 col-span-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Galeria de Fotos</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Metragem (m²)</label>
+                <Input 
+                  type="number"
+                  value={editingSala?.metadata?.metragem || ''} 
+                  onChange={(e) => setEditingSala({
+                    ...editingSala, 
+                    metadata: { ...editingSala.metadata, metragem: parseFloat(e.target.value) }
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer">
+                <input 
+                  type="checkbox"
+                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                  checked={editingSala?.metadata?.tem_janela || false}
+                  onChange={(e) => setEditingSala({
+                    ...editingSala,
+                    metadata: { ...editingSala.metadata, tem_janela: e.target.checked }
+                  })}
+                />
+                <span className="text-sm font-medium">Tem Janela</span>
+              </div>
+              <div className="flex items-center gap-2 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer">
+                <input 
+                  type="checkbox"
+                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                  checked={editingSala?.metadata?.tem_lavatorio || false}
+                  onChange={(e) => setEditingSala({
+                    ...editingSala,
+                    metadata: { ...editingSala.metadata, tem_lavatorio: e.target.checked }
+                  })}
+                />
+                <span className="text-sm font-medium">Tem Lavatório</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Galeria de Fotos</label>
                   <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
                     <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
                   </Button>
