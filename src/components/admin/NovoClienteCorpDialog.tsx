@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle, 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -20,6 +21,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [emailResp, setEmailResp] = useState("");
   const [telResp, setTelResp] = useState("");
   const [cpfResp, setCpfResp] = useState("");
+  const [planoId, setPlanoId] = useState<string | null>(null);
+  const [planos, setPlanos] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -29,8 +32,15 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       setEmailResp("");
       setTelResp("");
       setCpfResp("");
+      setPlanoId(null);
+      fetchPlanos();
     }
   }, [open, initialNome]);
+
+  async function fetchPlanos() {
+    const { data } = await supabase.from("planos").select("id, nome");
+    setPlanos(data || []);
+  }
 
   async function save() {
     if (!razaoSocial) {
@@ -44,7 +54,9 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       responsavel_email: emailResp,
       responsavel_telefone: telResp,
       // @ts-ignore
-      responsavel_cpf: cpfResp
+      responsavel_cpf: cpfResp,
+      // @ts-ignore
+      plano_id: planoId
     }).select().single();
 
     if (error) {
@@ -83,6 +95,23 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
           <div className="grid gap-2">
             <Label>Whatsapp do Responsável</Label>
             <Input value={telResp} onChange={(e) => setTelResp(e.target.value)} placeholder="(00) 00000-0000" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Plano (Opcional)</Label>
+            <Select 
+              value={planoId || ""} 
+              onValueChange={val => setPlanoId(val === "none" ? null : val)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um plano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem plano</SelectItem>
+                {planos.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
