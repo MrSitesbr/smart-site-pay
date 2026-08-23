@@ -587,7 +587,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   };
 
   return (
-    <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
+    <DndContext 
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
       {/* Sidebar - Widget Panel */}
       <div className="w-[300px] bg-white border-r flex flex-col shadow-xl z-30">
         <div className="p-4 bg-brand-blue-dark text-white flex items-center justify-between h-14">
