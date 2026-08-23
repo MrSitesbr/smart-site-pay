@@ -20,7 +20,12 @@ import {
   Trash2,
   X,
   Save,
-  ImageIcon
+  ImageIcon,
+  Search,
+  CheckCircle2,
+  Star,
+  Users,
+  Clock
 } from "lucide-react";
 import {
   Dialog,
@@ -30,6 +35,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { calculateCompatibility, WaitingListEntry } from "@/lib/compatibility";
 
 export default function AdminUnidadeDetalhe() {
   const { id } = useParams();
