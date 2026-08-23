@@ -108,8 +108,16 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
-            <div className="flex items-center mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <img src={logoIconUrl} alt="Logo" className="h-10 w-auto object-contain" />
+              <div className="flex flex-col leading-none">
+                <span className="font-heading font-black text-lg tracking-tighter text-white">
+                  CoWorking
+                </span>
+                <span className="font-heading font-black text-lg tracking-tighter text-brand-orange">
+                  013
+                </span>
+              </div>
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
               {description}

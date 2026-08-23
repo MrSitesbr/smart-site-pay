@@ -128,12 +128,20 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
   return (
     <Sidebar className="border-r border-brand-blue-dark/10 bg-[#2c3338] text-[#eee]">
       <SidebarContent className="bg-[#2c3338]">
-        <div className="flex items-center justify-center py-6 px-4">
+        <div className="flex items-center justify-center py-6 px-4 gap-3">
           <img 
             src="/assets/logo.png" 
             alt="Logo" 
             className="h-10 w-auto object-contain"
           />
+          <div className="flex flex-col leading-none text-left">
+            <span className="font-heading font-black text-lg tracking-tighter text-[#eee]">
+              CoWorking
+            </span>
+            <span className="font-heading font-black text-lg tracking-tighter text-brand-orange">
+              013
+            </span>
+          </div>
         </div>
         <SidebarGroup>
           <SidebarGroupContent>
