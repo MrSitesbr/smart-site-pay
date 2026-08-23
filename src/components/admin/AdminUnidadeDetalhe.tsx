@@ -601,7 +601,7 @@ export default function AdminUnidadeDetalhe() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Planos de Horas Permitidos</label>
               <div className="grid grid-cols-3 gap-2 mt-1">
-                {allPlanos.map(p => (
+                {allPlanos.map((p: any) => (
                   <label key={p.id} className="flex items-center gap-2 text-xs border p-2 rounded hover:bg-muted/50 cursor-pointer">
                     <input 
                       type="checkbox" 
