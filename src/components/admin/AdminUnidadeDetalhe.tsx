@@ -509,7 +509,7 @@ export default function AdminUnidadeDetalhe() {
                   { id: 'wifi', nome: 'Internet Fibra', icone: 'Wifi' },
                   { id: 'cafe', nome: 'Café e Água', icone: 'Coffee' },
                   { id: 'print', nome: 'Impressões', icone: 'Printer' }
-                ].map(servico => (
+                ].map((servico: any) => (
                   <label key={servico.id} className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                     <input 
                       type="checkbox" 
