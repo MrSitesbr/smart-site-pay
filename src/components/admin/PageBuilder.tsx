@@ -1,4 +1,49 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  DragOverEvent,
+  defaultDropAnimationSideEffects,
+  Active,
+  Over,
+  useDraggable
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Button } from "@/components/ui/button";
+import { 
+  Plus, Save, Layout, Eye, Smartphone, Monitor, 
+  ChevronLeft, Undo, Redo, Search, Trash2, Download, Upload, FileCode,
+  Layers, Settings2, MousePointer2, GripVertical, Columns as ColumnsIcon
+} from "lucide-react";
+import { PageRenderer } from "@/components/PageRenderer";
+import { Inspector } from "./Inspector";
+import { WIDGET_REGISTRY } from "./WidgetRegistry";
+import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
+import { toast } from "sonner";
+import { PageSettingsModal } from "./PageSettingsModal";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 // Drop Indicator Component
 const DropIndicator = () => (
@@ -12,12 +57,12 @@ const DropIndicator = () => (
 
 // Draggable Palette Widget Component
 const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette_${type}`,
     data: {
       type: 'palette_widget',
       widgetType: type,
-      config: config // Pass config for the overlay
+      config: config
     }
   });
 
@@ -44,51 +89,6 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
     </div>
   );
 };
-
-import { Button } from "@/components/ui/button";
-import { 
-  Plus, Save, Layout, Eye, Smartphone, Monitor, 
-  ChevronLeft, Undo, Redo, Search, Trash2, Download, Upload, FileCode,
-  Layers, Settings2, MousePointer2
-} from "lucide-react";
-import { PageRenderer } from "@/components/PageRenderer";
-import { Inspector } from "./Inspector";
-import { WIDGET_REGISTRY } from "./WidgetRegistry";
-import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
-import { toast } from "sonner";
-import { PageSettingsModal } from "./PageSettingsModal";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  DndContext, 
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  DragOverEvent,
-  defaultDropAnimationSideEffects,
-  Active,
-  Over
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface PageBuilderProps {
   pageId: string;
