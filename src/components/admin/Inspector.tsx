@@ -170,6 +170,28 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                         onChange={(e) => handleChange('content.limit', parseInt(e.target.value))} 
                       />
                     </div>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo de Plano</Label>
+                        <Select value={data.content.type || ''} onValueChange={(v) => handleChange('content.type', v)}>
+                          <SelectTrigger><SelectValue placeholder="Todos os planos" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="virtual">Endereço Virtual</SelectItem>
+                            <SelectItem value="privativo">Escritório Privativo</SelectItem>
+                            <SelectItem value="controle">Planos Controle</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Limite de Itens</Label>
+                        <Input 
+                          type="number" 
+                          value={data.content.limit || 6} 
+                          onChange={(e) => handleChange('content.limit', parseInt(e.target.value))} 
+                        />
+                      </div>
+                    </div>
                   )}
                   {data.type === 'icon_box' && (
                     <div className="space-y-4">
