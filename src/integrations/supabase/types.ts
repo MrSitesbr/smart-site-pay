@@ -569,6 +569,7 @@ export type Database = {
           foto_url: string | null
           galeria: string[] | null
           id: string
+          metadata: Json | null
           nome: string
           tipo: string
           unidade_id: string | null
@@ -580,6 +581,7 @@ export type Database = {
           foto_url?: string | null
           galeria?: string[] | null
           id?: string
+          metadata?: Json | null
           nome: string
           tipo: string
           unidade_id?: string | null
@@ -591,6 +593,7 @@ export type Database = {
           foto_url?: string | null
           galeria?: string[] | null
           id?: string
+          metadata?: Json | null
           nome?: string
           tipo?: string
           unidade_id?: string | null
@@ -848,6 +851,60 @@ export type Database = {
             columns: ["sala_id"]
             isOneToOne: false
             referencedRelation: "salas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waiting_list: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          id: string
+          min_metragem: number | null
+          needs_lavatory: boolean | null
+          needs_window: boolean | null
+          outros_requisitos: string | null
+          priority: number | null
+          status: string | null
+          unidade_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          min_metragem?: number | null
+          needs_lavatory?: boolean | null
+          needs_window?: boolean | null
+          outros_requisitos?: string | null
+          priority?: number | null
+          status?: string | null
+          unidade_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          min_metragem?: number | null
+          needs_lavatory?: boolean | null
+          needs_window?: boolean | null
+          outros_requisitos?: string | null
+          priority?: number | null
+          status?: string | null
+          unidade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiting_list_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waiting_list_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
             referencedColumns: ["id"]
           },
         ]
