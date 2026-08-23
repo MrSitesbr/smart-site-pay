@@ -408,6 +408,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    console.log("Drag started:", event.active.id);
     const { active } = event;
     const type = active.data.current?.type || 'widget';
     setActiveDrag({ 
