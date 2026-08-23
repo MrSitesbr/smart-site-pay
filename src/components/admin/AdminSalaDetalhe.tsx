@@ -62,17 +62,19 @@ export default function AdminSalaDetalhe() {
   async function handleSaveSala() {
     if (!editingSala.nome) return toast.error("Nome é obrigatório");
     
+    const updatePayload: any = {
+      nome: editingSala.nome,
+      tipo: editingSala.tipo,
+      capacidade: parseInt(editingSala.capacidade) || null,
+      descricao: editingSala.descricao,
+      foto_url: editingSala.galeria?.[0] || '',
+      galeria: editingSala.galeria || [],
+      metadata: editingSala.metadata || {}
+    };
+
     const { error } = await supabase
       .from('salas')
-      .update({
-        nome: editingSala.nome,
-        tipo: editingSala.tipo,
-        capacidade: parseInt(editingSala.capacidade) || null,
-        descricao: editingSala.descricao,
-        foto_url: editingSala.galeria?.[0] || '',
-        galeria: editingSala.galeria || [],
-        metadata: editingSala.metadata || {}
-      })
+      .update(updatePayload)
       .eq('id', id);
     
     if (error) {
