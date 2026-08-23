@@ -49,6 +49,18 @@ export default function AdminUnidadeDetalhe() {
   const [allPlanos, setAllPlanos] = useState<any[]>([]);
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<'unidade' | 'sala' | null>(null);
+  const [waitingList, setWaitingList] = useState<WaitingListEntry[]>([]);
+  const [isWaitingListDialogOpen, setIsWaitingListDialogOpen] = useState(false);
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [newEntry, setNewEntry] = useState({
+    cliente_id: '',
+    min_metragem: 0,
+    needs_window: false,
+    needs_lavatory: false,
+    outros_requisitos: '',
+    priority: 1
+  });
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (id) {
