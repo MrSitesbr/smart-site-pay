@@ -111,10 +111,10 @@ const Footer = () => {
             <div className="flex items-center gap-3 mb-4">
               <img src={logoIconUrl} alt="Logo" className="h-10 w-auto object-contain" />
               <div className="flex flex-col leading-none">
-                <span className="font-heading font-black text-lg tracking-tighter text-white">
+                <span className="font-heading font-bold text-xl tracking-tighter leading-[0.8] text-white">
                   CoWorking
                 </span>
-                <span className="font-heading font-black text-lg tracking-tighter text-brand-orange">
+                <span className="font-heading font-bold text-xl tracking-tighter leading-[0.8] text-brand-orange">
                   013
                 </span>
               </div>
