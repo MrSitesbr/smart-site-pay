@@ -113,7 +113,8 @@ export default function AdminUnidadeDetalhe() {
   async function handleAddWaitingEntry() {
     if (!newEntry.cliente_id) return toast.error("Selecione um cliente");
 
-    const { error } = await (supabase as any).from('waiting_list').insert([{
+    // @ts-ignore
+    const { error } = await supabase.from('waiting_list' as any).insert([{
       ...newEntry,
       unidade_id: id,
       status: 'aguardando'
