@@ -597,6 +597,32 @@ export default function AdminUnidadeDetalhe() {
                   placeholder="Ex: 25"
                 />
               </div>
+              <div className="col-span-2 grid grid-cols-2 gap-4">
+                <label className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                    checked={editingSala?.metadata?.tem_janela || false}
+                    onChange={(e) => setEditingSala({
+                      ...editingSala, 
+                      metadata: { ...editingSala.metadata, tem_janela: e.target.checked }
+                    })}
+                  />
+                  <span className="text-sm font-medium text-slate-700">Possui Janela</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
+                    checked={editingSala?.metadata?.tem_lavatorio || false}
+                    onChange={(e) => setEditingSala({
+                      ...editingSala, 
+                      metadata: { ...editingSala.metadata, tem_lavatorio: e.target.checked }
+                    })}
+                  />
+                  <span className="text-sm font-medium text-slate-700">Possui Lavatório</span>
+                </label>
+              </div>
               <div className="space-y-2 col-span-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Galeria de Fotos</label>
