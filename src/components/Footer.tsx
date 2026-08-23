@@ -108,16 +108,8 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <img src={logoIconUrl} alt="Logo" className="h-8 w-auto object-contain" />
-              <div className="flex flex-col leading-[0.8] items-start">
-                <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
-                  {logoTop}
-                </span>
-                <h1 className="text-3xl font-heading font-extrabold text-white -mt-1">
-                  {logoBottom}
-                </h1>
-              </div>
+            <div className="flex items-center mb-4">
+              <img src={logoIconUrl} alt="Logo" className="h-10 w-auto object-contain" />
             </div>
             <p className="text-sm text-white/60 leading-relaxed mb-5">
               {description}

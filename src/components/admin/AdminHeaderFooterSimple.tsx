@@ -142,24 +142,6 @@ export default function AdminHeaderFooterSimple() {
                   />
                   <p className="text-[10px] text-muted-foreground">Deixe em branco para usar o padrão do sistema.</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="h-text-top">Texto Superior (Laranja)</Label>
-                    <Input 
-                      id="h-text-top" 
-                      value={headerContent.logo_text_top} 
-                      onChange={e => setHeaderContent({...headerContent, logo_text_top: e.target.value})} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="h-text-bottom">Texto Principal</Label>
-                    <Input 
-                      id="h-text-bottom" 
-                      value={headerContent.logo_text_bottom} 
-                      onChange={e => setHeaderContent({...headerContent, logo_text_bottom: e.target.value})} 
-                    />
-                  </div>
-                </div>
               </div>
 
               <div className="space-y-4">
@@ -212,24 +194,6 @@ export default function AdminHeaderFooterSimple() {
                     value={footerContent.logo_icon || ""} 
                     onChange={e => setFooterContent({...footerContent, logo_icon: e.target.value})} 
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="f-text-top">Texto Superior</Label>
-                    <Input 
-                      id="f-text-top" 
-                      value={footerContent.logo_text_top} 
-                      onChange={e => setFooterContent({...footerContent, logo_text_top: e.target.value})} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="f-text-bottom">Texto Principal</Label>
-                    <Input 
-                      id="f-text-bottom" 
-                      value={footerContent.logo_text_bottom} 
-                      onChange={e => setFooterContent({...footerContent, logo_text_bottom: e.target.value})} 
-                    />
-                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="f-desc">Breve Descrição</Label>
