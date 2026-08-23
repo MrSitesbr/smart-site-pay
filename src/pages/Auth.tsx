@@ -65,11 +65,11 @@ export default function Auth() {
         <div className="flex flex-col items-center gap-2 mb-6">
           <div className="flex items-center gap-3">
             <img src="/assets/logo.png" alt="Logo" className="h-16 w-auto object-contain" />
-            <div className="flex flex-col leading-[0.8] text-left">
-              <span className="font-heading font-bold text-2xl tracking-tighter text-foreground">
+            <div className="flex flex-col leading-none text-left">
+              <span className="font-heading font-bold text-[16px] tracking-tighter text-foreground">
                 CoWorking
               </span>
-              <span className="font-heading font-bold text-2xl tracking-tighter text-primary">
+              <span className="font-heading font-bold text-[36px] tracking-tighter leading-[0.8] text-primary">
                 013
               </span>
             </div>
