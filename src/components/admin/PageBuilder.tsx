@@ -125,6 +125,8 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
       ref={setNodeRef} 
       style={style} 
       className={`relative group/section-wrap transition-all duration-200 ${isOver && !isDragging ? 'ring-2 ring-brand-orange ring-inset bg-brand-orange/5' : ''}`}
+      {...attributes}
+      {...listeners}
     >
       <div 
         {...attributes} 
