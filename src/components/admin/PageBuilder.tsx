@@ -1,4 +1,49 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  DragOverEvent,
+  defaultDropAnimationSideEffects,
+  Active,
+  Over,
+  useDraggable
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Button } from "@/components/ui/button";
+import { 
+  Plus, Save, Layout, Eye, Smartphone, Monitor, 
+  ChevronLeft, Undo, Redo, Search, Trash2, Download, Upload, FileCode,
+  Layers, Settings2, MousePointer2, GripVertical, Columns as ColumnsIcon
+} from "lucide-react";
+import { PageRenderer } from "@/components/PageRenderer";
+import { Inspector } from "./Inspector";
+import { WIDGET_REGISTRY } from "./WidgetRegistry";
+import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
+import { toast } from "sonner";
+import { PageSettingsModal } from "./PageSettingsModal";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 // Drop Indicator Component
 const DropIndicator = () => (
@@ -12,12 +57,12 @@ const DropIndicator = () => (
 
 // Draggable Palette Widget Component
 const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette_${type}`,
     data: {
       type: 'palette_widget',
       widgetType: type,
-      config: config // Pass config for the overlay
+      config: config
     }
   });
 
@@ -44,51 +89,6 @@ const DraggablePaletteWidget = ({ type, config, isSpecial, onAdd }: any) => {
     </div>
   );
 };
-
-import { Button } from "@/components/ui/button";
-import { 
-  Plus, Save, Layout, Eye, Smartphone, Monitor, 
-  ChevronLeft, Undo, Redo, Search, Trash2, Download, Upload, FileCode,
-  Layers, Settings2, MousePointer2
-} from "lucide-react";
-import { PageRenderer } from "@/components/PageRenderer";
-import { Inspector } from "./Inspector";
-import { WIDGET_REGISTRY } from "./WidgetRegistry";
-import { SectionData, WidgetData, WidgetType } from "@/types/page-builder";
-import { toast } from "sonner";
-import { PageSettingsModal } from "./PageSettingsModal";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  DndContext, 
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  DragOverEvent,
-  defaultDropAnimationSideEffects,
-  Active,
-  Over
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface PageBuilderProps {
   pageId: string;
@@ -144,7 +144,7 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
   );
 };
 
-import { GripVertical, Columns as ColumnsIcon } from "lucide-react";
+
 
 // Navigator Component for Elementor-like tree view
 const Navigator = ({ layout, selectedId, onSelect, onLayoutChange }: any) => {
@@ -587,7 +587,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   };
 
   return (
-    <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
+    <DndContext 
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex h-screen bg-[#f1f1f1] overflow-hidden font-sans">
       {/* Sidebar - Widget Panel */}
       <div className="w-[300px] bg-white border-r flex flex-col shadow-xl z-30">
         <div className="p-4 bg-brand-blue-dark text-white flex items-center justify-between h-14">
@@ -817,13 +824,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         {/* Scrollable Canvas Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-brand-gray/5">
           <div className={`mx-auto transition-all duration-300 bg-white shadow-2xl min-h-full ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
-            <DndContext 
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
+            <div>
               <SortableContext 
                 items={layout.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
@@ -848,51 +849,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
                 </div>
               </SortableContext>
               
-              <DragOverlay 
-                zIndex={9999}
-                dropAnimation={{
-                  duration: 250,
-                  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-                  sideEffects: defaultDropAnimationSideEffects({
-                    styles: {
-                      active: {
-                        opacity: '0.5',
-                      },
-                    },
-                  }),
-                }}
-              >
-                {activeDrag && (
-                  <div 
-                    className="pointer-events-none transform shadow-2xl transition-transform duration-200 animate-in zoom-in-95 scale-105"
-                    style={{ zIndex: 9999 }}
-                  >
-                    {activeDrag.type === 'section' ? (
-                      <div className="bg-brand-orange text-white p-4 rounded-lg shadow-2xl border-2 border-white/20 min-w-[300px] flex items-center gap-3 backdrop-blur-sm opacity-90">
-                        <Layout className="w-5 h-5" />
-                        <span className="font-bold uppercase tracking-widest text-xs">Movendo Seção</span>
-                      </div>
-                    ) : activeDrag.type === 'palette_widget' ? (
-                      <div className="bg-white text-brand-blue-dark p-4 rounded-xl shadow-2xl border-2 border-brand-orange min-w-[150px] flex flex-col items-center gap-2 relative">
-                        {activeDrag.data.config?.icon && 
-                          React.createElement(activeDrag.data.config.icon, { className: "w-6 h-6 text-brand-orange" })}
-                        <span className="font-bold uppercase tracking-tighter text-[10px]">
-                          {activeDrag.data.config?.label || activeDrag.data.widgetType}
-                        </span>
-                        <div className="absolute -top-2 -right-2 bg-brand-orange text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-bounce">
-                          PEGAR
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-blue-600 text-white p-3 rounded-lg shadow-2xl border-2 border-white/20 min-w-[200px] flex items-center gap-2 opacity-90 backdrop-blur-sm">
-                        <MousePointer2 className="w-4 h-4" />
-                        <span className="font-bold uppercase tracking-widest text-[10px]">Movendo Elemento</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </DragOverlay>
-            </DndContext>
+            </div>
 
             {layout.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
@@ -931,5 +888,52 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         )}
       </div>
     </div>
+
+    <DragOverlay 
+
+        zIndex={9999}
+        dropAnimation={{
+          duration: 250,
+          easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+          sideEffects: defaultDropAnimationSideEffects({
+            styles: {
+              active: {
+                opacity: '0.5',
+              },
+            },
+          }),
+        }}
+      >
+        {activeDrag && (
+          <div 
+            className="pointer-events-none transform shadow-2xl animate-in zoom-in-95 scale-105"
+            style={{ zIndex: 9999 }}
+          >
+            {activeDrag.type === 'section' ? (
+              <div className="bg-brand-orange text-white p-4 rounded-lg shadow-2xl border-2 border-white/20 min-w-[300px] flex items-center gap-3 backdrop-blur-sm opacity-90">
+                <Layout className="w-5 h-5" />
+                <span className="font-bold uppercase tracking-widest text-xs">Movendo Seção</span>
+              </div>
+            ) : activeDrag.type === 'palette_widget' ? (
+              <div className="bg-white text-brand-blue-dark p-4 rounded-xl shadow-2xl border-2 border-brand-orange min-w-[150px] flex flex-col items-center gap-2 relative">
+                {activeDrag.data.config?.icon && 
+                  React.createElement(activeDrag.data.config.icon, { className: "w-6 h-6 text-brand-orange" })}
+                <span className="font-bold uppercase tracking-tighter text-[10px]">
+                  {activeDrag.data.config?.label || activeDrag.data.widgetType}
+                </span>
+                <div className="absolute -top-2 -right-2 bg-brand-orange text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-bounce">
+                  PEGAR
+                </div>
+              </div>
+            ) : (
+              <div className="bg-blue-600 text-white p-3 rounded-lg shadow-2xl border-2 border-white/20 min-w-[200px] flex items-center gap-2 opacity-90 backdrop-blur-sm">
+                <MousePointer2 className="w-4 h-4" />
+                <span className="font-bold uppercase tracking-widest text-[10px]">Movendo Elemento</span>
+              </div>
+            )}
+          </div>
+        )}
+      </DragOverlay>
+    </DndContext>
   );
 };

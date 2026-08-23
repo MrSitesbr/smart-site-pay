@@ -3,7 +3,7 @@ import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon, Check, Star, HelpCircle, MapPin, Calendar, Clock, Info } from "lucide-react";
+import { User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout as LayoutIcon, Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnitsWidget, PlansWidget, RoomsWidget, GlobalHeaderWidget, GlobalFooterWidget } from "./admin/layout/CoworkingWidgets";
 import { ContactForm } from "./ContactForm";
@@ -26,7 +26,7 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onE
   if (!layout || !Array.isArray(layout)) return null;
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className={`w-full overflow-x-hidden ${isAdmin ? 'min-h-[500px] pb-32' : ''}`}>
       {layout.filter(Boolean).map((section) => (
         <SectionRenderer 
           key={section.id} 
@@ -37,6 +37,17 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onE
           dropIndicator={dropIndicator}
         />
       ))}
+      
+      {isAdmin && layout.length > 0 && (
+        <div className="py-10 flex justify-center">
+          <div className="w-full max-w-4xl border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50 transition-colors group">
+            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Plus className="w-6 h-6 text-brand-orange" />
+            </div>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Arraste uma nova seção aqui</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
