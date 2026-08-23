@@ -189,6 +189,7 @@ export default function AdminUnidadeDetalhe() {
       descricao: editingSala.descricao,
       foto_url: editingSala.galeria?.[0] || '',
       galeria: editingSala.galeria || [],
+      metadata: editingSala.metadata || {},
       unidade_id: id
     };
 
@@ -582,6 +583,18 @@ export default function AdminUnidadeDetalhe() {
                   type="number"
                   value={editingSala?.capacidade || ''} 
                   onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Metragem (m²)</label>
+                <Input 
+                  type="number"
+                  value={editingSala?.metadata?.metragem || ''} 
+                  onChange={(e) => setEditingSala({
+                    ...editingSala, 
+                    metadata: { ...editingSala.metadata, metragem: parseFloat(e.target.value) || 0 }
+                  })}
+                  placeholder="Ex: 25"
                 />
               </div>
               <div className="space-y-2 col-span-2">
