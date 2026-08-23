@@ -90,12 +90,12 @@ export default function AdminUnidadeDetalhe() {
   }
 
   async function fetchWaitingList() {
-    const { data, error } = await (supabase as any)
-      .from('waiting_list')
+    const { data, error } = await supabase
+      .from('waiting_list' as any)
       .select('*, clientes_corp(razao_social, nome_fantasia)')
-      .eq('unidade_id', id)
-      .eq('status', 'aguardando')
-      .order('priority', { ascending: false });
+      .eq('unidade_id' as any, id)
+      .eq('status' as any, 'aguardando')
+      .order('priority' as any, { ascending: false });
     
     if (!error) setWaitingList(data || []);
   }
