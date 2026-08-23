@@ -338,7 +338,7 @@ export default function AdminUnidadeDetalhe() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {salas.filter(s => s.nome.toLowerCase().includes(searchTerm.toLowerCase())).map((sala: any) => (
+            {salas.filter((s: any) => s.nome.toLowerCase().includes(searchTerm.toLowerCase())).map((sala: any) => (
               <Card 
                 key={sala.id} 
                 className="group overflow-hidden rounded-2xl border-none shadow-sm hover:shadow-xl transition-all cursor-pointer bg-white"
