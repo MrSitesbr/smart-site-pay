@@ -462,12 +462,13 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     if (!over) return;
 
     // Handle dropping palette widget into canvas
-    if (dragData?.type === 'palette_widget') {
-      const widgetType = dragData.widgetType;
-      
-      // Find the target column or widget
-      let targetColumnId = '';
+    if (active.data.current?.type === 'palette_widget') {
+      const widgetType = active.data.current.widgetType;
       const overData = over.data.current;
+      
+      console.log("Dropped palette widget:", widgetType, "over:", over.id, overData);
+
+      let targetColumnId = '';
       
       if (overData?.type === 'column') {
         targetColumnId = over.id as string;
@@ -476,11 +477,19 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
         layout.forEach(s => s.columns.forEach(c => {
           if (c.widgets.some(w => w.id === over.id)) targetColumnId = c.id;
         }));
+      } else if (overData?.type === 'section') {
+        // If dropped over a section, pick its first column
+        const section = layout.find(s => s.id === over.id);
+        if (section && section.columns.length > 0) {
+          targetColumnId = section.columns[0].id;
+        }
       }
 
       if (targetColumnId) {
         addWidget(targetColumnId, widgetType);
         return;
+      } else {
+        console.warn("No target column found for drop");
       }
     }
 
