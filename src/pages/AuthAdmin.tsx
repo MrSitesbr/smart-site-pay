@@ -113,7 +113,17 @@ export default function AuthAdmin() {
         </Link>
         
         <div className="flex flex-col items-center gap-4 mb-8">
-          <img src="/assets/logo.png" alt="Logo" className="h-20 w-auto object-contain" />
+          <div className="flex items-center gap-3">
+            <img src="/assets/logo.png" alt="Logo" className="h-20 w-auto object-contain" />
+            <div className="flex flex-col leading-none text-left">
+              <span className="font-heading font-black text-2xl tracking-tighter text-white">
+                CoWorking
+              </span>
+              <span className="font-heading font-black text-2xl tracking-tighter text-orange-500">
+                013
+              </span>
+            </div>
+          </div>
         </div>
 
         <p className="text-sm text-slate-400 mb-8 border-l-2 border-orange-500 pl-4 py-1 italic">

@@ -62,9 +62,19 @@ export default function Auth() {
         <Link to="/" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-3 h-3" /> Voltar ao site
         </Link>
-        <div className="flex flex-col items-center gap-4 mb-6">
-          <img src="/assets/logo.png" alt="Logo" className="h-16 w-auto object-contain" />
-          <h1 className="font-heading font-black text-2xl text-center">Área do Cliente</h1>
+        <div className="flex flex-col items-center gap-2 mb-6">
+          <div className="flex items-center gap-3">
+            <img src="/assets/logo.png" alt="Logo" className="h-16 w-auto object-contain" />
+            <div className="flex flex-col leading-none text-left">
+              <span className="font-heading font-black text-2xl tracking-tighter text-foreground">
+                CoWorking
+              </span>
+              <span className="font-heading font-black text-2xl tracking-tighter text-primary">
+                013
+              </span>
+            </div>
+          </div>
+          <h1 className="font-heading font-black text-xl text-center mt-2">Área do Cliente</h1>
         </div>
         <p className="text-sm text-muted-foreground mb-6">
           Acesse suas reservas e contratações.
