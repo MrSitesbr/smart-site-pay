@@ -107,16 +107,6 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <Link to="/" className="flex items-center gap-2 group relative z-10">
           <img src={logoIconUrl} alt="Logo" className="h-12 w-auto object-contain" />
-          <div className="flex flex-col leading-[0.8] items-start">
-            <span className="text-[14px] font-heading font-semibold tracking-tight text-orange-500">
-              {logoTop}
-            </span>
-            <h1 className={`text-3xl font-heading font-extrabold transition-colors ${
-              scrolled ? "text-black" : "text-white"
-            } -mt-1`}>
-              {logoBottom}
-            </h1>
-          </div>
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">
