@@ -153,6 +153,16 @@ export default function AdminSalaDetalhe() {
                 <p className="text-slate-600 leading-relaxed">
                   {sala.descricao || "Sem descrição detalhada cadastrada para esta sala."}
                 </p>
+                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Metragem</p>
+                    <p className="text-brand-blue-dark font-black">{sala.metadata?.metragem || '0'} m²</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {sala.metadata?.tem_janela && <Badge variant="outline" className="text-[10px] border-brand-orange/20 text-brand-orange">Com Janela</Badge>}
+                    {sala.metadata?.tem_lavatorio && <Badge variant="outline" className="text-[10px] border-brand-blue-dark/20 text-brand-blue-dark">Com Lavatório</Badge>}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4">
