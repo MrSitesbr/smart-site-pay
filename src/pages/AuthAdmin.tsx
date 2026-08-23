@@ -116,10 +116,10 @@ export default function AuthAdmin() {
           <div className="flex items-center gap-3">
             <img src="/assets/logo.png" alt="Logo" className="h-20 w-auto object-contain" />
             <div className="flex flex-col leading-[0.8] text-left">
-              <span className="font-heading font-bold text-2xl tracking-tighter text-white">
+              <span className="font-heading font-bold text-[18px] tracking-tighter text-white">
                 CoWorking
               </span>
-              <span className="font-heading font-bold text-2xl tracking-tighter text-orange-500">
+              <span className="font-heading font-bold text-[42px] tracking-tighter leading-[0.8] text-orange-500">
                 013
               </span>
             </div>
