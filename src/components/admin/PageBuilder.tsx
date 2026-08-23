@@ -906,7 +906,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
       >
         {activeDrag && (
           <div 
-            className="pointer-events-none transform shadow-2xl transition-transform duration-200 animate-in zoom-in-95 scale-105"
+            className="pointer-events-none transform shadow-2xl animate-in zoom-in-95 scale-105"
             style={{ zIndex: 9999 }}
           >
             {activeDrag.type === 'section' ? (
