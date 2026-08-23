@@ -129,8 +129,6 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
       {...listeners}
     >
       <div 
-        {...attributes} 
-        {...listeners}
         className="absolute -left-8 top-1/2 -translate-y-1/2 p-2 bg-brand-orange text-white rounded-l-md opacity-0 group-hover/section-wrap:opacity-100 cursor-grab active:cursor-grabbing transition-opacity z-20"
       >
         <GripVertical className="w-4 h-4" />
