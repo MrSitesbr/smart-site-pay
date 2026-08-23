@@ -144,7 +144,7 @@ const SortableSection = ({ section, isAdmin, onElementClick, activeId }: any) =>
   );
 };
 
-import { GripVertical, Columns as ColumnsIcon } from "lucide-react";
+
 
 // Navigator Component for Elementor-like tree view
 const Navigator = ({ layout, selectedId, onSelect, onLayoutChange }: any) => {
