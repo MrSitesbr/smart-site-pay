@@ -131,7 +131,8 @@ export default function AdminUnidadeDetalhe() {
 
   async function handleRemoveEntry(entryId: string) {
     if (!confirm("Remover da lista?")) return;
-    const { error } = await (supabase as any).from('waiting_list').update({ status: 'cancelado' }).eq('id', entryId);
+    // @ts-ignore
+    const { error } = await supabase.from('waiting_list' as any).update({ status: 'cancelado' }).eq('id', entryId);
     if (!error) fetchWaitingList();
   }
 
