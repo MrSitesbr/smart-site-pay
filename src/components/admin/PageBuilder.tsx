@@ -600,7 +600,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
   return (
     <DndContext 
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={rectIntersection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
