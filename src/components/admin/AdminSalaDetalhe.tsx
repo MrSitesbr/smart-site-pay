@@ -289,15 +289,14 @@ export default function AdminSalaDetalhe() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Galeria de Fotos</label>
-                  <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
-                    <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
-                  </Button>
-                </div>
-                <ImageUpload 
-                  value={editingSala?.galeria || []} 
-                  onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
-                />
+                <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
+                  <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
+                </Button>
               </div>
+              <ImageUpload 
+                value={editingSala?.galeria || []} 
+                onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
+              />
             </div>
 
             <div className="space-y-2">
