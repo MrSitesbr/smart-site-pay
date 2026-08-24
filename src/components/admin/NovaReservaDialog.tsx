@@ -163,8 +163,6 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     const out: string[] = [];
     const [y, m, d] = dataStr.split("-").map(Number);
     const cur = new Date(y, m - 1, d);
-    const fim = new Date(...(recAte.split("-").map(Number) as [number, number, number]));
-    fim.setMonth(fim.getMonth()); // no-op guard
     const limite = new Date(Number(recAte.slice(0, 4)), Number(recAte.slice(5, 7)) - 1, Number(recAte.slice(8, 10)));
     let guard = 0;
     while (cur <= limite && guard < 120) {
