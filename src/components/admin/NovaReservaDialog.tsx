@@ -177,6 +177,10 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   const datasPrevistas = useMemo(() => gerarDatas(), [dataStr, recorrente, recFreq, recAte]);
 
+  const temBloqueio = conflitos.some(c => c.tipo === 'bloqueio');
+  const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
+  const bloqueiaSalvar = !recorrente && (temBloqueio || temConflitoSala);
+
   async function save() {
     if (!dataStr) {
       toast({ title: "Informe a data da reserva", variant: "destructive" });
