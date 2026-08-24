@@ -156,8 +156,34 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   const isNovo = !selected && nome.trim().length > 0;
 
+  // Gera todas as datas (ISO) da recorrência
+  function gerarDatas(): string[] {
+    if (!dataStr) return [];
+    if (!recorrente || !recAte || recAte < dataStr) return [dataStr];
+    const out: string[] = [];
+    const [y, m, d] = dataStr.split("-").map(Number);
+    const cur = new Date(y, m - 1, d);
+    const fim = new Date(...(recAte.split("-").map(Number) as [number, number, number]));
+    fim.setMonth(fim.getMonth()); // no-op guard
+    const limite = new Date(Number(recAte.slice(0, 4)), Number(recAte.slice(5, 7)) - 1, Number(recAte.slice(8, 10)));
+    let guard = 0;
+    while (cur <= limite && guard < 120) {
+      out.push(dateISO(cur));
+      if (recFreq === "semanal") cur.setDate(cur.getDate() + 7);
+      else if (recFreq === "quinzenal") cur.setDate(cur.getDate() + 14);
+      else cur.setMonth(cur.getMonth() + 1);
+      guard++;
+    }
+    return out;
+  }
+
+  const datasPrevistas = useMemo(() => gerarDatas(), [dataStr, recorrente, recFreq, recAte]);
+
   async function save() {
-    if (!date) return;
+    if (!dataStr) {
+      toast({ title: "Informe a data da reserva", variant: "destructive" });
+      return;
+    }
     if (!nome.trim() || !email.trim() || !telefone.trim()) {
       toast({ title: "Preencha nome, email e telefone", variant: "destructive" });
       return;
@@ -166,29 +192,57 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       toast({ title: "Horário de fim deve ser após o início", variant: "destructive" });
       return;
     }
-    if (conflitos.some(c => c.tipo === 'bloqueio')) {
-      toast({ title: "Data bloqueada", description: "Não é possível realizar reservas em domingos ou feriados.", variant: "destructive" });
+    setSaving(true);
+
+    const datas = datasPrevistas;
+    const criadas: string[] = [];
+    const puladas: string[] = [];
+
+    for (const dt of datas) {
+      // Revalida cada data no servidor antes de inserir
+      if (selectedSala) {
+        const cfs = await verificarConflitos(selectedSala, dt, horaInicio, horaFim);
+        if (cfs.length > 0) {
+          puladas.push(dt.split("-").reverse().join("/"));
+          continue;
+        }
+      }
+      const payload: any = {
+        nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
+        ambiente, tipo, data: dt,
+        hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
+        status, origem, observacoes: observacoes.trim() || null,
+        unidade_id: selectedUnidade || null,
+        sala_id: selectedSala || null,
+      };
+      const { data: ins, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
+      if (error) {
+        toast({ title: "Erro ao criar reserva", description: error.message, variant: "destructive" });
+        setSaving(false);
+        onCreated?.();
+        return;
+      }
+      criadas.push(ins.id);
+      try {
+        await invokeGoogleSync({ action: "upsert", type: "reserva", id: ins.id });
+      } catch {}
+    }
+
+    setSaving(false);
+
+    if (criadas.length === 0) {
+      toast({
+        title: "Nenhuma reserva criada",
+        description: `Sala indisponível nas datas: ${puladas.join(", ")}`,
+        variant: "destructive",
+      });
       return;
     }
-    setSaving(true);
-    const payload: any = {
-      nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
-      ambiente, tipo, data: dateISO(date),
-      hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
-      status, origem, observacoes: observacoes.trim() || null,
-      unidade_id: selectedUnidade || null,
-      sala_id: selectedSala || null,
-    };
-    const { data, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
-    if (error) {
-      toast({ title: "Erro ao criar reserva", description: error.message, variant: "destructive" });
-      setSaving(false); return;
-    }
-    try {
-      await invokeGoogleSync({ action: "upsert", type: "reserva", id: data.id });
-    } catch {}
-    toast({ title: "Reserva criada" });
-    setSaving(false);
+
+    toast({
+      title: criadas.length > 1 ? `${criadas.length} reservas criadas` : "Reserva criada",
+      description: puladas.length ? `Ignoradas por indisponibilidade: ${puladas.join(", ")}` : undefined,
+    });
     onOpenChange(false);
     onCreated?.();
   }
