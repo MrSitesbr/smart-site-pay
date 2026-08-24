@@ -63,6 +63,13 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const [saving, setSaving] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // Data digitável (integrada ao calendário: inicia na data clicada)
+  const [dataStr, setDataStr] = useState("");
+  // Recorrência
+  const [recorrente, setRecorrente] = useState(false);
+  const [recFreq, setRecFreq] = useState<"semanal" | "quinzenal" | "mensal">("semanal");
+  const [recAte, setRecAte] = useState("");
+
   useEffect(() => {
     if (open) {
       setNome(""); setEmail(""); setTelefone(""); setSelected(null); setShowList(false);
@@ -70,10 +77,12 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setHoraInicio("09:00"); setHoraFim("10:00");
       setStatus("confirmada"); setOrigem("direto"); setObservacoes("");
       setSelectedUnidade(""); setSelectedSala(""); setConflitos([]);
-      
+      setDataStr(date ? dateISO(date) : dateISO(new Date()));
+      setRecorrente(false); setRecFreq("semanal"); setRecAte("");
+
       supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
     }
-  }, [open]);
+  }, [open, date]);
 
   useEffect(() => {
     if (selectedUnidade) {
@@ -88,20 +97,20 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   // Checar conflitos sempre que mudar sala, data ou horário
   useEffect(() => {
-    if (!selectedSala || !date || !horaInicio || !horaFim) {
+    if (!selectedSala || !dataStr || !horaInicio || !horaFim) {
       setConflitos([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       setCheckingConflitos(true);
-      const results = await verificarConflitos(selectedSala, dateISO(date), horaInicio, horaFim);
+      const results = await verificarConflitos(selectedSala, dataStr, horaInicio, horaFim);
       setConflitos(results);
       setCheckingConflitos(false);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedSala, date, horaInicio, horaFim]);
+  }, [selectedSala, dataStr, horaInicio, horaFim]);
 
   useEffect(() => {
     if (tipo === "diaria") { setHoraInicio("09:00"); setHoraFim("17:00"); }
@@ -147,8 +156,36 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   const isNovo = !selected && nome.trim().length > 0;
 
+  // Gera todas as datas (ISO) da recorrência
+  function gerarDatas(): string[] {
+    if (!dataStr) return [];
+    if (!recorrente || !recAte || recAte < dataStr) return [dataStr];
+    const out: string[] = [];
+    const [y, m, d] = dataStr.split("-").map(Number);
+    const cur = new Date(y, m - 1, d);
+    const limite = new Date(Number(recAte.slice(0, 4)), Number(recAte.slice(5, 7)) - 1, Number(recAte.slice(8, 10)));
+    let guard = 0;
+    while (cur <= limite && guard < 120) {
+      out.push(dateISO(cur));
+      if (recFreq === "semanal") cur.setDate(cur.getDate() + 7);
+      else if (recFreq === "quinzenal") cur.setDate(cur.getDate() + 14);
+      else cur.setMonth(cur.getMonth() + 1);
+      guard++;
+    }
+    return out;
+  }
+
+  const datasPrevistas = useMemo(() => gerarDatas(), [dataStr, recorrente, recFreq, recAte]);
+
+  const temBloqueio = conflitos.some(c => c.tipo === 'bloqueio');
+  const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
+  const bloqueiaSalvar = !recorrente && (temBloqueio || temConflitoSala);
+
   async function save() {
-    if (!date) return;
+    if (!dataStr) {
+      toast({ title: "Informe a data da reserva", variant: "destructive" });
+      return;
+    }
     if (!nome.trim() || !email.trim() || !telefone.trim()) {
       toast({ title: "Preencha nome, email e telefone", variant: "destructive" });
       return;
@@ -157,29 +194,57 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       toast({ title: "Horário de fim deve ser após o início", variant: "destructive" });
       return;
     }
-    if (conflitos.some(c => c.tipo === 'bloqueio')) {
-      toast({ title: "Data bloqueada", description: "Não é possível realizar reservas em domingos ou feriados.", variant: "destructive" });
+    setSaving(true);
+
+    const datas = datasPrevistas;
+    const criadas: string[] = [];
+    const puladas: string[] = [];
+
+    for (const dt of datas) {
+      // Revalida cada data no servidor antes de inserir
+      if (selectedSala) {
+        const cfs = await verificarConflitos(selectedSala, dt, horaInicio, horaFim);
+        if (cfs.length > 0) {
+          puladas.push(dt.split("-").reverse().join("/"));
+          continue;
+        }
+      }
+      const payload: any = {
+        nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
+        ambiente, tipo, data: dt,
+        hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
+        status, origem, observacoes: observacoes.trim() || null,
+        unidade_id: selectedUnidade || null,
+        sala_id: selectedSala || null,
+      };
+      const { data: ins, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
+      if (error) {
+        toast({ title: "Erro ao criar reserva", description: error.message, variant: "destructive" });
+        setSaving(false);
+        onCreated?.();
+        return;
+      }
+      criadas.push(ins.id);
+      try {
+        await invokeGoogleSync({ action: "upsert", type: "reserva", id: ins.id });
+      } catch {}
+    }
+
+    setSaving(false);
+
+    if (criadas.length === 0) {
+      toast({
+        title: "Nenhuma reserva criada",
+        description: `Sala indisponível nas datas: ${puladas.join(", ")}`,
+        variant: "destructive",
+      });
       return;
     }
-    setSaving(true);
-    const payload: any = {
-      nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
-      ambiente, tipo, data: dateISO(date),
-      hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
-      status, origem, observacoes: observacoes.trim() || null,
-      unidade_id: selectedUnidade || null,
-      sala_id: selectedSala || null,
-    };
-    const { data, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
-    if (error) {
-      toast({ title: "Erro ao criar reserva", description: error.message, variant: "destructive" });
-      setSaving(false); return;
-    }
-    try {
-      await invokeGoogleSync({ action: "upsert", type: "reserva", id: data.id });
-    } catch {}
-    toast({ title: "Reserva criada" });
-    setSaving(false);
+
+    toast({
+      title: criadas.length > 1 ? `${criadas.length} reservas criadas` : "Reserva criada",
+      description: puladas.length ? `Ignoradas por indisponibilidade: ${puladas.join(", ")}` : undefined,
+    });
     onOpenChange(false);
     onCreated?.();
   }
@@ -302,6 +367,11 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             </Select>
           </div>
           <div>
+            <Label className="text-xs">Data</Label>
+            <Input type="date" value={dataStr} onChange={(e) => setDataStr(e.target.value)} />
+            <p className="text-[10px] text-muted-foreground mt-0.5">Digite ou escolha a data — a reserva aparece no calendário nesse dia.</p>
+          </div>
+          <div>
             <Label className="text-xs">Tipo</Label>
             <Select value={tipo} onValueChange={setTipo}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -319,26 +389,59 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             <Label className="text-xs">Fim</Label>
             <Input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
           </div>
-          
-          {conflitos.length > 0 && (
-            <div className="col-span-2 p-2 bg-red-50 border border-red-200 rounded-lg flex gap-2 items-start mt-1">
-              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-red-800">
-                <p className="font-bold">Atenção: A data/horário selecionado possui conflitos!</p>
-                <ul className="list-disc list-inside">
-                  {conflitos.map((c, i) => (
-                    <li key={i}>
-                      {c.tipo === 'bloqueio' ? (
-                        <span className="font-bold text-red-700">BLOQUEADO: {c.nome}</span>
-                      ) : (
-                        <>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio}-{c.hora_fim})</>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+
+          {/* Aviso compacto de disponibilidade abaixo dos campos de horário */}
+          <div className="col-span-2 -mt-1">
+            {checkingConflitos ? (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" /> Verificando disponibilidade da sala…
+              </p>
+            ) : temBloqueio ? (
+              <p className="text-[11px] text-red-700 flex items-start gap-1">
+                <AlertTriangle className="w-3 h-3 mt-[2px] shrink-0" />
+                Data bloqueada ({conflitos.filter(c => c.tipo === 'bloqueio').map(c => c.nome).join(", ")}) — escolha outro dia.
+              </p>
+            ) : temConflitoSala ? (
+              <p className="text-[11px] text-red-700 flex items-start gap-1">
+                <AlertTriangle className="w-3 h-3 mt-[2px] shrink-0" />
+                Sala já ocupada neste horário ({conflitos.filter(c => c.tipo !== 'bloqueio').map(c => `${c.nome} ${c.hora_inicio}-${c.hora_fim}`).join(", ")}). Outros horários do mesmo dia estão livres.
+              </p>
+            ) : selectedSala ? (
+              <p className="text-[11px] text-green-700">Sala disponível neste horário.</p>
+            ) : null}
+          </div>
+
+          {/* Recorrência */}
+          <div className="col-span-2 rounded-lg border p-2 space-y-2">
+            <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+              <input type="checkbox" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} />
+              Repetir reserva (recorrência)
+            </label>
+            {recorrente && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Frequência</Label>
+                  <Select value={recFreq} onValueChange={(v: any) => setRecFreq(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="semanal">Toda semana (mesmo dia)</SelectItem>
+                      <SelectItem value="quinzenal">A cada 15 dias</SelectItem>
+                      <SelectItem value="mensal">Todo mês</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Repetir até</Label>
+                  <Input type="date" value={recAte} min={dataStr} onChange={(e) => setRecAte(e.target.value)} />
+                </div>
+                <p className="col-span-2 text-[10px] text-muted-foreground">
+                  {recAte
+                    ? `Serão criadas ${datasPrevistas.length} reservas. Datas com a sala ocupada, domingos e feriados são automaticamente ignoradas.`
+                    : "Informe a data final da recorrência."}
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div>
             <Label className="text-xs">Status</Label>
@@ -385,7 +488,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             ? `Diária · R$ ${r.diaria.toFixed(2)}`
             : `R$ ${r.hora.toFixed(2)}/h × ${horas > 0 ? horas.toFixed(1) : 0}h (cobra ${Math.ceil(horas)}h)`;
           const AMB_LBL: Record<string,string> = { estacao:"Estação de Trabalho", sala_privativa:"Sala Privativa", sala_reuniao:"Sala de Reunião" };
-          const dataTxt = date ? date.toLocaleDateString("pt-BR") : "";
+          const dataTxt = dataStr ? dataStr.split("-").reverse().join("/") : "";
           const hiTxt = tipo === "diaria" ? "09:00" : horaInicio;
           const hfTxt = tipo === "diaria" ? "17:00" : horaFim;
           const desc = `Reserva ${AMB_LBL[ambiente]} (${tipo==="diaria"?"Diaria":"Por Hora"}) - ${dataTxt} ${hiTxt}-${hfTxt}`;
