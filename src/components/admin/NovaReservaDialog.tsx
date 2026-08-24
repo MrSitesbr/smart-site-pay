@@ -63,6 +63,13 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const [saving, setSaving] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // Data digitável (integrada ao calendário: inicia na data clicada)
+  const [dataStr, setDataStr] = useState("");
+  // Recorrência
+  const [recorrente, setRecorrente] = useState(false);
+  const [recFreq, setRecFreq] = useState<"semanal" | "quinzenal" | "mensal">("semanal");
+  const [recAte, setRecAte] = useState("");
+
   useEffect(() => {
     if (open) {
       setNome(""); setEmail(""); setTelefone(""); setSelected(null); setShowList(false);
@@ -70,10 +77,12 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setHoraInicio("09:00"); setHoraFim("10:00");
       setStatus("confirmada"); setOrigem("direto"); setObservacoes("");
       setSelectedUnidade(""); setSelectedSala(""); setConflitos([]);
-      
+      setDataStr(date ? dateISO(date) : dateISO(new Date()));
+      setRecorrente(false); setRecFreq("semanal"); setRecAte("");
+
       supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
     }
-  }, [open]);
+  }, [open, date]);
 
   useEffect(() => {
     if (selectedUnidade) {
@@ -88,20 +97,20 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   // Checar conflitos sempre que mudar sala, data ou horário
   useEffect(() => {
-    if (!selectedSala || !date || !horaInicio || !horaFim) {
+    if (!selectedSala || !dataStr || !horaInicio || !horaFim) {
       setConflitos([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       setCheckingConflitos(true);
-      const results = await verificarConflitos(selectedSala, dateISO(date), horaInicio, horaFim);
+      const results = await verificarConflitos(selectedSala, dataStr, horaInicio, horaFim);
       setConflitos(results);
       setCheckingConflitos(false);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedSala, date, horaInicio, horaFim]);
+  }, [selectedSala, dataStr, horaInicio, horaFim]);
 
   useEffect(() => {
     if (tipo === "diaria") { setHoraInicio("09:00"); setHoraFim("17:00"); }
