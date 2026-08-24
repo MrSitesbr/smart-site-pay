@@ -488,7 +488,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             ? `Diária · R$ ${r.diaria.toFixed(2)}`
             : `R$ ${r.hora.toFixed(2)}/h × ${horas > 0 ? horas.toFixed(1) : 0}h (cobra ${Math.ceil(horas)}h)`;
           const AMB_LBL: Record<string,string> = { estacao:"Estação de Trabalho", sala_privativa:"Sala Privativa", sala_reuniao:"Sala de Reunião" };
-          const dataTxt = date ? date.toLocaleDateString("pt-BR") : "";
+          const dataTxt = dataStr ? dataStr.split("-").reverse().join("/") : "";
           const hiTxt = tipo === "diaria" ? "09:00" : horaInicio;
           const hfTxt = tipo === "diaria" ? "17:00" : horaFim;
           const desc = `Reserva ${AMB_LBL[ambiente]} (${tipo==="diaria"?"Diaria":"Por Hora"}) - ${dataTxt} ${hiTxt}-${hfTxt}`;
