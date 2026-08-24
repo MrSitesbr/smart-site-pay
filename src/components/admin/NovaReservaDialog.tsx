@@ -363,6 +363,11 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             </Select>
           </div>
           <div>
+            <Label className="text-xs">Data</Label>
+            <Input type="date" value={dataStr} onChange={(e) => setDataStr(e.target.value)} />
+            <p className="text-[10px] text-muted-foreground mt-0.5">Digite ou escolha a data — a reserva aparece no calendário nesse dia.</p>
+          </div>
+          <div>
             <Label className="text-xs">Tipo</Label>
             <Select value={tipo} onValueChange={setTipo}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -380,26 +385,59 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             <Label className="text-xs">Fim</Label>
             <Input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
           </div>
-          
-          {conflitos.length > 0 && (
-            <div className="col-span-2 p-2 bg-red-50 border border-red-200 rounded-lg flex gap-2 items-start mt-1">
-              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-red-800">
-                <p className="font-bold">Atenção: A data/horário selecionado possui conflitos!</p>
-                <ul className="list-disc list-inside">
-                  {conflitos.map((c, i) => (
-                    <li key={i}>
-                      {c.tipo === 'bloqueio' ? (
-                        <span className="font-bold text-red-700">BLOQUEADO: {c.nome}</span>
-                      ) : (
-                        <>{c.nome} ({c.tipo === 'reserva' ? 'Reserva' : 'Visita'}: {c.hora_inicio}-{c.hora_fim})</>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+
+          {/* Aviso compacto de disponibilidade abaixo dos campos de horário */}
+          <div className="col-span-2 -mt-1">
+            {checkingConflitos ? (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" /> Verificando disponibilidade da sala…
+              </p>
+            ) : temBloqueio ? (
+              <p className="text-[11px] text-red-700 flex items-start gap-1">
+                <AlertTriangle className="w-3 h-3 mt-[2px] shrink-0" />
+                Data bloqueada ({conflitos.filter(c => c.tipo === 'bloqueio').map(c => c.nome).join(", ")}) — escolha outro dia.
+              </p>
+            ) : temConflitoSala ? (
+              <p className="text-[11px] text-red-700 flex items-start gap-1">
+                <AlertTriangle className="w-3 h-3 mt-[2px] shrink-0" />
+                Sala já ocupada neste horário ({conflitos.filter(c => c.tipo !== 'bloqueio').map(c => `${c.nome} ${c.hora_inicio}-${c.hora_fim}`).join(", ")}). Outros horários do mesmo dia estão livres.
+              </p>
+            ) : selectedSala ? (
+              <p className="text-[11px] text-green-700">Sala disponível neste horário.</p>
+            ) : null}
+          </div>
+
+          {/* Recorrência */}
+          <div className="col-span-2 rounded-lg border p-2 space-y-2">
+            <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+              <input type="checkbox" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} />
+              Repetir reserva (recorrência)
+            </label>
+            {recorrente && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Frequência</Label>
+                  <Select value={recFreq} onValueChange={(v: any) => setRecFreq(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="semanal">Toda semana (mesmo dia)</SelectItem>
+                      <SelectItem value="quinzenal">A cada 15 dias</SelectItem>
+                      <SelectItem value="mensal">Todo mês</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Repetir até</Label>
+                  <Input type="date" value={recAte} min={dataStr} onChange={(e) => setRecAte(e.target.value)} />
+                </div>
+                <p className="col-span-2 text-[10px] text-muted-foreground">
+                  {recAte
+                    ? `Serão criadas ${datasPrevistas.length} reservas. Datas com a sala ocupada, domingos e feriados são automaticamente ignoradas.`
+                    : "Informe a data final da recorrência."}
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div>
             <Label className="text-xs">Status</Label>
