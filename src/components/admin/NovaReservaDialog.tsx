@@ -521,7 +521,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
         <DialogFooter className="mt-3">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-          <Button onClick={save} disabled={saving}>
+          <Button onClick={save} disabled={saving || bloqueiaSalvar}>
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Criar reserva
           </Button>
