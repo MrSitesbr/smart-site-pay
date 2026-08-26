@@ -64,7 +64,7 @@ const PricingSection = ({ content, settings }: { content?: any, settings?: any }
 
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {content.plans_individual.map((plan: any, i: number) => (
+          {localContent.plans_individual.map((plan: any, i: number) => (
             <div key={i} className={`bg-white rounded-[2rem] p-8 border-2 transition-all ${plan.highlight ? 'border-brand-orange shadow-xl scale-105 relative z-10' : 'border-transparent shadow-sm hover:shadow-md'}`}>
               {plan.highlight && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-orange text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Mais Popular</div>
