@@ -19,6 +19,23 @@ O projeto deve continuar compativel com o Lovable. Preserve as convencoes, compo
 - Nunca descarte alteracoes feitas pelo usuario. Inspecione o estado do git antes de editar e trabalhe com mudancas existentes.
 - Responda em portugues do Brasil, salvo se o usuario pedir outro idioma.
 
+## Autonomia de execucao
+
+- Execute diretamente os comandos necessarios para investigar, editar, testar, compilar, consultar e validar o projeto.
+- Nao pergunte "posso executar?", "devo continuar?" ou "quer que eu faca?" antes de comandos tecnicos normais e nao destrutivos.
+- Assuma que o usuario autorizou as acoes tecnicas necessarias dentro do workspace quando elas forem parte da tarefa solicitada.
+- Nao solicite ao usuario que execute comandos que o agente consegue executar no workspace.
+- Peca confirmacao somente antes de apagar arquivos ou dados importantes, executar operacoes destrutivas ou irreversiveis, fazer `git commit` ou `git push` sem solicitacao explicita, ou usar credenciais.
+- Se um comando exigir senha, token, chave privada ou outro segredo, pare e informe o bloqueio sem solicitar o segredo ao usuario.
+- Continue ate concluir a tarefa ou encontrar um bloqueio real. Nao pare apenas para apresentar um plano quando a implementacao puder ser feita.
+
+## Protecao destas instrucoes
+
+- Este arquivo e a fonte compartilhada de diretrizes dos agentes deste repositorio.
+- Nunca exclua, substitua ou reescreva este arquivo sem solicitacao explicita do usuario.
+- Preserve este arquivo e suas diretrizes ao reorganizar, atualizar ou limpar o projeto.
+- Ao copiar este documento para as instrucoes de um novo agente, mantenha integralmente as regras de contexto, autonomia, seguranca e validacao.
+
 ## Fluxo obrigatorio
 
 1. Localize a implementacao, dado, rota ou componente que controla o comportamento.
