@@ -648,7 +648,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
             <h3 className="text-[9px] font-black uppercase text-brand-orange tracking-widest mb-3 px-1">Componentes Especializados</h3>
             <div className="grid grid-cols-2 gap-3">
               {(Object.entries(WIDGET_REGISTRY) as [WidgetType, any][])
-                .filter(([type]) => ['units_grid', 'plans_grid', 'rooms_grid', 'popup', 'inner_section', 'icon_box'].includes(type))
+                .filter(([type]) => ['units_grid', 'plans_grid', 'rooms_grid', 'popup', 'inner_section', 'icon_box', 'blog_articles'].includes(type))
                 .map(([type, config]) => (
                   <DraggablePaletteWidget 
                     key={type} 

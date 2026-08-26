@@ -4,7 +4,6 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Calendar, User, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
@@ -51,13 +50,14 @@ export default function Blog() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {articles.map((article) => (
-                <Card key={article.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                <Link key={article.id} to={`/blog/${article.slug}`} className="group block h-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2">
+                <Card className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                   {article.image_url && (
                     <div className="aspect-video overflow-hidden bg-slate-200 flex items-center justify-center">
                       <img 
                         src={article.image_url || "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80"} 
                         alt={article.title} 
-                        className="w-full h-full object-cover transition-transform hover:scale-105"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80";
                         }}
@@ -71,15 +71,12 @@ export default function Blog() {
                     </div>
                     <h2 className="text-xl font-bold text-brand-blue-dark mb-3 line-clamp-2">{article.title}</h2>
                     <p className="text-muted-foreground text-sm mb-6 line-clamp-3">{article.excerpt}</p>
-                    <div className="mt-auto">
-                      <Button asChild variant="link" className="text-brand-orange p-0 font-bold">
-                        <Link to={`/blog/${article.slug}`}>
-                          LER ARTIGO <ChevronRight className="w-4 h-4 ml-1" />
-                        </Link>
-                      </Button>
+                    <div className="mt-auto inline-flex items-center text-brand-orange font-bold">
+                      LER ARTIGO <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                     </div>
                   </div>
                 </Card>
+                </Link>
               ))}
             </div>
           )}

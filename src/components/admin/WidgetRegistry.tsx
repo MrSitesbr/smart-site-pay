@@ -3,7 +3,7 @@ import {
   Columns, AlignLeft, AlignCenter, AlignRight, Bold, Italic, 
   Trash2, MoveUp, MoveDown, Plus, Settings2, Palette, Maximize2, 
   Building2, CreditCard, Armchair, MessageSquare, Box, 
-  List, CheckSquare, Search, 
+  List, CheckSquare, Search, FileText,
   ArrowRightCircle, Star
 } from "lucide-react";
 import { WidgetType } from "@/types/page-builder";
@@ -193,6 +193,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
         { title: "Pergunta 2?", content: "Resposta detalhada aqui." }
       ] 
     },
+    defaultStyles: {}
+  },
+  blog_articles: {
+    label: "Artigos do Blog",
+    icon: FileText,
+    defaultContent: { title: "Últimos artigos do blog", eyebrow: "Conteúdo para crescer", limit: 3 },
     defaultStyles: {}
   }
 };

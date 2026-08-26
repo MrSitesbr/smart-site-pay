@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { UnitsWidget, PlansWidget, RoomsWidget, GlobalHeaderWidget, GlobalFooterWidget } from "./admin/layout/CoworkingWidgets";
 import { ContactForm } from "./ContactForm";
 import ReservaDialog from "./ReservaDialog";
+import BlogHighlights from "./BlogHighlights";
 
 const LUCIDE_ICONS: Record<string, any> = {
   Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout: LayoutIcon
@@ -509,6 +510,9 @@ const WidgetRenderer: React.FC<{
             ))}
           </div>
         );
+
+      case 'blog_articles':
+        return <BlogHighlights content={content} />;
 
       default:
         return <div className="p-4 bg-muted text-xs italic">Widget: {widget.type}</div>;
