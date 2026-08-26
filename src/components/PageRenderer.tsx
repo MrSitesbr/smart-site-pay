@@ -151,9 +151,9 @@ const SectionRenderer: React.FC<{
       {settings.backgroundImage && <div style={overlayStyle} />}
       {getShapeDivider()}
       
-      <div className={`relative z-10 w-full grid gap-4 ${columns.length > 1 ? `grid-cols-1 md:grid-cols-${columns.length}` : 'grid-cols-1'} ${settings.layoutType === 'full' || settings.fullWidth ? '' : 'px-4'}`}
-           style={{ 
-             gridTemplateColumns: columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr', 
+      <div className={`page-builder-columns relative z-10 w-full grid gap-4 grid-cols-1 ${settings.layoutType === 'full' || settings.fullWidth ? '' : 'px-4'}`}
+           style={{
+             '--page-columns': columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr',
              width: '100%',
              maxWidth: (settings.layoutType === 'full' || settings.fullWidth) ? 'none' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
              marginLeft: 'auto',
@@ -276,6 +276,27 @@ const WidgetRenderer: React.FC<{
             style={{ borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined }} 
           />
         );
+
+      case 'video': {
+        const videoUrl = content.url || content.videoUrl;
+        const youtubeId = videoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^?&/]+)/)?.[1];
+
+        if (!videoUrl) return null;
+
+        return youtubeId ? (
+          <div className="aspect-video w-full overflow-hidden rounded-2xl">
+            <iframe
+              src={`https://www.youtube.com/embed/${youtubeId}`}
+              title={content.title || 'Vídeo'}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <video src={videoUrl} controls className="h-auto w-full rounded-2xl" />
+        );
+      }
       
       case 'button':
         return (
