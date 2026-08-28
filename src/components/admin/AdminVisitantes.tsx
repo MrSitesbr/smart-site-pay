@@ -184,7 +184,7 @@ function VisitanteCard({ v }: { v: any }) {
             </p>
             <p className="text-muted-foreground flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" /> 
-              Local: <span className="font-bold text-foreground">{v.salas?.nome}</span>
+              Local: <span className="font-bold text-foreground">{v.salas?.nome || "Não definido"}</span>
             </p>
           </div>
         </div>
