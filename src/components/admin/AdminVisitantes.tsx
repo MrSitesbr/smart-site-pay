@@ -133,7 +133,20 @@ export default function AdminVisitantes() {
             )}
           </div>
         </section>
+
+        {/* CADASTRADOS SEM AGENDAMENTO */}
+        {semAgendamento.length > 0 && (
+          <section className="space-y-4">
+            <h3 className="font-heading font-black text-brand-blue-dark text-xl border-l-4 border-muted-foreground pl-3">
+              Cadastrados (sem data marcada)
+            </h3>
+            <div className="grid gap-4">
+              {semAgendamento.map(v => <VisitanteCard key={v.id} v={v} />)}
+            </div>
+          </section>
+        )}
       </div>
+
 
       <NovoVisitanteDialog 
         open={showNovoVisita}
