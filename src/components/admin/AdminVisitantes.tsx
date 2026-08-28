@@ -43,16 +43,21 @@ export default function AdminVisitantes() {
   hoje.setHours(0,0,0,0);
 
   const visitasHoje = filtered.filter(v => {
+    if (!v.data_hora_prevista) return false;
     const data = new Date(v.data_hora_prevista);
     data.setHours(0,0,0,0);
     return data.getTime() === hoje.getTime();
   });
 
   const futurasVisitas = filtered.filter(v => {
+    if (!v.data_hora_prevista) return false;
     const data = new Date(v.data_hora_prevista);
     data.setHours(0,0,0,0);
     return data.getTime() > hoje.getTime();
   });
+
+  const semAgendamento = filtered.filter(v => !v.data_hora_prevista);
+
 
   return (
     <div className="space-y-6">
@@ -128,7 +133,20 @@ export default function AdminVisitantes() {
             )}
           </div>
         </section>
+
+        {/* CADASTRADOS SEM AGENDAMENTO */}
+        {semAgendamento.length > 0 && (
+          <section className="space-y-4">
+            <h3 className="font-heading font-black text-brand-blue-dark text-xl border-l-4 border-muted-foreground pl-3">
+              Cadastrados (sem data marcada)
+            </h3>
+            <div className="grid gap-4">
+              {semAgendamento.map(v => <VisitanteCard key={v.id} v={v} />)}
+            </div>
+          </section>
+        )}
       </div>
+
 
       <NovoVisitanteDialog 
         open={showNovoVisita}
@@ -141,9 +159,10 @@ export default function AdminVisitantes() {
 }
 
 function VisitanteCard({ v }: { v: any }) {
-  const data = new Date(v.data_hora_prevista);
-  const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const dia = data.toLocaleDateString('pt-BR');
+  const data = v.data_hora_prevista ? new Date(v.data_hora_prevista) : null;
+  const hora = data ? data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : "--:--";
+  const dia = data ? data.toLocaleDateString('pt-BR') : "Sem data";
+
 
   return (
     <Card className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-none shadow-sm hover:shadow-md transition-shadow bg-white">
@@ -165,7 +184,7 @@ function VisitanteCard({ v }: { v: any }) {
             </p>
             <p className="text-muted-foreground flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" /> 
-              Local: <span className="font-bold text-foreground">{v.salas?.nome}</span>
+              Local: <span className="font-bold text-foreground">{v.salas?.nome || "Não definido"}</span>
             </p>
           </div>
         </div>
