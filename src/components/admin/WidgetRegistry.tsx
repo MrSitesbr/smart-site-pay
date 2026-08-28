@@ -106,7 +106,16 @@ export const WIDGET_REGISTRY: Record<WidgetType, {
   hero: {
     label: "Hero Banner",
     icon: LayoutIcon,
-    defaultContent: { title: "Título Principal", subtitle: "Subtítulo da página", cta: "Botão", image: "https://images.unsplash.com/photo-1497366216548-37526070297c" },
+    defaultContent: {
+      title: "Título Principal",
+      subtitle: "Subtítulo da página",
+      cta: "Reservar agora",
+      ctaUrl: "/reservar",
+      ctaSize: "sm",
+      desktopColumns: true,
+      image: "https://images.unsplash.com/photo-1497366216548-37526070297c",
+      backgroundVideoUrl: ""
+    },
     defaultStyles: {}
   },
   features: {

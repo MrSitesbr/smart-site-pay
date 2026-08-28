@@ -161,6 +161,47 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                     </div>
                   )}
 
+                  {data.type === 'hero' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto do Botão</Label>
+                        <Input value={data.content.cta || ''} onChange={(e) => handleChange('content.cta', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Link da Reserva</Label>
+                        <Input value={data.content.ctaUrl || '/reservar'} onChange={(e) => handleChange('content.ctaUrl', e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tamanho do Botão</Label>
+                        <Select value={data.content.ctaSize || 'sm'} onValueChange={(v) => handleChange('content.ctaSize', v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sm">Menor</SelectItem>
+                            <SelectItem value="md">Médio</SelectItem>
+                            <SelectItem value="lg">Grande</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <Label className="text-[10px] font-black uppercase tracking-widest">Duas colunas no desktop</Label>
+                        <input
+                          type="checkbox"
+                          checked={data.content.desktopColumns !== false}
+                          onChange={(e) => handleChange('content.desktopColumns', e.target.checked)}
+                          className="w-4 h-4 accent-brand-orange"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vídeo YouTube de Fundo</Label>
+                        <Input
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          value={data.content.backgroundVideoUrl || ''}
+                          onChange={(e) => handleChange('content.backgroundVideoUrl', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {(data.type === 'units_grid' || data.type === 'rooms_grid') && (
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Limite de Itens</Label>

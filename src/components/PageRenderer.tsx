@@ -29,16 +29,16 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ layout, isAdmin, onE
   return (
     <div className={`w-full overflow-x-hidden ${isAdmin ? 'min-h-[500px] pb-32' : ''}`}>
       {layout.filter(Boolean).map((section) => (
-        <SectionRenderer 
-          key={section.id} 
-          section={section} 
-          isAdmin={isAdmin} 
+        <SectionRenderer
+          key={section.id}
+          section={section}
+          isAdmin={isAdmin}
           onElementClick={onElementClick}
           activeDragId={activeDragId}
           dropIndicator={dropIndicator}
-        />
+          />
       ))}
-      
+
       {isAdmin && layout.length > 0 && activeDragId && (
         <div className="py-10 flex justify-center">
           <div className="w-full max-w-4xl border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50 transition-colors group">
@@ -112,7 +112,7 @@ const SectionRenderer: React.FC<{
         </svg>
       )
     };
-    
+
     return shapes[settings.shapeDivider];
   };
 
@@ -148,7 +148,7 @@ const SectionRenderer: React.FC<{
           ></iframe>
         </div>
       )}
-      {settings.backgroundImage && <div style={overlayStyle} />}
+      {(settings.backgroundImage || (settings.backgroundType === 'video' && settings.backgroundVideoUrl)) && <div style={{ ...overlayStyle, zIndex: 1 }} />}
       {getShapeDivider()}
       
       <div className={`page-builder-columns relative z-10 w-full grid gap-4 grid-cols-1 ${settings.layoutType === 'full' || settings.fullWidth ? '' : 'px-4'}`}
@@ -378,20 +378,96 @@ const WidgetRenderer: React.FC<{
         );
 
       case 'hero':
+        const heroVideoUrl = content.backgroundVideoUrl;
+        const heroVideoId = heroVideoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^?&/]+)/)?.[1];
         return (
-          <div className="relative py-24 bg-brand-blue-dark overflow-hidden">
-            <div className="absolute inset-0 opacity-40">
-              <img src={content.image} className="w-full h-full object-cover" alt="" />
+          <div className="relative w-full min-h-[500px] lg:min-h-[650px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-brand-blue-dark via-brand-blue-dark to-brand-blue-dark/90">
+            {/* Background Video */}
+            {heroVideoId ? (
+              <>
+                <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                  <iframe
+                    className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-[100vh] w-[100vw] min-w-[177.78vh] -translate-x-1/2 -translate-y-1/2"
+                    src={`https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${heroVideoId}&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&origin=${encodeURIComponent(window.location.origin)}`}
+                    title="Vídeo de fundo"
+                    allow="autoplay"
+                    frameBorder="0"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                </div>
+                {/* Dark overlay for text contrast */}
+                <div className="absolute inset-0 z-[1] bg-black/45 pointer-events-none" />
+              </>
+            ) : content.image ? (
+              <>
+                <img 
+                  src={content.image} 
+                  className="absolute inset-0 w-full h-full object-cover"
+                  alt="" 
+                />
+                <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+              </>
+            ) : null}
+
+            {/* Content Container */}
+            <div className="relative z-10 w-full">
+              <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-12 py-16 lg:py-20">
+                <div className={`grid gap-8 lg:gap-16 items-center ${content.desktopColumns !== false ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                  
+                  {/* Left: Text Content */}
+                  <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
+                    {/* Eyebrow */}
+                    <div className="inline-flex items-center w-max gap-3">
+                      <div className="h-1 w-10 bg-brand-orange rounded-full" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-brand-orange">
+                        Solução Coworking
+                      </span>
+                    </div>
+
+                    {/* Title - Reduced and moderate weight */}
+                    <h1 
+                      className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-snug tracking-tight"
+                      dangerouslySetInnerHTML={{ __html: content.title || '' }}
+                    />
+
+                    {/* Subtitle */}
+                    <p 
+                      className="text-base sm:text-lg text-white/80 leading-relaxed max-w-md font-normal"
+                      dangerouslySetInnerHTML={{ __html: content.subtitle || '' }}
+                    />
+                  </div>
+
+                  {/* Right: CTA Card */}
+                  {content.cta && content.desktopColumns !== false && (
+                    <div className="flex items-center justify-center lg:justify-center">
+                      <div className="w-full sm:w-72 p-6 sm:p-8 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all">
+                        <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Próximo passo</p>
+                        <h3 className="text-xl font-bold text-white mb-5">Reserve agora</h3>
+                        <a 
+                          href={content.ctaUrl || '/reservar'} 
+                          className="block w-full px-5 py-2.5 bg-brand-orange text-white font-bold text-sm rounded-lg hover:bg-brand-orange/90 transition-colors text-center"
+                        >
+                          {content.cta}
+                        </a>
+                        <p className="text-xs text-white/50 mt-3 text-center">Sem compromisso</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="container mx-auto px-4 relative z-10 text-white">
-              <h1 className="text-5xl font-black mb-6 uppercase tracking-tighter" dangerouslySetInnerHTML={{ __html: content.title || '' }} />
-              <p className="text-xl opacity-90 max-w-2xl mb-8" dangerouslySetInnerHTML={{ __html: content.subtitle || '' }} />
-              {content.cta && (
-                <Button className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold px-8 py-6 rounded-2xl">
+
+            {/* Mobile CTA */}
+            {content.cta && content.desktopColumns !== false && (
+              <div className="lg:hidden absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 to-transparent">
+                <a 
+                  href={content.ctaUrl || '/reservar'} 
+                  className="block w-full px-5 py-3 bg-brand-orange text-white font-bold text-center rounded-lg hover:bg-brand-orange/90 transition-colors"
+                >
                   {content.cta}
-                </Button>
-              )}
-            </div>
+                </a>
+              </div>
+            )}
           </div>
         );
 
