@@ -158,7 +158,7 @@ const SectionRenderer: React.FC<{
              maxWidth: (settings.layoutType === 'full' || settings.fullWidth) ? 'none' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
              marginLeft: 'auto',
              marginRight: 'auto'
-           }}>
+           } as React.CSSProperties}>
         {columns.filter(Boolean).map((column) => (
           <ColumnRenderer 
             key={column.id} 
