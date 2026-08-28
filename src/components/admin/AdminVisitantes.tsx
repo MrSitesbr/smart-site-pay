@@ -159,9 +159,10 @@ export default function AdminVisitantes() {
 }
 
 function VisitanteCard({ v }: { v: any }) {
-  const data = new Date(v.data_hora_prevista);
-  const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const dia = data.toLocaleDateString('pt-BR');
+  const data = v.data_hora_prevista ? new Date(v.data_hora_prevista) : null;
+  const hora = data ? data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : "--:--";
+  const dia = data ? data.toLocaleDateString('pt-BR') : "Sem data";
+
 
   return (
     <Card className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-none shadow-sm hover:shadow-md transition-shadow bg-white">
