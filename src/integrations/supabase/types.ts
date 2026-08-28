@@ -811,7 +811,7 @@ export type Database = {
         Row: {
           cliente_corp_id: string | null
           created_at: string
-          data_hora_prevista: string
+          data_hora_prevista: string | null
           documento: string | null
           id: string
           nome: string
@@ -821,7 +821,7 @@ export type Database = {
         Insert: {
           cliente_corp_id?: string | null
           created_at?: string
-          data_hora_prevista: string
+          data_hora_prevista?: string | null
           documento?: string | null
           id?: string
           nome: string
@@ -831,7 +831,7 @@ export type Database = {
         Update: {
           cliente_corp_id?: string | null
           created_at?: string
-          data_hora_prevista?: string
+          data_hora_prevista?: string | null
           documento?: string | null
           id?: string
           nome?: string
