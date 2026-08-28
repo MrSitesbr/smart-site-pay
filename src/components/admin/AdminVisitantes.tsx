@@ -43,16 +43,21 @@ export default function AdminVisitantes() {
   hoje.setHours(0,0,0,0);
 
   const visitasHoje = filtered.filter(v => {
+    if (!v.data_hora_prevista) return false;
     const data = new Date(v.data_hora_prevista);
     data.setHours(0,0,0,0);
     return data.getTime() === hoje.getTime();
   });
 
   const futurasVisitas = filtered.filter(v => {
+    if (!v.data_hora_prevista) return false;
     const data = new Date(v.data_hora_prevista);
     data.setHours(0,0,0,0);
     return data.getTime() > hoje.getTime();
   });
+
+  const semAgendamento = filtered.filter(v => !v.data_hora_prevista);
+
 
   return (
     <div className="space-y-6">
