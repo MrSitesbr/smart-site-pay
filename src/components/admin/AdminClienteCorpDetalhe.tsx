@@ -247,19 +247,24 @@ export default function AdminClienteCorpDetalhe() {
         <TabsContent value="visitantes" className="mt-6">
           <Card className="p-6 space-y-4">
              <div className="flex justify-between items-center">
-              <h3 className="font-bold">Histórico de Visitantes</h3>
-              <Button size="sm" variant="outline" onClick={() => setShowNovoVisita(true)}><Plus className="w-4 h-4 mr-2" /> Agendar Visita</Button>
+              <h3 className="font-bold">Visitantes</h3>
+              <Button size="sm" variant="outline" onClick={() => setShowNovoVisita(true)}><Plus className="w-4 h-4 mr-2" /> Novo Visitante</Button>
             </div>
             <div className="grid gap-2">
               {visitantes.map(v => (
                 <div key={v.id} className="p-3 border rounded-lg flex justify-between items-center">
                   <div>
                     <p className="font-bold uppercase text-xs">{v.nome}</p>
-                    <p className="text-[10px] text-muted-foreground">{v.salas?.nome} · {new Date(v.data_hora_prevista).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {v.data_hora_prevista
+                        ? `${v.salas?.nome ? v.salas.nome + " · " : ""}${new Date(v.data_hora_prevista).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`
+                        : "Cadastro sem agendamento"}
+                    </p>
                   </div>
                 </div>
               ))}
               {visitantes.length === 0 && <p className="text-center py-8 text-muted-foreground italic text-sm">Nenhum visitante registrado.</p>}
+
             </div>
           </Card>
         </TabsContent>
