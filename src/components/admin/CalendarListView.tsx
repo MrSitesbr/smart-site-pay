@@ -10,7 +10,7 @@ interface CalendarListProps {
   events: any[];
   onDeleteReserva?: (r: any) => void;
   onDeleteContrato?: (c: any) => void;
-  onViewDetails: (kind: "reserva" | "contrato", obj: any) => void;
+  onViewDetails: (kind: "reserva" | "contrato" | "visita", obj: any) => void;
 }
 
 export function CalendarListView({ events, onDeleteReserva, onDeleteContrato, onViewDetails }: CalendarListProps) {
@@ -18,10 +18,10 @@ export function CalendarListView({ events, onDeleteReserva, onDeleteContrato, on
     return [...events].sort((a, b) => {
       const dateA = a.kind === "google" 
         ? (a.obj.start?.dateTime || a.obj.start?.date || "") 
-        : (a.kind === "reserva" ? a.obj.data : (a.obj.data_inicio || ""));
+        : (a.kind === "reserva" ? a.obj.data : (a.kind === "visita" ? a.obj.data_hora_prevista : (a.obj.data_inicio || "")));
       const dateB = b.kind === "google" 
         ? (b.obj.start?.dateTime || b.obj.start?.date || "") 
-        : (b.kind === "reserva" ? b.obj.data : (b.obj.data_inicio || ""));
+        : (b.kind === "reserva" ? b.obj.data : (b.kind === "visita" ? b.obj.data_hora_prevista : (b.obj.data_inicio || "")));
       return dateB.localeCompare(dateA);
     });
   }, [events]);
@@ -48,17 +48,18 @@ export function CalendarListView({ events, onDeleteReserva, onDeleteContrato, on
           ) : (
             sortedEvents.map((e, idx) => {
               const isGoogle = e.kind === "google";
+              const isVisita = e.kind === "visita";
               const isWoba = isGoogle 
                 ? `${e.obj.summary || ""} ${e.obj.description || ""}`.toLowerCase().includes("woba")
                 : e.obj.origem === "woba";
               
               const dateStr = isGoogle 
                 ? new Date(e.obj.start?.dateTime || e.obj.start?.date).toLocaleDateString("pt-BR")
-                : new Date((e.kind === "reserva" ? e.obj.data : e.obj.data_inicio) + "T00:00").toLocaleDateString("pt-BR");
+                : new Date(isVisita ? e.obj.data_hora_prevista : (e.kind === "reserva" ? e.obj.data : e.obj.data_inicio)).toLocaleDateString("pt-BR");
 
               const name = isGoogle ? (e.obj.summary || "Google Event") : e.obj.nome;
-              const type = isGoogle ? "Google Agenda" : (e.kind === "reserva" ? "Reserva Avulsa" : "Locação/Contrato");
-              const status = isGoogle ? "Confirmado" : e.obj.status;
+              const type = isGoogle ? "Google Agenda" : (isVisita ? "Visita agendada" : (e.kind === "reserva" ? "Reserva Avulsa" : "Locação/Contrato"));
+              const status = isGoogle ? "Confirmado" : (isVisita ? "Agendada" : e.obj.status);
 
               return (
                 <TableRow key={idx}>
@@ -87,13 +88,13 @@ export function CalendarListView({ events, onDeleteReserva, onDeleteContrato, on
                           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onViewDetails(e.kind, e.obj)}>
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button 
+                          {!isVisita && <Button 
                             size="icon" variant="ghost" 
                             className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={() => e.kind === "reserva" ? onDeleteReserva?.(e.obj) : onDeleteContrato?.(e.obj)}
                           >
                             <Trash2 className="w-4 h-4" />
-                          </Button>
+                          </Button>}
                         </>
                       )}
                     </div>

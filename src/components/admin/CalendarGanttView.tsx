@@ -49,7 +49,7 @@ export function CalendarGanttView({ events, month }: CalendarGanttProps) {
                   {groupEvents.map((e, eIdx) => {
                     const dateStr = e.kind === "google" 
                       ? (e.obj.start?.dateTime || e.obj.start?.date || "") 
-                      : (e.kind === "reserva" ? e.obj.data : (e.obj.data_inicio || ""));
+                      : (e.kind === "reserva" ? e.obj.data : (e.kind === "visita" ? e.obj.data_hora_prevista : (e.obj.data_inicio || "")));
                     
                     const eventDate = new Date(dateStr + (dateStr.length === 10 ? "T00:00" : ""));
                     if (eventDate.getMonth() !== month.getMonth() || eventDate.getFullYear() !== month.getFullYear()) return null;

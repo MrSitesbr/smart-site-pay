@@ -121,10 +121,7 @@ export default function AdminSalaDetalhe() {
                 </div>
               </div>
               <Button 
-                onClick={() => setEditingSala({
-                  ...sala,
-                  planos_permitidos: planos.map(p => p.id)
-                })}
+                onClick={() => navigate(`/admin/unidades/salas/${id}/editar`)}
                 className="bg-brand-blue-dark text-white"
               >
                 <Edit className="w-4 h-4 mr-2" /> Editar Sala

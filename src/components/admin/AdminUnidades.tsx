@@ -21,7 +21,6 @@ export default function AdminUnidades() {
   const [unidades, setUnidades] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
   const [planos, setPlanos] = useState<any[]>([]);
-  const [editingUnidade, setEditingUnidade] = useState<any>(null);
   const [editingSala, setEditingSala] = useState<any>(null);
   const [selectedUnidade, setSelectedUnidade] = useState<any>(null);
   const navigate = useNavigate();
@@ -45,30 +44,6 @@ export default function AdminUnidades() {
     const { data } = await supabase.from('salas').select('*').eq('unidade_id', unidade.id).order('nome');
     setSalas(data || []);
     setSelectedUnidade(unidade);
-  }
-
-  async function saveUnidade() {
-    if (!editingUnidade.nome) return toast.error("Nome é obrigatório");
-    
-    const payload: any = {
-      nome: editingUnidade.nome,
-      endereco: editingUnidade.endereco,
-      descricao: editingUnidade.descricao,
-      foto_url: editingUnidade.galeria?.[0] || '',
-      galeria: editingUnidade.galeria || []
-    };
-
-    const { error } = editingUnidade.id 
-      ? await (supabase as any).from('unidades').update(payload).eq('id', editingUnidade.id)
-      : await (supabase as any).from('unidades').insert([payload]);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Unidade salva!");
-      setEditingUnidade(null);
-      fetchUnidades();
-    }
   }
 
   async function deleteUnidade(id: string) {
@@ -141,7 +116,7 @@ export default function AdminUnidades() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Unidades & Salas</h2>
           <p className="text-muted-foreground">Gerencie endereços, infraestrutura e capacidades.</p>
         </div>
-        <Button onClick={() => setEditingUnidade({ nome: '', endereco: '', descricao: '', foto_url: '' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+        <Button onClick={() => navigate('/admin/unidades/novo')} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
           <Plus className="w-4 h-4 mr-2" /> Nova Unidade
         </Button>
       </div>
@@ -181,6 +156,14 @@ export default function AdminUnidades() {
                       >
                         Acessar
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/admin/unidades/${u.id}/editar`)}
+                        className="text-brand-blue-dark hover:bg-brand-blue-dark/5 rounded-xl px-3"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 mr-1" /> Editar
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -197,7 +180,7 @@ export default function AdminUnidades() {
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Layers className="w-5 h-5" /> Salas: {selectedUnidade.nome}
                 </h3>
-                <Button size="sm" onClick={() => setEditingSala({ nome: '', tipo: 'Coworking', capacidade: '', descricao: '' })} className="bg-brand-blue-dark text-white">
+                <Button size="sm" onClick={() => navigate(`/admin/unidades/${selectedUnidade.id}/salas/novo`)} className="bg-brand-blue-dark text-white">
                   <Plus className="w-4 h-4 mr-2" /> Nova Sala
                 </Button>
               </div>
@@ -239,55 +222,6 @@ export default function AdminUnidades() {
           )}
         </div>
       </div>
-
-      {/* Dialog Unidade */}
-      <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
-        <DialogScrollContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingUnidade?.id ? "Editar Unidade" : "Nova Unidade"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome da Unidade</label>
-                <Input 
-                  value={editingUnidade?.nome || ''} 
-                  onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
-                  placeholder="Ex: Unidade Boqueirão"
-                />
-              </div>
-              <div className="space-y-2 col-span-2">
-                <label className="text-sm font-medium">Galeria de Fotos (Multi-upload)</label>
-                <ImageUpload 
-                  value={editingUnidade?.galeria || []} 
-                onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls})}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Endereço Completo</label>
-              <Input 
-                value={editingUnidade?.endereco || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, endereco: e.target.value})}
-                placeholder="Rua, número, bairro..."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descrição da Unidade</label>
-              <Textarea 
-                value={editingUnidade?.descricao || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, descricao: e.target.value})}
-                placeholder="Descreva os diferenciais desta unidade..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
-            <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar</Button>
-          </DialogFooter>
-        </DialogScrollContent>
-      </Dialog>
 
       {/* Dialog Sala */}
       <Dialog open={!!editingSala} onOpenChange={() => setEditingSala(null)}>

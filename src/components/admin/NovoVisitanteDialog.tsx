@@ -17,6 +17,7 @@ type Props = {
   /** Quando informado, o visitante já é vinculado a este cliente (sem seletor de empresa) */
   clienteCorpId?: string;
   onCreated?: () => void;
+  initialClienteCorpId?: string;
 };
 
 function toDateInput(d: Date) {
@@ -26,7 +27,7 @@ function toDateInput(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteCorpId, onCreated }: Props) {
+export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteCorpId, onCreated, initialClienteCorpId }: Props) {
   const [modo, setModo] = useState<"agendar" | "cadastro">("agendar");
   const [nome, setNome] = useState("");
   const [documento, setDocumento] = useState("");
@@ -45,34 +46,39 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteC
   const [conflitos, setConflitos] = useState<ConflitoReserva[]>([]);
   const [saving, setSaving] = useState(false);
 
+  const effectiveClienteCorpId = clienteCorpId || initialClienteCorpId || "";
+  const resolvedClienteId = effectiveClienteCorpId || clienteId;
+
   useEffect(() => {
     if (!open) return;
+
     setModo("agendar");
     setNome("");
     setDocumento("");
     setObservacoes("");
-    setClienteId(clienteCorpId || "");
+    setClienteId(effectiveClienteCorpId || "");
     setUnidadeId("");
     setSalaId("");
     setDataStr(toDateInput(date || new Date()));
     setHora("09:00");
     setConflitos([]);
+
     supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
-    if (!clienteCorpId) {
+    if (!effectiveClienteCorpId) {
       supabase.from("clientes_corp").select("id, razao_social").then(({ data }) => setClientes(data || []));
     }
-  }, [open, date, clienteCorpId]);
+  }, [open, date, effectiveClienteCorpId]);
 
-  // Visitantes já cadastrados do cliente (seleção rápida)
   useEffect(() => {
-    if (!open || !clienteId) {
+    if (!open || !resolvedClienteId) {
       setConhecidos([]);
       return;
     }
+
     supabase
       .from("visitantes")
       .select("id, nome, documento")
-      .eq("cliente_corp_id", clienteId)
+      .eq("cliente_corp_id", resolvedClienteId)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         const map = new Map<string, any>();
@@ -81,7 +87,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteC
         });
         setConhecidos(Array.from(map.values()));
       });
-  }, [open, clienteId]);
+  }, [open, resolvedClienteId]);
 
   useEffect(() => {
     if (unidadeId) {
@@ -109,7 +115,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteC
   }, [salaId, dataStr, hora, modo]);
 
   async function save() {
-    if (!nome || !clienteId) {
+    if (!nome || !resolvedClienteId) {
       toast({ title: "Informe o nome do visitante e o cliente", variant: "destructive" });
       return;
     }
@@ -134,7 +140,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteC
       nome,
       documento: documento || null,
       observacoes: observacoes || null,
-      cliente_corp_id: clienteId,
+      cliente_corp_id: resolvedClienteId,
       sala_id: modo === "agendar" ? salaId : null,
       data_hora_prevista: dataHora,
     } as any);
@@ -204,7 +210,7 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteC
             <Input value={documento} onChange={(e) => setDocumento(e.target.value)} placeholder="RG / CPF" />
           </div>
 
-          {!clienteCorpId && (
+          {!effectiveClienteCorpId && (
             <div className="grid gap-2">
               <Label>Empresa (Cliente)</Label>
               <Select value={clienteId} onValueChange={setClienteId}>

@@ -13,7 +13,9 @@ import Painel from "./pages/Painel";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import AdminUnidadeDetalhe from "./components/admin/AdminUnidadeDetalhe";
+import AdminUnidadeFormPage from "./components/admin/AdminUnidadeFormPage";
 import AdminSalaDetalhe from "./components/admin/AdminSalaDetalhe";
+import AdminSalaFormPage from "./components/admin/AdminSalaFormPage";
 import AdminPlanoDetalhe from "./components/admin/AdminPlanoDetalhe";
 import AdminClienteCorpDetalhe from "./components/admin/AdminClienteCorpDetalhe";
 import AuthAdmin from "./pages/AuthAdmin";
@@ -67,7 +69,11 @@ const App = () => (
           <Route path="/painel" element={<Painel />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin/*" element={<Admin />} />
+          <Route path="/admin/unidades/novo" element={<AdminUnidadeFormPage />} />
+          <Route path="/admin/unidades/:id/editar" element={<AdminUnidadeFormPage />} />
           <Route path="/admin/unidades/:id" element={<AdminUnidadeDetalhe />} />
+          <Route path="/admin/unidades/:unidadeId/salas/novo" element={<AdminSalaFormPage />} />
+          <Route path="/admin/unidades/salas/:id/editar" element={<AdminSalaFormPage />} />
           <Route path="/admin/unidades/sala/:id" element={<AdminSalaDetalhe />} />
           <Route path="/admin/planos/:id" element={<AdminPlanoDetalhe />} />
           <Route path="/admin/clientes-corp/:id" element={<AdminClienteCorpDetalhe />} />

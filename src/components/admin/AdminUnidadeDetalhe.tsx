@@ -44,7 +44,6 @@ export default function AdminUnidadeDetalhe() {
   const [unidade, setUnidade] = useState<any>(null);
   const [salas, setSalas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingUnidade, setEditingUnidade] = useState<any>(null);
   const [editingSala, setEditingSala] = useState<any>(null);
   const [allPlanos, setAllPlanos] = useState<any[]>([]);
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
@@ -146,29 +145,6 @@ export default function AdminUnidadeDetalhe() {
     }
   }
 
-  async function saveUnidade() {
-    if (!editingUnidade.nome) return toast.error("Nome é obrigatório");
-    
-    const payload: any = {
-      nome: editingUnidade.nome,
-      endereco: editingUnidade.endereco,
-      descricao: editingUnidade.descricao,
-      foto_url: editingUnidade.galeria?.[0] || '',
-      galeria: editingUnidade.galeria || [],
-      servicos_infra: editingUnidade.servicos_infra || []
-    };
-
-    const { error } = await supabase.from('unidades').update(payload).eq('id', id);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Unidade atualizada!");
-      setEditingUnidade(null);
-      fetchData();
-    }
-  }
-
   async function deleteSala(salaId: string) {
     if (!confirm("Tem certeza que deseja excluir esta sala?")) return;
     const { error } = await supabase.from('salas').delete().eq('id', salaId);
@@ -261,7 +237,7 @@ export default function AdminUnidadeDetalhe() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={() => setEditingUnidade(unidade)} className="bg-brand-blue-dark text-white">
+                    <Button onClick={() => navigate(`/admin/unidades/${id}/editar`)} className="bg-brand-blue-dark text-white">
                       <Edit className="w-4 h-4 mr-2" /> Editar Unidade
                     </Button>
                     <Button onClick={deleteUnidade} variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-white">
@@ -331,7 +307,7 @@ export default function AdminUnidadeDetalhe() {
               />
             </div>
             <Button 
-              onClick={() => setEditingSala({ nome: '', tipo: 'Coworking', capacidade: '', descricao: '', foto_url: '', unidade_id: id })}
+              onClick={() => navigate(`/admin/unidades/${id}/salas/novo`)}
               className="bg-brand-orange hover:bg-brand-orange/90 text-white shadow-lg shadow-brand-orange/20"
             >
               <Plus className="w-4 h-4 mr-2" /> Nova Sala
@@ -455,94 +431,6 @@ export default function AdminUnidadeDetalhe() {
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Dialog Unidade */}
-      <Dialog open={!!editingUnidade} onOpenChange={() => setEditingUnidade(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Unidade</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome da Unidade</label>
-                <Input 
-                  value={editingUnidade?.nome || ''} 
-                  onChange={(e) => setEditingUnidade({...editingUnidade, nome: e.target.value})}
-                  placeholder="Ex: Unidade Boqueirão"
-                />
-              </div>
-              <div className="space-y-2 col-span-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Galeria de Fotos</label>
-                  <Button variant="outline" size="sm" onClick={() => { setMediaTarget('unidade'); setIsMediaPickerOpen(true); }} className="h-8 text-xs">
-                    <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
-                  </Button>
-                </div>
-                <ImageUpload 
-                  value={editingUnidade?.galeria || []} 
-                  onChange={(urls) => setEditingUnidade({...editingUnidade, galeria: urls})}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Endereço Completo</label>
-              <Input 
-                value={editingUnidade?.endereco || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, endereco: e.target.value})}
-                placeholder="Rua, número, bairro..."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descrição da Unidade</label>
-              <Textarea 
-                value={editingUnidade?.descricao || ''} 
-                onChange={(e) => setEditingUnidade({...editingUnidade, descricao: e.target.value})}
-                placeholder="Descreva os diferenciais desta unidade..."
-                rows={4}
-              />
-            </div>
-
-            <div className="space-y-4">
-              <label className="text-sm font-medium">Serviços de Infraestrutura</label>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { id: 'wifi', nome: 'Internet Fibra', icone: 'Wifi' },
-                  { id: 'cafe', nome: 'Café e Água', icone: 'Coffee' },
-                  { id: 'print', nome: 'Impressões', icone: 'Printer' }
-                ].map((servico: any) => (
-                  <label key={servico.id} className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
-                      checked={(editingUnidade?.servicos_infra || []).some((s: any) => s.id === servico.id)}
-                      onChange={(e) => {
-                        const current = editingUnidade?.servicos_infra || [];
-                        if (e.target.checked) {
-                          setEditingUnidade({
-                            ...editingUnidade, 
-                            servicos_infra: [...current, { ...servico, descricao: `Disponível na unidade ${editingUnidade.nome}` }]
-                          });
-                        } else {
-                          setEditingUnidade({
-                            ...editingUnidade, 
-                            servicos_infra: current.filter((s: any) => s.id !== servico.id)
-                          });
-                        }
-                      }}
-                    />
-                    <span className="text-sm font-bold text-slate-700">{servico.nome}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUnidade(null)}>Cancelar</Button>
-            <Button onClick={saveUnidade} className="bg-brand-orange text-white">Salvar Alterações</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog Sala */}
       <Dialog open={!!editingSala} onOpenChange={() => setEditingSala(null)}>
