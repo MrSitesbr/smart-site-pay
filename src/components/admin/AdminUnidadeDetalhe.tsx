@@ -650,8 +650,8 @@ export default function AdminUnidadeDetalhe() {
         onClose={() => { setIsMediaPickerOpen(false); setMediaTarget(null); }}
         onSelect={(url) => {
           if (mediaTarget === 'unidade') {
-            const current = editingUnidade?.galeria || [];
-            setEditingUnidade({...editingUnidade, galeria: [...current, url]});
+            const current = unidade?.galeria || [];
+            setUnidade({...unidade, galeria: [...current, url]});
           } else if (mediaTarget === 'sala') {
             const current = editingSala?.galeria || [];
             setEditingSala({...editingSala, galeria: [...current, url]});

@@ -49,7 +49,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [ambiente, setAmbiente] = useState<string>("todos");
   const [status, setStatus] = useState<string>("todos");
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
-  const [fullView, setFullView] = useState<{ kind: "reserva" | "contrato"; obj: any } | null>(null);
+  const [fullView, setFullView] = useState<{ kind: "reserva" | "contrato" | "visita"; obj: any } | null>(null);
   const [novaDay, setNovaDay] = useState<Date | null>(null);
   const [timelineDay, setTimelineDay] = useState<Date | null>(null);
   const [novoVisitanteDay, setNovoVisitanteDay] = useState<Date | null>(null);
