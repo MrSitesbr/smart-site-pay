@@ -61,6 +61,8 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const [origem, setOrigem] = useState<string>("direto");
   const [observacoes, setObservacoes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [valorManual, setValorManual] = useState<string>("");
+  const [descontoMotivo, setDescontoMotivo] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
 
   // Data digitável (integrada ao calendário: inicia na data clicada)
@@ -79,6 +81,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setSelectedUnidade(""); setSelectedSala(""); setConflitos([]);
       setDataStr(date ? dateISO(date) : dateISO(new Date()));
       setRecorrente(false); setRecFreq("semanal"); setRecAte("");
+      setValorManual(""); setDescontoMotivo("");
 
       supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
     }
@@ -177,6 +180,25 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   const datasPrevistas = useMemo(() => gerarDatas(), [dataStr, recorrente, recFreq, recAte]);
 
+  const RATES: Record<string, { hora: number; diaria: number }> = {
+    estacao: { hora: 20, diaria: 65 },
+    sala_privativa: { hora: 40, diaria: 150 },
+    sala_reuniao: { hora: 90, diaria: 450 },
+  };
+
+  const precoTabela = useMemo(() => {
+    const r = RATES[ambiente] || RATES.estacao;
+    if (tipo === "diaria") return r.diaria;
+    if (!horaInicio || !horaFim || horaFim <= horaInicio) return 0;
+    const [h1, m1] = horaInicio.split(":").map(Number);
+    const [h2, m2] = horaFim.split(":").map(Number);
+    const horas = (h2 * 60 + m2 - h1 * 60 - m1) / 60;
+    return Math.ceil(horas) * r.hora;
+  }, [ambiente, tipo, horaInicio, horaFim]);
+
+  const valorFinal = valorManual.trim() !== "" ? Number(valorManual.replace(",", ".")) || 0 : precoTabela;
+  const temDesconto = valorFinal < precoTabela;
+
   const temBloqueio = conflitos.some(c => c.tipo === 'bloqueio');
   const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
   const bloqueiaSalvar = !recorrente && (temBloqueio || temConflitoSala);
@@ -196,6 +218,9 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     }
     setSaving(true);
 
+    const serieId = recorrente && datasPrevistas.length > 1
+      ? (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()))
+      : null;
     const datas = datasPrevistas;
     const criadas: string[] = [];
     const puladas: string[] = [];
@@ -216,6 +241,11 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         status, origem, observacoes: observacoes.trim() || null,
         unidade_id: selectedUnidade || null,
         sala_id: selectedSala || null,
+        valor: valorFinal,
+        valor_original: precoTabela,
+        desconto_motivo: temDesconto ? (descontoMotivo.trim() || "Desconto concedido pelo gestor") : null,
+        desconto_por: temDesconto ? "admin" : null,
+        serie_id: serieId,
       };
       const { data: ins, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
       if (error) {
@@ -471,19 +501,14 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         </div>
 
         {(() => {
-          const RATES: Record<string, { hora: number; diaria: number }> = {
-            estacao: { hora: 20, diaria: 65 },
-            sala_privativa: { hora: 40, diaria: 150 },
-            sala_reuniao: { hora: 90, diaria: 450 },
-          };
-          const r = RATES[ambiente];
+          const r = RATES[ambiente] || RATES.estacao;
           let horas = 0;
           if (horaInicio && horaFim && horaFim > horaInicio) {
             const [h1, m1] = horaInicio.split(":").map(Number);
             const [h2, m2] = horaFim.split(":").map(Number);
             horas = (h2 * 60 + m2 - h1 * 60 - m1) / 60;
           }
-          const preco = tipo === "diaria" ? r.diaria : Math.ceil(horas) * r.hora;
+          const preco = valorFinal;
           const detalhe = tipo === "diaria"
             ? `Diária · R$ ${r.diaria.toFixed(2)}`
             : `R$ ${r.hora.toFixed(2)}/h × ${horas > 0 ? horas.toFixed(1) : 0}h (cobra ${Math.ceil(horas)}h)`;
@@ -501,8 +526,28 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                   <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Valor estimado</div>
                   <div className="text-[11px] text-muted-foreground">{detalhe}</div>
                 </div>
-                <div className="font-heading font-black text-2xl text-primary">
-                  R$ {preco.toFixed(2).replace(".", ",")}
+                <div className="text-right">
+                  {temDesconto && (
+                    <div className="text-[11px] line-through text-muted-foreground">R$ {precoTabela.toFixed(2).replace(".", ",")}</div>
+                  )}
+                  <div className="font-heading font-black text-2xl text-primary">
+                    R$ {preco.toFixed(2).replace(".", ",")}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Valor final (desconto manual)</Label>
+                  <Input
+                    inputMode="decimal"
+                    value={valorManual}
+                    onChange={(e) => setValorManual(e.target.value)}
+                    placeholder={precoTabela.toFixed(2).replace(".", ",")}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Motivo do desconto</Label>
+                  <Input value={descontoMotivo} onChange={(e) => setDescontoMotivo(e.target.value)} placeholder="Ex: cliente parceiro" />
                 </div>
               </div>
               <Button
