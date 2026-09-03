@@ -21,6 +21,15 @@ export async function verificarConflitos(
   const dateObj = new Date(data + "T12:00:00Z"); // Midday to avoid TZ issues
   const conflitos: ConflitoReserva[] = [];
 
+  // Capacidade da sala (estações compartilhadas aceitam várias reservas simultâneas)
+  const { data: salaInfo } = await supabase
+    .from('salas')
+    .select('capacidade, tipo')
+    .eq('id', salaId)
+    .maybeSingle();
+  const isCompartilhada = /comp|estac|estaç|coworking/i.test(String(salaInfo?.tipo || ''));
+  const capacidade = isCompartilhada ? Math.max(1, Number(salaInfo?.capacidade) || 1) : 1;
+
   // 0. Verificar Feriados e Domingos
   if (!isBusinessDay(dateObj)) {
     const info = getDateInfo(dateObj);
@@ -42,23 +51,32 @@ export async function verificarConflitos(
     .neq('status', 'cancelada');
 
   if (resConflitos) {
-    resConflitos.forEach(r => {
-      if (r.id === ignoreId) return;
-      
+    const sobrepostas = resConflitos.filter(r => {
+      if (r.id === ignoreId) return false;
       const rStart = r.hora_inicio.slice(0, 5);
       const rEnd = r.hora_fim.slice(0, 5);
-      
-      // Sobreposição de horários
-      if (horaInicio < rEnd && horaFim > rStart) {
+      return horaInicio < rEnd && horaFim > rStart;
+    });
+
+    if (capacidade > 1) {
+      // Espaço compartilhado: só bloqueia quando todas as vagas estiverem ocupadas
+      if (sobrepostas.length >= capacidade) {
         conflitos.push({
           tipo: 'reserva',
-          id: r.id,
-          nome: r.nome,
-          hora_inicio: rStart,
-          hora_fim: rEnd
+          nome: `Espaço lotado (${sobrepostas.length}/${capacidade} vagas)`,
+          hora_inicio: horaInicio,
+          hora_fim: horaFim,
         });
       }
-    });
+    } else {
+      sobrepostas.forEach(r => conflitos.push({
+        tipo: 'reserva',
+        id: r.id,
+        nome: r.nome,
+        hora_inicio: r.hora_inicio.slice(0, 5),
+        hora_fim: r.hora_fim.slice(0, 5),
+      }));
+    }
   }
 
   // 2. Verificar Visitantes
