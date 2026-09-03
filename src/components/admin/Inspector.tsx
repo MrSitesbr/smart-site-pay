@@ -203,13 +203,18 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                   )}
 
                   {(data.type === 'units_grid' || data.type === 'rooms_grid') && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Limite de Itens</Label>
-                      <Input 
-                        type="number" 
-                        value={data.content.limit || 6} 
-                        onChange={(e) => handleChange('content.limit', parseInt(e.target.value))} 
-                      />
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Limite de Itens</Label>
+                        <Input 
+                          type="number" 
+                          value={data.content.limit || 6} 
+                          onChange={(e) => handleChange('content.limit', parseInt(e.target.value))} 
+                        />
+                      </div>
+                      <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">
+                        Regra: só aparecem registros com status ativo/ativa
+                      </div>
                     </div>
                   )}
 

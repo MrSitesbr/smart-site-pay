@@ -57,17 +57,14 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       items: [
         { title: "Calendário Geral", id: "calendario" },
         { title: "Reservas", id: "reservas" },
-        { title: "Visitas", id: "visitantes" },
       ]
     },
     { 
       title: "CRM", 
       icon: Users,
       items: [
-        { title: "CRM Leads", id: "clientes" },
-        { title: "Clientes", id: "clientes_corp" },
-        { title: "Colaboradores", id: "funcionarios" },
-        { title: "Visitantes", id: "visitantes_crm" },
+        { title: "Leads de contratação", id: "clientes" },
+        { title: "Empresas clientes", id: "clientes_corp" },
       ]
     },
     { 
@@ -121,6 +118,8 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: Settings,
       items: [
         { title: "Configurações Gerais", id: "configuracoes" },
+        { title: "Manual do Painel", id: "documentacao" },
+        { title: "Suporte", id: "suporte" },
         { title: "Roteiro Construtor Dev", id: "docs_ia" },
       ]
     },

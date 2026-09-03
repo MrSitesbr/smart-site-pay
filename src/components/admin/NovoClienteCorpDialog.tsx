@@ -48,7 +48,25 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       return;
     }
     setSaving(true);
-    const { data, error } = await supabase.from("clientes_corp").insert({
+
+    const { data: clientesExistentes, error: buscaErr } = await supabase
+      .from("clientes_corp")
+      .select("id, razao_social, responsavel_email, responsavel_telefone");
+
+    if (buscaErr) {
+      toast({ title: "Erro ao verificar cliente corporativo", description: buscaErr.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    const match = (clientesExistentes || []).find((cliente: any) => {
+      const sameName = cliente.razao_social?.trim().toLowerCase() === razaoSocial.trim().toLowerCase();
+      const sameEmail = Boolean(emailResp) && cliente.responsavel_email?.trim().toLowerCase() === emailResp.trim().toLowerCase();
+      const samePhone = Boolean(telResp) && cliente.responsavel_telefone?.trim().replace(/\D/g, "") === telResp.replace(/\D/g, "");
+      return sameName || sameEmail || samePhone;
+    });
+
+    const payload = {
       razao_social: razaoSocial,
       responsavel_nome: nomeResp,
       responsavel_email: emailResp,
@@ -57,15 +75,30 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       responsavel_cpf: cpfResp,
       // @ts-ignore
       plano_id: planoId
-    }).select().single();
+    };
 
-    if (error) {
-      toast({ title: "Erro ao criar cliente corporativo", description: error.message, variant: "destructive" });
+    let result: any = null;
+    if (match) {
+      const { data, error } = await supabase.from("clientes_corp").update(payload).eq("id", match.id).select().single();
+      result = data;
+      if (error) {
+        toast({ title: "Erro ao atualizar cliente corporativo", description: error.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
     } else {
-      toast({ title: "Cliente corporativo criado" });
-      onCreated?.(data);
-      onOpenChange(false);
+      const { data, error } = await supabase.from("clientes_corp").insert(payload).select().single();
+      result = data;
+      if (error) {
+        toast({ title: "Erro ao criar cliente corporativo", description: error.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
     }
+
+    toast({ title: match ? "Cliente corporativo atualizado" : "Cliente corporativo criado" });
+    onCreated?.(result);
+    onOpenChange(false);
     setSaving(false);
   }
 

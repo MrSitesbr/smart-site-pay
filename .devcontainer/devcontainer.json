@@ -1,0 +1,19 @@
+{
+  "name": "smart-site-pay",
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "Vite App",
+      "onAutoForward": "openPreview",
+      "protocol": "http"
+    }
+  },
+  "postStartCommand": "bash -lc 'if ! pgrep -f \"vite --host 0.0.0.0 --port 8080\" >/dev/null; then npm run dev -- --host 0.0.0.0 --port 8080 > /tmp/smart-site-pay-vite.log 2>&1 & fi'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "mainul-islam.tiermux"
+      ]
+    }
+  }
+}

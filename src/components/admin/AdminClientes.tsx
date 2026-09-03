@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, MessageCircle, Mail, RotateCcw, Trash2 } from "lucide-react";
+import { Search, MessageCircle, Mail, RotateCcw, Trash2, UserRoundCheck } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
@@ -26,13 +28,24 @@ type Cliente = {
 };
 
 export default function AdminClientes({ contratos, reservas }: { contratos: any[]; reservas: any[] }) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [crmClientes, setCrmClientes] = useState<any[]>([]);
   const { overrides, setColor, clearColor } = useClientColors();
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone, created_at").then(({ data }) => {
+      if (mounted) setCrmClientes(data || []);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   const clientes = useMemo(() => {
     const map = new Map<string, Cliente>();
     const add = (email: string, patch: Partial<Cliente>) => {
-      const key = email.toLowerCase();
+      const key = (email || "").toLowerCase();
+      if (!key) return;
       const cur = map.get(key) || {
         email, nome: "", telefone: "", nicho: null,
         total_solicitacoes: 0, total_pago: 0, total_pendente: 0,
@@ -41,7 +54,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
       map.set(key, { ...cur, ...patch, ambientes: new Set([...cur.ambientes, ...(patch.ambientes || [])]) } as Cliente);
     };
     contratos.forEach((c) => {
-      const cur = map.get(c.email.toLowerCase());
+      const cur = map.get((c.email || "").toLowerCase());
       const paga = c.status === "paga" || c.status === "concluida";
       const pend = c.status === "pendente" || c.status === "aprovada";
       add(c.email, {
@@ -54,7 +67,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
       });
     });
     reservas.forEach((r) => {
-      const cur = map.get(r.email.toLowerCase());
+      const cur = map.get((r.email || "").toLowerCase());
       add(r.email, {
         nome: cur?.nome || r.nome,
         telefone: cur?.telefone || r.telefone,
@@ -64,12 +77,39 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
       });
     });
     return Array.from(map.values()).sort((a, b) => (b.ultima_atividade > a.ultima_atividade ? 1 : -1));
-  }, [contratos, reservas]);
+  }, [contratos, reservas, crmClientes]);
 
   const q = search.trim().toLowerCase();
   const filtered = clientes.filter((c) =>
     !q || c.nome.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || (c.nicho || "").toLowerCase().includes(q)
   );
+
+  async function promoverCliente(cliente: Cliente) {
+    const leads = contratos.filter((contrato) => (contrato.email || "").toLowerCase() === cliente.email.toLowerCase());
+    const clienteExistente = crmClientes.find((item) =>
+      (item.responsavel_email || "").trim().toLowerCase() === cliente.email.toLowerCase()
+    );
+    if (clienteExistente) {
+      navigate(`/admin/clientes-corp/${clienteExistente.id}`);
+      return;
+    }
+    if (!confirm(`Transformar ${cliente.nome} em cliente e liberar a área do cliente?`)) return;
+    const lead = leads[0];
+    const payload = {
+      razao_social: cliente.nome,
+      responsavel_nome: cliente.nome,
+      responsavel_email: cliente.email,
+      responsavel_telefone: cliente.telefone || lead?.telefone || "",
+    };
+    const query = (supabase.from("clientes_corp") as any).insert(payload);
+    const { data: clienteCriado, error } = await query.select("id").single();
+    if (error) {
+      toast({ title: "Não foi possível converter o lead", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Lead convertido em cliente" });
+    navigate(`/admin/clientes-corp/${clienteCriado.id}`);
+  }
 
   return (
     <div className="space-y-4">
@@ -147,6 +187,12 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
                       <Button size="sm" variant="outline" asChild>
                         <a href={`mailto:${c.email}`}><Mail className="w-4 h-4" /></a>
                       </Button>
+                      {!isWoba && (
+                        <Button size="sm" variant="outline" title="Transformar lead em cliente" onClick={() => promoverCliente(c)}>
+                          <UserRoundCheck className="w-4 h-4" />
+                          <span className="hidden xl:inline ml-1">Cliente</span>
+                        </Button>
+                      )}
                       <Button 
                         size="sm" 
                         variant="ghost" 

@@ -104,7 +104,7 @@ const Footer = () => {
   const logoIconUrl = cmsContent?.logo_icon || logoIconUrlDefault;
 
   return (
-    <footer className="bg-brand-blue-dark text-white pt-16 pb-6">
+    <footer className="bg-[#031d36] text-white pt-16 pb-6">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>

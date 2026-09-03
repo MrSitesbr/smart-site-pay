@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, TrendingUp, Building2, RefreshCw, ExternalLink } from "lucide-react";
 import { loadWobaCfg, mapGoogleEventsToWoba, fetchWobaEventsYear, type WobaEvento } from "@/lib/wobaEvents";
 import { dataPrevistaPagamento } from "@/lib/woba";
+import { supabase } from "@/integrations/supabase/client";
 
 const fmtBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const AMBIENTE_LABEL: Record<string, string> = { estacao: "Estação", sala_privativa: "Sala Privativa", sala_reuniao: "Sala Reunião" };
@@ -13,7 +14,7 @@ const PLANO_LABEL: Record<string, string> = { hora: "Hora", diaria: "Diária", p
 const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const PRODUTO_LABEL: Record<string, string> = { day_pass: "Day Pass", sala_reuniao: "Sala Reunião", privativo: "Privativa/Evento" };
 
-export default function AdminFinanceiro({ contratos }: { contratos: any[] }) {
+export default function AdminFinanceiro({ contratos, reservas = [] }: { contratos: any[]; reservas?: any[] }) {
   const now = new Date();
   const [year, setYear] = useState<number>(now.getFullYear());
   const [cfg] = useState(loadWobaCfg);
@@ -27,9 +28,7 @@ export default function AdminFinanceiro({ contratos }: { contratos: any[] }) {
     try {
       const [evs, cls] = await Promise.all([
         fetchWobaEventsYear(year, cfg).catch(() => []),
-        import("@/integrations/supabase/client").then(({ supabase }) =>
-          (supabase.from("woba_closings") as any).select("*").eq("ano", year).then((r: any) => r.data || []),
-        ),
+        (supabase.from("woba_closings") as any).select("*").eq("ano", year).then((r: any) => r.data || []),
       ]);
       setGEvents(evs);
       setWobaClosings(cls);
@@ -71,6 +70,19 @@ export default function AdminFinanceiro({ contratos }: { contratos: any[] }) {
       else { receita_pendente += preco; meses[mes].pendente += preco; }
     });
 
+    reservas.forEach((r) => {
+      const d = r.data ? new Date(r.data + "T00:00") : new Date(r.created_at);
+      if (d.getFullYear() !== year) return;
+      const valor = Number(r.valor ?? r.preco ?? 0);
+      const mes = d.getMonth();
+      if (r.status === "paga" || r.status === "realizada" || r.status === "concluida") {
+        receita_paga += valor; meses[mes].pago += valor;
+        porAmbiente[r.ambiente] = (porAmbiente[r.ambiente] || 0) + valor;
+        porPlano[r.tipo] = (porPlano[r.tipo] || 0) + valor;
+      } else if (r.status === "cancelada") receita_cancelada += valor;
+      else { receita_pendente += valor; meses[mes].pendente += valor; }
+    });
+
     // Repasses Woba por mês (todos "a receber" por padrão, salvo se woba_closings marcar pago)
     let wobaAReceber = 0, wobaPago = 0;
     wobaPorMes.forEach((wm, m) => {
@@ -81,7 +93,7 @@ export default function AdminFinanceiro({ contratos }: { contratos: any[] }) {
     });
 
     return { receita_paga, receita_pendente, receita_cancelada, meses, porAmbiente, porPlano, wobaAReceber, wobaPago };
-  }, [contratos, year, wobaPorMes, wobaClosings]);
+  }, [contratos, reservas, year, wobaPorMes, wobaClosings]);
 
   const maxMes = Math.max(1, ...stats.meses.map((m) => m.pago + m.pendente + m.woba + m.wobaPago));
 
@@ -90,6 +102,9 @@ export default function AdminFinanceiro({ contratos }: { contratos: any[] }) {
     contratos.forEach((c) => {
       const d = c.data_inicio || c.created_at.slice(0,10);
       rows.push([d, c.nome, c.email, AMBIENTE_LABEL[c.ambiente] || c.ambiente, PLANO_LABEL[c.plano_tipo] || c.plano_tipo, String(c.preco), c.status, "direto"]);
+    });
+    reservas.forEach((r) => {
+      rows.push([r.data || r.created_at.slice(0, 10), r.nome, r.email, AMBIENTE_LABEL[r.ambiente] || r.ambiente, PLANO_LABEL[r.tipo] || r.tipo, String(r.valor ?? r.preco ?? 0), r.status, r.origem || "direto"]);
     });
     wobaEventos.filter((e) => e.start.getFullYear() === year).forEach((e) => {
       rows.push([

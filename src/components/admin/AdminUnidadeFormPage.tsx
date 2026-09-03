@@ -15,6 +15,7 @@ const defaultForm = {
   descricao: "",
   foto_url: "",
   galeria: [] as string[],
+  status: "ativa",
   servicos_infra: [] as any[],
 };
 
@@ -58,6 +59,7 @@ export default function AdminUnidadeFormPage() {
         descricao: data.descricao || "",
         foto_url: data.foto_url || "",
         galeria: data.galeria || [],
+        status: data.status || "ativa",
         servicos_infra: data.servicos_infra || [],
       });
       setLoading(false);
@@ -80,6 +82,7 @@ export default function AdminUnidadeFormPage() {
       descricao: form.descricao,
       foto_url: form.galeria?.[0] || form.foto_url || "",
       galeria: form.galeria || [],
+      status: form.status || "ativa",
       servicos_infra: form.servicos_infra || [],
     };
 
@@ -96,15 +99,30 @@ export default function AdminUnidadeFormPage() {
     navigate(`/admin/unidades/${data.id}`);
   }
 
-  const handleInfraToggle = (servico: { id: string; nome: string }) => {
-    const current = form.servicos_infra || [];
-    const exists = current.some((item: any) => item.id === servico.id);
-
+  const addInfraService = () => {
     setForm({
       ...form,
-      servicos_infra: exists
-        ? current.filter((item: any) => item.id !== servico.id)
-        : [...current, { ...servico, descricao: `Disponível na unidade ${form.nome || "nova unidade"}` }],
+      servicos_infra: [
+        ...(form.servicos_infra || []),
+        {
+          id: `custom-${Date.now()}`,
+          nome: "",
+          descricao: "",
+        },
+      ],
+    });
+  };
+
+  const updateInfraService = (index: number, field: string, value: string) => {
+    const next = [...(form.servicos_infra || [])];
+    next[index] = { ...next[index], [field]: value };
+    setForm({ ...form, servicos_infra: next });
+  };
+
+  const removeInfraService = (index: number) => {
+    setForm({
+      ...form,
+      servicos_infra: (form.servicos_infra || []).filter((_: any, i: number) => i !== index),
     });
   };
 
@@ -147,6 +165,20 @@ export default function AdminUnidadeFormPage() {
               <Button onClick={saveUnidade} className="bg-brand-blue-dark text-white hover:bg-brand-blue-dark/90">
                 <Save className="w-4 h-4 mr-2" /> Salvar
               </Button>
+            </div>
+          </div>
+
+          <div className="mb-6 flex justify-end">
+            <div className="space-y-2 min-w-[220px]">
+              <label className="text-sm font-medium text-slate-700">Status da unidade</label>
+              <select
+                className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                value={form.status || "ativa"}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                <option value="ativa">Ativa</option>
+                <option value="inativa">Inativa</option>
+              </select>
             </div>
           </div>
 
@@ -195,30 +227,42 @@ export default function AdminUnidadeFormPage() {
             </div>
 
             <div className="space-y-4">
-              <label className="text-sm font-medium text-slate-700">Serviços de infraestrutura</label>
-              <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  { id: "wifi", nome: "Internet Fibra" },
-                  { id: "cafe", nome: "Café e Água" },
-                  { id: "print", nome: "Impressões" },
-                ].map((servico) => {
-                  const checked = (form.servicos_infra || []).some((item: any) => item.id === servico.id);
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-sm font-medium text-slate-700">Serviços de infraestrutura</label>
+                <Button type="button" variant="outline" size="sm" onClick={addInfraService} className="h-8 text-xs">
+                  + Adicionar serviço
+                </Button>
+              </div>
 
-                  return (
-                    <label
-                      key={servico.id}
-                      className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
-                        checked={checked}
-                        onChange={() => handleInfraToggle(servico)}
-                      />
-                      <span className="text-sm font-bold text-slate-700">{servico.nome}</span>
-                    </label>
-                  );
-                })}
+              <div className="space-y-3">
+                {(form.servicos_infra || []).length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    Nenhum serviço adicionado. Use o botão acima para incluir infraestrutura da unidade.
+                  </div>
+                ) : (
+                  (form.servicos_infra || []).map((servico: any, index: number) => (
+                    <div key={servico.id || `infra-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Item {index + 1}</span>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeInfraService(index)} className="text-destructive hover:text-destructive h-8 w-8 p-0">
+                          ×
+                        </Button>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <Input
+                          value={servico.nome || ""}
+                          onChange={(e) => updateInfraService(index, "nome", e.target.value)}
+                          placeholder="Nome do serviço"
+                        />
+                        <Input
+                          value={servico.descricao || ""}
+                          onChange={(e) => updateInfraService(index, "descricao", e.target.value)}
+                          placeholder="Descrição(opcional)"
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

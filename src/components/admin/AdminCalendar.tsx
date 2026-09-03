@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus, UserCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, ExternalLink, Loader2, Eye, Trash2, Plus, UserCheck, Pencil, Save, X } from "lucide-react";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
@@ -50,6 +50,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [status, setStatus] = useState<string>("todos");
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
   const [fullView, setFullView] = useState<{ kind: "reserva" | "contrato" | "visita"; obj: any } | null>(null);
+  const [isEditingReserva, setIsEditingReserva] = useState(false);
+  const [editingReserva, setEditingReserva] = useState<any | null>(null);
   const [novaDay, setNovaDay] = useState<Date | null>(null);
   const [timelineDay, setTimelineDay] = useState<Date | null>(null);
   const [novoVisitanteDay, setNovoVisitanteDay] = useState<Date | null>(null);
@@ -60,11 +62,44 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [showGoogle, setShowGoogle] = useState(true);
   const { overrides: colorOverrides } = useClientColors();
   const [visitantes, setVisitantes] = useState<any[]>([]);
+  const [checkin, setCheckin] = useState<any | null>(null);
+  const [roomCapacity, setRoomCapacity] = useState<number | null>(null);
+  const [savingCheckin, setSavingCheckin] = useState(false);
 
   useEffect(() => {
     supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
     supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || []));
   }, []);
+
+  useEffect(() => {
+    const reserva = fullView?.kind === "reserva" ? fullView.obj : null;
+    setCheckin(null);
+    setRoomCapacity(null);
+    if (!reserva) return;
+    (supabase.from("checkins") as any).select("*").eq("reservation_id", reserva.id).maybeSingle()
+      .then(({ data }: any) => setCheckin(data || null));
+    if (reserva.sala_id) {
+      (supabase.from("salas") as any).select("capacidade, tipo").eq("id", reserva.sala_id).maybeSingle()
+        .then(({ data }: any) => setRoomCapacity(Number(data?.capacidade) || null));
+    }
+  }, [fullView]);
+
+  async function toggleCheckin(reserva: any) {
+    setSavingCheckin(true);
+    const next = checkin
+      ? (supabase.from("checkins") as any).delete().eq("reservation_id", reserva.id)
+      : (supabase.from("checkins") as any).insert({ reservation_id: reserva.id }).select().single();
+    const { data, error } = await next;
+    if (error) {
+      toast({ title: "Erro no check-in", description: error.message, variant: "destructive" });
+    } else {
+      setCheckin(checkin ? null : data);
+      await (supabase.from("reservations") as any).update({ status: checkin ? "confirmada" : "realizada" }).eq("id", reserva.id);
+      onCreated?.();
+      toast({ title: checkin ? "Check-in estornado" : "Check-in registrado" });
+    }
+    setSavingCheckin(false);
+  }
 
   // IDs de eventos do Google que já foram associados a reservas/contratos internos.
   // Se um desses sumir do banco (reserva excluída), guardamos o id para nunca mais
@@ -186,6 +221,42 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const goNext = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
   const selectedInfo = selectedDay ? eventsByDay.get(dayKey(selectedDay)) : undefined;
+
+  const handleSaveReserva = async () => {
+    if (!fullView || fullView.kind !== "reserva" || !editingReserva) return;
+
+    const payload = {
+      nome: editingReserva.nome,
+      email: editingReserva.email,
+      telefone: editingReserva.telefone,
+      ambiente: editingReserva.ambiente,
+      tipo: editingReserva.tipo,
+      data: editingReserva.data,
+      hora_inicio: editingReserva.hora_inicio,
+      hora_fim: editingReserva.hora_fim,
+      status: editingReserva.status,
+      observacoes: editingReserva.observacoes || null,
+      admin_notes: editingReserva.admin_notes || null,
+    };
+
+    const { error } = await (supabase.from("reservations") as any).update(payload).eq("id", editingReserva.id);
+
+    if (error) {
+      console.error("Erro ao editar reserva:", error);
+      return;
+    }
+
+    const updated = { ...fullView.obj, ...payload };
+    setFullView({ ...fullView, obj: updated });
+    setIsEditingReserva(false);
+    setEditingReserva(null);
+    onCreated?.();
+  };
+
+  const handleCancelReservaEdit = () => {
+    setIsEditingReserva(false);
+    setEditingReserva(null);
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -560,55 +631,176 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
           {fullView && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-heading flex items-center gap-3">
-                  <EventAvatar name={fullView.obj.nome} isWoba={fullView.obj.origem === "woba"} photoUrl={fullView.obj.photo_url} size={40} />
-                  <span>Reserva completa</span>
+                <DialogTitle className="font-heading flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <EventAvatar name={fullView.obj.nome} isWoba={fullView.obj.origem === "woba"} photoUrl={fullView.obj.photo_url} size={40} />
+                    <span>Reserva completa</span>
+                  </div>
+                  {fullView.kind === "reserva" && !isEditingReserva && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Editar reserva"
+                      onClick={() => {
+                        setEditingReserva({ ...fullView.obj });
+                        setIsEditingReserva(true);
+                      }}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-2 text-sm">
-                <div className="flex flex-wrap gap-2">
-                  <Badge className={`${STATUS_COLORS[fullView.obj.status]} text-white`}>{fullView.obj.status}</Badge>
-                  <Badge variant="outline">{AMBIENTE_LABEL[fullView.obj.ambiente]}</Badge>
-                  {fullView.kind === "contrato" && <Badge variant="secondary">{PLANO_LABEL[fullView.obj.plano_tipo]}</Badge>}
-                  {fullView.obj.origem === "woba" && <Badge className="bg-blue-600 text-white">Woba</Badge>}
+
+              {fullView.kind === "reserva" && isEditingReserva && editingReserva ? (
+                <div className="space-y-3 text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nome</label>
+                      <Input value={editingReserva.nome || ""} onChange={(e) => setEditingReserva({ ...editingReserva, nome: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</label>
+                      <Select value={editingReserva.status || "pendente"} onValueChange={(v) => setEditingReserva({ ...editingReserva, status: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pendente">Pendente</SelectItem>
+                          <SelectItem value="confirmada">Confirmada</SelectItem>
+                          <SelectItem value="realizada">Realizada</SelectItem>
+                          <SelectItem value="cancelada">Cancelada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</label>
+                      <Input value={editingReserva.email || ""} onChange={(e) => setEditingReserva({ ...editingReserva, email: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Telefone</label>
+                      <Input value={editingReserva.telefone || ""} onChange={(e) => setEditingReserva({ ...editingReserva, telefone: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ambiente</label>
+                      <Select value={editingReserva.ambiente || "estacao"} onValueChange={(v) => setEditingReserva({ ...editingReserva, ambiente: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="estacao">Estação</SelectItem>
+                          <SelectItem value="sala_privativa">Sala Privativa</SelectItem>
+                          <SelectItem value="sala_reuniao">Sala Reunião</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tipo</label>
+                      <Select value={editingReserva.tipo || "hora"} onValueChange={(v) => setEditingReserva({ ...editingReserva, tipo: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hora">Hora</SelectItem>
+                          <SelectItem value="diaria">Diária</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data</label>
+                      <Input type="date" value={editingReserva.data || ""} onChange={(e) => setEditingReserva({ ...editingReserva, data: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Horário</label>
+                      <div className="flex gap-2">
+                        <Input type="time" value={editingReserva.hora_inicio || ""} onChange={(e) => setEditingReserva({ ...editingReserva, hora_inicio: e.target.value })} />
+                        <Input type="time" value={editingReserva.hora_fim || ""} onChange={(e) => setEditingReserva({ ...editingReserva, hora_fim: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observações</label>
+                    <textarea
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={editingReserva.observacoes || ""}
+                      onChange={(e) => setEditingReserva({ ...editingReserva, observacoes: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Notas do admin</label>
+                    <textarea
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={editingReserva.admin_notes || ""}
+                      onChange={(e) => setEditingReserva({ ...editingReserva, admin_notes: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t">
+                    <Button variant="outline" size="sm" onClick={handleCancelReservaEdit}>
+                      <X className="w-4 h-4 mr-2" /> Cancelar
+                    </Button>
+                    <Button size="sm" className="bg-brand-blue-dark text-white hover:bg-brand-blue-dark/90" onClick={handleSaveReserva}>
+                      <Save className="w-4 h-4 mr-2" /> Salvar
+                    </Button>
+                  </div>
                 </div>
-                <div><b>Nome:</b> {fullView.obj.nome}</div>
-                <div><b>Email:</b> {fullView.obj.email}</div>
-                <div><b>Telefone:</b> {fullView.obj.telefone}</div>
-                {fullView.kind === "reserva" ? (
-                  <>
-                    <div><b>Data:</b> {new Date(fullView.obj.data + "T00:00").toLocaleDateString("pt-BR")}</div>
-                    <div><b>Horário:</b> {fullView.obj.hora_inicio.slice(0,5)} — {fullView.obj.hora_fim.slice(0,5)}</div>
-                    <div><b>Tipo:</b> {fullView.obj.tipo}</div>
-                  </>
-                ) : (
-                  <>
-                    {fullView.obj.data_inicio && <div><b>Início:</b> {new Date(fullView.obj.data_inicio + "T00:00").toLocaleDateString("pt-BR")}</div>}
-                    {fullView.obj.dias_selecionados?.length > 0 && (
-                      <div><b>Dias:</b> {fullView.obj.dias_selecionados.map((d: string) => new Date(d + "T00:00").toLocaleDateString("pt-BR")).join(" · ")}</div>
+              ) : (
+                <>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className={`${STATUS_COLORS[fullView.obj.status]} text-white`}>{fullView.obj.status}</Badge>
+                      <Badge variant="outline">{AMBIENTE_LABEL[fullView.obj.ambiente]}</Badge>
+                      {fullView.kind === "contrato" && <Badge variant="secondary">{PLANO_LABEL[fullView.obj.plano_tipo]}</Badge>}
+                      {fullView.obj.origem === "woba" && <Badge className="bg-blue-600 text-white">Woba</Badge>}
+                    </div>
+                    <div><b>Nome:</b> {fullView.obj.nome}</div>
+                    <div><b>Email:</b> {fullView.obj.email}</div>
+                    <div><b>Telefone:</b> {fullView.obj.telefone}</div>
+                    {fullView.kind === "reserva" ? (
+                      <>
+                        <div><b>Data:</b> {new Date(fullView.obj.data + "T00:00").toLocaleDateString("pt-BR")}</div>
+                        <div><b>Horário:</b> {fullView.obj.hora_inicio.slice(0,5)} — {fullView.obj.hora_fim.slice(0,5)}</div>
+                        <div><b>Tipo:</b> {fullView.obj.tipo}</div>
+                        {roomCapacity && roomCapacity > 1 && (() => {
+                          const ocupadas = reservas.filter((r) => r.id !== fullView.obj.id && r.sala_id === fullView.obj.sala_id && r.data === fullView.obj.data && r.status !== "cancelada" && r.hora_inicio < fullView.obj.hora_fim && r.hora_fim > fullView.obj.hora_inicio).length + 1;
+                          return <div><b>Vagas:</b> {Math.max(0, roomCapacity - ocupadas)} livres de {roomCapacity} ({ocupadas} ocupadas)</div>;
+                        })()}
+                      </>
+                    ) : (
+                      <>
+                        {fullView.obj.data_inicio && <div><b>Início:</b> {new Date(fullView.obj.data_inicio + "T00:00").toLocaleDateString("pt-BR")}</div>}
+                        {fullView.obj.dias_selecionados?.length > 0 && (
+                          <div><b>Dias:</b> {fullView.obj.dias_selecionados.map((d: string) => new Date(d + "T00:00").toLocaleDateString("pt-BR")).join(" · ")}</div>
+                        )}
+                        <div><b>Preço:</b> R$ {Number(fullView.obj.preco).toFixed(2)}</div>
+                      </>
                     )}
-                    <div><b>Preço:</b> R$ {Number(fullView.obj.preco).toFixed(2)}</div>
-                  </>
-                )}
-                {fullView.obj.observacoes && <div className="italic text-muted-foreground">"{fullView.obj.observacoes}"</div>}
-                {fullView.obj.admin_notes && <div className="text-xs text-muted-foreground"><b>Notas admin:</b> {fullView.obj.admin_notes}</div>}
-                <div className="text-[11px] text-muted-foreground pt-2 border-t">Criado em {new Date(fullView.obj.created_at).toLocaleString("pt-BR")}</div>
-              </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <Button
-                  variant="outline" size="sm"
-                  className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
-                  onClick={async () => {
-                    const handler = fullView.kind === "reserva" ? onDeleteReserva : onDeleteContrato;
-                    if (!handler) return;
-                    await handler(fullView.obj);
-                    setFullView(null);
-                    setSelectedDay(undefined);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" /> Excluir reserva
-                </Button>
-              </div>
+                    {fullView.obj.observacoes && <div className="italic text-muted-foreground">"{fullView.obj.observacoes}"</div>}
+                    {fullView.obj.admin_notes && <div className="text-xs text-muted-foreground"><b>Notas admin:</b> {fullView.obj.admin_notes}</div>}
+                    <div className="text-[11px] text-muted-foreground pt-2 border-t">Criado em {new Date(fullView.obj.created_at).toLocaleString("pt-BR")}</div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    {fullView.kind === "reserva" && fullView.obj.ambiente === "estacao" && fullView.obj.status !== "cancelada" && (
+                      <Button
+                        variant="outline" size="sm"
+                        className={checkin ? "text-green-700 border-green-300" : "text-brand-blue-dark border-brand-blue-dark/30"}
+                        onClick={() => toggleCheckin(fullView.obj)} disabled={savingCheckin}
+                      >
+                        {savingCheckin ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
+                        {checkin ? "Estornar check-in" : "Registrar check-in"}
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline" size="sm"
+                      className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+                      onClick={async () => {
+                        const handler = fullView.kind === "reserva" ? onDeleteReserva : onDeleteContrato;
+                        if (!handler) return;
+                        await handler(fullView.obj);
+                        setFullView(null);
+                        setSelectedDay(undefined);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Excluir reserva
+                    </Button>
+                  </div>
+                </>
+              )}
             </>
           )}
         </DialogScrollContent>

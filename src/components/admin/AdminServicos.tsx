@@ -33,13 +33,15 @@ export default function AdminServicos() {
           nome: editingServico.nome,
           preco: editingServico.preco,
           categoria: editingServico.categoria,
-          icon: editingServico.icon
+          icon: editingServico.icon,
+          status: editingServico.status || 'ativa'
         }).eq('id', editingServico.id)
       : await supabase.from('servicos').insert([{
           nome: editingServico.nome,
           preco: editingServico.preco,
           categoria: editingServico.categoria,
-          icon: editingServico.icon
+          icon: editingServico.icon,
+          status: editingServico.status || 'ativa'
         }]);
     
     if (error) {
@@ -79,7 +81,7 @@ export default function AdminServicos() {
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Serviços</h2>
           <p className="text-muted-foreground">Gerencie o catálogo de serviços do site.</p>
         </div>
-        <Button onClick={() => setEditingServico({ nome: '', preco: '', categoria: 'Adicional', icon: 'Building2' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+        <Button onClick={() => setEditingServico({ nome: '', preco: '', categoria: 'Adicional', icon: 'Building2', status: 'ativa' })} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
           <Plus className="w-4 h-4 mr-2" /> Novo Serviço
         </Button>
       </div>
@@ -97,7 +99,12 @@ export default function AdminServicos() {
             </div>
             <h3 className="font-heading font-bold text-brand-blue-dark">{s.nome}</h3>
             <p className="text-sm font-bold text-brand-orange mt-1">{s.preco || "Cortesia"}</p>
-            <p className="text-[10px] text-muted-foreground uppercase mt-2">{s.categoria}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground uppercase">{s.categoria}</span>
+              <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${s.status === 'inativa' ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                {s.status === 'inativa' ? 'Inativa' : 'Ativa'}
+              </span>
+            </div>
           </Card>
         ))}
         {servicos.length === 0 && (
@@ -129,6 +136,17 @@ export default function AdminServicos() {
                 onChange={(e) => setEditingServico({...editingServico, preco: e.target.value})}
                 placeholder="Ex: R$ 5,00 ou Cortesia"
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status da visibilidade</label>
+              <select
+                className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                value={editingServico?.status || 'ativa'}
+                onChange={(e) => setEditingServico({ ...editingServico, status: e.target.value })}
+              >
+                <option value="ativa">Ativa</option>
+                <option value="inativa">Inativa</option>
+              </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

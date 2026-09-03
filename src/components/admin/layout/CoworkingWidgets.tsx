@@ -4,6 +4,7 @@ import { WIDGET_REGISTRY } from "../WidgetRegistry";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Wifi, Coffee, Printer, Info, Check, Clock } from "lucide-react";
+import { filterActiveRecords } from "@/lib/unit-status";
 
 const IconMap: Record<string, any> = {
   Wifi,
@@ -21,9 +22,11 @@ export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
       const { data, error } = await supabase
         .from('unidades')
         .select('*')
-        .limit(content.limit || 6);
-      
-      if (!error && data) setUnits(data);
+        .order('nome', { ascending: true });
+
+      if (!error && data) {
+        setUnits(filterActiveRecords(data).slice(0, content.limit || 6));
+      }
       setLoading(false);
     };
     fetchUnits();
@@ -163,9 +166,12 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
       const { data, error } = await supabase
         .from('salas')
         .select('*, unidades(nome)')
-        .limit(content.limit || 6);
-      
-      if (!error && data) setRooms(data);
+        .order('nome', { ascending: true });
+
+      if (!error && data) {
+        const activeRooms = filterActiveRecords(data).slice(0, content.limit || 6);
+        setRooms(activeRooms);
+      }
       setLoading(false);
     };
     fetchRooms();

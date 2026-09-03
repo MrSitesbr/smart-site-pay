@@ -16,6 +16,7 @@ const defaultForm = {
   descricao: "",
   foto_url: "",
   galeria: [] as string[],
+  status: "ativa",
   metadata: {
     metragem: 0,
     tem_janela: false,
@@ -73,6 +74,7 @@ export default function AdminSalaFormPage() {
           descricao: salaRes.data.descricao || "",
           foto_url: salaRes.data.foto_url || "",
           galeria: salaRes.data.galeria || [],
+          status: salaRes.data.status || "ativa",
           metadata: salaRes.data.metadata || {
             metragem: 0,
             tem_janela: false,
@@ -110,6 +112,7 @@ export default function AdminSalaFormPage() {
       descricao: form.descricao,
       foto_url: form.galeria?.[0] || form.foto_url || "",
       galeria: form.galeria || [],
+      status: form.status || "ativa",
       metadata: form.metadata || {
         metragem: 0,
         tem_janela: false,
@@ -188,6 +191,20 @@ export default function AdminSalaFormPage() {
               <Button onClick={saveSala} className="bg-brand-blue-dark text-white hover:bg-brand-blue-dark/90">
                 <Save className="w-4 h-4 mr-2" /> Salvar
               </Button>
+            </div>
+          </div>
+
+          <div className="mb-6 flex justify-end">
+            <div className="space-y-2 min-w-[220px]">
+              <label className="text-sm font-medium text-slate-700">Status da sala</label>
+              <select
+                className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                value={form.status || "ativa"}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                <option value="ativa">Ativa</option>
+                <option value="inativa">Inativa</option>
+              </select>
             </div>
           </div>
 

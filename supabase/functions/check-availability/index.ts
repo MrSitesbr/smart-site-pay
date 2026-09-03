@@ -70,7 +70,10 @@ Deno.serve(async (req) => {
         start: e.start?.dateTime || e.start?.date,
         end: e.end?.dateTime || e.end?.date,
       })),
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }), { 
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    });
   } catch (e) {
     console.error("check-availability error", e);
     return new Response(JSON.stringify({ error: String(e) }), {

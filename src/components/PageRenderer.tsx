@@ -449,7 +449,6 @@ const WidgetRenderer: React.FC<{
                         >
                           {content.cta}
                         </a>
-                        <p className="text-xs text-white/50 mt-3 text-center">Sem compromisso</p>
                       </div>
                     </div>
                   )}
@@ -458,7 +457,7 @@ const WidgetRenderer: React.FC<{
             </div>
 
             {/* Mobile CTA */}
-            {content.cta && content.desktopColumns !== false && (
+            {content.cta && content.desktopColumns === false && (
               <div className="lg:hidden absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 to-transparent">
                 <a 
                   href={content.ctaUrl || '/reservar'} 

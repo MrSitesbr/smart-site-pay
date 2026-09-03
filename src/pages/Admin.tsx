@@ -22,8 +22,6 @@ import AdminServicos from "@/components/admin/AdminServicos";
 import AdminUnidades from "@/components/admin/AdminUnidades";
 import AdminPaginas from "@/components/admin/AdminPaginas";
 import AdminClientesCorp from "@/components/admin/AdminClientesCorp";
-import AdminFuncionarios from "@/components/admin/AdminFuncionarios";
-import AdminVisitantes from "@/components/admin/AdminVisitantes";
 import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
 import AdminSettings from "@/components/admin/AdminSettings";
@@ -31,6 +29,8 @@ import AdminSEO from "@/components/admin/AdminSEO";
 import AdminMenus from "@/components/admin/AdminMenus";
 import AdminMidias from "@/components/admin/AdminMidias";
 import AdminDocsIA from "@/components/admin/AdminDocsIA";
+import AdminDocumentation from "@/components/admin/AdminDocumentation";
+import AdminSuporte from "@/components/admin/AdminSuporte";
 import AdminHeaderFooterSimple from "@/components/admin/AdminHeaderFooterSimple";
 
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
@@ -274,12 +274,10 @@ export default function Admin() {
       calendario: "Calendário Geral",
       contratos: "Contratações",
       reservas: "Calendário de Reservas",
-      clientes_corp: "CRM Clientes Corp",
-      funcionarios: "Colaboradores",
+      clientes_corp: "Empresas clientes",
       visitantes: "Calendário de Visitas",
-      visitantes_crm: "Visitantes",
       locacao_fixa: "Locação Fixa",
-      clientes: "CRM Leads",
+      clientes: "Leads de contratação",
       planos_horas: "Planos",
       financeiro: "Financeiro",
       erp: "ERP Ocupação",
@@ -293,6 +291,7 @@ export default function Admin() {
       configuracoes: "Configurações Gerais",
       midias: "Biblioteca de Mídias",
       seo: "SEO, Scripts & Site Map",
+      suporte: "Suporte",
       docs_ia: "Documentação para IA (Prompt Dev)"
     };
     return titles[id] || "Admin";
@@ -355,7 +354,6 @@ export default function Admin() {
               />
             )}
             {activeTab === "clientes_corp" && <AdminClientesCorp />}
-            {activeTab === "funcionarios" && <AdminFuncionarios />}
             {activeTab === "visitantes" && (
               <AdminCalendar 
                 reservas={reservas} 
@@ -366,11 +364,10 @@ export default function Admin() {
                 initialFilter="visitas"
               />
             )}
-            {activeTab === "visitantes_crm" && <AdminVisitantes />}
             {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
             {activeTab === "planos_horas" && <AdminPlanosHoras />}
-            {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} />}
+            {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} reservas={reservas} />}
             {activeTab === "erp" && <AdminERP reservas={reservas} contratos={contratos} />}
             {activeTab === "woba" && <AdminWobaRepasses reservas={reservas} contratos={contratos} />}
             {activeTab === "pendencias" && <AdminPendencias />}
@@ -383,6 +380,8 @@ export default function Admin() {
             {activeTab === "seo" && <AdminSEO />}
             {activeTab === "midias" && <AdminMidias />}
             {activeTab === "configuracoes" && <AdminSettings />}
+            {activeTab === "documentacao" && <AdminDocumentation />}
+            {activeTab === "suporte" && <AdminSuporte />}
             {activeTab === "docs_ia" && <AdminDocsIA />}
             
           </main>

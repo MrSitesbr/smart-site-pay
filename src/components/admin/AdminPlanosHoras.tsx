@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Edit2, Clock, Save, X, Building2 } from "lucide-react";
+import { Plus, Archive, Edit2, Clock, Save, X, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,7 +27,7 @@ export default function AdminPlanosHoras() {
   }, []);
 
   async function fetchPlanos() {
-    const { data } = await supabase.from('planos').select('*').order('quantidade_horas');
+    const { data } = await (supabase.from('planos') as any).select('*').is('deleted_at', null).order('quantidade_horas');
     setPlanos(data || []);
   }
 
@@ -35,12 +35,12 @@ export default function AdminPlanosHoras() {
   const filteredPlanos = planos;
 
 
-  async function deletePlano(id: string) {
-    if (!confirm("Tem certeza que deseja excluir este plano?")) return;
-    const { error } = await supabase.from('planos').delete().eq('id', id);
+  async function arquivarPlano(id: string) {
+    if (!confirm("Arquivar este plano? O histórico será preservado.")) return;
+    const { error } = await (supabase.from('planos') as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Plano excluído");
+      toast.success("Plano arquivado");
       fetchPlanos();
     }
   }
@@ -78,7 +78,7 @@ export default function AdminPlanosHoras() {
           <Card key={p.id} className="p-6 flex flex-col items-center text-center relative hover:shadow-lg transition-all border-none shadow-sm">
             <div className="absolute top-4 right-4 flex gap-2">
               <button onClick={() => navigate(`/admin/planos/${p.id}`)} className="p-2 hover:bg-accent rounded-full transition-colors"><Edit2 className="w-4 h-4 text-muted-foreground" /></button>
-              <button onClick={() => deletePlano(p.id)} className="p-2 hover:bg-destructive/10 rounded-full transition-colors"><Trash2 className="w-4 h-4 text-destructive" /></button>
+              <button onClick={() => arquivarPlano(p.id)} title="Arquivar plano" className="p-2 hover:bg-destructive/10 rounded-full transition-colors"><Archive className="w-4 h-4 text-destructive" /></button>
             </div>
             
             <div className="w-16 h-16 bg-brand-orange/10 rounded-full flex items-center justify-center mb-4">

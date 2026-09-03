@@ -28,6 +28,16 @@ function dateISO(d: Date) {
 }
 
 export default function NovaReservaDialog({ open, onOpenChange, date, reservas, contratos, onCreated }: Props) {
+  const [crmClientes, setCrmClientes] = useState<any[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone").then(({ data }) => {
+      if (mounted) setCrmClientes(data || []);
+    });
+    return () => { mounted = false; };
+  }, []);
+
   const clientes = useMemo<Cliente[]>(() => {
     const map = new Map<string, Cliente>();
     const add = (c: any) => {
@@ -35,9 +45,15 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       if (!key || map.has(key)) return;
       map.set(key, { nome: c.nome || "", email: c.email || "", telefone: c.telefone || "" });
     };
+    crmClientes.forEach((c) => {
+      const nomeCliente = c.razao_social || c.responsavel_nome || "";
+      const emailCliente = c.responsavel_email || "";
+      const telefoneCliente = c.responsavel_telefone || "";
+      add({ nome: nomeCliente, email: emailCliente, telefone: telefoneCliente });
+    });
     reservas.forEach(add); contratos.forEach(add);
-    return Array.from(map.values()).sort((a,b) => a.nome.localeCompare(b.nome));
-  }, [reservas, contratos]);
+    return Array.from(map.values()).filter((c) => c.nome).sort((a,b) => a.nome.localeCompare(b.nome));
+  }, [reservas, contratos, crmClientes]);
 
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -203,6 +219,51 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
   const bloqueiaSalvar = !recorrente && (temBloqueio || temConflitoSala);
 
+  async function syncClienteComCRM() {
+    const nomeCliente = nome.trim();
+    const emailCliente = email.trim();
+    const telefoneCliente = telefone.trim();
+    if (!nomeCliente) return;
+
+    const { data: clientesCorp, error: loadErr } = await supabase.from("clientes_corp").select("id, razao_social, responsavel_email, responsavel_telefone");
+    if (loadErr) {
+      console.error("Erro ao buscar clientes do CRM:", loadErr);
+      return;
+    }
+
+    const match = (clientesCorp || []).find((cliente: any) => {
+      const sameName = cliente.razao_social?.trim().toLowerCase() === nomeCliente.toLowerCase();
+      const sameEmail = Boolean(emailCliente) && cliente.responsavel_email?.trim().toLowerCase() === emailCliente.toLowerCase();
+      const samePhone = Boolean(telefoneCliente) && cliente.responsavel_telefone?.trim().replace(/\D/g, "") === telefoneCliente.replace(/\D/g, "");
+      return sameName || sameEmail || samePhone;
+    });
+
+    if (match) {
+      const payload: Record<string, any> = {
+        razao_social: nomeCliente,
+        responsavel_nome: nomeCliente,
+        responsavel_email: emailCliente || match.responsavel_email || null,
+        responsavel_telefone: telefoneCliente || match.responsavel_telefone || null,
+      };
+
+      const { error } = await supabase.from("clientes_corp").update(payload).eq("id", match.id);
+      if (error) console.error("Erro ao atualizar cliente do CRM:", error);
+      return;
+    }
+
+    const payload: Record<string, any> = {
+      razao_social: nomeCliente,
+      responsavel_nome: nomeCliente,
+      responsavel_email: emailCliente || null,
+      responsavel_telefone: telefoneCliente || null,
+    };
+
+    const { error } = await supabase.from("clientes_corp").insert(payload);
+    if (error) {
+      console.error("Erro ao criar cliente do CRM:", error);
+    }
+  }
+
   async function save() {
     if (!dataStr) {
       toast({ title: "Informe a data da reserva", variant: "destructive" });
@@ -221,6 +282,8 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     const serieId = recorrente && datasPrevistas.length > 1
       ? (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()))
       : null;
+    await syncClienteComCRM();
+
     const datas = datasPrevistas;
     const criadas: string[] = [];
     const puladas: string[] = [];
