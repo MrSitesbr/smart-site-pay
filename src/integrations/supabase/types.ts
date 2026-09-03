@@ -373,6 +373,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pendencias: {
+        Row: {
+          categoria: string
+          created_at: string
+          descricao: string | null
+          id: string
+          prioridade: number
+          responsavel: string | null
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          prioridade?: number
+          responsavel?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          prioridade?: number
+          responsavel?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       plano_unidades: {
         Row: {
           created_at: string
@@ -456,8 +492,12 @@ export type Database = {
       reservations: {
         Row: {
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
+          cancel_motivo: string | null
+          cancelled_at: string | null
           created_at: string
           data: string
+          desconto_motivo: string | null
+          desconto_por: string | null
           email: string
           google_calendar_id: string | null
           google_event_id: string | null
@@ -468,16 +508,23 @@ export type Database = {
           observacoes: string | null
           origem: string
           sala_id: string | null
+          serie_id: string | null
           status: Database["public"]["Enums"]["reserva_status"]
           telefone: string
           tipo: Database["public"]["Enums"]["reserva_tipo"]
           unidade_id: string | null
           updated_at: string
+          valor: number | null
+          valor_original: number | null
         }
         Insert: {
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
+          cancel_motivo?: string | null
+          cancelled_at?: string | null
           created_at?: string
           data: string
+          desconto_motivo?: string | null
+          desconto_por?: string | null
           email: string
           google_calendar_id?: string | null
           google_event_id?: string | null
@@ -488,16 +535,23 @@ export type Database = {
           observacoes?: string | null
           origem?: string
           sala_id?: string | null
+          serie_id?: string | null
           status?: Database["public"]["Enums"]["reserva_status"]
           telefone: string
           tipo: Database["public"]["Enums"]["reserva_tipo"]
           unidade_id?: string | null
           updated_at?: string
+          valor?: number | null
+          valor_original?: number | null
         }
         Update: {
           ambiente?: Database["public"]["Enums"]["ambiente_tipo"]
+          cancel_motivo?: string | null
+          cancelled_at?: string | null
           created_at?: string
           data?: string
+          desconto_motivo?: string | null
+          desconto_por?: string | null
           email?: string
           google_calendar_id?: string | null
           google_event_id?: string | null
@@ -508,11 +562,14 @@ export type Database = {
           observacoes?: string | null
           origem?: string
           sala_id?: string | null
+          serie_id?: string | null
           status?: Database["public"]["Enums"]["reserva_status"]
           telefone?: string
           tipo?: Database["public"]["Enums"]["reserva_tipo"]
           unidade_id?: string | null
           updated_at?: string
+          valor?: number | null
+          valor_original?: number | null
         }
         Relationships: [
           {
