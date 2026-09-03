@@ -100,6 +100,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       items: [
         { title: "Financeiro Geral", id: "financeiro" },
         { title: "Repasses Woba", id: "woba" },
+        { title: "Pendências", id: "pendencias" },
       ]
     },
     { 

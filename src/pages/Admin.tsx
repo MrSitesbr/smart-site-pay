@@ -15,6 +15,7 @@ import AdminClientes from "@/components/admin/AdminClientes";
 import AdminFinanceiro from "@/components/admin/AdminFinanceiro";
 import AdminERP from "@/components/admin/AdminERP";
 import AdminWobaRepasses from "@/components/admin/AdminWobaRepasses";
+import AdminPendencias from "@/components/admin/AdminPendencias";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminArtigos from "@/components/admin/AdminArtigos";
 import AdminServicos from "@/components/admin/AdminServicos";
@@ -193,19 +194,42 @@ export default function Admin() {
   }
 
   async function deleteReserva(r: Reserva) {
-    if (!confirm(`Excluir a reserva de ${r.nome} em ${new Date(r.data+"T00:00").toLocaleDateString("pt-BR")} ${r.hora_inicio.slice(0,5)}? Esta ação não pode ser desfeita.`)) return;
-    const gId = (r as any).google_event_id;
-    const cid = (r as any).google_calendar_id;
-    if (gId) {
-      const { error: gErr } = await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
-      if (gErr) {
-        toast({ title: "Não foi possível remover no Google Agenda", description: gErr.message + " — reserva não excluída para evitar inconsistência.", variant: "destructive" });
+    const serieId = (r as any).serie_id;
+    let escopo: "uma" | "futuras" = "uma";
+
+    if (serieId) {
+      escopo = confirm(
+        `Esta reserva faz parte de uma recorrência.\n\nOK = cancelar esta e TODAS as futuras (histórico passado preservado).\nCancelar = cancelar somente esta data.`
+      ) ? "futuras" : "uma";
+    } else if (!confirm(`Cancelar a reserva de ${r.nome} em ${new Date(r.data+"T00:00").toLocaleDateString("pt-BR")} ${r.hora_inicio.slice(0,5)}? O registro fica no histórico como cancelado.`)) {
+      return;
+    }
+
+    const alvos: any[] = escopo === "futuras"
+      ? reservas.filter((x: any) => x.serie_id === serieId && x.data >= r.data)
+      : [r];
+
+    for (const alvo of alvos) {
+      const gId = (alvo as any).google_event_id;
+      const cid = (alvo as any).google_calendar_id;
+      if (gId) {
+        await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
+      }
+      const { error } = await (supabase.from("reservations") as any)
+        .update({ status: "cancelada", cancelled_at: new Date().toISOString(), google_event_id: null })
+        .eq("id", alvo.id);
+      if (error) {
+        toast({ title: "Erro ao cancelar", description: error.message, variant: "destructive" });
+        fetchReservas();
         return;
       }
     }
-    const { error } = await (supabase.from("reservations") as any).delete().eq("id", r.id);
-    if (error) toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
-    else { toast({ title: "Reserva excluída (Google Agenda também)" }); fetchReservas(); }
+
+    toast({
+      title: alvos.length > 1 ? `${alvos.length} reservas futuras canceladas` : "Reserva cancelada",
+      description: "O histórico financeiro foi preservado.",
+    });
+    fetchReservas();
   }
 
   async function deleteContrato(c: Contrato) {
@@ -349,6 +373,7 @@ export default function Admin() {
             {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} />}
             {activeTab === "erp" && <AdminERP reservas={reservas} contratos={contratos} />}
             {activeTab === "woba" && <AdminWobaRepasses reservas={reservas} contratos={contratos} />}
+            {activeTab === "pendencias" && <AdminPendencias />}
             {activeTab === "artigos" && <AdminArtigos />}
             {activeTab === "servicos" && <AdminServicos />}
             {activeTab === "unidades" && <AdminUnidades />}
