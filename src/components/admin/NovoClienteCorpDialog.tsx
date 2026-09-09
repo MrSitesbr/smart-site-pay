@@ -109,8 +109,18 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
         body: { cliente_id: result.id, password: accessPassword },
         headers: adminFnHeaders(),
       });
-      const pwErr = (pwData as any)?.error || passwordError?.message;
-      if (pwErr) toast({ title: "Cliente salvo, mas a senha não foi definida", description: pwErr, variant: "destructive" });
+      const passwordResult = pwData as { ok?: boolean; error?: string } | null;
+      const pwErr = passwordResult?.error || passwordError?.message;
+      if (pwErr || !passwordResult?.ok) {
+        toast({
+          title: "Cliente salvo, mas a senha não foi definida",
+          description: pwErr || "A atualização da senha não foi confirmada pelo sistema.",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+      toast({ title: "Senha de acesso atualizada e confirmada" });
     }
     onCreated?.(result);
     onOpenChange(false);

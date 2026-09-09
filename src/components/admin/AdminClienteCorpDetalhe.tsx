@@ -116,14 +116,24 @@ export default function AdminClienteCorpDetalhe() {
 
   async function saveAccessPassword() {
     if (accessPassword.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres");
+    if (!id) return toast.error("Cliente não identificado. Reabra a ficha e tente novamente.");
     setSavingPassword(true);
-    const { data, error } = await supabase.functions.invoke("admin-set-client-password", {
-      body: { cliente_id: id, password: accessPassword },
-      headers: adminFnHeaders(),
-    });
-    const err = (data as any)?.error || error?.message;
-    if (err) toast.error(err); else { toast.success("Senha de acesso definida"); setAccessPassword(""); }
-    setSavingPassword(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-set-client-password", {
+        body: { cliente_id: id, password: accessPassword },
+        headers: adminFnHeaders(),
+      });
+      const response = data as { ok?: boolean; error?: string } | null;
+      const message = response?.error || error?.message;
+      if (message || !response?.ok) throw new Error(message || "A senha não foi confirmada pelo sistema.");
+      toast.success("Senha de acesso atualizada e confirmada");
+      setAccessPassword("");
+      await fetchData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a senha");
+    } finally {
+      setSavingPassword(false);
+    }
   }
 
   async function deleteFunc(fid: string) {
