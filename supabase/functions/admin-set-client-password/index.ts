@@ -41,22 +41,33 @@ Deno.serve(async (req) => {
 
     if (!authorized) return json({ error: "Não autorizado." }, 401);
 
-    const { cliente_id, password } = await req.json();
-    if (!cliente_id || !password || String(password).length < 6) {
+    const body = await req.json().catch(() => null) as { cliente_id?: string; password?: string } | null;
+    const clienteId = body?.cliente_id?.trim();
+    const password = body?.password ?? "";
+    if (!clienteId) {
+      return json({ error: "Cliente não identificado. Reabra a ficha e tente novamente." }, 400);
+    }
+    if (password.length < 6) {
       return json({ error: "Informe o cliente e uma senha com no mínimo 6 caracteres." }, 400);
     }
 
     const { data: cliente, error: cliErr } = await admin
       .from("clientes_corp")
       .select("id, user_id, responsavel_email, responsavel_nome")
-      .eq("id", cliente_id)
+      .eq("id", clienteId)
       .single();
-    if (cliErr) throw cliErr;
+    if (cliErr || !cliente) {
+      return json({ error: "Cliente não encontrado." }, 404);
+    }
 
     if (cliente.user_id) {
-      const { error } = await admin.auth.admin.updateUserById(cliente.user_id, { password });
+      const { data: updated, error } = await admin.auth.admin.updateUserById(cliente.user_id, {
+        password,
+        email_confirm: true,
+      });
       if (error) throw error;
-      return json({ ok: true, created: false });
+      if (!updated.user) throw new Error("A conta não confirmou a atualização da senha.");
+      return json({ ok: true, created: false, user_id: updated.user.id });
     }
 
     if (!cliente.responsavel_email) {
@@ -71,8 +82,12 @@ Deno.serve(async (req) => {
 
     let userId = found?.id ?? null;
     if (userId) {
-      const { error } = await admin.auth.admin.updateUserById(userId, { password });
+      const { data: updated, error } = await admin.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true,
+      });
       if (error) throw error;
+      if (!updated.user) throw new Error("A conta não confirmou a atualização da senha.");
     } else {
       const { data: created, error } = await admin.auth.admin.createUser({
         email: cliente.responsavel_email,
@@ -90,7 +105,7 @@ Deno.serve(async (req) => {
       .eq("id", cliente.id);
     if (upErr) throw upErr;
 
-    return json({ ok: true, created: !found });
+    return json({ ok: true, created: !found, user_id: userId });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
