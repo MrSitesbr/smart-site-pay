@@ -42,6 +42,7 @@ export default function Auth() {
   const [unidades, setUnidades] = useState<any[]>([]);
   const [planos, setPlanos] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
+  const [loadingOpcoes, setLoadingOpcoes] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -53,15 +54,58 @@ export default function Auth() {
 
   useEffect(() => {
     if (mode !== "signup") return;
-    supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
-    supabase.from("planos").select("id, nome, tipo").then(({ data }) => setPlanos(data || []));
+    supabase.from("unidades").select("id, nome").eq("status", "ativo").order("nome")
+      .then(({ data }) => setUnidades(data || []));
   }, [mode]);
 
+  // Planos e salas coerentes com a unidade escolhida
   useEffect(() => {
-    if (!form.unidade_id) { setSalas([]); return; }
-    supabase.from("salas").select("id, nome, tipo").eq("unidade_id", form.unidade_id)
-      .then(({ data }) => setSalas(data || []));
+    if (!form.unidade_id) { setPlanos([]); setSalas([]); return; }
+    let cancelado = false;
+    setLoadingOpcoes(true);
+    (async () => {
+      const [{ data: todos }, { data: todosVinculos }, { data: salasUnidade }] = await Promise.all([
+        (supabase.from("planos") as any).select("id, nome, tipo, unidade_id").is("deleted_at", null).order("nome"),
+        supabase.from("plano_unidades").select("plano_id, unidade_id"),
+        (supabase.from("salas") as any).select("id, nome, tipo").eq("unidade_id", form.unidade_id).order("nome"),
+      ]);
+      if (cancelado) return;
+
+      const vinculados = new Set(
+        (todosVinculos || []).filter((v: any) => v.unidade_id === form.unidade_id).map((v: any) => v.plano_id),
+      );
+      const comVinculo = new Set((todosVinculos || []).map((v: any) => v.plano_id));
+
+      // plano vale para a unidade se: pertence a ela, está vinculado a ela,
+      // ou não tem nenhum vínculo/unidade definida (vale para todas)
+      const finalPlanos = (todos || []).filter((p: any) =>
+        p.unidade_id
+          ? p.unidade_id === form.unidade_id
+          : vinculados.has(p.id) || !comVinculo.has(p.id),
+      );
+
+      setPlanos(finalPlanos);
+      setSalas(salasUnidade || []);
+      setForm((f) => ({
+        ...f,
+        plano_id: finalPlanos.some((p: any) => p.id === f.plano_id) ? f.plano_id : "",
+      }));
+      setLoadingOpcoes(false);
+    })();
+    return () => { cancelado = true; };
   }, [form.unidade_id]);
+
+  // Salas compatíveis com o plano escolhido (quando o plano define salas)
+  const [salasPlano, setSalasPlano] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!form.plano_id) { setSalasPlano(null); return; }
+    supabase.from("sala_planos").select("sala_id").eq("plano_id", form.plano_id)
+      .then(({ data }) => setSalasPlano(data && data.length ? data.map((s: any) => s.sala_id) : null));
+  }, [form.plano_id]);
+
+  const salasDisponiveis = salasPlano
+    ? salas.filter((s) => salasPlano.includes(s.id))
+    : salas;
 
   async function routeAfterLogin(userId: string) {
     const { data: cliente } = await (supabase.from("clientes_corp") as any)
@@ -330,12 +374,17 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Plano *</Label>
-                  <Select value={form.plano_id} onValueChange={(v) => setForm({ ...form, plano_id: v })}>
-                    <SelectTrigger className={inputCls}><SelectValue placeholder="Escolha o plano" /></SelectTrigger>
+                  <Select value={form.plano_id} onValueChange={(v) => setForm({ ...form, plano_id: v, sala_id: "" })} disabled={!form.unidade_id || loadingOpcoes}>
+                    <SelectTrigger className={inputCls}>
+                      <SelectValue placeholder={!form.unidade_id ? "Escolha a unidade primeiro" : loadingOpcoes ? "Carregando planos..." : "Escolha o plano"} />
+                    </SelectTrigger>
                     <SelectContent>
                       {planos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {form.unidade_id && !loadingOpcoes && planos.length === 0 && (
+                    <p className="text-xs text-slate-500">Nenhum plano disponível nesta unidade.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Sala que pretende usar</Label>
@@ -344,9 +393,12 @@ export default function Auth() {
                       <SelectValue placeholder={form.unidade_id ? "Escolha a sala" : "Escolha a unidade primeiro"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {salas.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
+                      {salasDisponiveis.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {form.plano_id && salasDisponiveis.length === 0 && (
+                    <p className="text-xs text-slate-500">Nenhuma sala vinculada a este plano nesta unidade.</p>
+                  )}
                 </div>
               </>
             )}
