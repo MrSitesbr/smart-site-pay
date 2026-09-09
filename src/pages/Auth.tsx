@@ -54,8 +54,12 @@ export default function Auth() {
 
   useEffect(() => {
     if (mode !== "signup") return;
-    supabase.from("unidades").select("id, nome").eq("status", "ativo").order("nome")
-      .then(({ data }) => setUnidades(data || []));
+    supabase.from("unidades").select("id, nome, status").order("nome")
+      .then(({ data }) => {
+        const todas = data || [];
+        const ativas = todas.filter((u: any) => !u.status || String(u.status).toLowerCase().startsWith("ativ"));
+        setUnidades(ativas.length ? ativas : todas);
+      });
   }, [mode]);
 
   // Planos e salas coerentes com a unidade escolhida
