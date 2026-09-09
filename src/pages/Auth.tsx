@@ -377,12 +377,17 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Plano *</Label>
-                  <Select value={form.plano_id} onValueChange={(v) => setForm({ ...form, plano_id: v })}>
-                    <SelectTrigger className={inputCls}><SelectValue placeholder="Escolha o plano" /></SelectTrigger>
+                  <Select value={form.plano_id} onValueChange={(v) => setForm({ ...form, plano_id: v, sala_id: "" })} disabled={!form.unidade_id || loadingOpcoes}>
+                    <SelectTrigger className={inputCls}>
+                      <SelectValue placeholder={!form.unidade_id ? "Escolha a unidade primeiro" : loadingOpcoes ? "Carregando planos..." : "Escolha o plano"} />
+                    </SelectTrigger>
                     <SelectContent>
                       {planos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {form.unidade_id && !loadingOpcoes && planos.length === 0 && (
+                    <p className="text-xs text-slate-500">Nenhum plano disponível nesta unidade.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Sala que pretende usar</Label>
@@ -391,9 +396,12 @@ export default function Auth() {
                       <SelectValue placeholder={form.unidade_id ? "Escolha a sala" : "Escolha a unidade primeiro"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {salas.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
+                      {salasDisponiveis.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {form.plano_id && salasDisponiveis.length === 0 && (
+                    <p className="text-xs text-slate-500">Nenhuma sala vinculada a este plano nesta unidade.</p>
+                  )}
                 </div>
               </>
             )}
