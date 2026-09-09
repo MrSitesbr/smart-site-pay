@@ -418,6 +418,9 @@ export default function Auth() {
                     <Input type="password" value={form.confirmar} onChange={(e) => setForm({ ...form, confirmar: e.target.value })} className={inputCls} />
                   </div>
                 </div>
+                <p className="text-[11px] text-slate-500 leading-snug -mt-2">
+                  A senha deve ter no mínimo 6 caracteres. Recomendamos incluir letras maiúsculas, números e caracteres especiais (ex.: @, #, $, !) para maior segurança.
+                </p>
               </>
             ) : (
               <>
