@@ -88,6 +88,53 @@ export type Database = {
         }
         Relationships: []
       }
+      cliente_documentos: {
+        Row: {
+          cliente_corp_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          mime_type: string | null
+          nome: string
+          size_bytes: number | null
+          storage_path: string
+          updated_at: string
+          visivel_cliente: boolean
+        }
+        Insert: {
+          cliente_corp_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          mime_type?: string | null
+          nome: string
+          size_bytes?: number | null
+          storage_path: string
+          updated_at?: string
+          visivel_cliente?: boolean
+        }
+        Update: {
+          cliente_corp_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          mime_type?: string | null
+          nome?: string
+          size_bytes?: number | null
+          storage_path?: string
+          updated_at?: string
+          visivel_cliente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_documentos_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes_corp: {
         Row: {
           cnpj: string | null
@@ -478,6 +525,54 @@ export type Database = {
         }
         Relationships: []
       }
+      plano_solicitacoes: {
+        Row: {
+          admin_notes: string | null
+          cliente_corp_id: string
+          created_at: string
+          id: string
+          mensagem: string | null
+          plano_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          cliente_corp_id: string
+          created_at?: string
+          id?: string
+          mensagem?: string | null
+          plano_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          cliente_corp_id?: string
+          created_at?: string
+          id?: string
+          mensagem?: string | null
+          plano_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plano_solicitacoes_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_solicitacoes_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plano_unidades: {
         Row: {
           created_at: string
@@ -519,8 +614,10 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           descricao: string | null
+          horas_incluidas: number
           id: string
           nome: string
+          periodo_apuracao: string
           preco: number
           quantidade_horas: number
           tipo: string | null
@@ -531,8 +628,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           descricao?: string | null
+          horas_incluidas?: number
           id?: string
           nome: string
+          periodo_apuracao?: string
           preco: number
           quantidade_horas: number
           tipo?: string | null
@@ -543,8 +642,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           descricao?: string | null
+          horas_incluidas?: number
           id?: string
           nome?: string
+          periodo_apuracao?: string
           preco?: number
           quantidade_horas?: number
           tipo?: string | null
@@ -888,6 +989,79 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          autor_nome: string | null
+          autor_tipo: string
+          corpo: string
+          created_at: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          autor_nome?: string | null
+          autor_tipo?: string
+          corpo: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          autor_nome?: string | null
+          autor_tipo?: string
+          corpo?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assunto: string
+          cliente_corp_id: string
+          created_at: string
+          id: string
+          prioridade: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assunto: string
+          cliente_corp_id: string
+          created_at?: string
+          id?: string
+          prioridade?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assunto?: string
+          cliente_corp_id?: string
+          created_at?: string
+          id?: string
+          prioridade?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unidades: {
         Row: {
           created_at: string
@@ -1100,6 +1274,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_cliente_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
