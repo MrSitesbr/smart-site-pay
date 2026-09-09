@@ -335,6 +335,14 @@ export default function Auth() {
                 CRIAR CONTA
               </Button>
 
+              <button
+                type="button"
+                onClick={recuperarSenha}
+                className="w-full text-xs text-orange-400 hover:text-orange-300 underline underline-offset-4"
+              >
+                Esqueci minha senha
+              </button>
+
               <p className="text-xs text-center text-slate-500 pt-2">
                 Novos cadastros passam por liberação da equipe do Coworking 013.
               </p>
