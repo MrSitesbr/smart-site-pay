@@ -131,6 +131,25 @@ export default function Auth() {
     navigate(redirect || "/painel");
   }
 
+  async function recuperarSenha() {
+    const emailLimpo = email.trim().toLowerCase();
+    if (!emailLimpo) {
+      toast({ title: "Informe seu e-mail", description: "Digite o e-mail cadastrado para receber o link.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(emailLimpo, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) {
+      toast({ title: "Não foi possível enviar", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "E-mail enviado",
+      description: "Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha.",
+    });
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!notRobot) {
@@ -334,6 +353,14 @@ export default function Auth() {
               >
                 CRIAR CONTA
               </Button>
+
+              <button
+                type="button"
+                onClick={recuperarSenha}
+                className="w-full text-xs text-orange-400 hover:text-orange-300 underline underline-offset-4"
+              >
+                Esqueci minha senha
+              </button>
 
               <p className="text-xs text-center text-slate-500 pt-2">
                 Novos cadastros passam por liberação da equipe do Coworking 013.
