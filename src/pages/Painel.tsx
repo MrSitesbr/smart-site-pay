@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2, LogOut, ExternalLink, Copy, Home, CalendarPlus, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, LogOut, ExternalLink, Copy, Home, CalendarPlus, ArrowRight, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 
@@ -49,19 +49,34 @@ export default function Painel() {
   const [reservas, setReservas] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
   const [month, setMonth] = useState<Date>(new Date());
+  const [cliente, setCliente] = useState<any>(null);
+  const [funcionarios, setFuncionarios] = useState<any[]>([]);
+  const [visitantes, setVisitantes] = useState<any[]>([]);
+  const [accessBlocked, setAccessBlocked] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/auth?redirect=/painel"); return; }
       setUser(session.user);
-      const [c, r] = await Promise.all([
+      const { data: clienteData } = await (supabase.from("clientes_corp") as any).select("*, unidades(nome), planos(nome), salas(nome)").eq("user_id", session.user.id).maybeSingle();
+      if (clienteData && clienteData.status_acesso !== "aprovado") {
+        setAccessBlocked(clienteData.status_acesso === "recusado" ? "Seu cadastro foi recusado. Entre em contato com a equipe." : "Seu cadastro está em análise. A equipe liberará o acesso após revisar seus dados.");
+        setLoading(false);
+        return;
+      }
+      setCliente(clienteData);
+      const [c, r, f, v] = await Promise.all([
         supabase.from("contract_requests").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }),
         supabase.from("reservations").select("*").eq("email", session.user.email!).order("data", { ascending: false }),
+        clienteData ? supabase.from("funcionarios_cliente").select("*").eq("cliente_corp_id", clienteData.id) : Promise.resolve({ data: [] } as any),
+        clienteData ? supabase.from("visitantes").select("*, salas(nome)").eq("cliente_corp_id", clienteData.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] } as any),
       ]);
       if (c.error) toast({ title: "Erro", description: c.error.message, variant: "destructive" });
       else setContratos(c.data || []);
       if (!r.error) setReservas(r.data || []);
+      setFuncionarios(f.data || []);
+      setVisitantes(v.data || []);
       setLoading(false);
     })();
   }, [navigate]);
@@ -99,6 +114,8 @@ export default function Painel() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
 
+  if (accessBlocked) return <div className="min-h-screen flex items-center justify-center p-4"><Card className="max-w-md p-8 text-center"><Building2 className="w-10 h-10 mx-auto mb-4 text-secondary" /><h1 className="font-heading font-black text-xl mb-2">Acesso aguardando liberação</h1><p className="text-muted-foreground mb-6">{accessBlocked}</p><Button onClick={logout}>Sair</Button></Card></div>;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-brand-blue-dark text-white">
@@ -121,12 +138,21 @@ export default function Painel() {
       <main className="container mx-auto px-4 py-6 max-w-[1600px]">
         <Tabs defaultValue="calendario">
           <TabsList className="mb-6">
+            <TabsTrigger value="empresa">Minha empresa</TabsTrigger>
             <TabsTrigger value="calendario">Calendário</TabsTrigger>
             <TabsTrigger value="lista">Minhas solicitações ({contratos.length})</TabsTrigger>
             <TabsTrigger value="canceladas">
               Canceladas ({contratos.filter((c) => c.status === "cancelada").length + reservas.filter((r) => r.status === "cancelada").length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="empresa">
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Card className="p-5 lg:col-span-2"><h2 className="font-heading font-black text-xl mb-3">{cliente?.razao_social || "Empresa vinculada"}</h2><div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></Card>
+              <Card className="p-5"><h3 className="font-heading font-bold mb-3">Colaboradores ({funcionarios.length})</h3>{funcionarios.length ? <div className="space-y-2">{funcionarios.map(f => <div key={f.id} className="border-b pb-2 text-sm"><p className="font-medium">{f.nome}</p><p className="text-xs text-muted-foreground">{f.cargo || f.email || f.telefone || "Colaborador autorizado"}</p></div>)}</div> : <p className="text-sm text-muted-foreground">Nenhum colaborador cadastrado.</p>}</Card>
+              <Card className="p-5 lg:col-span-3"><h3 className="font-heading font-bold mb-3">Visitantes ({visitantes.length})</h3>{visitantes.length ? <div className="grid gap-2 sm:grid-cols-2">{visitantes.map(v => <div key={v.id} className="border rounded-lg p-3 text-sm"><p className="font-medium">{v.nome}</p><p className="text-xs text-muted-foreground">{v.salas?.nome || "Sem sala"}{v.data_hora_prevista ? ` · ${new Date(v.data_hora_prevista).toLocaleString("pt-BR")}` : ""}</p></div>)}</div> : <p className="text-sm text-muted-foreground">Nenhum visitante registrado.</p>}</Card>
+            </div>
+          </TabsContent>
 
           {/* CALENDÁRIO — estilo Google Calendar (mês maximizado) */}
           <TabsContent value="calendario">

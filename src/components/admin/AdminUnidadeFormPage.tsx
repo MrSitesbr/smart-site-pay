@@ -59,7 +59,7 @@ export default function AdminUnidadeFormPage() {
         descricao: data.descricao || "",
         foto_url: data.foto_url || "",
         galeria: data.galeria || [],
-        status: data.status || "ativa",
+        status: (data as any).status || "ativa",
         servicos_infra: data.servicos_infra || [],
       });
       setLoading(false);

@@ -74,7 +74,7 @@ export default function AdminSalaFormPage() {
           descricao: salaRes.data.descricao || "",
           foto_url: salaRes.data.foto_url || "",
           galeria: salaRes.data.galeria || [],
-          status: salaRes.data.status || "ativa",
+          status: (salaRes.data as any).status || "ativa",
           metadata: salaRes.data.metadata || {
             metragem: 0,
             tem_janela: false,

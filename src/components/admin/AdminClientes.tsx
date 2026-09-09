@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, MessageCircle, Mail, RotateCcw, Trash2, UserRoundCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, MessageCircle, Mail, UserRoundCheck, UserPlus, Send, Handshake, CheckCircle2, GripVertical, Eye } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
 import { toast } from "@/hooks/use-toast";
+import { DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Estação", sala_privativa: "Sala Privativa", sala_reuniao: "Sala Reunião",
@@ -24,15 +29,38 @@ type Cliente = {
   total_solicitacoes: number;
   total_pago: number;
   total_pendente: number;
+  total_valor: number;
   ambientes: Set<string>;
   ultima_atividade: string;
+  etapa: string;
 };
+
+const FUNIL = [
+  { id: "pendente", label: "Prospecção", help: "Entrada", icon: UserPlus, color: "border-slate-300 bg-slate-50" },
+  { id: "contato", label: "Contato Inicial", help: "Qualificação", icon: MessageCircle, color: "border-cyan-200 bg-cyan-50/50" },
+  { id: "aprovada", label: "Proposta Enviada", help: "Consideração", icon: Send, color: "border-blue-200 bg-blue-50/50" },
+  { id: "negociacao", label: "Negociação", help: "Decisão", icon: Handshake, color: "border-amber-200 bg-amber-50/50" },
+  { id: "paga", label: "Fechado / Ganho", help: "Conversão", icon: CheckCircle2, color: "border-emerald-200 bg-emerald-50/50" },
+] as const;
+
+function etapaDoLead(status: string) {
+  if (status === "paga" || status === "concluida") return "paga";
+  if (status === "contato") return "contato";
+  if (status === "cancelada") return "pendente";
+  if (status === "aprovada") return "aprovada";
+  if (status === "negociacao") return "negociacao";
+  return "pendente";
+}
 
 export default function AdminClientes({ contratos, reservas }: { contratos: any[]; reservas: any[] }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [draggedLead, setDraggedLead] = useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Cliente | null>(null);
+  const [leadEtapas, setLeadEtapas] = useState<Record<string, string>>({});
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [crmClientes, setCrmClientes] = useState<any[]>([]);
-  const { overrides, setColor, clearColor } = useClientColors();
+  const { overrides } = useClientColors();
 
   useEffect(() => {
     let mounted = true;
@@ -50,7 +78,9 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
       const cur = map.get(key) || {
         email, nome: "", telefone: "", nicho: null,
         total_solicitacoes: 0, total_pago: 0, total_pendente: 0,
+        total_valor: 0,
         ambientes: new Set<string>(), ultima_atividade: "",
+        etapa: "pendente",
       };
       map.set(key, { ...cur, ...patch, ambientes: new Set([...cur.ambientes, ...(patch.ambientes || [])]) } as Cliente);
     };
@@ -63,8 +93,10 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
         total_solicitacoes: (cur?.total_solicitacoes || 0) + 1,
         total_pago: (cur?.total_pago || 0) + (paga ? Number(c.preco) : 0),
         total_pendente: (cur?.total_pendente || 0) + (pend ? Number(c.preco) : 0),
+        total_valor: (cur?.total_valor || 0) + Number(c.valor ?? c.preco ?? 0),
         ambientes: new Set([c.ambiente]) as any,
         ultima_atividade: !cur?.ultima_atividade || c.created_at > cur.ultima_atividade ? c.created_at : cur.ultima_atividade,
+        etapa: !cur?.ultima_atividade || c.created_at > cur.ultima_atividade ? etapaDoLead(c.status) : cur.etapa,
       });
     });
     reservas.forEach((r) => {
@@ -75,13 +107,14 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
         total_solicitacoes: (cur?.total_solicitacoes || 0) + 1,
         ambientes: new Set([r.ambiente]) as any,
         ultima_atividade: !cur?.ultima_atividade || r.created_at > cur.ultima_atividade ? r.created_at : cur.ultima_atividade,
+        etapa: cur?.etapa || "pendente",
       });
     });
     return Array.from(map.values()).sort((a, b) => (b.ultima_atividade > a.ultima_atividade ? 1 : -1));
   }, [contratos, reservas, crmClientes]);
 
   const q = search.trim().toLowerCase();
-  const filtered = clientes.filter((c) =>
+  const filtered = clientes.map((c) => ({ ...c, etapa: leadEtapas[c.email] || c.etapa })).filter((c) =>
     !q || c.nome.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || (c.nicho || "").toLowerCase().includes(q)
   );
 
@@ -112,6 +145,41 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     navigate(`/admin/clientes-corp/${clienteCriado.id}`);
   }
 
+  async function moverLead(cliente: Cliente, etapa: string) {
+    const leads = contratos.filter((contrato) => (contrato.email || "").toLowerCase() === cliente.email.toLowerCase());
+    if (!leads.length) return;
+    const etapaAnterior = cliente.etapa;
+    setLeadEtapas((current) => ({ ...current, [cliente.email]: etapa }));
+    const { error } = await (supabase.from("contract_requests") as any).update({ status: etapa }).in("id", leads.map((lead) => lead.id));
+    if (error) {
+      setLeadEtapas((current) => ({ ...current, [cliente.email]: etapaAnterior }));
+      toast({ title: "Não foi possível mover o lead", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: `Lead movido para ${FUNIL.find((item) => item.id === etapa)?.label}` });
+  }
+
+  async function salvarLead(lead: Cliente, patch: { nome: string; email: string; telefone: string; status: string; preco: number }) {
+    const relacionados = contratos.filter((contrato) => (contrato.email || "").toLowerCase() === lead.email.toLowerCase());
+    const { error } = await (supabase.from("contract_requests") as any).update(patch).in("id", relacionados.map((contrato) => contrato.id));
+    if (error) {
+      toast({ title: "Não foi possível salvar o lead", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Lead atualizado" });
+    setSelectedLead(null);
+    window.location.reload();
+  }
+
+  async function finalizarArraste(event: DragEndEvent) {
+    const email = String(event.active.id).replace("lead:", "");
+    const etapa = event.over?.id ? String(event.over.id) : null;
+    setDraggedLead(null);
+    const lead = filtered.find((item) => item.email === email);
+    if (!lead || !etapa || lead.etapa === etapa) return;
+    await moverLead(lead, etapa);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -119,102 +187,132 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome, email ou nicho…" className="pl-9" />
         </div>
-        <Badge variant="outline" className="font-heading font-bold">{filtered.length} clientes</Badge>
+        <Badge variant="outline" className="font-heading font-bold">{filtered.length} leads</Badge>
+      </div>
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <GripVertical className="h-4 w-4 text-brand-orange" /> Arraste um card para outra coluna do funil.
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="p-10 text-center text-muted-foreground">Nenhum cliente encontrado.</Card>
+        <Card className="p-10 text-center text-muted-foreground">Nenhum lead encontrado.</Card>
       ) : (
-        <div className="grid gap-3">
-          {filtered.map((c) => {
+        <DndContext sensors={sensors} onDragStart={({ active }) => setDraggedLead(String(active.id).replace("lead:", ""))} onDragCancel={() => setDraggedLead(null)} onDragEnd={finalizarArraste}>
+        <div className="flex min-w-0 gap-4 overflow-x-scroll pb-5 [scrollbar-color:hsl(var(--brand-orange))_hsl(var(--muted))] [scrollbar-width:auto]">
+          {FUNIL.map((coluna) => {
+            const ColumnIcon = coluna.icon;
+            const leadsDaColuna = filtered.filter((lead) => lead.etapa === coluna.id);
+            return <FunilColumn
+              key={coluna.id}
+              id={coluna.id}
+              className={`w-[310px] min-w-[310px] shrink-0 rounded-2xl border-2 p-3 transition-colors ${coluna.color} ${draggedLead ? "ring-1 ring-brand-orange/20" : ""}`}>
+              <div className="mb-3 flex items-center justify-between border-b border-current/10 pb-3">
+                <div className="flex items-center gap-2"><ColumnIcon className="h-4 w-4 text-brand-blue-dark" /><div><h2 className="font-heading text-sm font-black text-brand-blue-dark">{coluna.label}</h2><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{coluna.help}</p></div></div>
+                <div className="text-right"><Badge variant="secondary">{leadsDaColuna.length}</Badge><p className="mt-1 text-[10px] font-bold text-emerald-700">{fmtBRL(leadsDaColuna.reduce((sum, lead) => sum + lead.total_valor, 0))}</p></div>
+              </div>
+              <div className="min-h-[180px] space-y-3">
+              {leadsDaColuna.map((c) => {
             const isWoba = c.email.toLowerCase().includes("woba") || c.nome.toLowerCase().includes("woba");
             const color = getClientColor({ name: c.nome, email: c.email, isWoba, overrides });
-            const hasOverride = !!overrides[c.email.toLowerCase()];
             return (
-              <Card key={c.email} className="p-4 border-l-4" style={{ borderLeftColor: color }}>
-                <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <EventAvatar name={c.nome || c.email} isWoba={isWoba} color={color} size={44} />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <p className="font-heading font-black">{c.nome || c.email}</p>
-                        {isWoba && <Badge className="bg-pink-600 text-white">Woba</Badge>}
-                        {c.nicho && <Badge variant="secondary">{c.nicho}</Badge>}
-                        {Array.from(c.ambientes).map((a) => (
-                          <Badge key={a} variant="outline" className="text-[10px]">{AMBIENTE_LABEL[a] || a}</Badge>
+              <LeadDragCard
+                key={c.email}
+                id={c.email}
+                className={draggedLead === c.email ? "opacity-50" : ""}>
+              <Card onClick={() => setSelectedLead(c)} className="group relative w-full min-w-0 cursor-pointer overflow-hidden border-l-4 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ borderLeftColor: color }}>
+                <div className="flex min-w-0 items-start gap-2.5">
+                    <EventAvatar name={c.nome || c.email} isWoba={isWoba} color={color} size={36} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="min-w-0 truncate font-heading text-sm font-black text-brand-blue-dark">{c.nome || c.email}</p>
+                        <Eye className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-brand-orange" />
+                      </div>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{c.email}</p>
+                      <div className="mt-2 flex min-w-0 items-center gap-1 overflow-hidden">
+                        {isWoba && <Badge className="shrink-0 bg-pink-600 px-1.5 py-0 text-[10px] text-white">Woba</Badge>}
+                        {c.nicho && <Badge variant="secondary" className="max-w-[110px] shrink-0 truncate px-1.5 py-0 text-[10px]">{c.nicho}</Badge>}
+                        {Array.from(c.ambientes).slice(0, 2).map((a) => (
+                          <Badge key={a} variant="outline" className="max-w-[110px] shrink-0 truncate px-1.5 py-0 text-[10px]">{AMBIENTE_LABEL[a] || a}</Badge>
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">{c.email} · {c.telefone}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        Última atividade: {c.ultima_atividade ? new Date(c.ultima_atividade).toLocaleDateString("pt-BR") : "—"}
-                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-heading font-bold">Solicitações</p>
-                      <p className="font-heading font-black text-2xl">{c.total_solicitacoes}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-heading font-bold">Pago</p>
-                      <p className="font-heading font-black text-lg text-green-600">{fmtBRL(c.total_pago)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-heading font-bold">Pendente</p>
-                      <p className="font-heading font-black text-lg text-yellow-600">{fmtBRL(c.total_pendente)}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <label
-                        className={`relative inline-flex items-center justify-center w-9 h-9 rounded-md border cursor-pointer ${isWoba ? "opacity-50 pointer-events-none" : "hover:ring-2 hover:ring-primary/40"}`}
-                        style={{ background: color }}
-                        title={isWoba ? "Woba usa sempre rosa" : "Alterar cor do cliente"}
-                      >
-                        <input
-                          type="color"
-                          value={color}
-                          onChange={(e) => setColor(c.email, e.target.value)}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          disabled={isWoba}
-                        />
-                      </label>
-                      {hasOverride && !isWoba && (
-                        <Button size="sm" variant="ghost" onClick={() => clearColor(c.email)} title="Restaurar cor padrão">
-                          <RotateCcw className="w-4 h-4" />
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline" asChild>
-                        <a href={`https://wa.me/55${c.telefone.replace(/\D/g,"")}`} target="_blank" rel="noreferrer"><MessageCircle className="w-4 h-4" /></a>
-                      </Button>
-                      <Button size="sm" variant="outline" asChild>
-                        <a href={`mailto:${c.email}`}><Mail className="w-4 h-4" /></a>
-                      </Button>
-                      {!isWoba && (
-                        <Button size="sm" variant="outline" title="Transformar lead em cliente" onClick={() => promoverCliente(c)}>
-                          <UserRoundCheck className="w-4 h-4" />
-                          <span className="hidden xl:inline ml-1">Cliente</span>
-                        </Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-destructive h-8 w-8 p-0"
-                        onClick={async () => {
-                          if (!confirm("Excluir histórico de leads deste e-mail?")) return;
-                          // @ts-ignore
-                          const { error } = await supabase.from('contract_requests').delete().eq('email', c.email);
-                          if (!error) window.location.reload();
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                <div className="mt-3 flex min-w-0 items-end justify-between gap-2 border-t border-slate-100 pt-2.5">
+                  <div className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
+                    <GripVertical className="h-3.5 w-3.5" /> {c.total_solicitacoes} {c.total_solicitacoes === 1 ? "solicitação" : "solicitações"}
                   </div>
                 </div>
               </Card>
+              </LeadDragCard>
             );
+              })}
+              {leadsDaColuna.length === 0 && <div className="rounded-xl border border-dashed border-current/20 p-6 text-center text-xs text-muted-foreground">Nenhum lead nesta etapa</div>}
+              </div>
+            </FunilColumn>;
           })}
         </div>
+        </DndContext>
       )}
+      <LeadDetailsDialog
+        lead={selectedLead}
+        contracts={contratos}
+        onClose={() => setSelectedLead(null)}
+        onSave={salvarLead}
+        onMove={moverLead}
+        onConvert={promoverCliente}
+      />
     </div>
   );
+}
+
+function FunilColumn({ id, className, children }: { id: string; className: string; children: ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return <section ref={setNodeRef} className={`${className} ${isOver ? "ring-2 ring-brand-orange shadow-lg" : ""}`}>{children}</section>;
+}
+
+function LeadDragCard({ id, className, children }: { id: string; className: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: `lead:${id}` });
+  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+  return <div ref={setNodeRef} style={style} {...listeners} {...attributes} className={`cursor-grab active:cursor-grabbing ${className} ${isDragging ? "z-10 opacity-50" : ""}`}>{children}</div>;
+}
+
+function LeadDetailsDialog({ lead, contracts, onClose, onSave, onMove, onConvert }: { lead: Cliente | null; contracts: any[]; onClose: () => void; onSave: (lead: Cliente, patch: { nome: string; email: string; telefone: string; status: string; preco: number }) => Promise<void>; onMove: (lead: Cliente, etapa: string) => Promise<void>; onConvert: (lead: Cliente) => Promise<void> }) {
+  const [nome, setNome] = useState(lead?.nome || "");
+  const [email, setEmail] = useState(lead?.email || "");
+  const [telefone, setTelefone] = useState(lead?.telefone || "");
+  const [status, setStatus] = useState(lead?.etapa || "pendente");
+  const [moving, setMoving] = useState(false);
+  const [preco, setPreco] = useState(String(lead?.total_valor || 0));
+
+  useEffect(() => {
+    setNome(lead?.nome || ""); setEmail(lead?.email || ""); setTelefone(lead?.telefone || "");
+    setStatus(lead?.etapa || "pendente"); setPreco(String(lead?.total_valor || 0)); setMoving(false);
+  }, [lead]);
+
+  if (!lead) return null;
+  const related = contracts.filter((contract) => (contract.email || "").toLowerCase() === lead.email.toLowerCase());
+  const latest = related[0];
+  const etapaLabel = FUNIL.find((item) => item.id === lead.etapa)?.label || lead.etapa;
+
+  return <Dialog open={!!lead} onOpenChange={(open) => !open && onClose()}>
+    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <div className="h-2 bg-brand-orange" />
+      <div className="p-6">
+        <DialogHeader><DialogTitle className="flex items-center gap-3 text-2xl text-brand-blue-dark"><EventAvatar name={lead.nome || lead.email} size={44} /><span>{lead.nome || lead.email}</span></DialogTitle></DialogHeader>
+        <div className="mt-5 grid gap-6 md:grid-cols-[1fr_220px]">
+          <div className="space-y-4">
+            <div><p className="mb-2 text-xs font-black uppercase tracking-widest text-slate-400">Informações do lead</p><div className="grid gap-3 md:grid-cols-2"><FieldInput label="Nome / empresa" value={nome} onChange={setNome} /><FieldInput label="E-mail" value={email} onChange={setEmail} type="email" /><FieldInput label="Telefone" value={telefone} onChange={setTelefone} /></div></div>
+            <div className="rounded-xl border border-brand-orange/30 bg-brand-orange/5 p-4"><div className="flex items-center justify-between gap-3"><div><Label className="text-xs font-black uppercase tracking-widest text-brand-blue-dark">Mover para coluna</Label><p className="mt-1 text-xs text-muted-foreground">A alteração é aplicada imediatamente, como no arraste do card.</p></div>{moving && <span className="text-xs font-bold text-brand-orange">Salvando...</span>}</div><Select value={status} onValueChange={async (value) => { setStatus(value); setMoving(true); await onMove(lead, value); setMoving(false); }} disabled={moving}><SelectTrigger className="mt-3 bg-white"><SelectValue /></SelectTrigger><SelectContent>{FUNIL.map((item) => <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label className="text-xs">Valor do negócio</Label><Input className="mt-1" type="number" min="0" step="0.01" value={preco} onChange={(event) => setPreco(event.target.value)} /></div>
+            <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><p className="font-bold text-brand-blue-dark">Contexto</p><p className="mt-1">{related.length} solicitação(ões) registrada(s) · última atividade {lead.ultima_atividade ? new Date(lead.ultima_atividade).toLocaleDateString("pt-BR") : "sem data"}.</p>{latest?.observacoes && <p className="mt-2 italic">“{latest.observacoes}”</p>}</div>
+          </div>
+          <aside className="rounded-2xl bg-brand-blue-dark p-5 text-white"><p className="text-xs font-black uppercase tracking-widest text-brand-orange">Resumo</p><p className="mt-3 text-3xl font-black">{fmtBRL(Number(preco) || 0)}</p><p className="mt-1 text-sm text-white/65">valor do negócio</p><div className="mt-6 space-y-3 border-t border-white/15 pt-4 text-sm"><p><span className="text-white/55">Etapa</span><br /><b>{etapaLabel}</b></p><p><span className="text-white/55">Ambientes</span><br /><b>{Array.from(lead.ambientes).map((item) => AMBIENTE_LABEL[item] || item).join(", ") || "Não informado"}</b></p></div></aside>
+        </div>
+        <DialogFooter className="mt-6 flex-wrap gap-2 border-t pt-4"><Button variant="outline" onClick={onClose}>Fechar</Button><Button variant="outline" asChild><a href={`mailto:${email}`}><Mail className="mr-2 h-4 w-4" />Enviar e-mail</a></Button>{!lead.email.toLowerCase().includes("woba") && <Button variant="outline" onClick={() => onConvert(lead)}><UserRoundCheck className="mr-2 h-4 w-4" />Converter em cliente</Button>}<Button className="bg-brand-orange text-white" onClick={() => onSave(lead, { nome, email, telefone, status, preco: Number(preco) || 0 })}><CheckCircle2 className="mr-2 h-4 w-4" />Salvar alterações</Button></DialogFooter>
+      </div>
+    </DialogContent>
+  </Dialog>;
+}
+
+function FieldInput({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
+  return <div><Label className="text-xs">{label}</Label><Input className="mt-1" type={type} value={value} onChange={(event) => onChange(event.target.value)} /></div>;
 }

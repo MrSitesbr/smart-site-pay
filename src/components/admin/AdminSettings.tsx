@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ShieldCheck, Mail, Lock, Save } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
@@ -13,12 +14,15 @@ export default function AdminSettings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [mistralKey, setMistralKey] = useState("");
+  const [autoApprove, setAutoApprove] = useState(false);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
+    const { data: accessSetting } = await supabase.from("app_settings").select("value").eq("key", "auto_aprovar_cadastros").maybeSingle();
+    setAutoApprove((accessSetting?.value as any)?.enabled === true);
     const { data } = await supabase
       .from('site_sections')
       .select('content')
@@ -29,6 +33,13 @@ export default function AdminSettings() {
       const content = data.content as any;
       if (content.mistral_api_key) setMistralKey(content.mistral_api_key);
     }
+  };
+
+  const updateAutoApprove = async (enabled: boolean) => {
+    setAutoApprove(enabled);
+    const { error } = await (supabase.from("app_settings") as any).upsert({ key: "auto_aprovar_cadastros", value: { enabled }, updated_at: new Date().toISOString() });
+    if (error) { setAutoApprove(!enabled); toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); }
+    else toast({ title: enabled ? "Liberação automática ativada" : "Liberação automática desativada" });
   };
 
   const handleUpdateMistral = async (e: React.FormEvent) => {
@@ -128,6 +139,7 @@ export default function AdminSettings() {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-none shadow-sm md:col-span-2"><CardHeader><CardTitle className="text-brand-blue-dark">Cadastros de clientes</CardTitle><CardDescription>Defina se novos cadastros entram no painel imediatamente.</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between rounded-lg border p-4"><Label htmlFor="auto-approve">Liberar novos cadastros automaticamente</Label><Switch id="auto-approve" checked={autoApprove} onCheckedChange={updateAutoApprove} /></div></CardContent></Card>
         <Card className="border-none shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-brand-blue-dark">

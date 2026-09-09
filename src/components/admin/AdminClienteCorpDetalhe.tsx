@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText, KeyRound } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
@@ -36,6 +36,8 @@ export default function AdminClienteCorpDetalhe() {
   const [visitantes, setVisitantes] = useState<any[]>([]);
   const [editingFunc, setEditingFunc] = useState<any>(null);
   const [showNovoVisita, setShowNovoVisita] = useState(false);
+  const [accessPassword, setAccessPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -111,6 +113,14 @@ export default function AdminClienteCorpDetalhe() {
     }
   }
 
+  async function saveAccessPassword() {
+    if (accessPassword.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres");
+    setSavingPassword(true);
+    const { error } = await supabase.functions.invoke("admin-set-client-password", { body: { cliente_id: id, password: accessPassword } });
+    if (error) toast.error(error.message); else { toast.success("Senha de acesso definida"); setAccessPassword(""); }
+    setSavingPassword(false);
+  }
+
   async function deleteFunc(fid: string) {
     if (!confirm("Excluir colaborador?")) return;
     const { error } = await supabase.from('funcionarios_cliente').delete().eq('id', fid);
@@ -184,6 +194,7 @@ export default function AdminClienteCorpDetalhe() {
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Salvar Alterações
             </Button>
+            <div className="border-t pt-4 space-y-2"><Label className="flex items-center gap-2"><KeyRound className="w-4 h-4" /> Senha de acesso do cliente</Label><div className="flex gap-2"><Input type="password" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" /><Button onClick={saveAccessPassword} disabled={savingPassword}>{savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : "Definir senha"}</Button></div></div>
           </Card>
         </TabsContent>
 

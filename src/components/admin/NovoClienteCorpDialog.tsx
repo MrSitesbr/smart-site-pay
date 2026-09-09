@@ -22,6 +22,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [telResp, setTelResp] = useState("");
   const [cpfResp, setCpfResp] = useState("");
   const [planoId, setPlanoId] = useState<string | null>(null);
+  const [accessPassword, setAccessPassword] = useState("");
   const [planos, setPlanos] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -33,6 +34,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       setTelResp("");
       setCpfResp("");
       setPlanoId(null);
+      setAccessPassword("");
       fetchPlanos();
     }
   }, [open, initialNome]);
@@ -45,6 +47,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   async function save() {
     if (!razaoSocial) {
       toast({ title: "Razão Social é obrigatória", variant: "destructive" });
+      return;
+    }
+    if (accessPassword && accessPassword.length < 6) {
+      toast({ title: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -97,6 +103,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
     }
 
     toast({ title: match ? "Cliente corporativo atualizado" : "Cliente corporativo criado" });
+    if (accessPassword) {
+      const { error: passwordError } = await supabase.functions.invoke("admin-set-client-password", { body: { cliente_id: result.id, password: accessPassword } });
+      if (passwordError) toast({ title: "Cliente salvo, mas a senha não foi definida", description: passwordError.message, variant: "destructive" });
+    }
     onCreated?.(result);
     onOpenChange(false);
     setSaving(false);
@@ -145,6 +155,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Senha de acesso (Opcional)</Label>
+            <Input type="password" value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" />
           </div>
         </div>
         <DialogFooter>

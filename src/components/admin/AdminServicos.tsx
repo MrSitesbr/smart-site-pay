@@ -29,14 +29,14 @@ export default function AdminServicos() {
     if (!editingServico.nome) return toast.error("Nome é obrigatório");
     
     const { error } = editingServico.id 
-      ? await supabase.from('servicos').update({
+      ? await (supabase.from('servicos') as any).update({
           nome: editingServico.nome,
           preco: editingServico.preco,
           categoria: editingServico.categoria,
           icon: editingServico.icon,
           status: editingServico.status || 'ativa'
         }).eq('id', editingServico.id)
-      : await supabase.from('servicos').insert([{
+      : await (supabase.from('servicos') as any).insert([{
           nome: editingServico.nome,
           preco: editingServico.preco,
           categoria: editingServico.categoria,

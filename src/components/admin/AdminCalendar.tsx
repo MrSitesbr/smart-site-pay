@@ -13,6 +13,7 @@ import EventAvatar from "./EventAvatar";
 import NovaReservaDialog from "./NovaReservaDialog";
 import DayTimelineDialog from "./DayTimelineDialog";
 import { useClientColors } from "@/hooks/useClientColors";
+import { toast } from "@/hooks/use-toast";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
 import { CalendarListView } from "./CalendarListView";
 import { CalendarGanttView } from "./CalendarGanttView";
@@ -77,7 +78,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
     setCheckin(null);
     setRoomCapacity(null);
     if (!reserva) return;
-    (supabase.from("checkins") as any).select("*").eq("reservation_id", reserva.id).maybeSingle()
+    (supabase.from as any)("checkins").select("*").eq("reservation_id", reserva.id).maybeSingle()
       .then(({ data }: any) => setCheckin(data || null));
     if (reserva.sala_id) {
       (supabase.from("salas") as any).select("capacidade, tipo").eq("id", reserva.sala_id).maybeSingle()
@@ -88,8 +89,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   async function toggleCheckin(reserva: any) {
     setSavingCheckin(true);
     const next = checkin
-      ? (supabase.from("checkins") as any).delete().eq("reservation_id", reserva.id)
-      : (supabase.from("checkins") as any).insert({ reservation_id: reserva.id }).select().single();
+      ? (supabase.from as any)("checkins").delete().eq("reservation_id", reserva.id)
+      : (supabase.from as any)("checkins").insert({ reservation_id: reserva.id }).select().single();
     const { data, error } = await next;
     if (error) {
       toast({ title: "Erro no check-in", description: error.message, variant: "destructive" });
