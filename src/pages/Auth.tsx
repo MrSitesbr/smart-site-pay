@@ -138,16 +138,47 @@ export default function Auth() {
       return;
     }
     setLoading(true);
+    const emailLimpo = email.trim().toLowerCase();
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: emailLimpo, password });
       if (error) throw error;
       await routeAfterLogin(data.user!.id);
     } catch (e: any) {
-      toast({
-        title: "Falha no acesso",
-        description: e.message === "Invalid login credentials" ? "Credenciais inválidas. Verifique seu e-mail e senha." : e.message,
-        variant: "destructive",
-      });
+      if (e.message === "Invalid login credentials") {
+        const { data: st } = await supabase.functions.invoke("client-access-status", {
+          body: { email: emailLimpo },
+        });
+        const status = (st as any)?.status;
+        const temLogin = (st as any)?.tem_login;
+
+        if (status === "pendente") {
+          toast({
+            title: "Cadastro aguardando autorização",
+            description: "Seu acesso ainda não foi liberado pela equipe. Fale conosco no WhatsApp (13) 98805-0358.",
+            variant: "destructive",
+          });
+        } else if (status === "recusado") {
+          toast({
+            title: "Acesso não liberado",
+            description: "Fale com a equipe do Coworking 013 pelo WhatsApp (13) 98805-0358.",
+            variant: "destructive",
+          });
+        } else if (status === "aprovado" && !temLogin) {
+          toast({
+            title: "Acesso ainda não criado",
+            description: "Seu cadastro está liberado, mas falta a senha ser criada pela equipe. Fale no WhatsApp (13) 98805-0358.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Credenciais inválidas",
+            description: "Verifique seu e-mail e senha. Se precisar, peça uma nova senha no WhatsApp (13) 98805-0358.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({ title: "Falha no acesso", description: e.message, variant: "destructive" });
+      }
     } finally { setLoading(false); }
   }
 
