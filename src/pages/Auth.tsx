@@ -64,29 +64,26 @@ export default function Auth() {
     let cancelado = false;
     setLoadingOpcoes(true);
     (async () => {
-      const [{ data: todos }, { data: vinculos }, { data: salasUnidade }] = await Promise.all([
+      const [{ data: todos }, { data: todosVinculos }, { data: salasUnidade }] = await Promise.all([
         (supabase.from("planos") as any).select("id, nome, tipo, unidade_id").is("deleted_at", null).order("nome"),
-        supabase.from("plano_unidades").select("plano_id").eq("unidade_id", form.unidade_id),
+        supabase.from("plano_unidades").select("plano_id, unidade_id"),
         (supabase.from("salas") as any).select("id, nome, tipo").eq("unidade_id", form.unidade_id).order("nome"),
       ]);
       if (cancelado) return;
 
-      const vinculados = new Set((vinculos || []).map((v: any) => v.plano_id));
-      const planosUnidade = (todos || []).filter((p: any) => {
-        if (p.unidade_id) return p.unidade_id === form.unidade_id;
-        if (vinculados.size > 0 && vinculados.has(p.id)) return true;
-        // planos sem nenhum vínculo de unidade valem para todas
-        return !vinculados.has(p.id) && !p.unidade_id ? true : false;
-      });
-
-      // remove planos vinculados a OUTRAS unidades
-      const { data: todosVinculos } = await supabase.from("plano_unidades").select("plano_id, unidade_id");
+      const vinculados = new Set(
+        (todosVinculos || []).filter((v: any) => v.unidade_id === form.unidade_id).map((v: any) => v.plano_id),
+      );
       const comVinculo = new Set((todosVinculos || []).map((v: any) => v.plano_id));
-      const finalPlanos = planosUnidade.filter((p: any) =>
-        p.unidade_id === form.unidade_id || vinculados.has(p.id) || !comVinculo.has(p.id),
+
+      // plano vale para a unidade se: pertence a ela, está vinculado a ela,
+      // ou não tem nenhum vínculo/unidade definida (vale para todas)
+      const finalPlanos = (todos || []).filter((p: any) =>
+        p.unidade_id
+          ? p.unidade_id === form.unidade_id
+          : vinculados.has(p.id) || !comVinculo.has(p.id),
       );
 
-      if (cancelado) return;
       setPlanos(finalPlanos);
       setSalas(salasUnidade || []);
       setForm((f) => ({
