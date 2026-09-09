@@ -54,15 +54,61 @@ export default function Auth() {
 
   useEffect(() => {
     if (mode !== "signup") return;
-    supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
-    supabase.from("planos").select("id, nome, tipo").then(({ data }) => setPlanos(data || []));
+    supabase.from("unidades").select("id, nome").eq("status", "ativo").order("nome")
+      .then(({ data }) => setUnidades(data || []));
   }, [mode]);
 
+  // Planos e salas coerentes com a unidade escolhida
   useEffect(() => {
-    if (!form.unidade_id) { setSalas([]); return; }
-    supabase.from("salas").select("id, nome, tipo").eq("unidade_id", form.unidade_id)
-      .then(({ data }) => setSalas(data || []));
+    if (!form.unidade_id) { setPlanos([]); setSalas([]); return; }
+    let cancelado = false;
+    setLoadingOpcoes(true);
+    (async () => {
+      const [{ data: todos }, { data: vinculos }, { data: salasUnidade }] = await Promise.all([
+        (supabase.from("planos") as any).select("id, nome, tipo, unidade_id").is("deleted_at", null).order("nome"),
+        supabase.from("plano_unidades").select("plano_id").eq("unidade_id", form.unidade_id),
+        (supabase.from("salas") as any).select("id, nome, tipo").eq("unidade_id", form.unidade_id).order("nome"),
+      ]);
+      if (cancelado) return;
+
+      const vinculados = new Set((vinculos || []).map((v: any) => v.plano_id));
+      const planosUnidade = (todos || []).filter((p: any) => {
+        if (p.unidade_id) return p.unidade_id === form.unidade_id;
+        if (vinculados.size > 0 && vinculados.has(p.id)) return true;
+        // planos sem nenhum vínculo de unidade valem para todas
+        return !vinculados.has(p.id) && !p.unidade_id ? true : false;
+      });
+
+      // remove planos vinculados a OUTRAS unidades
+      const { data: todosVinculos } = await supabase.from("plano_unidades").select("plano_id, unidade_id");
+      const comVinculo = new Set((todosVinculos || []).map((v: any) => v.plano_id));
+      const finalPlanos = planosUnidade.filter((p: any) =>
+        p.unidade_id === form.unidade_id || vinculados.has(p.id) || !comVinculo.has(p.id),
+      );
+
+      if (cancelado) return;
+      setPlanos(finalPlanos);
+      setSalas(salasUnidade || []);
+      setForm((f) => ({
+        ...f,
+        plano_id: finalPlanos.some((p: any) => p.id === f.plano_id) ? f.plano_id : "",
+      }));
+      setLoadingOpcoes(false);
+    })();
+    return () => { cancelado = true; };
   }, [form.unidade_id]);
+
+  // Salas compatíveis com o plano escolhido (quando o plano define salas)
+  const [salasPlano, setSalasPlano] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!form.plano_id) { setSalasPlano(null); return; }
+    supabase.from("sala_planos").select("sala_id").eq("plano_id", form.plano_id)
+      .then(({ data }) => setSalasPlano(data && data.length ? data.map((s: any) => s.sala_id) : null));
+  }, [form.plano_id]);
+
+  const salasDisponiveis = salasPlano
+    ? salas.filter((s) => salasPlano.includes(s.id))
+    : salas;
 
   async function routeAfterLogin(userId: string) {
     const { data: cliente } = await (supabase.from("clientes_corp") as any)
