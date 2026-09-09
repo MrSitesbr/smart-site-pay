@@ -35,6 +35,35 @@ export type Database = {
         }
         Relationships: []
       }
+      checkins: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          id: string
+          reservation_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          reservation_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_colors: {
         Row: {
           color: string
@@ -63,6 +92,7 @@ export type Database = {
         Row: {
           cnpj: string | null
           created_at: string
+          deleted_at: string | null
           documentos: string[] | null
           id: string
           plano_id: string | null
@@ -79,6 +109,7 @@ export type Database = {
         Insert: {
           cnpj?: string | null
           created_at?: string
+          deleted_at?: string | null
           documentos?: string[] | null
           id?: string
           plano_id?: string | null
@@ -95,6 +126,7 @@ export type Database = {
         Update: {
           cnpj?: string | null
           created_at?: string
+          deleted_at?: string | null
           documentos?: string[] | null
           id?: string
           plano_id?: string | null
@@ -485,6 +517,7 @@ export type Database = {
       planos: {
         Row: {
           created_at: string
+          deleted_at: string | null
           descricao: string | null
           id: string
           nome: string
@@ -496,6 +529,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           descricao?: string | null
           id?: string
           nome: string
@@ -507,6 +541,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           descricao?: string | null
           id?: string
           nome?: string
@@ -665,6 +700,7 @@ export type Database = {
           id: string
           metadata: Json | null
           nome: string
+          status: string
           tipo: string
           unidade_id: string | null
         }
@@ -677,6 +713,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           nome: string
+          status?: string
           tipo: string
           unidade_id?: string | null
         }
@@ -689,6 +726,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           nome?: string
+          status?: string
           tipo?: string
           unidade_id?: string | null
         }
@@ -710,6 +748,7 @@ export type Database = {
           id: string
           nome: string
           preco: string | null
+          status: string
         }
         Insert: {
           categoria?: string | null
@@ -718,6 +757,7 @@ export type Database = {
           id?: string
           nome: string
           preco?: string | null
+          status?: string
         }
         Update: {
           categoria?: string | null
@@ -726,6 +766,7 @@ export type Database = {
           id?: string
           nome?: string
           preco?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -857,6 +898,7 @@ export type Database = {
           id: string
           nome: string
           servicos_infra: Json | null
+          status: string
         }
         Insert: {
           created_at?: string
@@ -867,6 +909,7 @@ export type Database = {
           id?: string
           nome: string
           servicos_infra?: Json | null
+          status?: string
         }
         Update: {
           created_at?: string
@@ -877,6 +920,7 @@ export type Database = {
           id?: string
           nome?: string
           servicos_infra?: Json | null
+          status?: string
         }
         Relationships: []
       }
