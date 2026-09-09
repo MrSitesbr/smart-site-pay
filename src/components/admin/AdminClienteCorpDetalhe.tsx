@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
+import { adminFnHeaders } from "@/lib/googleSync";
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
@@ -116,8 +117,12 @@ export default function AdminClienteCorpDetalhe() {
   async function saveAccessPassword() {
     if (accessPassword.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres");
     setSavingPassword(true);
-    const { error } = await supabase.functions.invoke("admin-set-client-password", { body: { cliente_id: id, password: accessPassword } });
-    if (error) toast.error(error.message); else { toast.success("Senha de acesso definida"); setAccessPassword(""); }
+    const { data, error } = await supabase.functions.invoke("admin-set-client-password", {
+      body: { cliente_id: id, password: accessPassword },
+      headers: adminFnHeaders(),
+    });
+    const err = (data as any)?.error || error?.message;
+    if (err) toast.error(err); else { toast.success("Senha de acesso definida"); setAccessPassword(""); }
     setSavingPassword(false);
   }
 

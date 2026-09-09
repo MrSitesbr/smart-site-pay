@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { adminFnHeaders } from "@/lib/googleSync";
 
 type Props = {
   open: boolean;
@@ -104,8 +105,12 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
 
     toast({ title: match ? "Cliente corporativo atualizado" : "Cliente corporativo criado" });
     if (accessPassword) {
-      const { error: passwordError } = await supabase.functions.invoke("admin-set-client-password", { body: { cliente_id: result.id, password: accessPassword } });
-      if (passwordError) toast({ title: "Cliente salvo, mas a senha não foi definida", description: passwordError.message, variant: "destructive" });
+      const { data: pwData, error: passwordError } = await supabase.functions.invoke("admin-set-client-password", {
+        body: { cliente_id: result.id, password: accessPassword },
+        headers: adminFnHeaders(),
+      });
+      const pwErr = (pwData as any)?.error || passwordError?.message;
+      if (pwErr) toast({ title: "Cliente salvo, mas a senha não foi definida", description: pwErr, variant: "destructive" });
     }
     onCreated?.(result);
     onOpenChange(false);
