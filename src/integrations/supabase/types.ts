@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       client_colors: {
         Row: {
           color: string
@@ -50,7 +71,10 @@ export type Database = {
           responsavel_email: string | null
           responsavel_nome: string | null
           responsavel_telefone: string | null
+          sala_id: string | null
+          status_acesso: string
           unidade_id: string | null
+          user_id: string | null
         }
         Insert: {
           cnpj?: string | null
@@ -63,7 +87,10 @@ export type Database = {
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          sala_id?: string | null
+          status_acesso?: string
           unidade_id?: string | null
+          user_id?: string | null
         }
         Update: {
           cnpj?: string | null
@@ -76,7 +103,10 @@ export type Database = {
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          sala_id?: string | null
+          status_acesso?: string
           unidade_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -84,6 +114,13 @@ export type Database = {
             columns: ["plano_id"]
             isOneToOne: false
             referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_corp_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
             referencedColumns: ["id"]
           },
           {
@@ -1019,7 +1056,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       ambiente_tipo: "estacao" | "sala_privativa" | "sala_reuniao"
