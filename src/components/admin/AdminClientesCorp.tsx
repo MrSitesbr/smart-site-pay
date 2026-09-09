@@ -5,6 +5,7 @@ import { Plus, MessageCircle, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import NovoClienteCorpDialog from "./NovoClienteCorpDialog";
+import { toast } from "sonner";
 
 export default function AdminClientesCorp() {
   const navigate = useNavigate();

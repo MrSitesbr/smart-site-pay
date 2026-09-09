@@ -246,7 +246,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         responsavel_telefone: telefoneCliente || match.responsavel_telefone || null,
       };
 
-      const { error } = await supabase.from("clientes_corp").update(payload).eq("id", match.id);
+      const { error } = await (supabase.from("clientes_corp") as any).update(payload).eq("id", match.id);
       if (error) console.error("Erro ao atualizar cliente do CRM:", error);
       return;
     }
