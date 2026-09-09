@@ -65,6 +65,7 @@ export default function AuthAdmin() {
     if (email === HARDCODED_EMAIL && password === HARDCODED_PASS) {
       // Simulamos uma sessão no localStorage para o Admin.tsx reconhecer o bypass se necessário
       localStorage.setItem("admin_bypass", "true");
+      localStorage.setItem("admin_key", password);
       toast({ title: "Acesso Liberado (Modo de Contingência)" });
       navigate("/admin");
       setLoading(false);
