@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
+import { adminFnHeaders } from "@/lib/googleSync";
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
