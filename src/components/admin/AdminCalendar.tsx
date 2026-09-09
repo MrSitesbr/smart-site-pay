@@ -19,7 +19,6 @@ import { CalendarListView } from "./CalendarListView";
 import { CalendarGanttView } from "./CalendarGanttView";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import NovoEventoDialog from "./NovoEventoDialog";
-import { toast } from "@/hooks/use-toast";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
