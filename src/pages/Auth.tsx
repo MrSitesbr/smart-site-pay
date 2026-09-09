@@ -42,6 +42,7 @@ export default function Auth() {
   const [unidades, setUnidades] = useState<any[]>([]);
   const [planos, setPlanos] = useState<any[]>([]);
   const [salas, setSalas] = useState<any[]>([]);
+  const [loadingOpcoes, setLoadingOpcoes] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
