@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      checkins: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          id: string
+          reservation_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          reservation_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_colors: {
         Row: {
           color: string
@@ -42,6 +92,7 @@ export type Database = {
         Row: {
           cnpj: string | null
           created_at: string
+          deleted_at: string | null
           documentos: string[] | null
           id: string
           plano_id: string | null
@@ -50,11 +101,15 @@ export type Database = {
           responsavel_email: string | null
           responsavel_nome: string | null
           responsavel_telefone: string | null
+          sala_id: string | null
+          status_acesso: string
           unidade_id: string | null
+          user_id: string | null
         }
         Insert: {
           cnpj?: string | null
           created_at?: string
+          deleted_at?: string | null
           documentos?: string[] | null
           id?: string
           plano_id?: string | null
@@ -63,11 +118,15 @@ export type Database = {
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          sala_id?: string | null
+          status_acesso?: string
           unidade_id?: string | null
+          user_id?: string | null
         }
         Update: {
           cnpj?: string | null
           created_at?: string
+          deleted_at?: string | null
           documentos?: string[] | null
           id?: string
           plano_id?: string | null
@@ -76,7 +135,10 @@ export type Database = {
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          sala_id?: string | null
+          status_acesso?: string
           unidade_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -84,6 +146,13 @@ export type Database = {
             columns: ["plano_id"]
             isOneToOne: false
             referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_corp_sala_id_fkey"
+            columns: ["sala_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
             referencedColumns: ["id"]
           },
           {
@@ -448,6 +517,7 @@ export type Database = {
       planos: {
         Row: {
           created_at: string
+          deleted_at: string | null
           descricao: string | null
           id: string
           nome: string
@@ -459,6 +529,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           descricao?: string | null
           id?: string
           nome: string
@@ -470,6 +541,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           descricao?: string | null
           id?: string
           nome?: string
@@ -628,6 +700,7 @@ export type Database = {
           id: string
           metadata: Json | null
           nome: string
+          status: string
           tipo: string
           unidade_id: string | null
         }
@@ -640,6 +713,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           nome: string
+          status?: string
           tipo: string
           unidade_id?: string | null
         }
@@ -652,6 +726,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           nome?: string
+          status?: string
           tipo?: string
           unidade_id?: string | null
         }
@@ -673,6 +748,7 @@ export type Database = {
           id: string
           nome: string
           preco: string | null
+          status: string
         }
         Insert: {
           categoria?: string | null
@@ -681,6 +757,7 @@ export type Database = {
           id?: string
           nome: string
           preco?: string | null
+          status?: string
         }
         Update: {
           categoria?: string | null
@@ -689,6 +766,7 @@ export type Database = {
           id?: string
           nome?: string
           preco?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -820,6 +898,7 @@ export type Database = {
           id: string
           nome: string
           servicos_infra: Json | null
+          status: string
         }
         Insert: {
           created_at?: string
@@ -830,6 +909,7 @@ export type Database = {
           id?: string
           nome: string
           servicos_infra?: Json | null
+          status?: string
         }
         Update: {
           created_at?: string
@@ -840,6 +920,7 @@ export type Database = {
           id?: string
           nome?: string
           servicos_infra?: Json | null
+          status?: string
         }
         Relationships: []
       }
@@ -1019,7 +1100,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       ambiente_tipo: "estacao" | "sala_privativa" | "sala_reuniao"

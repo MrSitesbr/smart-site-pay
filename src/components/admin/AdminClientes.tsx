@@ -9,6 +9,7 @@ import { Search, MessageCircle, Mail, RotateCcw, Trash2, UserRoundCheck } from "
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
+import { toast } from "@/hooks/use-toast";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Estação", sala_privativa: "Sala Privativa", sala_reuniao: "Sala Reunião",
