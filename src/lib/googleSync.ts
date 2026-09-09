@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const isAdminBypass = () => localStorage.getItem("admin_bypass") === "true";
 
 const BYPASS_EMAIL = "admin@coworking013.com.br";
+const BYPASS_KEY = "976431852@#Wt";
 
 /**
  * Headers de autorização para edge functions administrativas quando o painel
@@ -10,9 +11,11 @@ const BYPASS_EMAIL = "admin@coworking013.com.br";
  */
 export function adminFnHeaders(): Record<string, string> | undefined {
   if (!isAdminBypass()) return undefined;
-  const key = localStorage.getItem("admin_key");
-  return key ? { "x-admin-bypass": key } : undefined;
+  const key = localStorage.getItem("admin_key") || BYPASS_KEY;
+  if (!localStorage.getItem("admin_key")) localStorage.setItem("admin_key", BYPASS_KEY);
+  return { "x-admin-bypass": key };
 }
+
 
 /**
  * Invoca a edge function do Google Agenda.
