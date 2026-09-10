@@ -179,6 +179,15 @@ export default function AdminUnidadeFormPage() {
                 <option value="ativa">Ativa</option>
                 <option value="inativa">Inativa</option>
               </select>
+              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.status !== "inativa"}
+                  onChange={(e) => setForm({ ...form, status: e.target.checked ? "ativa" : "inativa" })}
+                  className="rounded"
+                />
+                Mostrar na página de Unidades
+              </label>
             </div>
           </div>
 

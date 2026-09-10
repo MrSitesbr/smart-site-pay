@@ -35,6 +35,7 @@ export default function AdminClienteCorpDetalhe() {
   const [planos, setPlanos] = useState<any[]>([]);
   const [funcionarios, setFuncionarios] = useState<any[]>([]);
   const [visitantes, setVisitantes] = useState<any[]>([]);
+  const [usoPlano, setUsoPlano] = useState({ horas: 0, reservas: 0, solicitacoes: 0 });
   const [editingFunc, setEditingFunc] = useState<any>(null);
   const [showNovoVisita, setShowNovoVisita] = useState(false);
   const [accessPassword, setAccessPassword] = useState("");
@@ -58,13 +59,22 @@ export default function AdminClienteCorpDetalhe() {
       setUnidades(uniRes.data || []);
       setPlanos(planRes.data || []);
 
-      const [funcRes, visRes] = await Promise.all([
+      const [funcRes, visRes, reservaRes, contratoRes] = await Promise.all([
         supabase.from('funcionarios_cliente').select('*').eq('cliente_corp_id', id),
-        supabase.from('visitantes').select('*, salas(nome)').eq('cliente_corp_id', id)
+        supabase.from('visitantes').select('*, salas(nome)').eq('cliente_corp_id', id),
+        cliRes.data.responsavel_email ? supabase.from('reservations').select('hora_inicio, hora_fim, status').eq('email', cliRes.data.responsavel_email) : Promise.resolve({ data: [] } as any),
+        cliRes.data.responsavel_email ? supabase.from('contract_requests').select('id, status').eq('email', cliRes.data.responsavel_email) : Promise.resolve({ data: [] } as any)
       ]);
 
       setFuncionarios(funcRes.data || []);
       setVisitantes(visRes.data || []);
+      const reservasAtivas = (reservaRes.data || []).filter((r: any) => r.status !== 'cancelada');
+      const horas = reservasAtivas.reduce((total: number, r: any) => {
+        const [startHour, startMinute] = String(r.hora_inicio || '00:00').slice(0, 5).split(':').map(Number);
+        const [endHour, endMinute] = String(r.hora_fim || '00:00').slice(0, 5).split(':').map(Number);
+        return total + Math.max(0, (endHour * 60 + endMinute - startHour * 60 - startMinute) / 60);
+      }, 0);
+      setUsoPlano({ horas, reservas: reservasAtivas.length, solicitacoes: (contratoRes.data || []).length });
     } catch (error: any) {
       toast.error("Erro ao carregar dados: " + error.message);
       navigate("/admin");
@@ -243,6 +253,14 @@ export default function AdminClienteCorpDetalhe() {
               </div>
             </div>
             <Button onClick={save} disabled={saving}>Salvar Vinculação</Button>
+            <div className="border-t pt-4">
+              <h3 className="font-heading font-bold mb-3">Uso do plano</h3>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg bg-muted p-3"><p className="text-xs text-muted-foreground">Horas reservadas</p><p className="text-2xl font-black">{usoPlano.horas.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}h</p></div>
+                <div className="rounded-lg bg-muted p-3"><p className="text-xs text-muted-foreground">Reservas ativas</p><p className="text-2xl font-black">{usoPlano.reservas}</p></div>
+                <div className="rounded-lg bg-muted p-3"><p className="text-xs text-muted-foreground">Solicitações</p><p className="text-2xl font-black">{usoPlano.solicitacoes}</p></div>
+              </div>
+            </div>
           </Card>
         </TabsContent>
 

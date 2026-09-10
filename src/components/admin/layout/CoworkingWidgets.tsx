@@ -149,6 +149,8 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const routeUnitId = window.location.pathname.match(/^\/unidades\/([^/]+)/)?.[1];
+  const unidadeId = content.unidade_id || routeUnitId;
 
   const handleBooking = async (room: any) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -169,13 +171,15 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
         .order('nome', { ascending: true });
 
       if (!error && data) {
-        const activeRooms = filterActiveRecords(data).slice(0, content.limit || 6);
+        const activeRooms = filterActiveRecords(data)
+          .filter((room: any) => !unidadeId || room.unidade_id === unidadeId)
+          .slice(0, content.limit || 6);
         setRooms(activeRooms);
       }
       setLoading(false);
     };
     fetchRooms();
-  }, [content.limit]);
+  }, [content.limit, unidadeId]);
 
   if (loading) return <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
     {[1, 2, 3].map(i => <div key={i} className="h-64 bg-muted rounded-2xl"></div>)}

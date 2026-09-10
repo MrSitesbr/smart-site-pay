@@ -7,6 +7,7 @@ import { PageRenderer } from "@/components/PageRenderer";
 import { getPageContent } from "@/lib/cms";
 import { SectionData } from "@/types/page-builder";
 import { supabase } from "@/integrations/supabase/client";
+import { unidadeDetailPageLayout, unidadesPageLayout } from "@/lib/defaultPageLayouts";
 
 const DynamicPage = ({ isAdmin = false, unidadeId }: { isAdmin?: boolean, unidadeId?: string }) => {
   const [layout, setLayout] = useState<SectionData[]>([]);
@@ -33,9 +34,27 @@ const DynamicPage = ({ isAdmin = false, unidadeId }: { isAdmin?: boolean, unidad
         
         if (dynamicSection?.content?.layout) {
           setLayout(dynamicSection.content.layout);
+        } else if (unidadeId) {
+          const { data: unidade } = await supabase
+            .from("unidades")
+            .select("id, nome, descricao, endereco")
+            .eq("id", unidadeId)
+            .maybeSingle();
+          setLayout(unidade ? unidadeDetailPageLayout(unidade.nome, unidade.descricao || "", unidade.endereco || "", unidade.id) : []);
+        } else if (location.pathname === "/unidades") {
+          setLayout(unidadesPageLayout);
         } else {
           setLayout([]);
         }
+      } else if (unidadeId) {
+        const { data: unidade } = await supabase
+          .from("unidades")
+          .select("id, nome, descricao, endereco")
+          .eq("id", unidadeId)
+          .maybeSingle();
+        setLayout(unidade ? unidadeDetailPageLayout(unidade.nome, unidade.descricao || "", unidade.endereco || "", unidade.id) : []);
+      } else if (location.pathname === "/unidades") {
+        setLayout(unidadesPageLayout);
       } else {
         setLayout([]);
       }

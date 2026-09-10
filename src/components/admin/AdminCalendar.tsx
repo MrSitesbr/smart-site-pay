@@ -19,6 +19,7 @@ import { CalendarListView } from "./CalendarListView";
 import { CalendarGanttView } from "./CalendarGanttView";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import NovoEventoDialog from "./NovoEventoDialog";
+import { verificarConflitos } from "@/lib/disponibilidade";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -46,7 +47,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [month, setMonth] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [unidades, setUnidades] = useState<any[]>([]);
+  const [salas, setSalas] = useState<any[]>([]);
   const [selectedUnidade, setSelectedUnidade] = useState<string>("todas");
+  const [selectedSala, setSelectedSala] = useState<string>("todas");
   const [ambiente, setAmbiente] = useState<string>("todos");
   const [status, setStatus] = useState<string>("todos");
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
@@ -71,6 +74,14 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
     supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
     supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || []));
   }, []);
+
+  useEffect(() => {
+    const query = selectedUnidade === "todas"
+      ? supabase.from("salas").select("id, nome, unidade_id").order("nome")
+      : supabase.from("salas").select("id, nome, unidade_id").eq("unidade_id", selectedUnidade).order("nome");
+    query.then(({ data }) => setSalas(data || []));
+    setSelectedSala("todas");
+  }, [selectedUnidade]);
 
   useEffect(() => {
     const reserva = fullView?.kind === "reserva" ? fullView.obj : null;
@@ -159,8 +170,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       map.get(key)!.push(ev);
     };
     const q = search.trim().toLowerCase();
-    const matches = (nome: string, email: string, amb: string, st: string, unidId?: string) => {
+    const matches = (nome: string, email: string, amb: string, st: string, unidId?: string, salaId?: string) => {
       if (selectedUnidade !== "todas" && unidId !== selectedUnidade) return false;
+      if (selectedSala !== "todas" && salaId !== selectedSala) return false;
       if (ambiente !== "todos" && amb !== ambiente) return false;
       if (status !== "todos" && st !== status) return false;
       if (q && !nome.toLowerCase().includes(q) && !email.toLowerCase().includes(q)) return false;
@@ -168,13 +180,13 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
     };
     if (filterType === "geral" || filterType === "reservas") {
       contratos.forEach((c) => {
-        if (!matches(c.nome, c.email, c.ambiente, c.status, c.unidade_id)) return;
+        if (!matches(c.nome, c.email, c.ambiente, c.status, c.unidade_id, c.sala_id)) return;
         const dias: string[] = c.dias_selecionados || [];
         dias.forEach((d) => push(d, { kind: "contrato", obj: c }));
         if (c.data_inicio && !dias.includes(c.data_inicio)) push(c.data_inicio, { kind: "contrato", obj: c });
       });
       reservas.forEach((r) => {
-        if (!matches(r.nome, r.email, r.ambiente, r.status, r.unidade_id)) return;
+        if (!matches(r.nome, r.email, r.ambiente, r.status, r.unidade_id, r.sala_id)) return;
         push(r.data, { kind: "reserva", obj: r });
       });
     }
@@ -184,6 +196,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         const dateKey = v.data_hora_prevista?.slice(0, 10);
         if (!dateKey) return;
         if (selectedUnidade !== "todas" && v.salas?.unidade_id !== selectedUnidade) return;
+        if (selectedSala !== "todas" && v.sala_id !== selectedSala) return;
         if (q && !v.nome.toLowerCase().includes(q) && !v.clientes_corp?.razao_social.toLowerCase().includes(q)) return;
         push(dateKey, { kind: "visita", obj: v });
       });
@@ -205,7 +218,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       });
     }
     return map;
-  }, [reservas, contratos, visitantes, filterType, gEvents, showGoogle, internalIds, deletedGoogleIds, search, ambiente, status, selectedUnidade]);
+  }, [reservas, contratos, visitantes, filterType, gEvents, showGoogle, internalIds, deletedGoogleIds, search, ambiente, status, selectedUnidade, selectedSala]);
 
 
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -225,6 +238,20 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
   const handleSaveReserva = async () => {
     if (!fullView || fullView.kind !== "reserva" || !editingReserva) return;
+
+    if (editingReserva.sala_id) {
+      const conflitos = await verificarConflitos(
+        editingReserva.sala_id,
+        editingReserva.data,
+        String(editingReserva.hora_inicio).slice(0, 5),
+        String(editingReserva.hora_fim).slice(0, 5),
+        editingReserva.id,
+      );
+      if (conflitos.length > 0) {
+        toast({ title: "Horário indisponível", description: conflitos.map((c) => c.nome).join(", "), variant: "destructive" });
+        return;
+      }
+    }
 
     const payload = {
       nome: editingReserva.nome,
@@ -332,6 +359,14 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               {unidades.map(u => (
                 <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedSala} onValueChange={setSelectedSala}>
+            <SelectTrigger className="w-40 h-9 text-xs"><SelectValue placeholder="Sala" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as salas</SelectItem>
+              {salas.map(s => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
             </SelectContent>
           </Select>
 

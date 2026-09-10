@@ -123,8 +123,8 @@ export default function NovoVisitanteDialog({ open, onOpenChange, date, clienteC
       toast({ title: "Informe sala, data e hora", variant: "destructive" });
       return;
     }
-    if (modo === "agendar" && conflitos.some(c => c.tipo === "bloqueio")) {
-      toast({ title: "Data bloqueada", description: "Não é possível agendar visitas em domingos ou feriados.", variant: "destructive" });
+    if (modo === "agendar" && conflitos.length > 0) {
+      toast({ title: "Horário indisponível", description: conflitos.map(c => c.nome).join(", "), variant: "destructive" });
       return;
     }
 

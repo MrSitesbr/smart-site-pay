@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PageBuilder } from "./PageBuilder";
 import { SectionData } from "@/types/page-builder";
+import { unidadesPageLayout } from "@/lib/defaultPageLayouts";
 
 export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fixos' }) {
   const [pages, setPages] = useState<any[]>([]);
@@ -123,7 +124,7 @@ export default function AdminPaginas({ mode = 'pages' }: { mode?: 'pages' | 'fix
 
   if (isBuilding && selectedPage) {
     const dynamicSection = selectedPage.site_sections?.find((s: any) => s.section_key === 'dynamic-layout') || selectedPage.site_sections?.[0];
-    const initialLayout = dynamicSection?.content?.layout || [];
+    const initialLayout = dynamicSection?.content?.layout || (selectedPage.route === "/unidades" ? unidadesPageLayout : []);
 
     return (
       <div className="fixed inset-0 z-50 bg-white">

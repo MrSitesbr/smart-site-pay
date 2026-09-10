@@ -338,23 +338,71 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({ pageId, initialLayout 
     pushToHistory(newLayout);
   };
 
+  const removeFromColumns = (columns: any[], targetId: string): { columns: any[]; removed: boolean } => {
+    let removed = false;
+    const nextColumns = columns
+      .filter((column) => {
+        if (column.id === targetId) {
+          removed = true;
+          return false;
+        }
+        return true;
+      })
+      .map((column) => {
+        const widgets = (column.widgets || [])
+          .filter((widget: any) => {
+            if (widget.id === targetId) {
+              removed = true;
+              return false;
+            }
+            return true;
+          })
+          .map((widget: any) => {
+            if (widget.type !== 'inner_section' || !Array.isArray(widget.content?.columns)) {
+              return widget;
+            }
+
+            const nested = removeFromColumns(widget.content.columns, targetId);
+            removed = removed || nested.removed;
+            return nested.removed
+              ? { ...widget, content: { ...widget.content, columns: nested.columns } }
+              : widget;
+          });
+
+        return { ...column, widgets };
+      });
+
+    return { columns: nextColumns, removed };
+  };
+
   const deleteElement = () => {
     if (!selectedElement) return;
-    
+
+    const targetId = selectedElement.id;
+    let removed = false;
     let newLayout = JSON.parse(JSON.stringify(layout));
-    
+
     if (selectedElement.type === 'section') {
-      newLayout = newLayout.filter((s: any) => s.id !== selectedElement.id);
+      newLayout = newLayout.filter((section: any) => {
+        if (section.id === targetId) {
+          removed = true;
+          return false;
+        }
+        return true;
+      });
     } else {
-      newLayout = newLayout.map((section: any) => ({
-        ...section,
-        columns: section.columns.map((column: any) => ({
-          ...column,
-          widgets: column.widgets.filter((w: any) => w.id !== selectedElement.id)
-        }))
-      }));
+      newLayout = newLayout.map((section: any) => {
+        const result = removeFromColumns(section.columns || [], targetId);
+        removed = removed || result.removed;
+        return { ...section, columns: result.columns };
+      });
     }
-    
+
+    if (!removed) {
+      toast.error("Não foi possível localizar o elemento para excluir.");
+      return;
+    }
+
     setLayout(newLayout);
     setSelectedElement(null);
     pushToHistory(newLayout);
