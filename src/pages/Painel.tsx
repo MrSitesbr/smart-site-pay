@@ -10,6 +10,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Loader2, LogOut, ExternalLink, Copy, Home, CalendarPlus, ArrowRight, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
+import MeusDados from "@/components/painel/MeusDados";
+import Colaboradores from "@/components/painel/Colaboradores";
+import VisitantesCliente from "@/components/painel/VisitantesCliente";
+import MeuPlano from "@/components/painel/MeuPlano";
+import DocumentosCliente from "@/components/painel/DocumentosCliente";
+import SuporteCliente from "@/components/painel/SuporteCliente";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Espaço de Trabalho",
@@ -59,7 +65,7 @@ export default function Painel() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/auth?redirect=/painel"); return; }
       setUser(session.user);
-      const { data: clienteData } = await (supabase.from("clientes_corp") as any).select("*, unidades(nome), planos(nome), salas(nome)").eq("user_id", session.user.id).maybeSingle();
+      const { data: clienteData } = await (supabase.from("clientes_corp") as any).select("*, unidades(nome), planos(*), salas(nome)").eq("user_id", session.user.id).maybeSingle();
       if (clienteData && clienteData.status_acesso !== "aprovado") {
         setAccessBlocked(clienteData.status_acesso === "recusado" ? "Seu cadastro foi recusado. Entre em contato com a equipe." : "Seu cadastro está em análise. A equipe liberará o acesso após revisar seus dados.");
         setLoading(false);
