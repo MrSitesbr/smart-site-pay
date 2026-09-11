@@ -3,26 +3,55 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "./ImageUpload";
 import { MediaPickerModal } from "./MediaPickerModal";
 import { ArrowLeft, Building2, CheckCircle2, ImageIcon, Save } from "lucide-react";
 import { toast } from "sonner";
 
+const categorias = [
+  { value: "privativa", label: "Sala Privativa" },
+  { value: "compartilhado", label: "Escritório Compartilhado" },
+  { value: "consultorio_poltrona", label: "Consultório com Poltrona" },
+  { value: "consultorio_maca", label: "Consultório com Maca" },
+] as const;
+
+const tiposLocacao = [
+  { value: "locacao_mensal", label: "Locação Mensal" },
+  { value: "locacao_periodo", label: "Locação por Período" },
+] as const;
+
+const subtiposPeriodo = [
+  { value: "pacote_mensal", label: "Pacote Mensal" },
+  { value: "locacao_avulsa", label: "Locação Avulsa" },
+] as const;
+
+const statusOptions = [
+  { value: "disponivel", label: "Disponível" },
+  { value: "indisponivel", label: "Indisponível" },
+  { value: "oculto", label: "Oculto" },
+] as const;
+
 const defaultForm = {
   nome: "",
-  tipo: "Coworking",
+  categoria: categorias[0].value,
+  tipo_locacao: tiposLocacao[0].value,
+  subtipo_periodo: "",
   capacidade: "",
   descricao: "",
   foto_url: "",
   galeria: [] as string[],
-  status: "ativa",
+  status: statusOptions[0].value,
   metadata: {
     metragem: 0,
     tem_janela: false,
     tem_lavatorio: false,
   },
   planos_permitidos: [] as string[],
+  preco_locacao_mensal: "",
+  preco_periodo_pacote_mensal: "",
+  preco_periodo_locacao_avulsa: "",
 };
 
 export default function AdminSalaFormPage() {
@@ -67,20 +96,30 @@ export default function AdminSalaFormPage() {
           return;
         }
 
+        const sala = salaRes.data || {};
+        const tipoLocacao = sala.tipo_locacao || tiposLocacao[0].value;
+        const needsSubTipo = tipoLocacao === "locacao_periodo";
+        const subtipo = needsSubTipo ? (sala.subtipo_periodo || subtiposPeriodo[0].value) : "";
+
         setForm({
-          nome: salaRes.data.nome || "",
-          tipo: salaRes.data.tipo || "Coworking",
-          capacidade: salaRes.data.capacidade?.toString() || "",
-          descricao: salaRes.data.descricao || "",
-          foto_url: salaRes.data.foto_url || "",
-          galeria: salaRes.data.galeria || [],
-          status: (salaRes.data as any).status || "ativa",
-          metadata: salaRes.data.metadata || {
+          nome: sala.nome || "",
+          categoria: sala.categoria || categorias[0].value,
+          tipo_locacao: tipoLocacao,
+          subtipo_periodo: subtipo,
+          capacidade: sala.capacidade?.toString() || "",
+          descricao: sala.descricao || "",
+          foto_url: sala.foto_url || "",
+          galeria: sala.galeria || [],
+          status: sala.status || statusOptions[0].value,
+          metadata: sala.metadata || {
             metragem: 0,
             tem_janela: false,
             tem_lavatorio: false,
           },
           planos_permitidos: (planosRes.data || []).map((p: any) => p.plano_id),
+          preco_locacao_mensal: sala.preco_locacao_mensal?.toString() || "",
+          preco_periodo_pacote_mensal: sala.preco_periodo_pacote_mensal?.toString() || "",
+          preco_periodo_locacao_avulsa: sala.preco_periodo_locacao_avulsa?.toString() || "",
         });
         setLoading(false);
       })();
@@ -105,20 +144,29 @@ export default function AdminSalaFormPage() {
       return;
     }
 
+    const precoLocacaoMensal = form.preco_locacao_mensal === "" ? null : Number(form.preco_locacao_mensal);
+    const precoPeriodoPacoteMensal = form.preco_periodo_pacote_mensal === "" ? null : Number(form.preco_periodo_pacote_mensal);
+    const precoPeriodoLocacaoAvulsa = form.preco_periodo_locacao_avulsa === "" ? null : Number(form.preco_periodo_locacao_avulsa);
+
     const payload: any = {
       nome: form.nome,
-      tipo: form.tipo,
+      categoria: form.categoria,
+      tipo_locacao: form.tipo_locacao,
+      subtipo_periodo: form.tipo_locacao === "locacao_periodo" ? form.subtipo_periodo : null,
       capacidade: Number(form.capacidade) || null,
       descricao: form.descricao,
       foto_url: form.galeria?.[0] || form.foto_url || "",
       galeria: form.galeria || [],
-      status: form.status || "ativa",
+      status: form.status || "disponivel",
       metadata: form.metadata || {
         metragem: 0,
         tem_janela: false,
         tem_lavatorio: false,
       },
       unidade_id: isEditing ? undefined : unidadeId,
+      preco_locacao_mensal: precoLocacaoMensal,
+      preco_periodo_pacote_mensal: precoPeriodoPacoteMensal,
+      preco_periodo_locacao_avulsa: precoPeriodoLocacaoAvulsa,
     };
 
     if (isEditing && id) {
@@ -158,186 +206,206 @@ export default function AdminSalaFormPage() {
     return (
       <div className="p-8">
         <div className="max-w-5xl mx-auto animate-pulse space-y-6">
-          <div className="h-10 w-64 rounded bg-slate-200" />
-          <div className="h-80 rounded-2xl bg-slate-200" />
+          <div className="h-8 bg-slate-200 rounded w-1/3" />
+          <div className="h-96 bg-slate-100 rounded-xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 bg-[#f8fafc] min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center justify-between gap-4">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="hover:bg-brand-blue-dark/5">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-          </Button>
-          <div className="flex items-center gap-2 text-brand-blue-dark">
-            <Building2 className="w-5 h-5 text-brand-orange" />
-            <span className="font-bold">{isEditing ? "Editar sala" : "Nova sala"}</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-[2rem] border border-brand-blue-dark/5 shadow-sm p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-orange">Configuração</p>
-              <h1 className="text-3xl font-heading font-black text-brand-blue-dark mt-2">
-                {isEditing ? "Detalhes da sala" : "Cadastro de nova sala"}
-              </h1>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate(-1)}>Cancelar</Button>
-              <Button onClick={saveSala} className="bg-brand-blue-dark text-white hover:bg-brand-blue-dark/90">
-                <Save className="w-4 h-4 mr-2" /> Salvar
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="max-w-5xl mx-auto px-4 py-10">
+        <div className="bg-white shadow-xl rounded-2xl border border-slate-200/80 p-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <h1 className="text-2xl font-semibold text-slate-900">{isEditing ? "Editar Sala" : "Nova Sala"}</h1>
           </div>
 
-          <div className="mb-6 flex justify-end">
-            <div className="space-y-2 min-w-[220px]">
-              <label className="text-sm font-medium text-slate-700">Status da sala</label>
-              <select
-                className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
-                value={form.status || "ativa"}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-              >
-                <option value="ativa">Ativa</option>
-                <option value="inativa">Inativa</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid gap-6">
-            <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Nome da sala</label>
-                <Input
-                  value={form.nome || ""}
-                  onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                  placeholder="Ex: Sala de Reunião 01"
-                />
+                <Label>Nome</Label>
+                <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Nome da sala" />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Tipo</label>
+                <Label>Categoria</Label>
                 <select
-                  className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
-                  value={form.tipo || "Coworking"}
-                  onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                  className="w-full border rounded-md px-3 py-2 bg-white"
+                  value={form.categoria}
+                  onChange={(e) => setForm({ ...form, categoria: e.target.value })}
                 >
-                  <option value="Coworking">Coworking (Estação)</option>
-                  <option value="Privativa">Sala Privativa</option>
-                  <option value="Reunião">Sala de Reunião</option>
-                  <option value="Auditório">Auditório</option>
-                  <option value="Consultório">Consultório</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
                 </select>
               </div>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Capacidade (pessoas)</label>
-                <Input
-                  type="number"
-                  value={form.capacidade || ""}
-                  onChange={(e) => setForm({ ...form, capacidade: e.target.value })}
-                  placeholder="Ex: 8"
-                />
+                <Label>Tipo de Locação</Label>
+                <select
+                  className="w-full border rounded-md px-3 py-2 bg-white"
+                  value={form.tipo_locacao}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setForm({ ...form, tipo_locacao: next, subtipo_periodo: next === "locacao_periodo" ? form.subtipo_periodo || subtiposPeriodo[0].value : "" });
+                  }}
+                >
+                  {tiposLocacao.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {form.tipo_locacao === "locacao_periodo" && (
+                <div className="space-y-2">
+                  <Label>Subtipo de Período</Label>
+                  <select
+                    className="w-full border rounded-md px-3 py-2 bg-white"
+                    value={form.subtipo_periodo}
+                    onChange={(e) => setForm({ ...form, subtipo_periodo: e.target.value })}
+                  >
+                    {subtiposPeriodo.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <select
+                  className="w-full border rounded-md px-3 py-2 bg-white"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                >
+                  {statusOptions.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Metragem (m²)</label>
+                <Label>Capacidade</Label>
+                <Input value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Preço Locação Mensal</Label>
                 <Input
                   type="number"
-                  value={form.metadata?.metragem || ""}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      metadata: { ...form.metadata, metragem: Number(e.target.value) || 0 },
-                    })
-                  }
-                  placeholder="Ex: 25"
+                  min={0}
+                  value={form.preco_locacao_mensal}
+                  onChange={(e) => setForm({ ...form, preco_locacao_mensal: e.target.value })}
+                  placeholder="R$ 0,00"
                 />
               </div>
+
+              {form.tipo_locacao === "locacao_periodo" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Preço Pacote Mensal</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={form.preco_periodo_pacote_mensal}
+                      onChange={(e) => setForm({ ...form, preco_periodo_pacote_mensal: e.target.value })}
+                      placeholder="R$ 0,00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Preço Locação Avulsa</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={form.preco_periodo_locacao_avulsa}
+                      onChange={(e) => setForm({ ...form, preco_periodo_locacao_avulsa: e.target.value })}
+                      placeholder="R$ 0,00"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-slate-700">Galeria de fotos</label>
-                <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
-                  <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca de mídia
+            <div className="space-y-4">
+              <ImageUpload
+                value={form.foto_url}
+                onChange={(url) => setForm({ ...form, foto_url: url })}
+              />
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Galeria</label>
+                <div className="flex gap-2 flex-wrap">
+                  {form.galeria?.map((url) => (
+                    <div key={url} className="relative group">
+                      <img src={url} className="w-24 h-24 object-cover rounded-lg border" />
+                      <button
+                        type="button"
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            galeria: form.galeria.filter((item: string) => item !== url),
+                          })
+                        }
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))}
+                  {!form.galeria?.length && <p className="text-slate-500 text-sm">Sem imagens na galeria</p>}
+                </div>
+                <Button type="button" variant="outline" onClick={() => setIsMediaPickerOpen(true)}>
+                  <ImageIcon className="w-4 h-4 mr-2" /> Adicionar imagens
                 </Button>
               </div>
-              <ImageUpload
-                value={form.galeria || []}
-                onChange={(urls) => setForm({ ...form, galeria: urls })}
-              />
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <label className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
-                  checked={form.metadata?.tem_janela || false}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      metadata: { ...form.metadata, tem_janela: e.target.checked },
-                    })
-                  }
-                />
-                <span className="text-sm font-medium text-slate-700">Possui janela</span>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
-                  checked={form.metadata?.tem_lavatorio || false}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      metadata: { ...form.metadata, tem_lavatorio: e.target.checked },
-                    })
-                  }
-                />
-                <span className="text-sm font-medium text-slate-700">Possui lavatório</span>
-              </label>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Planos permitidos</label>
-              <div className="grid md:grid-cols-3 gap-2 mt-1">
-                {allPlanos.map((p: any) => (
-                  <label key={p.id} className="flex items-center gap-2 text-xs border p-2 rounded hover:bg-muted/50 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded"
-                      checked={(form.planos_permitidos || []).includes(p.id)}
-                      onChange={(e) => {
-                        const current = form.planos_permitidos || [];
-                        const next = e.target.checked
-                          ? [...current, p.id]
-                          : current.filter((id: string) => id !== p.id);
-                        setForm({ ...form, planos_permitidos: next });
-                      }}
-                    />
-                    <span className="truncate">{p.nome}</span>
-                  </label>
-                ))}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Planos permitidos</label>
+                <div className="border rounded-md divide-y">
+                  {allPlanos.map((p) => {
+                    const checked = (form.planos_permitidos || []).includes(p.id);
+                    return (
+                      <label key={p.id} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const current = form.planos_permitidos || [];
+                            const next = e.target.checked
+                              ? [...current, p.id]
+                              : current.filter((id: string) => id !== p.id);
+                            setForm({ ...form, planos_permitidos: next });
+                          }}
+                        />
+                        <span className="truncate">{p.nome}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Descrição / observações</label>
-              <Textarea
-                value={form.descricao || ""}
-                onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                rows={5}
-                placeholder="Recursos disponíveis, metragem, ambiente, etc."
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Descrição / observações</label>
+                <Textarea
+                  value={form.descricao || ""}
+                  onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+                  rows={5}
+                  placeholder="Recursos disponíveis, metragem, ambiente, etc."
+                />
+              </div>
             </div>
           </div>
 

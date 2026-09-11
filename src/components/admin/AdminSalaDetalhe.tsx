@@ -36,6 +36,27 @@ export default function AdminSalaDetalhe() {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (sala && !editingSala) {
+      setEditingSala({
+        nome: sala.nome,
+        categoria: sala.categoria || '',
+        tipo_locacao: sala.tipo_locacao || '',
+        subtipo_periodo: sala.subtipo_periodo || '',
+        status: sala.status || 'disponivel',
+        capacidade: sala.capacidade || '',
+        descricao: sala.descricao || '',
+        foto_url: sala.foto_url || '',
+        galeria: sala.galeria || [],
+        metadata: sala.metadata || {},
+        preco_locacao_mensal: sala.preco_locacao_mensal ?? '',
+        preco_periodo_pacote_mensal: sala.preco_periodo_pacote_mensal ?? '',
+        preco_periodo_locacao_avulsa: sala.preco_periodo_locacao_avulsa ?? '',
+        planos_permitidos: planos.map((p: any) => p.id),
+      });
+    }
+  }, [sala]);
+
   async function fetchData() {
     setLoading(true);
     const { data: salaData, error: sErr } = await supabase.from('salas').select('*').eq('id', id).single();
@@ -61,22 +82,28 @@ export default function AdminSalaDetalhe() {
 
   async function handleSaveSala() {
     if (!editingSala.nome) return toast.error("Nome é obrigatório");
-    
+
     const updatePayload: any = {
       nome: editingSala.nome,
-      tipo: editingSala.tipo,
+      categoria: editingSala.categoria,
+      tipo_locacao: editingSala.tipo_locacao,
+      subtipo_periodo: editingSala.tipo_locacao === 'locacao_periodo' ? editingSala.subtipo_periodo : null,
       capacidade: parseInt(editingSala.capacidade) || null,
       descricao: editingSala.descricao,
       foto_url: editingSala.galeria?.[0] || '',
       galeria: editingSala.galeria || [],
-      metadata: editingSala.metadata || {}
+      status: editingSala.status || 'disponivel',
+      metadata: editingSala.metadata || {},
+      preco_locacao_mensal: editingSala.preco_locacao_mensal == null ? null : Number(editingSala.preco_locacao_mensal),
+      preco_periodo_pacote_mensal: editingSala.preco_periodo_pacote_mensal == null ? null : Number(editingSala.preco_periodo_pacote_mensal),
+      preco_periodo_locacao_avulsa: editingSala.preco_periodo_locacao_avulsa == null ? null : Number(editingSala.preco_periodo_locacao_avulsa),
     };
 
     const { error } = await supabase
       .from('salas')
       .update(updatePayload)
       .eq('id', id);
-    
+
     if (error) {
       toast.error(error.message);
       return;
@@ -219,23 +246,62 @@ export default function AdminSalaDetalhe() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo</label>
+                <label className="text-sm font-medium">Categoria</label>
                 <select 
                   className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
-                  value={editingSala?.tipo || ''}
-                  onChange={(e) => setEditingSala({...editingSala, tipo: e.target.value})}
+                  value={editingSala?.categoria || ''}
+                  onChange={(e) => setEditingSala({...editingSala, categoria: e.target.value})}
                 >
-                  <option value="Coworking">Coworking (Estação)</option>
-                  <option value="Privativa">Sala Privativa</option>
-                  <option value="Reunião">Sala de Reunião</option>
-                  <option value="Auditório">Auditório</option>
-                  <option value="Consultório">Consultório</option>
+                  <option value="Coworking">Coworking</option>
+                  <option value="privativa">Sala Privativa</option>
+                  <option value="compartilhado">Escritório Compartilhado</option>
+                  <option value="consultorio_poltrona">Consultório com Poltrona</option>
+                  <option value="consultorio_maca">Consultório com Maca</option>
                 </select>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <label className="text-sm font-medium">Capacidade (Pessoas)</label>
+
+                <label className="text-sm font-medium">Tipo de Locação</label>
+                <select 
+                  className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                  value={editingSala?.tipo_locacao || ''}
+                  onChange={(e) => setEditingSala({...editingSala, tipo_locacao: e.target.value})}
+                >
+                  <option value="locacao_mensal">Locação Mensal</option>
+                  <option value="locacao_periodo">Locação por Período</option>
+                </select>
+
+                {editingSala.tipo_locacao === 'locacao_periodo' ? (
+                  <div className="mt-2 space-y-1">
+                    <label className="text-xs text-muted-foreground">Subtipo</label>
+                    <select 
+                      className="w-full px-3 py-1 bg-white border rounded-md text-sm"
+                      value={editingSala?.subtipo_periodo || ''}
+                      onChange={(e) => setEditingSala({...editingSala, subtipo_periodo: e.target.value})}
+                    >
+                      <option value="pacote_mensal">Pacote Mensal</option>
+                      <option value="locacao_avulsa">Locação Avulsa</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="mt-2 space-y-1">
+                    <label className="text-xs text-muted-foreground">Status</label>
+                    <select 
+                      className="w-full px-3 py-1 bg-white border rounded-md text-sm"
+                      value={editingSala?.status || 'disponivel'}
+                      onChange={(e) => setEditingSala({...editingSala, status: e.target.value})}
+                    >
+                      <option value="disponivel">Disponível</option>
+                      <option value="indisponivel">Indisponível</option>
+                      <option value="oculto">Oculto</option>
+                    </select>
+                  </div>
+                )}
+
                 <label className="text-sm font-medium">Capacidade (Pessoas)</label>
                 <Input 
                   type="number"
@@ -283,6 +349,45 @@ export default function AdminSalaDetalhe() {
               </div>
             </div>
             
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Preços da Sala</label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Preço Locação Mensal</label>
+                  <Input 
+                    type="number"
+                    min={0}
+                    value={editingSala?.preco_locacao_mensal ?? ''}
+                    onChange={(e) => setEditingSala({...editingSala, preco_locacao_mensal: e.target.value === '' ? null : Number(e.target.value)})}
+                  />
+                </div>
+                {editingSala?.tipo_locacao === 'locacao_periodo' ? (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Preço Pacote Mensal</label>
+                      <Input 
+                        type="number"
+                        min={0}
+                        value={editingSala?.preco_periodo_pacote_mensal ?? ''}
+                        onChange={(e) => setEditingSala({...editingSala, preco_periodo_pacote_mensal: e.target.value === '' ? null : Number(e.target.value)})}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Preço Locação Avulsa</label>
+                      <Input 
+                        type="number"
+                        min={0}
+                        value={editingSala?.preco_periodo_locacao_avulsa ?? ''}
+                        onChange={(e) => setEditingSala({...editingSala, preco_periodo_locacao_avulsa: e.target.value === '' ? null : Number(e.target.value)})}
+                      />
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Galeria de Fotos</label>

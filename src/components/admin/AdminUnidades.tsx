@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, Save, X, Building2, Layers, Eye } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, Building2, Layers, Eye, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,29 @@ export default function AdminUnidades() {
   const [editingSala, setEditingSala] = useState<any>(null);
   const [selectedUnidade, setSelectedUnidade] = useState<any>(null);
   const navigate = useNavigate();
+
+  const categorias = [
+    { value: 'privativa', label: 'Sala Privativa' },
+    { value: 'compartilhado', label: 'Escritório Compartilhado' },
+    { value: 'consultorio_poltrona', label: 'Consultório com Poltrona' },
+    { value: 'consultorio_maca', label: 'Consultório com Maca' },
+  ];
+
+  const tiposLocacao = [
+    { value: 'locacao_mensal', label: 'Locação Mensal' },
+    { value: 'locacao_periodo', label: 'Locação por Período' },
+  ];
+
+  const subtiposPeriodo = [
+    { value: 'pacote_mensal', label: 'Pacote Mensal' },
+    { value: 'locacao_avulsa', label: 'Locação Avulsa' },
+  ];
+
+  const statusOptions = [
+    { value: 'disponivel', label: 'Disponível' },
+    { value: 'indisponivel', label: 'Indisponível' },
+    { value: 'oculto', label: 'Oculto' },
+  ];
 
   useEffect(() => {
     fetchUnidades();
@@ -114,7 +137,7 @@ export default function AdminUnidades() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark">Unidades & Salas</h2>
-          <p className="text-muted-foreground">Gerencie endereços, infraestrutura e capacidades.</p>
+          <p className="text-muted-foreground">Gerencie endereços, infraestrutura, categorias, tipos de locação e preços.</p>
         </div>
         <Button onClick={() => navigate('/admin/unidades/novo')} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
           <Plus className="w-4 h-4 mr-2" /> Nova Unidade
@@ -187,16 +210,40 @@ export default function AdminUnidades() {
               <div className="grid gap-4">
                 {salas.map(s => (
                   <Card key={s.id} className="p-4 border-none shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-brand-blue-dark">{s.nome}</span>
                           <span className="text-[10px] bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full uppercase font-bold">
-                            {s.tipo}
+                            {(() => { const c = categorias.find(x => x.value === s.categoria); return c ? c.label : s.categoria || '—'; })()}
+                          </span>
+                          <span className="text-[10px] bg-brand-blue-dark/10 text-brand-blue-dark px-2 py-0.5 rounded-full uppercase font-bold">
+                            {(() => { const t = tiposLocacao.find(x => x.value === s.tipo_locacao); return t ? t.label : s.tipo_locacao || '—'; })()}
+                          </span>
+                          {s.tipo_locacao === 'locacao_periodo' && s.subtipo_periodo ? (
+                            <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full uppercase font-bold">
+                              {(() => { const st = subtiposPeriodo.find(x => x.value === s.subtipo_periodo); return st ? st.label : s.subtipo_periodo; })()}
+                            </span>
+                          ) : null}
+                          <span className={`text-[10px] border px-2 py-0.5 rounded-full uppercase font-bold ${s.status === 'disponivel' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : s.status === 'indisponivel' ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-600 bg-slate-100 border-slate-200'}`}>
+                            {s.status === 'disponivel' ? 'Disponível' : s.status === 'indisponivel' ? 'Indisponível' : s.status === 'oculto' ? 'Oculto' : s.status || '—'}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           Capacidade: {s.capacidade || 'N/A'} pessoas
+                        </p>
+                        <p className="text-xs text-brand-blue-dark/80 mt-1">
+                          {(() => {
+                            const valores: string[] = [];
+                            if (s.tipo_locacao === 'locacao_mensal' || !s.tipo_locacao) {
+                              if (s.preco_locacao_mensal != null) valores.push(`Mensal: R$ ${Number(s.preco_locacao_mensal).toFixed(2)}`);
+                            }
+                            if (s.tipo_locacao === 'locacao_periodo') {
+                              if (s.preco_periodo_pacote_mensal != null) valores.push(`Pacote: R$ ${Number(s.preco_periodo_pacote_mensal).toFixed(2)}`);
+                              if (s.preco_periodo_locacao_avulsa != null) valores.push(`Avulsa: R$ ${Number(s.preco_periodo_locacao_avulsa).toFixed(2)}`);
+                            }
+                            return valores.join(' • ') || 'Sem preço cadastrado';
+                          })()}
                         </p>
                         {s.descricao && <p className="text-xs italic mt-1 line-clamp-1">{s.descricao}</p>}
                       </div>
@@ -239,19 +286,91 @@ export default function AdminUnidades() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo</label>
+                <label className="text-sm font-medium">Categoria</label>
                 <select 
                   className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
-                  value={editingSala?.tipo || ''}
-                  onChange={(e) => setEditingSala({...editingSala, tipo: e.target.value})}
+                  value={editingSala?.categoria || ''}
+                  onChange={(e) => setEditingSala({...editingSala, categoria: e.target.value})}
                 >
-                  <option value="Coworking">Coworking (Estação)</option>
-                  <option value="Privativa">Sala Privativa</option>
-                  <option value="Reunião">Sala de Reunião</option>
-                  <option value="Auditório">Auditório</option>
-                  <option value="Consultório">Consultório</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
                 </select>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo de Locação</label>
+                <select 
+                  className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                  value={editingSala?.tipo_locacao || ''}
+                  onChange={(e) => setEditingSala({...editingSala, tipo_locacao: e.target.value})}
+                >
+                  {tiposLocacao.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+              {editingSala?.tipo_locacao === 'locacao_periodo' ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Subtipo de Período</label>
+                  <select 
+                    className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                    value={editingSala?.subtipo_periodo || ''}
+                    onChange={(e) => setEditingSala({...editingSala, subtipo_periodo: e.target.value})}
+                  >
+                    {subtiposPeriodo.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <select 
+                    className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
+                    value={editingSala?.status || 'disponivel'}
+                    onChange={(e) => setEditingSala({...editingSala, status: e.target.value})}
+                  >
+                    {statusOptions.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Preço Locação Mensal</label>
+                <Input 
+                  type="number"
+                  min={0}
+                  value={editingSala?.preco_locacao_mensal ?? ''}
+                  onChange={(e) => setEditingSala({...editingSala, preco_locacao_mensal: e.target.value === '' ? null : Number(e.target.value)})}
+                />
+              </div>
+              {editingSala?.tipo_locacao === 'locacao_periodo' ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Preço Pacote Mensal</label>
+                    <Input 
+                      type="number"
+                      min={0}
+                      value={editingSala?.preco_periodo_pacote_mensal ?? ''}
+                      onChange={(e) => setEditingSala({...editingSala, preco_periodo_pacote_mensal: e.target.value === '' ? null : Number(e.target.value)})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Preço Locação Avulsa</label>
+                    <Input 
+                      type="number"
+                      min={0}
+                      value={editingSala?.preco_periodo_locacao_avulsa ?? ''}
+                      onChange={(e) => setEditingSala({...editingSala, preco_periodo_locacao_avulsa: e.target.value === '' ? null : Number(e.target.value)})}
+                    />
+                  </div>
+                </>
+              ) : null}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Capacidade (Pessoas)</label>
