@@ -33,7 +33,7 @@ export const ContactForm = () => {
           ambiente: 'estacao', // Fallback required by enum
           plano_tipo: 'contato',
           preco: 0,
-          user_id: (await supabase.auth.getUser()).data.user?.id || '00000000-0000-0000-0000-000000000000'
+          user_id: (await supabase.auth.getUser()).data.user?.id || null
         }]);
 
       if (error) throw error;

@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CalendarCheck, Loader2, CheckCircle2, XCircle, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,10 +26,7 @@ interface ReservaDialogProps {
 }
 
 export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, defaultData }: ReservaDialogProps) {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [availability, setAvailability] = useState<null | { available: boolean; conflicts: number; capacity: number }>(null);
   const [form, setForm] = useState({
     nome: "", email: "", telefone: "",
     ambiente: defaultAmbiente || "estacao",
@@ -55,56 +51,50 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
     });
   }, [open]);
 
-  const set = (k: string, v: string) => { setForm((f) => ({ ...f, [k]: v })); setAvailability(null); };
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const isDiaria = form.tipo === "diaria";
   const effective = isDiaria ? { ...form, hora_inicio: "09:00", hora_fim: "17:00" } : form;
 
-  async function verificar() {
-    if (!effective.data) { toast({ title: "Selecione a data" }); return; }
-    setChecking(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("check-availability", {
-        body: {
-          ambiente: effective.ambiente,
-          data: effective.data,
-          hora_inicio: effective.hora_inicio,
-          hora_fim: effective.hora_fim,
-        },
-      });
-      if (error) throw error;
-      setAvailability(data);
-    } catch (e: any) {
-      toast({ title: "Erro ao verificar", description: e.message, variant: "destructive" });
-    } finally { setChecking(false); }
-  }
-
   async function reservar() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast({ title: "Acesso restrito", description: "Somente pessoas cadastradas podem fazer reserva. Por favor, faça login ou crie uma conta.", variant: "destructive" });
-      onOpenChange(false);
-      navigate("/auth?redirect=/");
-      return;
-    }
     if (!form.nome || !form.email || !form.telefone || !effective.data) {
-      toast({ title: "Preencha todos os campos" }); return;
-    }
-    if (!availability?.available) {
-      toast({ title: "Verifique a disponibilidade antes de reservar" }); return;
+      toast({ title: "Preencha nome, e-mail, telefone e data" });
+      return;
     }
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke("create-reservation", {
-        body: { ...effective },
+      const { data: userData } = await supabase.auth.getUser();
+      const ambLabel = AMBIENTES.find((a) => a.value === effective.ambiente)?.label || effective.ambiente;
+      const tipoLabel = effective.tipo === "hora" ? "Por hora" : "Diária";
+      const observacoes = [
+        `Solicitação de reserva via WhatsApp.`,
+        `Ambiente: ${ambLabel}.`,
+        `Tipo: ${tipoLabel}.`,
+        `Data: ${effective.data}.`,
+        `Horário: ${effective.hora_inicio} às ${effective.hora_fim}.`,
+        form.observacoes ? `Observações: ${form.observacoes}` : "",
+      ].filter(Boolean).join(" ");
+
+      const { error } = await supabase.from("contract_requests").insert({
+        user_id: userData.user?.id || null,
+        nome: form.nome,
+        email: form.email,
+        telefone: form.telefone,
+        ambiente: effective.ambiente,
+        plano_tipo: effective.tipo,
+        preco: 0,
+        data_inicio: effective.data,
+        dias_selecionados: [effective.data],
+        observacoes,
+        origem: "Reserva via WhatsApp",
+        status: "pendente",
       });
       if (error) throw error;
 
-      const ambLabel = AMBIENTES.find((a) => a.value === effective.ambiente)?.label;
       const msg = `Olá! Acabei de fazer uma reserva no Coworking 013:\n\n*${ambLabel}*\nData: ${effective.data}\nHorário: ${effective.hora_inicio} às ${effective.hora_fim}\nTipo: ${effective.tipo === "hora" ? "Por hora" : "Diária"}\n\n*Meus dados:*\nNome: ${form.nome}\nEmail: ${form.email}\nTelefone: ${form.telefone}\n${form.observacoes ? "Obs: " + form.observacoes : ""}\n\nAguardo a confirmação 🙏`;
       const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
       window.open(url, "_blank");
-      toast({ title: "Reserva criada!", description: "Estamos te redirecionando ao WhatsApp para confirmação." });
+      toast({ title: "Solicitação enviada!", description: "Seus dados foram registrados e o WhatsApp será aberto para confirmação." });
       setTimeout(() => onOpenChange(false), 1500);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
@@ -119,7 +109,7 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
             Faça sua <span className="text-secondary">reserva</span>
           </DialogTitle>
           <DialogDescription>
-            Escolha o ambiente, dia e horário. Verificamos a disponibilidade em tempo real no Google Calendar.
+            Preencha os dados da reserva e envie sua solicitação pelo WhatsApp.
           </DialogDescription>
         </DialogHeader>
 
@@ -185,27 +175,12 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-            <Button onClick={verificar} disabled={checking} variant="outline" className="rounded-full font-heading font-bold">
-              {checking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CalendarCheck className="w-4 h-4 mr-2" />}
-              Verificar disponibilidade
-            </Button>
-            <Button onClick={reservar} disabled={loading || !availability?.available}
+            <Button onClick={reservar} disabled={loading || !form.nome || !form.email || !form.telefone || !effective.data}
               className="rounded-full font-heading font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90 flex-1">
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageCircle className="w-4 h-4 mr-2" />}
-              Confirmar e enviar ao WhatsApp
+              Enviar solicitação ao WhatsApp
             </Button>
           </div>
-
-          {availability && (
-            <div className={`rounded-xl p-4 flex items-center gap-3 ${availability.available ? "bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100" : "bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100"}`}>
-              {availability.available ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-              <div className="text-sm">
-                {availability.available
-                  ? `Disponível! ${effective.ambiente === "estacao" ? `${availability.capacity - availability.conflicts}/${availability.capacity} estações livres` : "Horário livre"}.`
-                  : "Indisponível neste horário. Escolha outro horário ou data."}
-              </div>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
