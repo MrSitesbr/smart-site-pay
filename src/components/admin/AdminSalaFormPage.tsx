@@ -341,8 +341,11 @@ export default function AdminSalaFormPage() {
 
             <div className="space-y-4">
               <ImageUpload
-                value={form.foto_url}
-                onChange={(url) => setForm({ ...form, foto_url: url })}
+                value={form.galeria || []}
+                onChange={(urls) => {
+                  const primeiro = Array.isArray(urls) && urls.length ? urls[0] : "";
+                  setForm({ ...form, galeria: Array.isArray(urls) ? urls : [], foto_url: primeiro });
+                }}
               />
 
               <div className="space-y-2">
