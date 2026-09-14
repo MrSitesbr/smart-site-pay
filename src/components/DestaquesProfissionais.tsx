@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Stethoscope, Scale, HardHat, Cpu, Megaphone, Briefcase } from "lucide-react";
 import { assets } from "@/lib/migration-assets";
 import { getPageContent } from "@/lib/cms";
+import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   tag: "Soluções por Área",
@@ -58,7 +59,7 @@ const DestaquesProfissionais = ({ content, settings }: { content?: any, settings
       <div className={widthClass}>
         <div className="text-center max-w-3xl mx-auto mb-20">
           <span className="text-secondary font-heading font-bold text-sm tracking-widest uppercase mb-4 inline-block">{localContent.tag}</span>
-          <h2 className="font-heading font-black text-4xl md:text-5xl text-brand-blue-dark mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
+          <h2 className="font-heading font-black text-4xl md:text-5xl text-brand-blue-dark mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(localContent.title) }} />
           <p className="text-muted-foreground text-lg" style={textStyle}>
             {localContent.subtitle}
           </p>

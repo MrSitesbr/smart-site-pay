@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MapPin, Building2, Navigation, Store } from "lucide-react";
 import sabrina from "@/assets/sabrina-cow013.png.asset.json";
 import { getPageContent } from "@/lib/cms";
+import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   title: 'Localização que aproxima você de mais oportunidades',
@@ -80,7 +81,7 @@ const InstitucionalSection = ({ content, settings }: { content?: any, settings?:
                 <MapPin className="w-5 h-5" />
                 <span className="font-heading font-bold text-sm">{content.location_tag}</span>
               </div>
-              <h2 className="font-heading font-black text-3xl md:text-4xl lg:text-5xl text-white leading-tight mb-5" dangerouslySetInnerHTML={{ __html: content.title }} />
+              <h2 className="font-heading font-black text-3xl md:text-4xl lg:text-5xl text-white leading-tight mb-5" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.title) }} />
               <p className="text-white/75 leading-relaxed mb-8">{content.description}</p>
               <div className="grid sm:grid-cols-3 gap-4">
                 {content.features.map((f: any, i: number) => {

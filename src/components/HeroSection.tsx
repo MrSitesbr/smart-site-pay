@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, User, Mail, Phone, ArrowRight } from "lucide-react";
 import { assets } from "@/lib/migration-assets";
+import DOMPurify from "dompurify";
 
 const HeroSection = ({ content, settings }: { content?: any, settings?: any }) => {
   const [step, setStep] = useState(1);
@@ -65,7 +66,7 @@ const HeroSection = ({ content, settings }: { content?: any, settings?: any }) =
           <div className="text-white animate-fade-in-up" style={textStyle}>
             <h1 
               className="font-heading font-black text-5xl md:text-7xl leading-tight mb-6 tracking-tighter"
-              dangerouslySetInnerHTML={{ __html: sectionContent.title }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(sectionContent.title) }}
             />
             <p className="text-xl text-white/90 mb-8 max-w-xl leading-relaxed" style={textStyle}>
               {sectionContent.subtitle}

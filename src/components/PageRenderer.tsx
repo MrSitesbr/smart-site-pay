@@ -9,6 +9,7 @@ import { UnitsWidget, PlansWidget, RoomsWidget, GlobalHeaderWidget, GlobalFooter
 import { ContactForm } from "./ContactForm";
 import ReservaDialog from "./ReservaDialog";
 import BlogHighlights from "./BlogHighlights";
+import DOMPurify from "dompurify";
 
 const LUCIDE_ICONS: Record<string, any> = {
   Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout: LayoutIcon
@@ -266,10 +267,10 @@ const WidgetRenderer: React.FC<{
     switch (widget.type) {
       case 'heading':
         const Tag = (content.level || 'h2') as keyof JSX.IntrinsicElements;
-        return <Tag style={widgetStyle} className="font-heading font-bold" dangerouslySetInnerHTML={{ __html: content.text || '' }} />;
+        return <Tag style={widgetStyle} className="font-heading font-bold" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.text || '') }} />;
       
       case 'text':
-        return <div style={widgetStyle} className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.text || '' }} />;
+        return <div style={widgetStyle} className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.text || '') }} />;
       
       case 'image':
         return (
@@ -361,7 +362,7 @@ const WidgetRenderer: React.FC<{
                   {content.title}
                 </DialogTitle>
               </DialogHeader>
-              <div className="py-6 font-medium text-muted-foreground" dangerouslySetInnerHTML={{ __html: content.content || '' }} />
+              <div className="py-6 font-medium text-muted-foreground" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.content || '') }} />
               {content.actionType && content.actionType !== 'none' && (
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <Button 
@@ -432,13 +433,13 @@ const WidgetRenderer: React.FC<{
                     {/* Title - Reduced and moderate weight */}
                     <h1 
                       className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-snug tracking-tight"
-                      dangerouslySetInnerHTML={{ __html: content.title || '' }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.title || '') }}
                     />
 
                     {/* Subtitle */}
                     <p 
                       className="text-base sm:text-lg text-white/80 leading-relaxed max-w-md font-normal"
-                      dangerouslySetInnerHTML={{ __html: content.subtitle || '' }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.subtitle || '') }}
                     />
                   </div>
 

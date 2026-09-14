@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
+import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   tag: "QUEM TRABALHA AQUI RECOMENDA",
@@ -60,7 +61,7 @@ const TestimonialsSection = ({ content, settings }: { content?: any, settings?: 
         <div className="grid lg:grid-cols-4 gap-8 mb-12 items-end">
           <div className="lg:col-span-3">
             <span className="inline-block text-secondary font-heading font-bold text-xs tracking-widest mb-4 uppercase">{localContent.tag}</span>
-            <h2 className="font-heading font-black text-4xl md:text-5xl text-white leading-tight" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
+            <h2 className="font-heading font-black text-4xl md:text-5xl text-white leading-tight" style={textStyle} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(localContent.title) }} />
           </div>
 
           <div className="flex gap-3 lg:justify-end">

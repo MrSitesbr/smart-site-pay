@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, User, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Helmet } from "react-helmet";
+import DOMPurify from "dompurify";
 
 export default function ArtigoIndividual() {
   const { slug } = useParams();
@@ -95,7 +96,7 @@ export default function ArtigoIndividual() {
 
           <div 
             className="prose prose-lg max-w-none prose-slate prose-headings:text-brand-blue-dark prose-headings:font-bold prose-a:text-brand-orange prose-img:rounded-3xl prose-img:shadow-lg"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
           />
 
           {(previousArticle || nextArticle) && (

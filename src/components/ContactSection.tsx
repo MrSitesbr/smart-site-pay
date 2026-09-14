@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { getPageContent } from "@/lib/cms";
+import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   cta_title: 'Pronto para levar seu negócio para outro nível?',
@@ -99,7 +100,7 @@ const ContactSection = ({ content, settings }: { content?: any, settings?: any }
         <div className="grid lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2">
             <span className="inline-block text-secondary font-heading font-bold text-xs tracking-widest mb-4 uppercase">FALE COM A GENTE</span>
-            <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground leading-tight mb-8" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
+            <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground leading-tight mb-8" style={textStyle} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(localContent.title) }} />
             <div className="space-y-5">
               {localContent.contact_items.map((item: any, i: number) => {
                 const Icon = getIcon(item.icon);

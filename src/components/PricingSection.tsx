@@ -3,6 +3,7 @@ import { Check, X, Building2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReservaDialog from "@/components/ReservaDialog";
 import { getPageContent } from "@/lib/cms";
+import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   title: 'Planos que se adaptam ao <span class="text-primary">seu crescimento.</span>',
@@ -58,7 +59,7 @@ const PricingSection = ({ content, settings }: { content?: any, settings?: any }
     >
       <div className={widthClass}>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
+          <h2 className="font-heading font-black text-4xl md:text-5xl text-foreground mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(localContent.title) }} />
           <p className="text-muted-foreground text-lg" style={textStyle}>{localContent.subtitle}</p>
         </div>
 

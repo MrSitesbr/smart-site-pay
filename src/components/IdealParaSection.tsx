@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { getPageContent } from "@/lib/cms";
 import { assets } from "@/lib/migration-assets";
+import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   tag: "NOSSOS AMBIENTES",
@@ -96,7 +97,7 @@ const IdealParaSection = ({ content, settings }: { content?: any, settings?: any
       <div className={widthClass}>
         <div className="text-center max-w-3xl mx-auto mb-20">
           <span className="text-secondary font-heading font-bold text-sm tracking-widest uppercase mb-4 inline-block">{localContent.tag}</span>
-          <h2 className="font-heading font-black text-4xl md:text-5xl text-brand-blue-dark mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: localContent.title }} />
+          <h2 className="font-heading font-black text-4xl md:text-5xl text-brand-blue-dark mb-6" style={textStyle} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(localContent.title) }} />
         </div>
 
 
