@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Code, Map as MapIcon, Save, Loader2 } from "lucide-react";
+import { Search, Code, Map as MapIcon, Save, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -166,10 +166,22 @@ export default function AdminSEO() {
             <MapIcon className="w-5 h-5" />
             <h3 className="text-xl font-bold">Site Map</h3>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">O mapa do site é gerado automaticamente para os buscadores.</p>
-          <div className="bg-muted p-4 rounded-lg font-mono text-xs">
+          <p className="text-sm text-muted-foreground mb-4">
+            O mapa do site é gerado automaticamente para os buscadores. 
+            O Google Search Console deve acessar: <code className="bg-muted px-2 py-1 rounded">{window.location.origin}/sitemap.xml</code>
+          </p>
+          <div className="bg-muted p-4 rounded-lg font-mono text-xs mb-4">
             {settings.sitemap_url}
           </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.open(`${window.location.origin}/sitemap.xml`, '_blank')}
+            className="text-sm"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Ver Sitemap XML
+          </Button>
         </Card>
 
         <div className="flex justify-end">

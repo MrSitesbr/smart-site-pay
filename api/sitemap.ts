@@ -1,10 +1,25 @@
-const SITE_URL = "https://www.coworking013.com.br";
+const SITE_URL = process.env.SITE_URL || process.env.VITE_SITE_URL || "https://www.coworking013.com.br";
 
 const privateRoutePrefixes = [
   "/admin",
   "/auth",
   "/auth-admin",
   "/painel",
+];
+
+// URLs estáticas que sempre devem estar no sitemap
+const staticRoutes = [
+  "/",
+  "/sobre",
+  "/espacos",
+  "/coworking",
+  "/blog",
+  "/contato",
+  "/reservas",
+  "/galeria",
+  "/depoimentos",
+  "/planos",
+  "/eventos",
 ];
 
 type SitemapRequest = { method?: string };
@@ -60,21 +75,28 @@ async function fetchSupabase(resource: string): Promise<Array<Record<string, unk
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase environment variables are not configured");
+    console.error("Supabase environment variables are not configured");
+    return [];
   }
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/${resource}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-    },
-  });
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/${resource}`, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(`Supabase request failed with status ${response.status}`);
+    if (!response.ok) {
+      console.error(`Supabase request failed with status ${response.status} for resource: ${resource}`);
+      return [];
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching from Supabase:", error);
+    return [];
   }
-
-  return response.json();
 }
 
 export default async function sitemap(request: SitemapRequest, response: SitemapResponse) {
@@ -92,8 +114,11 @@ export default async function sitemap(request: SitemapRequest, response: Sitemap
     ]);
 
     const entries = new Map<string, string | null>();
-    entries.set("/", null);
-    entries.set("/blog", null);
+    
+    // Adicionar URLs estáticas primeiro
+    for (const route of staticRoutes) {
+      entries.set(route, null);
+    }
 
     for (const page of pages) {
       if (page.is_global) continue;
@@ -113,7 +138,16 @@ export default async function sitemap(request: SitemapRequest, response: Sitemap
     return response.status(200).send(body);
   } catch (error) {
     console.error("Failed to generate sitemap", error);
+    
+    // Fallback: gerar sitemap com apenas URLs estáticas
+    const fallbackBody = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${staticRoutes.map(route => createUrlEntry(route, null)).join("\n")}
+</urlset>
+`;
+    
     response.setHeader("Content-Type", "application/xml; charset=utf-8");
-    return response.status(503).send("<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"></urlset>");
+    response.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+    return response.status(200).send(fallbackBody);
   }
 }
