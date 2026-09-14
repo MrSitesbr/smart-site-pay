@@ -122,11 +122,11 @@ const Footer = () => {
 
   // Dados das unidades
   const unidades = [
-    "Unidade 01: R. Jaú, 955 Conj. 26, Boqueirão - Praia Grande - SP",
-    "Unidade 02: Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP",
-    "Unidade 03: R. São Caetano, 86, Boqueirão - Praia Grande - SP (Sede Administrativa)",
-    "Unidade 04: Rua Benjamin Constant, 61, Centro - São Vicente - SP"
-  ];
+    address1,
+    address2,
+    address3,
+    address4
+  ].filter(Boolean);
 
   const cols = cmsContent?.columns || defaultCols;
   const description = cmsContent?.description || "O seu espaço de trabalho e networking na Praia Grande.";
@@ -135,6 +135,7 @@ const Footer = () => {
   const address1 = cmsContent?.address_1 || "Av. P. Costa e Silva, 609 - S. 906 - Boqueirão - Praia Grande - SP";
   const address2 = cmsContent?.address_2 || "R. São Caetano, 86 - Boqueirão - Praia Grande - SP";
   const address3 = cmsContent?.address_3 || "R. Jaú, 955 Conj. 26 - Boqueirão - Praia Grande - SP";
+  const address4 = cmsContent?.address_4 || "Rua Benjamin Constant, 61, Centro - São Vicente - SP";
   const workingHoursWeek = cmsContent?.working_hours_week || "Seg. à Sex.: 08h às 21h";
   const workingHoursSat = cmsContent?.working_hours_sat || "Sáb: 08h às 12h";
   const logoTop = cmsContent?.logo_text_top || "CoWorking";
@@ -144,8 +145,8 @@ const Footer = () => {
   return (
     <footer className="bg-[#031d36] text-white pt-16 pb-6">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-10 mb-12">
-          <div>
+        <div className="grid md:grid-cols-5 gap-8 mb-12">
+          <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               <img src={logoIconUrl} alt="Logo" className="h-10 w-auto object-contain" />
               <div className="flex flex-col leading-none">
@@ -174,7 +175,7 @@ const Footer = () => {
           </div>
 
           {cols.map((col, i) => (
-            <div key={i}>
+            <div key={i} className="md:col-span-1">
               <h4 className="font-heading font-bold mb-4">{col.title}</h4>
               <ul className="space-y-2">
                 {col.links.map((l, j) => (
@@ -200,16 +201,26 @@ const Footer = () => {
             </div>
           ))}
 
-          <div>
+          <div className="md:col-span-1">
             <h4 className="font-heading font-bold mb-4">Unidades</h4>
             <ul className="space-y-3 text-sm text-white/70">
-              {unidades.map((unidade, i) => (
-                <li key={i}>{unidade}</li>
-              ))}
+              {unidades.map((unidade, i) => {
+                const match = unidade.match(/^(Unidade \d+:)/);
+                if (match) {
+                  const label = match[1];
+                  const address = unidade.substring(match.index + match[0].length);
+                  return (
+                    <li key={i}>
+                      <span className="font-bold text-white">{label}</span>{address}
+                    </li>
+                  );
+                }
+                return <li key={i}>{unidade}</li>;
+              })}
             </ul>
           </div>
 
-          <div>
+          <div className="md:col-span-1">
             <h4 className="font-heading font-bold mb-4">Informações</h4>
             <div className="space-y-3 text-sm text-white/70">
               <p><strong className="text-white">Contatos e Atendimento</strong></p>

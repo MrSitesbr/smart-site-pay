@@ -29,6 +29,7 @@ export default function AdminHeaderFooterSimple() {
     address_1: "Av. P. Costa e Silva, 609 - S. 906 - Boqueirão - Praia Grande - SP",
     address_2: "R. São Caetano, 86 - Boqueirão - Praia Grande - SP",
     address_3: "R. Jaú, 955 Conj. 26 - Boqueirão - Praia Grande - SP",
+    address_4: "Rua Benjamin Constant, 61, Centro - São Vicente - SP",
     working_hours_week: "Seg. à Sex.: 08h às 21h",
     working_hours_sat: "Sáb: 08h às 12h",
     instagram_url: "",
@@ -231,7 +232,7 @@ export default function AdminHeaderFooterSimple() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Endereços (Até 3 unidades)</Label>
+                  <Label>Endereços (Até 4 unidades)</Label>
                   <Input 
                     className="mb-2"
                     value={footerContent.address_1} 
@@ -245,9 +246,15 @@ export default function AdminHeaderFooterSimple() {
                     placeholder="Unidade 2"
                   />
                   <Input 
+                    className="mb-2"
                     value={footerContent.address_3} 
                     onChange={e => setFooterContent({...footerContent, address_3: e.target.value})} 
                     placeholder="Unidade 3"
+                  />
+                  <Input 
+                    value={footerContent.address_4} 
+                    onChange={e => setFooterContent({...footerContent, address_4: e.target.value})} 
+                    placeholder="Unidade 4"
                   />
                 </div>
               </div>
