@@ -140,12 +140,16 @@ const SectionRenderer: React.FC<{
     >
       {settings.backgroundType === 'video' && settings.backgroundVideoUrl && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          <iframe
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] h-[300%] max-w-none"
-            src={`https://www.youtube.com/embed/${settings.backgroundVideoUrl.split('v=')[1]?.split('&')[0] || settings.backgroundVideoUrl.split('/').pop()}?autoplay=1&mute=1&loop=1&playlist=${settings.backgroundVideoUrl.split('v=')[1]?.split('&')[0] || settings.backgroundVideoUrl.split('/').pop()}&controls=0&showinfo=0&rel=0&enablejsapi=1`}
-            frameBorder="0"
-            allow="autoplay; encrypted-media"
-          ></iframe>
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="pointer-events-none absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover"
+          >
+            <source src="/assets/videoplayback.mp4" type="video/mp4" />
+          </video>
         </div>
       )}
       {(settings.backgroundImage || (settings.backgroundType === 'video' && settings.backgroundVideoUrl)) && <div style={{ ...overlayStyle, zIndex: 1 }} />}
@@ -385,16 +389,17 @@ const WidgetRenderer: React.FC<{
             {/* Background Video */}
             {heroVideoId ? (
               <>
-                <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                  <iframe
-                    className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-[100vh] w-[100vw] min-w-[177.78vh] -translate-x-1/2 -translate-y-1/2"
-                    src={`https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${heroVideoId}&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&origin=${encodeURIComponent(window.location.origin)}`}
-                    title="Vídeo de fundo"
-                    allow="autoplay"
-                    frameBorder="0"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                </div>
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="pointer-events-none absolute inset-0 w-full h-full object-cover z-0"
+                >
+                  <source src="/assets/videoplayback.mp4" type="video/mp4" />
+                  Seu navegador não suporta vídeos em HTML5.
+                </video>
                 {/* Dark overlay for text contrast */}
                 <div className="absolute inset-0 z-[1] bg-black/45 pointer-events-none" />
               </>
@@ -442,12 +447,12 @@ const WidgetRenderer: React.FC<{
                     <div className="flex items-center justify-center lg:justify-center">
                       <div className="w-full sm:w-72 p-6 sm:p-8 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all">
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Próximo passo</p>
-                        <h3 className="text-xl font-bold text-white mb-5">Reserve agora</h3>
+                        <h3 className="text-xl font-bold text-white mb-5">Solicitar reserva</h3>
                         <a 
                           href={content.ctaUrl || '/reservar'} 
                           className="block w-full px-5 py-2.5 bg-brand-orange text-white font-bold text-sm rounded-lg hover:bg-brand-orange/90 transition-colors text-center"
                         >
-                          {content.cta}
+                          Consultar
                         </a>
                       </div>
                     </div>

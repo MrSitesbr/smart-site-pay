@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Phone, Calendar, ChevronDown, ExternalLink } from "lucide-react";
+import { Menu, X, Phone, User, ChevronDown, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -190,10 +190,12 @@ const Navbar = () => {
             <Phone className="w-4 h-4 text-primary" />
             {phone}
           </a>
-          <Button onClick={() => setReservaOpen(true)} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
-            <Calendar className="w-4 h-4 mr-2" />
-            Reservar
-          </Button>
+          <Link to="/auth">
+  <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
+    <User className="w-4 h-4 mr-2" />
+    Acessar
+  </Button>
+</Link>
 
         </div>
 

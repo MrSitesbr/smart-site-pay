@@ -215,18 +215,27 @@ export default function AdminUnidades() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-brand-blue-dark">{s.nome}</span>
                           <span className="text-[10px] bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full uppercase font-bold">
-                            {(() => { const c = categorias.find(x => x.value === s.categoria); return c ? c.label : s.categoria || '—'; })()}
+                            {(() => {
+                              const categoria = String(s.categoria || s.tipo || '').toLowerCase();
+                              const c = categorias.find(x => x.value === s.categoria);
+                              if (c) return c.label;
+                              if (categoria.includes('privativ')) return 'Sala Privativa';
+                              if (categoria.includes('compartilh') || categoria.includes('cowork')) return 'Escritório Compartilhado';
+                              if (categoria.includes('maca')) return 'Consultório com Maca';
+                              if (categoria.includes('consult')) return 'Consultório com Poltrona';
+                              return s.categoria || '—';
+                            })()}
                           </span>
                           <span className="text-[10px] bg-brand-blue-dark/10 text-brand-blue-dark px-2 py-0.5 rounded-full uppercase font-bold">
-                            {(() => { const t = tiposLocacao.find(x => x.value === s.tipo_locacao); return t ? t.label : s.tipo_locacao || '—'; })()}
+                            {(() => { const t = tiposLocacao.find(x => x.value === s.tipo_locacao); return t ? t.label : s.tipo_locacao || 'Locação Mensal'; })()}
                           </span>
                           {s.tipo_locacao === 'locacao_periodo' && s.subtipo_periodo ? (
                             <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full uppercase font-bold">
                               {(() => { const st = subtiposPeriodo.find(x => x.value === s.subtipo_periodo); return st ? st.label : s.subtipo_periodo; })()}
                             </span>
                           ) : null}
-                          <span className={`text-[10px] border px-2 py-0.5 rounded-full uppercase font-bold ${s.status === 'disponivel' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : s.status === 'indisponivel' ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-600 bg-slate-100 border-slate-200'}`}>
-                            {s.status === 'disponivel' ? 'Disponível' : s.status === 'indisponivel' ? 'Indisponível' : s.status === 'oculto' ? 'Oculto' : s.status || '—'}
+                          <span className={`text-[10px] border px-2 py-0.5 rounded-full uppercase font-bold ${s.status === 'disponivel' || s.status === 'ativa' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : s.status === 'indisponivel' ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-600 bg-slate-100 border-slate-200'}`}>
+                            {s.status === 'disponivel' || s.status === 'ativa' ? 'Disponível' : s.status === 'indisponivel' ? 'Indisponível' : s.status === 'oculto' ? 'Oculto' : s.status || '—'}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">

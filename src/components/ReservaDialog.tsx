@@ -9,18 +9,39 @@ import { Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const TIPOS_LOCACAO = [
-  { value: "locacao_mensal", label: "Locação Mensal" },
-  { value: "locacao_periodo", label: "Locação por Período" },
-];
-
-const SUBTIPOS_PERIODO = [
-  { value: "pacote_mensal", label: "Pacote Mensal" },
-  { value: "locacao_avulsa", label: "Locação Avulsa" },
-];
-
 const HORAS = Array.from({ length: 9 }, (_, i) => `${String(9 + i).padStart(2, "0")}:00`);
 const WHATSAPP = "5513992037957";
+const CATEGORIAS: Record<string, string> = {
+  privativa: "Sala Privativa",
+  compartilhado: "Escritório Compartilhado",
+  consultorio_poltrona: "Consultório com Poltrona",
+  consultorio_maca: "Consultório com Maca",
+};
+
+function getCategoriaLabel(sala: SalaReserva) {
+  const categoria = sala.categoria || sala.tipo?.toLowerCase();
+  if (!categoria) return "Categoria não informada";
+  if (/privativ/.test(categoria)) return "Sala Privativa";
+  if (/compartilh|cowork/.test(categoria)) return "Escritório Compartilhado";
+  if (/maca/.test(categoria)) return "Consultório com Maca";
+  if (/consult/.test(categoria)) return "Consultório com Poltrona";
+  return CATEGORIAS[categoria] || "Categoria não informada";
+}
+
+type UnidadeReserva = { id: string; nome: string };
+type SalaReserva = {
+  id: string;
+  nome: string;
+  unidade_id: string;
+  categoria: string | null;
+  tipo: string | null;
+  status: string | null;
+  tipo_locacao: string | null;
+  subtipo_periodo: string | null;
+  preco_locacao_mensal: number | null;
+  preco_periodo_pacote_mensal: number | null;
+  preco_periodo_locacao_avulsa: number | null;
+};
 
 interface ReservaDialogProps {
   open: boolean;
@@ -31,11 +52,13 @@ interface ReservaDialogProps {
 
 export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, defaultData }: ReservaDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [salas, setSalas] = useState<any[]>([]);
+  const [unidades, setUnidades] = useState<UnidadeReserva[]>([]);
+  const [salas, setSalas] = useState<SalaReserva[]>([]);
   const [form, setForm] = useState({
     nome: "",
     email: "",
     telefone: "",
+    unidade_id: "",
     sala_id: defaultAmbiente || "",
     tipo_locacao: "locacao_mensal",
     subtipo_periodo: "pacote_mensal",
@@ -52,8 +75,8 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
       if (!u) return;
       setForm((f) => ({
         ...f,
-        nome: f.nome || (u.user_metadata as any)?.nome || "",
-        telefone: f.telefone || (u.user_metadata as any)?.telefone || "",
+        nome: f.nome || String(u.user_metadata?.nome || ""),
+        telefone: f.telefone || String(u.user_metadata?.telefone || ""),
         email: f.email || u.email || "",
       }));
     });
@@ -62,29 +85,51 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const { data } = await supabase.from("salas").select("*").neq("status", "oculto").order("nome");
-      setSalas(data || []);
-      if ((data || []).length && !form.sala_id) {
-        setForm((f) => ({ ...f, sala_id: data[0].id }));
+      const [{ data: unidadesData }, { data: salasData }] = await Promise.all([
+        supabase.from("unidades").select("id, nome").order("nome"),
+        supabase.from("salas").select("*").neq("status", "oculto").order("nome"),
+      ]);
+      const visibleSalas = salasData || [];
+      const unidadesComSalas = (unidadesData || []).filter((unidade) =>
+        visibleSalas.some((sala) => sala.unidade_id === unidade.id),
+      );
+      setUnidades(unidadesComSalas);
+      setSalas(visibleSalas);
+
+      const salaInicial = visibleSalas.find((sala) => sala.id === defaultAmbiente) || visibleSalas[0];
+      if (salaInicial) {
+        setForm((f) => ({
+          ...f,
+          unidade_id: salaInicial.unidade_id,
+          sala_id: salaInicial.id,
+          tipo_locacao: salaInicial.tipo_locacao || "locacao_mensal",
+          subtipo_periodo: salaInicial.subtipo_periodo || "pacote_mensal",
+        }));
       }
     })();
-  }, [open]);
+  }, [open, defaultAmbiente]);
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const sala = salas.find((s) => s.id === form.sala_id);
-  const isMensal = form.tipo_locacao === "locacao_mensal";
+  const salasDaUnidade = salas.filter((s) => s.unidade_id === form.unidade_id);
+  const isMensal = sala?.tipo_locacao === "locacao_mensal";
+  const salaDisponivel = sala?.status === "disponivel" || sala?.status === "ativa";
 
   const precoSelecionado = (() => {
     if (!sala) return null;
     if (isMensal) return sala.preco_locacao_mensal ?? null;
-    if (form.subtipo_periodo === "pacote_mensal") return sala.preco_periodo_pacote_mensal ?? null;
+    if (sala.subtipo_periodo === "pacote_mensal") return sala.preco_periodo_pacote_mensal ?? null;
     return sala.preco_periodo_locacao_avulsa ?? null;
   })();
 
   async function reservar() {
-    if (!form.nome || !form.email || !form.telefone || !form.sala_id || !form.data) {
-      toast({ title: "Preencha nome, e-mail, telefone, sala e data" });
+    if (!form.nome || !form.email || !form.telefone || !form.unidade_id || !form.sala_id || !form.data) {
+      toast({ title: "Preencha nome, e-mail, telefone, unidade, sala e data" });
+      return;
+    }
+    if (!sala || !salaDisponivel) {
+      toast({ title: "Selecione uma sala disponível para solicitar a reserva" });
       return;
     }
     if (!isMensal && (!form.hora_inicio || !form.hora_fim)) {
@@ -96,7 +141,8 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
       const { data: userData } = await supabase.auth.getUser();
       const observacoes = [
         `Solicitação de reserva via WhatsApp.`,
-        `Sala: ${sala?.nome || form.sala_id}.`,
+        `Unidade: ${unidades.find((u) => u.id === form.unidade_id)?.nome || form.unidade_id}.`,
+        `Sala: ${sala.nome}.`,
         `Tipo: ${isMensal ? "Locação Mensal" : form.subtipo_periodo === "pacote_mensal" ? "Pacote Mensal" : "Locação Avulsa"}.`,
         `Data: ${form.data}.`,
         isMensal ? "" : `Horário: ${form.hora_inicio} às ${form.hora_fim}.`,
@@ -111,7 +157,7 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
         email: form.email,
         telefone: form.telefone,
         ambiente: form.sala_id,
-        plano_tipo: form.tipo_locacao,
+        plano_tipo: sala.tipo_locacao || "locacao_mensal",
         preco: precoSelecionado ?? 0,
         data_inicio: form.data,
         dias_selecionados: [form.data],
@@ -126,8 +172,8 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
       window.open(url, "_blank");
       toast({ title: "Solicitação enviada!", description: "Seus dados foram registrados e o WhatsApp será aberto para confirmação." });
       setTimeout(() => onOpenChange(false), 1500);
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({ title: "Erro", description: e instanceof Error ? e.message : "Não foi possível enviar a solicitação.", variant: "destructive" });
     } finally { setLoading(false); }
   }
 
@@ -158,40 +204,70 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
               <Input value={form.telefone} onChange={(e) => set("telefone", e.target.value)} placeholder="(13) 9..." />
             </div>
             <div>
+              <Label>Unidade</Label>
+              <Select
+                value={form.unidade_id}
+                onValueChange={(value) => {
+                  const primeiraSala = salas.find((sala) => sala.unidade_id === value);
+                  setForm((f) => ({
+                    ...f,
+                    unidade_id: value,
+                    sala_id: primeiraSala?.id || "",
+                    tipo_locacao: primeiraSala?.tipo_locacao || "locacao_mensal",
+                    subtipo_periodo: primeiraSala?.subtipo_periodo || "pacote_mensal",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione a unidade" /></SelectTrigger>
+                <SelectContent>
+                  {unidades.map((unidade) => (
+                    <SelectItem key={unidade.id} value={unidade.id}>{unidade.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label>Sala</Label>
-              <Select value={form.sala_id} onValueChange={(v) => set("sala_id", v)}>
+              <Select
+                value={form.sala_id}
+                onValueChange={(value) => {
+                  const nextSala = salas.find((item) => item.id === value);
+                  setForm((f) => ({
+                    ...f,
+                    sala_id: value,
+                    tipo_locacao: nextSala?.tipo_locacao || "locacao_mensal",
+                    subtipo_periodo: nextSala?.subtipo_periodo || "pacote_mensal",
+                  }));
+                }}
+                disabled={!form.unidade_id}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {salas.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.nome} • {s.tipo_locacao === "locacao_mensal" ? "Locação Mensal" : s.subtipo_periodo === "pacote_mensal" ? "Pacote Mensal" : "Locação Avulsa"} • {s.status === "disponivel" ? "Disponível" : s.status === "indisponivel" ? "Indisponível" : "Oculto"}
+                  {salasDaUnidade.map((s) => (
+                    <SelectItem key={s.id} value={s.id} disabled={s.status !== "disponivel"}>
+                      {s.nome} • {getCategoriaLabel(s)} • {s.status === "disponivel" || s.status === "ativa" ? "Disponível" : "Indisponível"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Tipo de Locação</Label>
-              <Select value={form.tipo_locacao} onValueChange={(v) => set("tipo_locacao", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TIPOS_LOCACAO.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Regime de locação</Label>
+              <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                {sala ? (isMensal ? "Locação Mensal" : sala.subtipo_periodo === "pacote_mensal" ? "Pacote Mensal" : "Locação Avulsa") : "Selecione uma sala"}
+              </div>
+              {sala && <p className="mt-1 text-sm font-medium text-secondary">{precoSelecionado == null ? "Preço sob consulta" : `R$ ${Number(precoSelecionado).toFixed(2).replace(".", ",")}`}</p>}
             </div>
-            {!isMensal && (
+            {!isMensal && sala && (
               <div>
                 <Label>Subtipo de Período</Label>
-                <Select value={form.subtipo_periodo} onValueChange={(v) => set("subtipo_periodo", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SUBTIPOS_PERIODO.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                  {sala.subtipo_periodo === "pacote_mensal" ? "Pacote Mensal" : "Locação Avulsa"}
+                </div>
               </div>
             )}
             <div>
-              <Label>Data</Label>
+              <Label>{isMensal ? "Data de início" : "Data"}</Label>
               <Input type="date" value={form.data} onChange={(e) => set("data", e.target.value)} min={new Date().toISOString().split("T")[0]} />
             </div>
             {!isMensal && (
@@ -219,7 +295,7 @@ export default function ReservaDialog({ open, onOpenChange, defaultAmbiente, def
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-            <Button onClick={reservar} disabled={loading || !form.nome || !form.email || !form.telefone || !form.sala_id || !form.data}
+            <Button onClick={reservar} disabled={loading || !form.nome || !form.email || !form.telefone || !form.unidade_id || !form.sala_id || !form.data || !salaDisponivel}
               className="rounded-full font-heading font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90 flex-1">
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageCircle className="w-4 h-4 mr-2" />}
               Solicitar reserva
