@@ -30,7 +30,11 @@ export default function AdminHeaderFooterSimple() {
     address_2: "R. São Caetano, 86 - Boqueirão - Praia Grande - SP",
     address_3: "R. Jaú, 955 Conj. 26 - Boqueirão - Praia Grande - SP",
     working_hours_week: "Seg. à Sex.: 08h às 21h",
-    working_hours_sat: "Sáb: 08h às 12h"
+    working_hours_sat: "Sáb: 08h às 12h",
+    instagram_url: "",
+    facebook_url: "",
+    youtube_url: "",
+    whatsapp_url: ""
   });
 
   const [headerSectionId, setHeaderSectionId] = useState<string | null>(null);
@@ -266,6 +270,48 @@ export default function AdminHeaderFooterSimple() {
                     id="f-hours-sat" 
                     value={footerContent.working_hours_sat} 
                     onChange={e => setFooterContent({...footerContent, working_hours_sat: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-black text-brand-blue-dark flex items-center gap-2 uppercase tracking-tight">
+                  <Globe className="w-5 h-5 text-brand-orange" /> Redes Sociais
+                </h3>
+                <div className="space-y-2">
+                  <Label htmlFor="f-instagram">Instagram URL</Label>
+                  <Input 
+                    id="f-instagram" 
+                    value={footerContent.instagram_url || ""} 
+                    onChange={e => setFooterContent({...footerContent, instagram_url: e.target.value})} 
+                    placeholder="https://instagram.com/..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="f-facebook">Facebook URL</Label>
+                  <Input 
+                    id="f-facebook" 
+                    value={footerContent.facebook_url || ""} 
+                    onChange={e => setFooterContent({...footerContent, facebook_url: e.target.value})} 
+                    placeholder="https://facebook.com/..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="f-youtube">YouTube URL</Label>
+                  <Input 
+                    id="f-youtube" 
+                    value={footerContent.youtube_url || ""} 
+                    onChange={e => setFooterContent({...footerContent, youtube_url: e.target.value})} 
+                    placeholder="https://youtube.com/..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="f-whatsapp">WhatsApp URL</Label>
+                  <Input 
+                    id="f-whatsapp" 
+                    value={footerContent.whatsapp_url || ""} 
+                    onChange={e => setFooterContent({...footerContent, whatsapp_url: e.target.value})} 
+                    placeholder="https://wa.me/..."
                   />
                 </div>
               </div>

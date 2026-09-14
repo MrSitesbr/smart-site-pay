@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MessageCircle, Mail, UserRoundCheck, UserPlus, Send, Handshake, CheckCircle2, GripVertical, Eye } from "lucide-react";
+import { Search, MessageCircle, Mail, UserRoundCheck, UserPlus, Send, Handshake, CheckCircle2, GripVertical, Eye, Trash2 } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
@@ -171,6 +171,37 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     window.location.reload();
   }
 
+  async function excluirLead(cliente: Cliente) {
+    // Verificar se o lead tem contratos ou reservas associados
+    const emailLower = cliente.email.toLowerCase();
+    const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
+    const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
+
+    if (contratosDoLead.length > 0 || reservasDoLead.length > 0) {
+      toast({ title: "Não foi possível excluir o lead", description: "Este lead possui movimento financeiro registrado (contratos ou reservas).", variant: "destructive" });
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    // Excluir os contratos do lead (contract_requests)
+    const contratosParaExcluir = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
+    if (contratosParaExcluir.length > 0) {
+      const { error: contratosError } = await (supabase.from("contract_requests") as any)
+        .delete()
+        .in("id", contratosParaExcluir.map((c) => c.id));
+      if (contratosError) {
+        toast({ title: "Erro", description: "Não foi possível excluir os contratos associados.", variant: "destructive" });
+        return;
+      }
+    }
+
+    toast({ title: "Lead excluído com sucesso" });
+    window.location.reload();
+  }
+
   async function finalizarArraste(event: DragEndEvent) {
     const email = String(event.active.id).replace("lead:", "");
     const etapa = event.over?.id ? String(event.over.id) : null;
@@ -224,7 +255,12 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="min-w-0 truncate font-heading text-sm font-black text-brand-blue-dark">{c.nome || c.email}</p>
-                        <Eye className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-brand-orange" />
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-brand-orange" />
+                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); excluirLead(c); }} title="Excluir lead">
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          </Button>
+                        </div>
                       </div>
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{c.email}</p>
                       <div className="mt-2 flex min-w-0 items-center gap-1 overflow-hidden">

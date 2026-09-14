@@ -5,6 +5,36 @@ import { supabase } from "@/integrations/supabase/client";
 const logoIconUrlDefault = "/assets/logo.png";
 import { getPageContent } from "@/lib/cms";
 
+// Componentes de ícones de redes sociais (SVG)
+const InstagramIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+  </svg>
+);
+
+const FacebookIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+  </svg>
+);
+
+const YoutubeIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
+  </svg>
+);
+
+const WhatsappIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9c2.5 0 4.8.8 6.7 2.2L18.6 3.3a1.5 1.5 0 0 1 2.1 1.8l-3.2 3.2a9 9 0 0 1-2.2-6.7z"/>
+    <path d="M12 12l-1.5 1.5a3.5 3.5 0 0 0 5 5l2.5-2.5a3.5 3.5 0 0 0-5-5z"/>
+    <path d="M7.5 13.5a3.5 3.5 0 0 0 5-5l2.5-2.5a3.5 3.5 0 0 0-5 5z"/>
+  </svg>
+);
+
 const Footer = () => {
   const [cmsContent, setCmsContent] = useState<any>(null);
 
@@ -90,6 +120,14 @@ const Footer = () => {
     },
   ];
 
+  // Dados das unidades
+  const unidades = [
+    "Unidade 01: R. Jaú, 955 Conj. 26, Boqueirão - Praia Grande - SP",
+    "Unidade 02: Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP",
+    "Unidade 03: R. São Caetano, 86, Boqueirão - Praia Grande - SP (Sede Administrativa)",
+    "Unidade 04: Rua Benjamin Constant, 61, Centro - São Vicente - SP"
+  ];
+
   const cols = cmsContent?.columns || defaultCols;
   const description = cmsContent?.description || "O seu espaço de trabalho e networking na Praia Grande.";
   const phone = cmsContent?.phone || "(13) 98805-0358";
@@ -163,16 +201,36 @@ const Footer = () => {
           ))}
 
           <div>
-            <h4 className="font-heading font-bold mb-4">Informações</h4>
+            <h4 className="font-heading font-bold mb-4">Unidades</h4>
             <ul className="space-y-3 text-sm text-white/70">
-              <li>{phone}</li>
-              <li>{email}</li>
-              <li>{address1}</li>
-              <li>{address2}</li>
-              <li>{address3}</li>
-              <li>{workingHoursWeek}</li>
-              <li>{workingHoursSat}</li>
+              {unidades.map((unidade, i) => (
+                <li key={i}>{unidade}</li>
+              ))}
             </ul>
+          </div>
+
+          <div>
+            <h4 className="font-heading font-bold mb-4">Informações</h4>
+            <div className="space-y-3 text-sm text-white/70">
+              <p><strong className="text-white">Contatos e Atendimento</strong></p>
+              <p>Telefone / WhatsApp: {phone}</p>
+              <p>E-mail: {email}</p>
+              <p>Horário de Atendimento: {workingHoursWeek} | {workingHoursSat} (atendimento e telefone centralizados na sede)</p>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <a href={cmsContent?.instagram_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+                <InstagramIcon className="w-4 h-4" />
+              </a>
+              <a href={cmsContent?.facebook_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+                <FacebookIcon className="w-4 h-4" />
+              </a>
+              <a href={cmsContent?.youtube_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+                <YoutubeIcon className="w-4 h-4" />
+              </a>
+              <a href={cmsContent?.whatsapp_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+                <WhatsappIcon className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </div>
 
