@@ -174,6 +174,19 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
   async function limparHistoricoLead(cliente: Cliente) {
     const emailLower = cliente.email.toLowerCase();
     
+    console.log("DEBUG limparHistoricoLead:", { nome: cliente.nome, email: cliente.email, emailLower });
+    console.log("DEBUG - Total contratos:", contratos.length, "Total reservas:", reservas.length);
+    
+    const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
+    const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
+    
+    console.log("DEBUG - Contratos do lead:", contratosDoLead.length, "Reservas do lead:", reservasDoLead.length);
+    
+    if (contratosDoLead.length === 0 && reservasDoLead.length === 0) {
+      toast({ title: "Aviso", description: `Lead "${cliente.nome}" (${cliente.email}) não tem contratos ou reservas para limpar.`, variant: "default" });
+      return;
+    }
+    
     if (!confirm(`Tem certeza que deseja LIMPAR TODAS as solicitações (${cliente.total_solicitacoes}) do lead "${cliente.nome}" (${cliente.email})? Esta ação excluirá todos os contratos e reservas associados, mas NÃO excluirá o lead. Esta ação não pode ser desfeita.`)) {
       return;
     }
@@ -181,10 +194,12 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     // Excluir as reservas do lead (tabela: reservations)
     const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
     if (reservasParaExcluir.length > 0) {
+      console.log("DEBUG - Excluindo reservas:", reservasParaExcluir.map(r => r.id));
       const { error: reservasError } = await (supabase.from("reservations") as any)
         .delete()
         .in("id", reservasParaExcluir.map((r) => r.id));
       if (reservasError) {
+        console.log("DEBUG - Erro ao excluir reservas:", reservasError);
         toast({ title: "Erro", description: "Não foi possível excluir as reservas: " + reservasError.message, variant: "destructive" });
         return;
       }
@@ -194,10 +209,12 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     // Excluir os contratos do lead (tabela: contract_requests)
     const contratosParaExcluir = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
     if (contratosParaExcluir.length > 0) {
+      console.log("DEBUG - Excluindo contratos:", contratosParaExcluir.map(c => c.id));
       const { error: contratosError } = await (supabase.from("contract_requests") as any)
         .delete()
         .in("id", contratosParaExcluir.map((c) => c.id));
       if (contratosError) {
+        console.log("DEBUG - Erro ao excluir contratos:", contratosError);
         toast({ title: "Erro", description: "Não foi possível excluir os contratos: " + contratosError.message, variant: "destructive" });
         return;
       }
@@ -211,9 +228,13 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
   async function excluirLead(cliente: Cliente) {
     const emailLower = cliente.email.toLowerCase();
     
+    console.log("DEBUG excluirLead:", { nome: cliente.nome, email: cliente.email, emailLower });
+    
     // Debug: verificar emails relacionados
     const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
     const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
+    
+    console.log("DEBUG - Contratos do lead:", contratosDoLead.length, "Reservas do lead:", reservasDoLead.length);
     
     if (contratosDoLead.length === 0 && reservasDoLead.length === 0) {
       // Se não há nada para excluir, apenas remove o lead
@@ -232,10 +253,12 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     // Excluir as reservas do lead (tabela: reservations)
     const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
     if (reservasParaExcluir.length > 0) {
+      console.log("DEBUG - Excluindo reservas:", reservasParaExcluir.map(r => r.id));
       const { error: reservasError } = await (supabase.from("reservations") as any)
         .delete()
         .in("id", reservasParaExcluir.map((r) => r.id));
       if (reservasError) {
+        console.log("DEBUG - Erro ao excluir reservas:", reservasError);
         toast({ title: "Erro", description: "Não foi possível excluir as reservas: " + reservasError.message, variant: "destructive" });
         return;
       }
@@ -245,10 +268,12 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     // Excluir os contratos do lead (tabela: contract_requests)
     const contratosParaExcluir = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
     if (contratosParaExcluir.length > 0) {
+      console.log("DEBUG - Excluindo contratos:", contratosParaExcluir.map(c => c.id));
       const { error: contratosError } = await (supabase.from("contract_requests") as any)
         .delete()
         .in("id", contratosParaExcluir.map((c) => c.id));
       if (contratosError) {
+        console.log("DEBUG - Erro ao excluir contratos:", contratosError);
         toast({ title: "Erro", description: "Não foi possível excluir os contratos: " + contratosError.message, variant: "destructive" });
         return;
       }
@@ -315,11 +340,11 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
                         <div className="flex items-center gap-1">
                           <Eye className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-brand-orange" />
                           {c.total_solicitacoes > 0 && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); limparHistoricoLead(c); }} title="Limpar histórico (excluir todas as solicitações)">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); e.preventDefault(); console.log("CLICOU LIMPAR HISTORICO:", c.nome, c.email); limparHistoricoLead(c); }} title="Limpar histórico (excluir todas as solicitações)">
                               <Archive className="h-3.5 w-3.5 text-amber-600" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); excluirLead(c); }} title="Excluir lead">
+                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); e.preventDefault(); console.log("CLICOU EXCLUIR LEAD:", c.nome, c.email); excluirLead(c); }} title="Excluir lead">
                             <Trash2 className="h-3.5 w-3.5 text-red-500" />
                           </Button>
                         </div>
