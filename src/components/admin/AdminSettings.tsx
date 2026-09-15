@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, Mail, Lock, Save } from "lucide-react";
+import { Loader2, ShieldCheck, Mail, Lock, Save, Calendar, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { loadWobaCfg, wobaDefaults, WOBA_LS_KEY } from "@/lib/wobaEvents";
+import type { WobaCfg } from "@/lib/wobaEvents";
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
@@ -15,9 +17,11 @@ export default function AdminSettings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [mistralKey, setMistralKey] = useState("");
   const [autoApprove, setAutoApprove] = useState(false);
+  const [wobaCfg, setWobaCfg] = useState<WobaCfg>({ ...wobaDefaults });
 
   useEffect(() => {
     loadSettings();
+    setWobaCfg(loadWobaCfg());
   }, []);
 
   const loadSettings = async () => {
@@ -72,6 +76,19 @@ export default function AdminSettings() {
         }
       }
       toast({ title: "Configurações salvas", description: "Chave da Mistral AI atualizada." });
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateWobaConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      localStorage.setItem(WOBA_LS_KEY, JSON.stringify(wobaCfg));
+      toast({ title: "Configuração do Google Calendar salva", description: "As configurações foram salvas no navegador." });
     } catch (error: any) {
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     } finally {
@@ -247,6 +264,54 @@ export default function AdminSettings() {
               type="submit" 
               disabled={loading}
               className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Salvar Configuração
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="border-none shadow-sm max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-brand-blue-dark">
+            <Calendar className="w-5 h-5" />
+            Google Calendar
+          </CardTitle>
+          <CardDescription>
+            Configure a integração com o Google Calendar para sincronizar reservas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleUpdateWobaConfig} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="calendar-id">ID do Calendário</Label>
+              <Input
+                id="calendar-id"
+                type="text"
+                placeholder="primary"
+                value={wobaCfg.calendarId || ""}
+                onChange={(e) => setWobaCfg({ ...wobaCfg, calendarId: e.target.value })}
+                className="border-brand-blue-dark/10"
+              />
+              <p className="text-xs text-muted-foreground">ID do calendário do Google. Use "primary" para o calendário principal ou o ID específico de um calendário compartilhado.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filtro">Filtro de Eventos</Label>
+              <Input
+                id="filtro"
+                type="text"
+                placeholder="woba"
+                value={wobaCfg.filtro || ""}
+                onChange={(e) => setWobaCfg({ ...wobaCfg, filtro: e.target.value })}
+                className="border-brand-blue-dark/10"
+              />
+              <p className="text-xs text-muted-foreground">Palavra-chave para filtrar eventos do calendário. Somente eventos que contêm esta palavra serão sincronizados.</p>
+            </div>
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-brand-blue-dark hover:bg-brand-blue-dark/90 text-white"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar Configuração
