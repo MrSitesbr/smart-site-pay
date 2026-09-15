@@ -60,7 +60,35 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
   const [leadEtapas, setLeadEtapas] = useState<Record<string, string>>({});
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [crmClientes, setCrmClientes] = useState<any[]>([]);
+  const [loadingApagarTudo, setLoadingApagarTudo] = useState(false);
   const { overrides } = useClientColors();
+
+  // Função para APAGAR TUDO - todos os leads, reservas e contratos
+  async function apagarTudo() {
+    const senha = prompt("DIGITE 'APAGAR TUDO' para confirmar (maiúsculas):");
+    if (senha !== "APAGAR TUDO") {
+      toast({ title: "Cancelado", description: "Ação cancelada. Digite exatamente 'APAGAR TUDO' em maiúsculas.", variant: "default" });
+      return;
+    }
+
+    setLoadingApagarTudo(true);
+    try {
+      // Apagar todas as reservas
+      const { error: errorReservas } = await (supabase.from("reservations") as any).delete().neq("id", "");
+      if (errorReservas) throw new Error("Erro ao apagar reservas: " + errorReservas.message);
+
+      // Apagar todos os contratos
+      const { error: errorContratos } = await (supabase.from("contract_requests") as any).delete().neq("id", "");
+      if (errorContratos) throw new Error("Erro ao apagar contratos: " + errorContratos.message);
+
+      toast({ title: "SUCCESSO", description: `TODOS os leads, reservas e contratos foram apagados! Total: ${reservas.length} reservas + ${contratos.length} contratos.` });
+      window.location.reload();
+    } catch (err: any) {
+      toast({ title: "ERRO", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingApagarTudo(false);
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -305,6 +333,17 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
         <GripVertical className="h-4 w-4 text-brand-orange" /> Arraste um card para outra coluna do funil.
       </div>
+      {contratos.length > 0 || reservas.length > 0 ? (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={apagarTudo}
+          disabled={loadingApagarTudo}
+          className="mb-4 bg-red-600 hover:bg-red-700 text-white"
+        >
+          {loadingApagarTudo ? "Apagando..." : `APAGAR TUDO (${reservas.length} reservas + ${contratos.length} contratos)`}
+        </Button>
+      ) : null}
 
       {filtered.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">Nenhum lead encontrado.</Card>
