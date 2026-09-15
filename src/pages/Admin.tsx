@@ -365,7 +365,7 @@ export default function Admin() {
               />
             )}
             {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
-            {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} />}
+            {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} onRefresh={() => { fetchReservas(); fetchContratos(); }} />}
             {activeTab === "planos_horas" && <AdminPlanosHoras />}
             {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} reservas={reservas} />}
             {activeTab === "erp" && <AdminERP reservas={reservas} contratos={contratos} />}

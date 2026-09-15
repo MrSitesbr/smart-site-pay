@@ -52,7 +52,7 @@ function etapaDoLead(status: string) {
   return "pendente";
 }
 
-export default function AdminClientes({ contratos, reservas }: { contratos: any[]; reservas: any[] }) {
+export default function AdminClientes({ contratos, reservas, onRefresh }: { contratos: any[]; reservas: any[]; onRefresh?: () => void }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [draggedLead, setDraggedLead] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
       if (errorContratos) throw new Error("Erro ao apagar contratos: " + errorContratos.message);
 
       toast({ title: "SUCCESSO", description: `TODOS os leads, reservas e contratos foram apagados! Total: ${reservas.length} reservas + ${contratos.length} contratos.` });
-      window.location.reload();
+      onRefresh?.();
     } catch (err: any) {
       toast({ title: "ERRO", description: err.message, variant: "destructive" });
     } finally {
@@ -196,7 +196,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     }
     toast({ title: "Lead atualizado" });
     setSelectedLead(null);
-    window.location.reload();
+    onRefresh?.();
   }
 
   async function limparHistoricoLead(cliente: Cliente) {
@@ -250,7 +250,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     }
 
     toast({ title: "Histórico limpo", description: `Todas as ${cliente.total_solicitacoes} solicitações do lead foram removidas.` });
-    window.location.reload();
+    onRefresh?.();
   }
 
   async function excluirLead(cliente: Cliente) {
@@ -270,7 +270,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
         return;
       }
       toast({ title: "Lead excluído com sucesso" });
-      window.location.reload();
+      onRefresh?.();
       return;
     }
     
@@ -309,7 +309,7 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
     }
 
     toast({ title: "Lead excluído com sucesso" });
-    window.location.reload();
+    onRefresh?.();
   }
 
   async function finalizarArraste(event: DragEndEvent) {
