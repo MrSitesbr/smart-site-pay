@@ -174,32 +174,48 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
   async function excluirLead(cliente: Cliente) {
     const emailLower = cliente.email.toLowerCase();
     
-    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}"? Esta ação não pode ser desfeita. Todos os contratos e reservas associados também serão excluídos.`)) {
-      return;
-    }
-
-    // Excluir as reservas do lead
-    const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
-    if (reservasParaExcluir.length > 0) {
-      const { error: reservasError } = await (supabase.from("reservas") as any)
-        .delete()
-        .in("id", reservasParaExcluir.map((r) => r.id));
-      if (reservasError) {
-        toast({ title: "Erro", description: "Não foi possível excluir as reservas associadas.", variant: "destructive" });
+    // Debug: verificar emails relacionados
+    const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
+    const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
+    
+    if (contratosDoLead.length === 0 && reservasDoLead.length === 0) {
+      // Tentar encontrar por email sem lowercase
+      const contratosDoLead2 = contratos.filter((c) => (c.email || "") === cliente.email);
+      const reservasDoLead2 = reservas.filter((r) => (r.email || "") === cliente.email);
+      if (contratosDoLead2.length === 0 && reservasDoLead2.length === 0) {
+        toast({ title: "Aviso", description: `Lead "${cliente.nome}" (${cliente.email}) não encontrado em contratos nem reservas.`, variant: "default" });
         return;
       }
     }
+    
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}" (${cliente.email})? Esta ação não pode ser desfeita. Todos os contratos e reservas associados também serão excluídos.`)) {
+      return;
+    }
 
-    // Excluir os contratos do lead (contract_requests)
+    // Excluir as reservas do lead (tabela: reservations)
+    const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
+    if (reservasParaExcluir.length > 0) {
+      const { error: reservasError } = await (supabase.from("reservations") as any)
+        .delete()
+        .in("id", reservasParaExcluir.map((r) => r.id));
+      if (reservasError) {
+        toast({ title: "Erro", description: "Não foi possível excluir as reservas associadas: " + reservasError.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Sucesso", description: `Excluídas ${reservasParaExcluir.length} reserva(s) do lead.` });
+    }
+
+    // Excluir os contratos do lead (tabela: contract_requests)
     const contratosParaExcluir = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
     if (contratosParaExcluir.length > 0) {
       const { error: contratosError } = await (supabase.from("contract_requests") as any)
         .delete()
         .in("id", contratosParaExcluir.map((c) => c.id));
       if (contratosError) {
-        toast({ title: "Erro", description: "Não foi possível excluir os contratos associados.", variant: "destructive" });
+        toast({ title: "Erro", description: "Não foi possível excluir os contratos associados: " + contratosError.message, variant: "destructive" });
         return;
       }
+      toast({ title: "Sucesso", description: `Excluídos ${contratosParaExcluir.length} contrato(s) do lead.` });
     }
 
     toast({ title: "Lead excluído com sucesso" });
