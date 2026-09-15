@@ -279,13 +279,25 @@ export default function AdminSettings() {
             Google Calendar
           </CardTitle>
           <CardDescription>
-            Configure a integração com o Google Calendar para sincronizar reservas.
+            Configure a integração com o Google Calendar para sincronizar reservas automaticamente.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 p-3 bg-brand-blue-dark/5 border border-brand-blue-dark/20 rounded-lg text-sm">
+            <p className="font-bold text-brand-blue-dark mb-2">Como obter o ID do Calendário:</p>
+            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+              <li>Acesse <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" className="text-brand-blue-dark underline font-medium">Google Calendar</a></li>
+              <li>Clique nas reticências (⋮) ao lado do nome do seu calendário</li>
+              <li>Selecione "Configurações e compartilhamento"</li>
+              <li>Role até "Endereço do calendário" e copie o valor de "ID do calendário"</li>
+              <li>Ou use <code className="bg-slate-100 px-1 rounded">primary</code> para o calendário principal</li>
+            </ol>
+            <p className="mt-2 text-xs text-muted-foreground">Para calendários compartilhados, use o ID que aparece na URL: calendar/google.com/calendar/u/0/r/eventedit/ <strong>ID_AQUI</strong></p>
+          </div>
+          
           <form onSubmit={handleUpdateWobaConfig} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="calendar-id">ID do Calendário</Label>
+              <Label htmlFor="calendar-id">ID do Calendário *</Label>
               <Input
                 id="calendar-id"
                 type="text"
@@ -293,8 +305,9 @@ export default function AdminSettings() {
                 value={wobaCfg.calendarId || ""}
                 onChange={(e) => setWobaCfg({ ...wobaCfg, calendarId: e.target.value })}
                 className="border-brand-blue-dark/10"
+                required
               />
-              <p className="text-xs text-muted-foreground">ID do calendário do Google. Use "primary" para o calendário principal ou o ID específico de um calendário compartilhado.</p>
+              <p className="text-xs text-muted-foreground">Ex: primary, ou o ID do calendário do Google (ex: abc123@group.calendar.google.com)</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="filtro">Filtro de Eventos</Label>
@@ -306,7 +319,7 @@ export default function AdminSettings() {
                 onChange={(e) => setWobaCfg({ ...wobaCfg, filtro: e.target.value })}
                 className="border-brand-blue-dark/10"
               />
-              <p className="text-xs text-muted-foreground">Palavra-chave para filtrar eventos do calendário. Somente eventos que contêm esta palavra serão sincronizados.</p>
+              <p className="text-xs text-muted-foreground">Palavra-chave para filtrar eventos do calendário. Somente eventos que contêm esta palavra serão sincronizados. Deixe vazio para sincronizar todos.</p>
             </div>
             <Button 
               type="submit" 
