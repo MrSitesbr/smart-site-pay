@@ -172,18 +172,22 @@ export default function AdminClientes({ contratos, reservas }: { contratos: any[
   }
 
   async function excluirLead(cliente: Cliente) {
-    // Verificar se o lead tem contratos ou reservas associados
     const emailLower = cliente.email.toLowerCase();
-    const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
-    const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
-
-    if (contratosDoLead.length > 0 || reservasDoLead.length > 0) {
-      toast({ title: "Não foi possível excluir o lead", description: "Este lead possui movimento financeiro registrado (contratos ou reservas).", variant: "destructive" });
+    
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}"? Esta ação não pode ser desfeita. Todos os contratos e reservas associados também serão excluídos.`)) {
       return;
     }
 
-    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}"? Esta ação não pode ser desfeita.`)) {
-      return;
+    // Excluir as reservas do lead
+    const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
+    if (reservasParaExcluir.length > 0) {
+      const { error: reservasError } = await (supabase.from("reservas") as any)
+        .delete()
+        .in("id", reservasParaExcluir.map((r) => r.id));
+      if (reservasError) {
+        toast({ title: "Erro", description: "Não foi possível excluir as reservas associadas.", variant: "destructive" });
+        return;
+      }
     }
 
     // Excluir os contratos do lead (contract_requests)
