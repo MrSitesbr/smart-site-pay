@@ -321,7 +321,7 @@ const WidgetRenderer: React.FC<{
           <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-2xl">
             {content.formType === 'reserva' ? (
               <div className="text-white">
-                <h3 className="text-xl font-bold mb-4">{content.title || 'Solicitar Reserva'}</h3>
+                <h3 className="text-xl font-bold mb-4">{content.title || 'Consultar Reserva'}</h3>
                 <div className="flex flex-col gap-4">
                    <p className="text-sm opacity-80">Selecione o melhor dia e horário para seu coworking.</p>
                    <ReservaDialogWrapper buttonText={content.buttonText || "Abrir Calendário"} />
@@ -448,7 +448,7 @@ const WidgetRenderer: React.FC<{
                     <div className="flex items-center justify-center lg:justify-center">
                       <div className="w-full sm:w-72 p-6 sm:p-8 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all">
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Próximo passo</p>
-                        <h3 className="text-xl font-bold text-white mb-5">Solicitar reserva</h3>
+                        <h3 className="text-xl font-bold text-white mb-5">Consultar reserva</h3>
                         <a 
                           href={content.ctaUrl || '/reservar'} 
                           className="block w-full px-5 py-2.5 bg-brand-orange text-white font-bold text-sm rounded-lg hover:bg-brand-orange/90 transition-colors text-center"
