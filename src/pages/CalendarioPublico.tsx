@@ -117,22 +117,25 @@ export default function CalendarioPublico() {
   };
   const slotSelecionado = (id: string, index: number) => Boolean(periodoNoSlot(id, index)) || (selecao?.salaId === id && index >= Math.min(selecao.inicioIndex, selecao.fimIndex) && index <= Math.max(selecao.inicioIndex, selecao.fimIndex));
 
+  const adicionarSelecao = useCallback((atual: Selecao) => {
+    const inicio = horarioMinutos(SLOTS[Math.min(atual.inicioIndex, atual.fimIndex)]);
+    const fim = horarioMinutos(SLOTS[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
+    const novo: Periodo = { id: `${isoDate(dia)}-${inicio}-${fim}`, salaId: atual.salaId, data: isoDate(dia), inicio, fim };
+    setPeriodos((lista) => lista.some((item) => item.id === novo.id) ? lista : [...lista, novo].sort((a, b) => `${a.data}${a.inicio}`.localeCompare(`${b.data}${b.inicio}`)));
+    setConfirmacaoAberta(true);
+  }, [dia]);
+
   useEffect(() => {
     const finalizar = () => {
       if (!arrastandoRef.current) return;
       arrastandoRef.current = false;
       const atual = selecaoRef.current;
-      if (!atual) return;
-      const inicio = horarioMinutos(SLOTS[Math.min(atual.inicioIndex, atual.fimIndex)]);
-      const fim = horarioMinutos(SLOTS[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
-      const novo: Periodo = { id: `${isoDate(dia)}-${inicio}-${fim}`, salaId: atual.salaId, data: isoDate(dia), inicio, fim };
-      setPeriodos((lista) => lista.some((item) => item.id === novo.id) ? lista : [...lista, novo].sort((a, b) => `${a.data}${a.inicio}`.localeCompare(`${b.data}${b.inicio}`)));
-      setConfirmacaoAberta(true);
+      if (atual) adicionarSelecao(atual);
     };
     window.addEventListener("pointerup", finalizar);
     window.addEventListener("pointercancel", finalizar);
     return () => { window.removeEventListener("pointerup", finalizar); window.removeEventListener("pointercancel", finalizar); };
-  }, [dia]);
+  }, [adicionarSelecao]);
 
   useEffect(() => {
     if (carregandoSalas || salas.length === 0) return;
@@ -226,7 +229,7 @@ export default function CalendarioPublico() {
       </section>
       <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6" aria-label="Agenda de horários do dia">
         <div className="mb-5 flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary"><CalendarDays className="h-5 w-5" /></div><div><h2 className="font-heading text-lg font-bold capitalize">{format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}</h2><p className="text-sm text-muted-foreground">Clique e arraste para selecionar um período</p></div></div>
-        {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="overflow-x-auto select-none"><div className="min-w-[720px]" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="sticky top-0 z-20 grid border-b bg-card" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="p-3 text-xs font-bold text-muted-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l p-3 text-center"><p className="text-sm font-bold">{sala.nome}</p><p className="text-xs text-muted-foreground">{sala.unidadeNome}</p></div>)}</div>{SLOTS.map((slot, index) => <div key={slot} className="grid" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="border-b p-2 text-xs font-semibold text-muted-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); return <div key={sala.id} role="button" tabIndex={ocupacao ? -1 : 0} aria-label={ocupacao ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onKeyDown={(event) => { if (!ocupacao && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); iniciarSelecao(sala.id, index); arrastandoRef.current = false; setConfirmacaoAberta(true); } }} className={`relative min-h-12 border-b border-l transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : selecionado ? "bg-primary/20 ring-2 ring-inset ring-primary cursor-grabbing" : "cursor-crosshair bg-card hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-2 text-xs font-bold"><LockKeyhole className="mr-1 h-3.5 w-3.5" />Indisponível</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
+        {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="overflow-x-auto select-none"><div className="min-w-[720px]" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="sticky top-0 z-20 grid border-b bg-card" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="p-3 text-xs font-bold text-muted-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l p-3 text-center"><p className="text-sm font-bold">{sala.nome}</p><p className="text-xs text-muted-foreground">{sala.unidadeNome}</p></div>)}</div>{SLOTS.map((slot, index) => <div key={slot} className="grid" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="border-b p-2 text-xs font-semibold text-muted-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); return <div key={sala.id} role="button" tabIndex={ocupacao ? -1 : 0} aria-label={ocupacao ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onKeyDown={(event) => { if (!ocupacao && !periodoNoSlot(sala.id, index) && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); iniciarSelecao(sala.id, index); arrastandoRef.current = false; adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index }); } }} className={`relative min-h-12 border-b border-l transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : selecionado ? "bg-primary/20 ring-2 ring-inset ring-primary cursor-grabbing" : "cursor-crosshair bg-card hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-2 text-xs font-bold"><LockKeyhole className="mr-1 h-3.5 w-3.5" />Indisponível</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
       </section>
     </main>
     <Footer />
