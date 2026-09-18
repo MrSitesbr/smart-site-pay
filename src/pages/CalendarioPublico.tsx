@@ -107,11 +107,15 @@ export default function CalendarioPublico() {
     const inicio = SLOTS[index], fim = inicio + 30;
     return ocupacoesDoDia.find((item) => item.sala_id === id && inicio < minutos(item.hora_fim) && fim > minutos(item.hora_inicio));
   };
+  const periodoNoSlot = (id: string, index: number) => {
+    const inicio = SLOTS[index], fim = inicio + 30;
+    return periodos.find((item) => item.salaId === id && item.data === isoDate(dia) && inicio < minutos(item.fim) && fim > minutos(item.inicio));
+  };
   const intervaloLivre = (id: string, a: number, b: number) => {
     const inicio = Math.min(a, b), fim = Math.max(a, b);
-    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => !ocupacaoNoSlot(id, index));
+    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => !ocupacaoNoSlot(id, index) && !periodoNoSlot(id, index));
   };
-  const slotSelecionado = (id: string, index: number) => selecao?.salaId === id && index >= Math.min(selecao.inicioIndex, selecao.fimIndex) && index <= Math.max(selecao.inicioIndex, selecao.fimIndex);
+  const slotSelecionado = (id: string, index: number) => Boolean(periodoNoSlot(id, index)) || (selecao?.salaId === id && index >= Math.min(selecao.inicioIndex, selecao.fimIndex) && index <= Math.max(selecao.inicioIndex, selecao.fimIndex));
 
   useEffect(() => {
     const finalizar = () => {
@@ -152,7 +156,7 @@ export default function CalendarioPublico() {
   const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function iniciarSelecao(id: string, index: number) {
-    if (ocupacaoNoSlot(id, index)) return;
+    if (ocupacaoNoSlot(id, index) || periodoNoSlot(id, index)) return;
     if (periodos.length && periodos[0].salaId !== id) {
       toast({ title: "Escolha a mesma sala", description: "Envie esta solicitação ou remova os períodos antes de escolher outra sala." });
       return;
@@ -242,6 +246,6 @@ export default function CalendarioPublico() {
         <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp} disabled={!periodos.length}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando || !periodos.length}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar períodos" : "Entrar ou cadastrar"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
-    <ReservaDialog open={consultaAberta} onOpenChange={(aberta) => { if (dadosConsulta || aberta) setConsultaAberta(aberta); }} onSuccess={() => { const dados = lerConsulta(); setDadosConsulta(dados); setConsultaAberta(false); if (selecaoRef.current) setConfirmacaoAberta(true); }} />
+    <ReservaDialog open={consultaAberta} onOpenChange={(aberta) => { if (dadosConsulta || aberta) setConsultaAberta(aberta); }} onSuccess={() => { const dados = lerConsulta(); setDadosConsulta(dados); if (dados) setDadosEditados(dados); setConsultaAberta(false); if (selecaoRef.current) setConfirmacaoAberta(true); }} />
   </div>;
 }
