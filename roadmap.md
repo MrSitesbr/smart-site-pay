@@ -22,4 +22,4 @@
 - [x] Compactar calendário e grade de horários no desktop.
 - [x] Exibir separações claras entre linhas e colunas da grade diária.
 - [x] Usar na agenda pública o horário final editado pelo administrador, permitindo até 20h.
-- [ ] Validar a agenda atualizada em desktop e celular.
+- [x] Validar a agenda atualizada em desktop e celular.
