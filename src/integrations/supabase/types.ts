@@ -1278,6 +1278,7 @@ export type Database = {
       get_public_room_availability: {
         Args: { p_end_date: string; p_sala_id?: string; p_start_date: string }
         Returns: {
+          color_slot: number
           data: string
           hora_fim: string
           hora_inicio: string
