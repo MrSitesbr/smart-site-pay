@@ -129,6 +129,9 @@ const Footer = () => {
   ];
 
   const cols = cmsContent?.columns || defaultCols;
+  const footerCols = cols.map((col: any, index: number) => index === 0 && !col.links.some((link: any) => link.href === "/agendamento")
+    ? { ...col, links: [...col.links.slice(0, 1), { label: "Agendamento", href: "/agendamento", route: true }, ...col.links.slice(1)] }
+    : col);
   const description = cmsContent?.description || "O seu espaço de trabalho e networking na Praia Grande.";
   const phone = cmsContent?.phone || "(13) 98805-0358";
   const email = cmsContent?.email || "contato@coworking013.com.br";
@@ -173,7 +176,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {cols.map((col, i) => (
+           {footerCols.map((col: any, i: number) => (
             <div key={i}>
               <h4 className="font-heading font-bold mb-4">{col.title}</h4>
               <ul className="space-y-2">
