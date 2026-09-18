@@ -8,6 +8,7 @@ import DynamicPage from "./pages/DynamicPage";
 import Blog from "./pages/Blog";
 import ArtigoIndividual from "./pages/ArtigoIndividual";
 import Reservar from "./pages/Reservar";
+import CalendarioPublico from "./pages/CalendarioPublico";
 import Contratar from "./pages/Contratar";
 import Painel from "./pages/Painel";
 import Auth from "./pages/Auth";
@@ -65,6 +66,7 @@ const App = () => (
           
           {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />
+          <Route path="/reservar/calendario" element={<CalendarioPublico />} />
           <Route path="/contratar" element={<Contratar />} />
           <Route path="/painel" element={<Painel />} />
           <Route path="/auth" element={<Auth />} />

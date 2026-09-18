@@ -84,7 +84,7 @@ export default function AdminSalaFormPage() {
       (async () => {
         setLoading(true);
         const [salaRes, planosRes] = await Promise.all([
-          supabase.from("salas").select("*").eq("id", id).single(),
+          (supabase.from("salas") as any).select("*").eq("id", id).single(),
           supabase.from("sala_planos").select("plano_id").eq("sala_id", id),
         ]);
 
