@@ -9,7 +9,7 @@
 - [x] Incluir contato por WhatsApp com dados da consulta, sala, data e horário.
 - [x] Adicionar Agendamento ao cabeçalho e rodapé, exigindo consulta somente no primeiro acesso.
 - [x] Validar o fluxo público completo em desktop e celular.
-- [ ] Ocultar unidades 01 e 04 de todos os agendamentos públicos e de clientes.
-- [ ] Converter o Gantt diário para grade vertical com seleção contínua por arraste.
-- [ ] Confirmar a seleção por WhatsApp ou pelo sistema, exigindo acesso para reserva interna.
-- [ ] Validar a nova agenda em desktop e celular.
+- [x] Ocultar unidades 01 e 04 de todos os agendamentos públicos e de clientes.
+- [x] Converter o Gantt diário para grade vertical com seleção contínua por arraste.
+- [x] Confirmar a seleção por WhatsApp ou pelo sistema, exigindo acesso para reserva interna.
+- [x] Validar a nova agenda em desktop e celular.
