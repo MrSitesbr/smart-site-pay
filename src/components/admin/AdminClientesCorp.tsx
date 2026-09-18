@@ -43,19 +43,13 @@ export default function AdminClientesCorp() {
       .eq('cliente_corp_id', id)
       .limit(1);
     
-    const { data: reservas, error: reservasError } = await (supabase.from('reservas') as any)
-      .select('id')
-      .eq('cliente_corp_id', id)
-      .limit(1);
-
-    if (contratosAtivosError || contractRequestsError || reservasError) {
+    if (contratosAtivosError || contractRequestsError) {
       toast({ title: "Erro", description: "Erro ao verificar movimentos financeiros", variant: "destructive" });
       return;
     }
 
     if ((contratosAtivos && contratosAtivos.length > 0) || 
-        (contractRequests && contractRequests.length > 0) || 
-        (reservas && reservas.length > 0)) {
+        (contractRequests && contractRequests.length > 0)) {
       toast({ title: "Erro", description: `Não é possível excluir ${razaoSocial}. Este cliente possui movimento financeiro registrado.`, variant: "destructive" });
       return;
     }
