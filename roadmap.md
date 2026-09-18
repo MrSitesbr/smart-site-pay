@@ -17,3 +17,9 @@
 - [x] Permitir adicionar múltiplas datas e horários para a mesma sala.
 - [x] Enviar todos os períodos juntos por WhatsApp ou pelo sistema, com validação segura.
 - [x] Validar o fluxo múltiplo em desktop e celular.
+
+- [ ] Aumentar o contraste visual da agenda pública.
+- [ ] Compactar calendário e grade de horários no desktop.
+- [ ] Exibir separações claras entre linhas e colunas da grade diária.
+- [ ] Usar na agenda pública o horário final editado pelo administrador, permitindo até 20h.
+- [ ] Validar a agenda atualizada em desktop e celular.
