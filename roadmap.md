@@ -13,3 +13,7 @@
 - [x] Converter o Gantt diário para grade vertical com seleção contínua por arraste.
 - [x] Confirmar a seleção por WhatsApp ou pelo sistema, exigindo acesso para reserva interna.
 - [x] Validar a nova agenda em desktop e celular.
+- [ ] Tornar editáveis os dados da consulta na confirmação do agendamento.
+- [ ] Permitir adicionar múltiplas datas e horários para a mesma sala.
+- [ ] Enviar todos os períodos juntos por WhatsApp ou pelo sistema, com validação segura.
+- [ ] Validar o fluxo múltiplo em desktop e celular.
