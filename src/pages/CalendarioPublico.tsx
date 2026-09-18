@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addMonths, eachDayOfInterval, endOfMonth, format, getDay, isBefore, isSameDay, startOfDay, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, ChevronLeft, ChevronRight, Loader2, LockKeyhole, LogIn, MessageCircle, Plus, Send, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, CircleHelp, ImageOff, Loader2, LockKeyhole, LogIn, MessageCircle, Plus, Send, Trash2, Users } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReservaDialog, { CONSULTA_STORAGE_KEY } from "@/components/ReservaDialog";
@@ -16,7 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
 
-type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number };
+type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number; fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null };
 type UnidadePublica = { id: string; nome: string; horario_abertura: string; horario_fechamento: string };
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
@@ -62,6 +62,8 @@ export default function CalendarioPublico() {
   const [periodos, setPeriodos] = useState<Periodo[]>([]);
   const [dadosEditados, setDadosEditados] = useState<DadosConsulta>(() => lerConsulta() || { nome: "", email: "", whatsapp: "", tipoNegocio: "" });
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
+  const [modoSala, setModoSala] = useState<"especifica" | "qualquer">("especifica");
+  const [salaDetalhes, setSalaDetalhes] = useState<SalaPublica | null>(null);
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
 
@@ -70,7 +72,7 @@ export default function CalendarioPublico() {
   useEffect(() => {
     let ativo = true;
     Promise.all([
-      supabase.from("salas").select("id, nome, unidade_id, status").in("status", ["disponivel", "ativa"]).order("nome"),
+      supabase.from("salas").select("id, nome, unidade_id, status, foto_url, galeria, descricao, tipo, capacidade").in("status", ["disponivel", "ativa"]).order("nome"),
       supabase.from("unidades").select("id, nome, horario_abertura, horario_fechamento").ilike("status", "ativ%").order("nome"),
       supabase.auth.getSession(),
     ]).then(([salasResponse, unidadesResponse, sessaoResponse]) => {
@@ -81,7 +83,7 @@ export default function CalendarioPublico() {
       setUnidades(listaUnidades);
       setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && dadosUnidades.has(sala.unidade_id))).map((sala) => {
         const unidade = dadosUnidades.get(String(sala.unidade_id));
-        return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "20:00") };
+         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "20:00"), fotoUrl: sala.foto_url || sala.galeria?.[0] || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade };
       }));
       setAutenticado(Boolean(sessaoResponse.data.session));
       setCarregandoSalas(false);
@@ -154,7 +156,7 @@ export default function CalendarioPublico() {
   useEffect(() => {
     if (carregandoSalas || salas.length === 0) return;
     try {
-      const pendente = JSON.parse(sessionStorage.getItem(SELECAO_STORAGE_KEY) || "null") as { periodos?: Periodo[]; dados?: DadosConsulta } | null;
+       const pendente = JSON.parse(sessionStorage.getItem(SELECAO_STORAGE_KEY) || "null") as { periodos?: Periodo[]; dados?: DadosConsulta; modoSala?: "especifica" | "qualquer" } | null;
       const validos = (pendente?.periodos || []).filter((item) => salas.some((sala) => sala.id === item.salaId) && /^\d{4}-\d{2}-\d{2}$/.test(item.data) && /^\d{2}:\d{2}$/.test(item.inicio) && /^\d{2}:\d{2}$/.test(item.fim)).slice(0, MAX_PERIODOS);
       if (!validos.length) return;
       const data = new Date(`${validos[0].data}T12:00:00`);
@@ -162,6 +164,7 @@ export default function CalendarioPublico() {
       setPeriodos(validos);
       const dadosValidos = consultaSchema.safeParse(pendente?.dados);
       if (dadosValidos.success) setDadosEditados(dadosValidos.data);
+       if (pendente?.modoSala === "qualquer") setModoSala("qualquer");
       setConfirmacaoAberta(true);
       sessionStorage.removeItem(SELECAO_STORAGE_KEY);
     } catch { sessionStorage.removeItem(SELECAO_STORAGE_KEY); }
@@ -199,13 +202,13 @@ export default function CalendarioPublico() {
     if (!dadosValidos.success) { toast({ title: "Revise seus dados", description: dadosValidos.error.issues[0]?.message, variant: "destructive" }); return; }
     localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify(dadosValidos.data));
     if (!autenticado) {
-      sessionStorage.setItem(SELECAO_STORAGE_KEY, JSON.stringify({ periodos, dados: dadosValidos.data }));
+       sessionStorage.setItem(SELECAO_STORAGE_KEY, JSON.stringify({ periodos, dados: dadosValidos.data, modoSala }));
       navigate(`/auth?redirect=${encodeURIComponent("/agendamento")}`);
       return;
     }
     setSolicitando(true);
     const { error } = await supabase.rpc("request_authenticated_reservations", {
-      p_sala_id: salaDosPeriodos.id,
+       p_sala_id: (modoSala === "qualquer" ? null : salaDosPeriodos.id) as string,
       p_periodos: periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim })),
       p_nome: dadosValidos.data.nome,
       p_email: dadosValidos.data.email,
@@ -213,7 +216,7 @@ export default function CalendarioPublico() {
       p_tipo_negocio: dadosValidos.data.tipoNegocio,
     });
     if (error) toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
-    else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
+     else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); setModoSala("especifica"); await carregarAgenda(); }
     setSolicitando(false);
   }
 
@@ -224,7 +227,8 @@ export default function CalendarioPublico() {
     const dados = validacao.data;
     localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify(dados)); setDadosConsulta(dados);
     const lista = periodos.map((item, index) => `${index + 1}. ${format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")} — ${item.inicio} às ${item.fim}`).join("\n");
-    const texto = `Olá! Quero consultar uma reserva no Coworking 013.\n\nNome: ${dados.nome}\nE-mail: ${dados.email}\nWhatsApp: ${dados.whatsapp}\nTipo de negócio: ${dados.tipoNegocio}\nUnidade: ${salaDosPeriodos.unidadeNome}\nSala: ${salaDosPeriodos.nome}\n\nDatas e horários:\n${lista}`;
+     const local = modoSala === "qualquer" ? "Unidade e sala: qualquer sala disponível (definição pelo administrador)" : `Unidade: ${salaDosPeriodos.unidadeNome}\nSala: ${salaDosPeriodos.nome}`;
+     const texto = `Olá! Quero consultar uma reserva no Coworking 013.\n\nNome: ${dados.nome}\nE-mail: ${dados.email}\nWhatsApp: ${dados.whatsapp}\nTipo de negócio: ${dados.tipoNegocio}\n${local}\n\nDatas e horários:\n${lista}`;
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
   }
 
@@ -250,7 +254,7 @@ export default function CalendarioPublico() {
       </section>
       <section className="overflow-hidden rounded-lg border-2 border-border bg-card shadow-sm" aria-label="Agenda de horários do dia">
         <div className="flex items-center gap-3 border-b-2 border-border bg-muted/50 px-4 py-3"><div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-primary"><CalendarDays className="h-4 w-4" /></div><div><h2 className="font-heading text-base font-bold capitalize text-foreground">{format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}</h2><p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p></div></div>
-        {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="max-h-[620px] overflow-auto select-none"><div className="min-w-[680px]"><div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex items-center px-2 py-2 text-xs font-bold text-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l-2 border-border px-2 py-2 text-center"><p className="text-xs font-bold text-foreground sm:text-sm">{sala.nome}</p><p className="text-[10px] font-medium text-foreground/70">{sala.unidadeNome} · {horarioMinutos(sala.abertura)}–{horarioMinutos(sala.fechamento)}</p></div>)}</div>{slotsVisiveis.map((slot, index) => <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex min-h-9 items-center border-r border-border px-2 text-[11px] font-bold text-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); const fechado = foraDoExpediente(sala.id, index); const indisponivel = Boolean(ocupacao || fechado); return <div key={sala.id} role="button" tabIndex={indisponivel ? -1 : 0} aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onKeyDown={(event) => { if (!indisponivel && !periodoNoSlot(sala.id, index) && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); iniciarSelecao(sala.id, index); arrastandoRef.current = false; adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index }); } }} className={`relative min-h-9 border-l border-border transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : fechado ? "cursor-not-allowed bg-muted text-muted-foreground" : selecionado ? "cursor-grabbing bg-primary/20 ring-2 ring-inset ring-primary" : "cursor-crosshair hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-1 text-[10px] font-bold"><LockKeyhole className="mr-1 h-3 w-3" />Indisponível</div> : fechado ? <div className="flex h-full items-center justify-center text-[9px] font-semibold uppercase">Fechado</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
+         {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="max-h-[620px] overflow-auto select-none"><div className="min-w-[680px]"><div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex items-center px-2 py-2 text-xs font-bold text-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l-2 border-border px-2 py-2"><div className="flex items-center gap-2"><div className="h-9 w-11 shrink-0 overflow-hidden rounded border border-border bg-background">{sala.fotoUrl ? <img src={sala.fotoUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-muted-foreground"><ImageOff className="h-4 w-4" /></div>}</div><div className="min-w-0 flex-1 text-left"><p className="truncate text-xs font-bold text-foreground sm:text-sm">{sala.nome}</p><p className="truncate text-[10px] font-medium text-foreground/70">{sala.unidadeNome}</p></div><Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Mais informações sobre ${sala.nome}`} title="Mais informações" onClick={() => setSalaDetalhes(sala)}><CircleHelp className="h-4 w-4" /></Button></div><p className="mt-1 text-center text-[10px] font-medium text-foreground/70">{horarioMinutos(sala.abertura)}–{horarioMinutos(sala.fechamento)}</p></div>)}</div>{slotsVisiveis.map((slot, index) => <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex min-h-9 items-center border-r border-border px-2 text-[11px] font-bold text-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); const fechado = foraDoExpediente(sala.id, index); const indisponivel = Boolean(ocupacao || fechado); return <div key={sala.id} role="button" tabIndex={indisponivel ? -1 : 0} aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onKeyDown={(event) => { if (!indisponivel && !periodoNoSlot(sala.id, index) && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); iniciarSelecao(sala.id, index); arrastandoRef.current = false; adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index }); } }} className={`relative min-h-9 border-l border-border transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : fechado ? "cursor-not-allowed bg-muted text-muted-foreground" : selecionado ? "cursor-grabbing bg-primary/20 ring-2 ring-inset ring-primary" : "cursor-crosshair hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-1 text-[10px] font-bold"><LockKeyhole className="mr-1 h-3 w-3" />Indisponível</div> : fechado ? <div className="flex h-full items-center justify-center text-[9px] font-semibold uppercase">Fechado</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
       </section>
     </main>
     <Footer />
@@ -264,12 +268,17 @@ export default function CalendarioPublico() {
             <div><Label htmlFor="confirmar-whatsapp">WhatsApp</Label><Input id="confirmar-whatsapp" type="tel" maxLength={30} value={dadosEditados.whatsapp} onChange={(e) => setDadosEditados((atual) => ({ ...atual, whatsapp: e.target.value }))} /></div>
             <div><Label htmlFor="confirmar-negocio">Tipo de negócio</Label><Input id="confirmar-negocio" maxLength={120} value={dadosEditados.tipoNegocio} onChange={(e) => setDadosEditados((atual) => ({ ...atual, tipoNegocio: e.target.value }))} /></div>
           </div>
-          {salaDosPeriodos && <div className="rounded-md border bg-muted/40 p-4"><p className="font-heading text-lg font-bold">{salaDosPeriodos.nome}</p><p className="text-sm text-muted-foreground">{salaDosPeriodos.unidadeNome}</p><div className="mt-3 space-y-2">{periodos.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"><div><p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p><p className="text-sm text-muted-foreground">{item.inicio} às {item.fim}</p></div><Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}><Trash2 className="h-4 w-4" /></Button></div>)}</div></div>}
+           {salaDosPeriodos && <div className="space-y-3 rounded-md border bg-muted/40 p-4"><div><Label htmlFor="modo-sala">Preferência de sala</Label><Select value={modoSala} onValueChange={(valor: "especifica" | "qualquer") => setModoSala(valor)}><SelectTrigger id="modo-sala" className="mt-1 bg-background"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="especifica">{salaDosPeriodos.nome} · {salaDosPeriodos.unidadeNome}</SelectItem><SelectItem value="qualquer">Qualquer sala disponível</SelectItem></SelectContent></Select>{modoSala === "qualquer" && <p className="mt-2 text-xs text-muted-foreground">A unidade e a sala serão escolhidas pelo administrador conforme a disponibilidade.</p>}</div><div className="space-y-2">{periodos.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"><div><p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p><p className="text-sm text-muted-foreground">{item.inicio} às {item.fim}</p></div><Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}><Trash2 className="h-4 w-4" /></Button></div>)}</div></div>}
           <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}><Plus className="mr-2 h-4 w-4" />Adicionar outra data ou horário</Button>
         </div>
         <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp} disabled={!periodos.length}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando || !periodos.length}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar períodos" : "Entrar ou cadastrar"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
+     <Dialog open={Boolean(salaDetalhes)} onOpenChange={(aberta) => { if (!aberta) setSalaDetalhes(null); }}>
+       <DialogContent className="max-w-lg">
+         {salaDetalhes && <><DialogHeader><DialogTitle className="font-heading text-2xl font-black">{salaDetalhes.nome}</DialogTitle><DialogDescription>{salaDetalhes.unidadeNome}</DialogDescription></DialogHeader><div className="space-y-4">{salaDetalhes.fotoUrl ? <img src={salaDetalhes.fotoUrl} alt={salaDetalhes.nome} className="aspect-video w-full rounded-md border border-border object-cover" /> : <div className="flex aspect-video w-full items-center justify-center rounded-md border border-dashed border-border bg-muted text-muted-foreground"><ImageOff className="mr-2 h-5 w-5" />Sem foto cadastrada</div>}<div className="flex flex-wrap gap-2 text-sm"><span className="rounded-md border bg-muted px-3 py-1.5">{salaDetalhes.tipo}</span>{salaDetalhes.capacidade && <span className="inline-flex items-center rounded-md border bg-muted px-3 py-1.5"><Users className="mr-1.5 h-4 w-4" />Até {salaDetalhes.capacidade} pessoas</span>}<span className="rounded-md border bg-muted px-3 py-1.5">{horarioMinutos(salaDetalhes.abertura)}–{horarioMinutos(salaDetalhes.fechamento)}</span></div><p className="text-sm leading-relaxed text-foreground/80">{salaDetalhes.descricao || "Nenhuma descrição cadastrada para esta sala."}</p></div></>}
+       </DialogContent>
+     </Dialog>
     <ReservaDialog open={consultaAberta} onOpenChange={(aberta) => { if (dadosConsulta || aberta) setConsultaAberta(aberta); }} onSuccess={() => { const dados = lerConsulta(); setDadosConsulta(dados); if (dados) setDadosEditados(dados); setConsultaAberta(false); if (selecaoRef.current) setConfirmacaoAberta(true); }} />
   </div>;
 }
