@@ -190,7 +190,14 @@ export default function CalendarioPublico() {
       return;
     }
     setSolicitando(true);
-    const { error } = await supabase.rpc("request_authenticated_reservations", { p_sala_id: salaDosPeriodos.id, p_periodos: periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim })) });
+    const { error } = await supabase.rpc("request_authenticated_reservations", {
+      p_sala_id: salaDosPeriodos.id,
+      p_periodos: periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim })),
+      p_nome: dadosValidos.data.nome,
+      p_email: dadosValidos.data.email,
+      p_whatsapp: dadosValidos.data.whatsapp,
+      p_tipo_negocio: dadosValidos.data.tipoNegocio,
+    });
     if (error) toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
     else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
     setSolicitando(false);
