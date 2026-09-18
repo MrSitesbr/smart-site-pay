@@ -16,8 +16,8 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
 
-type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string };
-type UnidadePublica = { id: string; nome: string };
+type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number };
+type UnidadePublica = { id: string; nome: string; horario_abertura: string; horario_fechamento: string };
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
@@ -26,7 +26,7 @@ const UNIDADES_PERMANENTES = new Set([
   "66a610f6-1f6b-4673-903d-80aa57657982",
   "40840fbd-f575-4ff7-9e6d-1e9231985ce6",
 ]);
-const SLOTS = Array.from({ length: 20 }, (_, index) => 8 * 60 + index * 30);
+const SLOTS = Array.from({ length: 24 }, (_, index) => 8 * 60 + index * 30);
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const CORES = ["bg-primary", "bg-secondary", "bg-destructive", "bg-accent", "bg-foreground", "bg-muted-foreground"];
 const WHATSAPP = "5513988050358";
@@ -71,15 +71,18 @@ export default function CalendarioPublico() {
     let ativo = true;
     Promise.all([
       supabase.from("salas").select("id, nome, unidade_id, status").in("status", ["disponivel", "ativa"]).order("nome"),
-      supabase.from("unidades").select("id, nome").ilike("status", "ativ%").order("nome"),
+      supabase.from("unidades").select("id, nome, horario_abertura, horario_fechamento").ilike("status", "ativ%").order("nome"),
       supabase.auth.getSession(),
     ]).then(([salasResponse, unidadesResponse, sessaoResponse]) => {
       if (!ativo) return;
       if (salasResponse.error) toast({ title: "Não foi possível carregar as salas", description: salasResponse.error.message, variant: "destructive" });
       const listaUnidades = (unidadesResponse.data || []).filter((unidade) => !UNIDADES_PERMANENTES.has(unidade.id));
-      const nomes = new Map(listaUnidades.map((unidade) => [unidade.id, unidade.nome]));
+      const dadosUnidades = new Map(listaUnidades.map((unidade) => [unidade.id, unidade]));
       setUnidades(listaUnidades);
-      setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && nomes.has(sala.unidade_id))).map((sala) => ({ id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: nomes.get(String(sala.unidade_id)) || "Unidade" })));
+      setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && dadosUnidades.has(sala.unidade_id))).map((sala) => {
+        const unidade = dadosUnidades.get(String(sala.unidade_id));
+        return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "20:00") };
+      }));
       setAutenticado(Boolean(sessaoResponse.data.session));
       setCarregandoSalas(false);
     });
@@ -103,27 +106,38 @@ export default function CalendarioPublico() {
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
   const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(dia)}T12:00:00`));
   const salasGantt = salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId);
+  const slotsVisiveis = useMemo(() => {
+    if (!salasGantt.length) return SLOTS;
+    const abertura = Math.min(...salasGantt.map((sala) => sala.abertura));
+    const fechamento = Math.max(...salasGantt.map((sala) => sala.fechamento));
+    return SLOTS.filter((slot) => slot >= abertura && slot < fechamento);
+  }, [salasGantt]);
+  const foraDoExpediente = (id: string, index: number) => {
+    const sala = salas.find((item) => item.id === id);
+    const slot = slotsVisiveis[index];
+    return !sala || slot < sala.abertura || slot + 30 > sala.fechamento;
+  };
   const ocupacaoNoSlot = (id: string, index: number) => {
-    const inicio = SLOTS[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 30;
     return ocupacoesDoDia.find((item) => item.sala_id === id && inicio < minutos(item.hora_fim) && fim > minutos(item.hora_inicio));
   };
   const periodoNoSlot = (id: string, index: number) => {
-    const inicio = SLOTS[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 30;
     return periodos.find((item) => item.salaId === id && item.data === isoDate(dia) && inicio < minutos(item.fim) && fim > minutos(item.inicio));
   };
   const intervaloLivre = (id: string, a: number, b: number) => {
     const inicio = Math.min(a, b), fim = Math.max(a, b);
-    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => !ocupacaoNoSlot(id, index) && !periodoNoSlot(id, index));
+    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => !foraDoExpediente(id, index) && !ocupacaoNoSlot(id, index) && !periodoNoSlot(id, index));
   };
   const slotSelecionado = (id: string, index: number) => Boolean(periodoNoSlot(id, index)) || (selecao?.salaId === id && index >= Math.min(selecao.inicioIndex, selecao.fimIndex) && index <= Math.max(selecao.inicioIndex, selecao.fimIndex));
 
   const adicionarSelecao = useCallback((atual: Selecao) => {
-    const inicio = horarioMinutos(SLOTS[Math.min(atual.inicioIndex, atual.fimIndex)]);
-    const fim = horarioMinutos(SLOTS[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
+    const inicio = horarioMinutos(slotsVisiveis[Math.min(atual.inicioIndex, atual.fimIndex)]);
+    const fim = horarioMinutos(slotsVisiveis[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
     const novo: Periodo = { id: `${isoDate(dia)}-${inicio}-${fim}`, salaId: atual.salaId, data: isoDate(dia), inicio, fim };
     setPeriodos((lista) => lista.some((item) => item.id === novo.id) ? lista : [...lista, novo].sort((a, b) => `${a.data}${a.inicio}`.localeCompare(`${b.data}${b.inicio}`)));
     setConfirmacaoAberta(true);
-  }, [dia]);
+  }, [dia, slotsVisiveis]);
 
   useEffect(() => {
     const finalizar = () => {
@@ -154,12 +168,12 @@ export default function CalendarioPublico() {
   }, [carregandoSalas, salas]);
 
   const salaSelecionada = selecao ? salas.find((sala) => sala.id === selecao.salaId) : null;
-  const inicioSelecionado = selecao ? horarioMinutos(SLOTS[Math.min(selecao.inicioIndex, selecao.fimIndex)]) : "";
-  const fimSelecionado = selecao ? horarioMinutos(SLOTS[Math.max(selecao.inicioIndex, selecao.fimIndex)] + 30) : "";
+  const inicioSelecionado = selecao ? horarioMinutos(slotsVisiveis[Math.min(selecao.inicioIndex, selecao.fimIndex)]) : "";
+  const fimSelecionado = selecao ? horarioMinutos(slotsVisiveis[Math.max(selecao.inicioIndex, selecao.fimIndex)] + 30) : "";
   const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function iniciarSelecao(id: string, index: number) {
-    if (ocupacaoNoSlot(id, index) || periodoNoSlot(id, index)) return;
+    if (foraDoExpediente(id, index) || ocupacaoNoSlot(id, index) || periodoNoSlot(id, index)) return;
     if (periodos.length && periodos[0].salaId !== id) {
       toast({ title: "Escolha a mesma sala", description: "Envie esta solicitação ou remova os períodos antes de escolher outra sala." });
       return;

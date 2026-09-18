@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "./ImageUpload";
 import { MediaPickerModal } from "./MediaPickerModal";
-import { ArrowLeft, ImageIcon, Save, Building2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ImageIcon, Save, Building2, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 const defaultForm = {
@@ -16,6 +16,8 @@ const defaultForm = {
   foto_url: "",
   galeria: [] as string[],
   status: "ativa",
+  horario_abertura: "08:00",
+  horario_fechamento: "20:00",
   servicos_infra: [] as any[],
 };
 
@@ -60,6 +62,8 @@ export default function AdminUnidadeFormPage() {
         foto_url: data.foto_url || "",
         galeria: data.galeria || [],
         status: (data as any).status || "ativa",
+        horario_abertura: data.horario_abertura?.slice(0, 5) || "08:00",
+        horario_fechamento: data.horario_fechamento?.slice(0, 5) || "20:00",
         servicos_infra: data.servicos_infra || [],
       });
       setLoading(false);
@@ -83,6 +87,8 @@ export default function AdminUnidadeFormPage() {
       foto_url: form.galeria?.[0] || form.foto_url || "",
       galeria: form.galeria || [],
       status: form.status || "ativa",
+      horario_abertura: form.horario_abertura || "08:00",
+      horario_fechamento: form.horario_fechamento || "20:00",
       servicos_infra: form.servicos_infra || [],
     };
 
@@ -209,6 +215,36 @@ export default function AdminUnidadeFormPage() {
                   onChange={(e) => setForm({ ...form, endereco: e.target.value })}
                   placeholder="Rua, número, bairro..."
                 />
+              </div>
+            </div>
+
+            <div className="grid gap-4 rounded-lg border bg-muted/30 p-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Clock className="h-4 w-4 text-primary" /> Abertura da agenda
+                </label>
+                <Input
+                  type="time"
+                  min="08:00"
+                  max="19:30"
+                  step="1800"
+                  value={form.horario_abertura || "08:00"}
+                  onChange={(e) => setForm({ ...form, horario_abertura: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Clock className="h-4 w-4 text-primary" /> Fechamento da agenda
+                </label>
+                <Input
+                  type="time"
+                  min="08:30"
+                  max="20:00"
+                  step="1800"
+                  value={form.horario_fechamento || "20:00"}
+                  onChange={(e) => setForm({ ...form, horario_fechamento: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 20h.</p>
               </div>
             </div>
 
