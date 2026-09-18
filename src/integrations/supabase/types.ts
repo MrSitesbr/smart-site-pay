@@ -1301,6 +1301,19 @@ export type Database = {
         }
         Returns: string
       }
+      request_authenticated_reservations:
+        | { Args: { p_periodos: Json; p_sala_id: string }; Returns: string[] }
+        | {
+            Args: {
+              p_email: string
+              p_nome: string
+              p_periodos: Json
+              p_sala_id: string
+              p_tipo_negocio: string
+              p_whatsapp: string
+            }
+            Returns: string[]
+          }
       submit_public_consultation: {
         Args: {
           p_email: string

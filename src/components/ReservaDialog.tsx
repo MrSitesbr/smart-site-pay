@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { CalendarSearch, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { consultaSchema } from "@/lib/consultaValidation";
 
 interface ReservaDialogProps {
   open: boolean;
@@ -30,6 +31,15 @@ export default function ReservaDialog({ open, onOpenChange, onSuccess }: Reserva
 
   useEffect(() => {
     if (!open) return;
+    try {
+      const salvo = consultaSchema.safeParse(JSON.parse(localStorage.getItem(CONSULTA_STORAGE_KEY) || "null"));
+      if (salvo.success) setForm({
+        nome: salvo.data.nome,
+        email: salvo.data.email,
+        whatsapp: salvo.data.whatsapp,
+        tipoNegocio: salvo.data.tipoNegocio,
+      });
+    } catch { /* Mantém o formulário vazio quando o armazenamento estiver inválido. */ }
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
       if (!u) return;
@@ -45,28 +55,25 @@ export default function ReservaDialog({ open, onOpenChange, onSuccess }: Reserva
   const set = (campo: keyof typeof form, valor: string) => setForm((atual) => ({ ...atual, [campo]: valor }));
 
   async function consultar() {
-    if (!form.nome.trim() || !form.email.trim() || !form.whatsapp.trim() || !form.tipoNegocio.trim()) {
-      toast({ title: "Preencha todos os campos" });
+    const validacao = consultaSchema.safeParse(form);
+    if (!validacao.success) {
+      toast({ title: "Revise seus dados", description: validacao.error.issues[0]?.message, variant: "destructive" });
       return;
     }
+    const dados = validacao.data;
     setLoading(true);
     const { error } = await supabase.rpc("submit_public_consultation", {
-      p_nome: form.nome.trim(),
-      p_email: form.email.trim(),
-      p_whatsapp: form.whatsapp.trim(),
-      p_tipo_negocio: form.tipoNegocio.trim(),
+      p_nome: dados.nome,
+      p_email: dados.email,
+      p_whatsapp: dados.whatsapp,
+      p_tipo_negocio: dados.tipoNegocio,
     });
     setLoading(false);
     if (error) {
       toast({ title: "Não foi possível consultar", description: error.message, variant: "destructive" });
       return;
     }
-    localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify({
-      nome: form.nome.trim(),
-      email: form.email.trim(),
-      whatsapp: form.whatsapp.trim(),
-      tipoNegocio: form.tipoNegocio.trim(),
-    }));
+    localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify(dados));
     toast({ title: "Consulta registrada", description: "Agora escolha uma sala, data e horário." });
     onOpenChange(false);
     if (onSuccess) onSuccess();
@@ -87,19 +94,19 @@ export default function ReservaDialog({ open, onOpenChange, onSuccess }: Reserva
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Nome completo</Label>
-              <Input value={form.nome} onChange={(e) => set("nome", e.target.value)} />
+              <Input maxLength={100} value={form.nome} onChange={(e) => set("nome", e.target.value)} />
             </div>
             <div>
               <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+              <Input type="email" maxLength={255} value={form.email} onChange={(e) => set("email", e.target.value)} />
             </div>
             <div>
               <Label>WhatsApp</Label>
-              <Input type="tel" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="(13) 9..." />
+              <Input type="tel" maxLength={30} value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="(13) 9..." />
             </div>
             <div>
               <Label>Tipo de negócio</Label>
-              <Input value={form.tipoNegocio} onChange={(e) => set("tipoNegocio", e.target.value)} placeholder="Ex.: advocacia, saúde, tecnologia" />
+              <Input maxLength={120} value={form.tipoNegocio} onChange={(e) => set("tipoNegocio", e.target.value)} placeholder="Ex.: advocacia, saúde, tecnologia" />
             </div>
           </div>
 
