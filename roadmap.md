@@ -23,3 +23,6 @@
 - [x] Exibir separações claras entre linhas e colunas da grade diária.
 - [x] Usar na agenda pública o horário final editado pelo administrador, permitindo até 20h.
 - [x] Validar a agenda atualizada em desktop e celular.
+- [ ] Permitir solicitar períodos para qualquer sala disponível, deixando a definição final com o administrador.
+- [ ] Mostrar miniatura e detalhes de cada sala no cabeçalho da agenda.
+- [ ] Validar a solicitação flexível e o popup de informações das salas.
