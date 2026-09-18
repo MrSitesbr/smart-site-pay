@@ -85,11 +85,15 @@ const Navbar = () => {
       ]
     },
     { label: "Unidades", href: "/unidades", route: true },
+    { label: "Agendamento", href: "/agendamento", route: true },
     { label: "Institucional", href: "/institucional", route: true },
     { label: "Contato", href: "/#contato" },
   ];
 
-  const links = cmsContent?.links || defaultLinks;
+  const loadedLinks = cmsContent?.links || defaultLinks;
+  const links = loadedLinks.some((link: any) => link.href === "/agendamento")
+    ? loadedLinks
+    : [...loadedLinks.slice(0, 3), { label: "Agendamento", href: "/agendamento", route: true }, ...loadedLinks.slice(3)];
   const logoTop = cmsContent?.logo_text_top || "CoWorking";
   const logoBottom = cmsContent?.logo_text_bottom || "013";
   const phone = cmsContent?.phone || "(13) 98805-0358";
@@ -264,7 +268,7 @@ const Navbar = () => {
             className="w-full mt-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold"
           >
             <Calendar className="w-4 h-4 mr-2" />
-            Reservar
+             Agendamento
           </Button>
 
         </div>

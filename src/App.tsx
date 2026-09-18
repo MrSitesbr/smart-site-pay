@@ -67,6 +67,7 @@ const App = () => (
           {/* Functional Pages */}
           <Route path="/reservar" element={<Reservar />} />
           <Route path="/reservar/calendario" element={<CalendarioPublico />} />
+          <Route path="/agendamento" element={<CalendarioPublico />} />
           <Route path="/contratar" element={<Contratar />} />
           <Route path="/painel" element={<Painel />} />
           <Route path="/auth" element={<Auth />} />

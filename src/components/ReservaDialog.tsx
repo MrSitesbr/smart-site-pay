@@ -13,9 +13,12 @@ interface ReservaDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultAmbiente?: string;
   defaultData?: string;
+  onSuccess?: () => void;
 }
 
-export default function ReservaDialog({ open, onOpenChange }: ReservaDialogProps) {
+export const CONSULTA_STORAGE_KEY = "coworking013_consulta";
+
+export default function ReservaDialog({ open, onOpenChange, onSuccess }: ReservaDialogProps) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -58,8 +61,16 @@ export default function ReservaDialog({ open, onOpenChange }: ReservaDialogProps
       toast({ title: "Não foi possível consultar", description: error.message, variant: "destructive" });
       return;
     }
+    localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify({
+      nome: form.nome.trim(),
+      email: form.email.trim(),
+      whatsapp: form.whatsapp.trim(),
+      tipoNegocio: form.tipoNegocio.trim(),
+    }));
     toast({ title: "Consulta registrada", description: "Agora escolha uma sala, data e horário." });
-    navigate("/reservar/calendario");
+    onOpenChange(false);
+    if (onSuccess) onSuccess();
+    else navigate("/agendamento");
   }
 
   return (
