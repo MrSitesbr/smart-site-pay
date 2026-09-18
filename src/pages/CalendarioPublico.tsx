@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addMonths, eachDayOfInterval, endOfMonth, format, getDay, isBefore, isSameDay, startOfDay, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarDays, ChevronLeft, ChevronRight, Loader2, LockKeyhole, LogIn, MessageCircle, Send } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2, LockKeyhole, LogIn, MessageCircle, Plus, Send, Trash2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReservaDialog, { CONSULTA_STORAGE_KEY } from "@/components/ReservaDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { isBusinessDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
 
 type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string };
 type UnidadePublica = { id: string; nome: string };
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
-type DadosConsulta = { nome: string; email: string; whatsapp: string; tipoNegocio: string };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
+type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
 
 const UNIDADES_PERMANENTES = new Set([
   "66a610f6-1f6b-4673-903d-80aa57657982",
@@ -28,14 +31,15 @@ const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const CORES = ["bg-primary", "bg-secondary", "bg-destructive", "bg-accent", "bg-foreground", "bg-muted-foreground"];
 const WHATSAPP = "5513988050358";
 const SELECAO_STORAGE_KEY = "coworking013_selecao_agenda";
+const MAX_PERIODOS = 20;
 const isoDate = (date: Date) => format(date, "yyyy-MM-dd");
 const horarioMinutos = (total: number) => `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 const minutos = (valor: string) => { const [h, m] = valor.slice(0, 5).split(":").map(Number); return h * 60 + m; };
 
 function lerConsulta(): DadosConsulta | null {
   try {
-    const valor = JSON.parse(localStorage.getItem(CONSULTA_STORAGE_KEY) || "null");
-    return valor?.nome && valor?.email && valor?.whatsapp && valor?.tipoNegocio ? valor : null;
+    const valor = consultaSchema.safeParse(JSON.parse(localStorage.getItem(CONSULTA_STORAGE_KEY) || "null"));
+    return valor.success ? valor.data : null;
   } catch { return null; }
 }
 
@@ -55,6 +59,8 @@ export default function CalendarioPublico() {
   const [dadosConsulta, setDadosConsulta] = useState<DadosConsulta | null>(() => lerConsulta());
   const [consultaAberta, setConsultaAberta] = useState(() => !lerConsulta());
   const [selecao, setSelecao] = useState<Selecao | null>(null);
+  const [periodos, setPeriodos] = useState<Periodo[]>([]);
+  const [dadosEditados, setDadosEditados] = useState<DadosConsulta>(() => lerConsulta() || { nome: "", email: "", whatsapp: "", tipoNegocio: "" });
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
@@ -111,25 +117,30 @@ export default function CalendarioPublico() {
     const finalizar = () => {
       if (!arrastandoRef.current) return;
       arrastandoRef.current = false;
-      if (selecaoRef.current) setConfirmacaoAberta(true);
+      const atual = selecaoRef.current;
+      if (!atual) return;
+      const inicio = horarioMinutos(SLOTS[Math.min(atual.inicioIndex, atual.fimIndex)]);
+      const fim = horarioMinutos(SLOTS[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
+      const novo: Periodo = { id: `${isoDate(dia)}-${inicio}-${fim}`, salaId: atual.salaId, data: isoDate(dia), inicio, fim };
+      setPeriodos((lista) => lista.some((item) => item.id === novo.id) ? lista : [...lista, novo].sort((a, b) => `${a.data}${a.inicio}`.localeCompare(`${b.data}${b.inicio}`)));
+      setConfirmacaoAberta(true);
     };
     window.addEventListener("pointerup", finalizar);
     window.addEventListener("pointercancel", finalizar);
     return () => { window.removeEventListener("pointerup", finalizar); window.removeEventListener("pointercancel", finalizar); };
-  }, []);
+  }, [dia]);
 
   useEffect(() => {
     if (carregandoSalas || salas.length === 0) return;
     try {
-      const pendente = JSON.parse(sessionStorage.getItem(SELECAO_STORAGE_KEY) || "null") as { data?: string; salaId?: string; inicio?: string; fim?: string } | null;
-      if (!pendente?.data || !pendente.salaId || !pendente.inicio || !pendente.fim) return;
-      const salaExiste = salas.some((sala) => sala.id === pendente.salaId);
-      const inicioIndex = SLOTS.indexOf(minutos(pendente.inicio));
-      const fimIndex = SLOTS.indexOf(minutos(pendente.fim) - 30);
-      if (!salaExiste || inicioIndex < 0 || fimIndex < inicioIndex) { sessionStorage.removeItem(SELECAO_STORAGE_KEY); return; }
-      const data = new Date(`${pendente.data}T12:00:00`);
+      const pendente = JSON.parse(sessionStorage.getItem(SELECAO_STORAGE_KEY) || "null") as { periodos?: Periodo[]; dados?: DadosConsulta } | null;
+      const validos = (pendente?.periodos || []).filter((item) => salas.some((sala) => sala.id === item.salaId) && /^\d{4}-\d{2}-\d{2}$/.test(item.data) && /^\d{2}:\d{2}$/.test(item.inicio) && /^\d{2}:\d{2}$/.test(item.fim)).slice(0, MAX_PERIODOS);
+      if (!validos.length) return;
+      const data = new Date(`${validos[0].data}T12:00:00`);
       setDia(startOfDay(data)); setMes(startOfMonth(data));
-      atualizarSelecao({ salaId: pendente.salaId, inicioIndex, fimIndex });
+      setPeriodos(validos);
+      const dadosValidos = consultaSchema.safeParse(pendente?.dados);
+      if (dadosValidos.success) setDadosEditados(dadosValidos.data);
       setConfirmacaoAberta(true);
       sessionStorage.removeItem(SELECAO_STORAGE_KEY);
     } catch { sessionStorage.removeItem(SELECAO_STORAGE_KEY); }
@@ -138,9 +149,18 @@ export default function CalendarioPublico() {
   const salaSelecionada = selecao ? salas.find((sala) => sala.id === selecao.salaId) : null;
   const inicioSelecionado = selecao ? horarioMinutos(SLOTS[Math.min(selecao.inicioIndex, selecao.fimIndex)]) : "";
   const fimSelecionado = selecao ? horarioMinutos(SLOTS[Math.max(selecao.inicioIndex, selecao.fimIndex)] + 30) : "";
+  const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function iniciarSelecao(id: string, index: number) {
     if (ocupacaoNoSlot(id, index)) return;
+    if (periodos.length && periodos[0].salaId !== id) {
+      toast({ title: "Escolha a mesma sala", description: "Envie esta solicitação ou remova os períodos antes de escolher outra sala." });
+      return;
+    }
+    if (periodos.length >= MAX_PERIODOS) {
+      toast({ title: "Limite atingido", description: `Você pode enviar até ${MAX_PERIODOS} períodos por solicitação.` });
+      return;
+    }
     arrastandoRef.current = true;
     setConfirmacaoAberta(false);
     atualizarSelecao({ salaId: id, inicioIndex: index, fimIndex: index });
@@ -153,25 +173,39 @@ export default function CalendarioPublico() {
   }
 
   async function solicitar() {
-    if (!selecao || !salaSelecionada) return;
+    if (!periodos.length || !salaDosPeriodos) return;
+    const dadosValidos = consultaSchema.safeParse(dadosEditados);
+    if (!dadosValidos.success) { toast({ title: "Revise seus dados", description: dadosValidos.error.issues[0]?.message, variant: "destructive" }); return; }
+    localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify(dadosValidos.data));
     if (!autenticado) {
-      sessionStorage.setItem(SELECAO_STORAGE_KEY, JSON.stringify({ data: isoDate(dia), salaId: selecao.salaId, inicio: inicioSelecionado, fim: fimSelecionado }));
+      sessionStorage.setItem(SELECAO_STORAGE_KEY, JSON.stringify({ periodos, dados: dadosValidos.data }));
       navigate(`/auth?redirect=${encodeURIComponent("/agendamento")}`);
       return;
     }
     setSolicitando(true);
-    const { error } = await supabase.rpc("request_authenticated_reservation", { p_sala_id: selecao.salaId, p_data: isoDate(dia), p_hora_inicio: inicioSelecionado, p_hora_fim: fimSelecionado });
+    const { error } = await supabase.rpc("request_authenticated_reservations", { p_sala_id: salaDosPeriodos.id, p_periodos: periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim })) });
     if (error) toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
-    else { toast({ title: "Reserva solicitada", description: "O horário ficou pendente até a confirmação da equipe." }); setConfirmacaoAberta(false); atualizarSelecao(null); await carregarAgenda(); }
+    else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
     setSolicitando(false);
   }
 
   function abrirWhatsApp() {
-    if (!salaSelecionada) return;
-    const dados = dadosConsulta || lerConsulta();
-    if (!dados) { setConfirmacaoAberta(false); setConsultaAberta(true); return; }
-    const texto = `Olá! Quero consultar uma reserva no Coworking 013.\n\nNome: ${dados.nome}\nE-mail: ${dados.email}\nWhatsApp: ${dados.whatsapp}\nTipo de negócio: ${dados.tipoNegocio}\nUnidade: ${salaSelecionada.unidadeNome}\nSala: ${salaSelecionada.nome}\nData: ${format(dia, "dd/MM/yyyy")}\nHorário: ${inicioSelecionado} às ${fimSelecionado}`;
+    if (!salaDosPeriodos || !periodos.length) return;
+    const validacao = consultaSchema.safeParse(dadosEditados);
+    if (!validacao.success) { toast({ title: "Revise seus dados", description: validacao.error.issues[0]?.message, variant: "destructive" }); return; }
+    const dados = validacao.data;
+    localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify(dados)); setDadosConsulta(dados);
+    const lista = periodos.map((item, index) => `${index + 1}. ${format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")} — ${item.inicio} às ${item.fim}`).join("\n");
+    const texto = `Olá! Quero consultar uma reserva no Coworking 013.\n\nNome: ${dados.nome}\nE-mail: ${dados.email}\nWhatsApp: ${dados.whatsapp}\nTipo de negócio: ${dados.tipoNegocio}\nUnidade: ${salaDosPeriodos.unidadeNome}\nSala: ${salaDosPeriodos.nome}\n\nDatas e horários:\n${lista}`;
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
+  }
+
+  function removerPeriodo(id: string) {
+    setPeriodos((lista) => {
+      const atualizada = lista.filter((item) => item.id !== id);
+      if (!atualizada.length) setConfirmacaoAberta(false);
+      return atualizada;
+    });
   }
 
   return <div className="min-h-screen bg-muted/30">
@@ -194,9 +228,18 @@ export default function CalendarioPublico() {
     <Footer />
     <Dialog open={confirmacaoAberta} onOpenChange={(aberta) => { setConfirmacaoAberta(aberta); if (!aberta) atualizarSelecao(null); }}>
       <DialogContent>
-        <DialogHeader><DialogTitle className="font-heading text-2xl font-black">Confirmar horário</DialogTitle><DialogDescription>Confira o período escolhido antes de continuar.</DialogDescription></DialogHeader>
-        {salaSelecionada && <div className="rounded-md border bg-muted/40 p-4"><p className="font-heading text-lg font-bold">{salaSelecionada.nome}</p><p className="text-sm text-muted-foreground">{salaSelecionada.unidadeNome}</p><div className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><p className="text-muted-foreground">Data</p><p className="font-semibold">{format(dia, "dd/MM/yyyy")}</p></div><div><p className="text-muted-foreground">Horário</p><p className="font-semibold">{inicioSelecionado} às {fimSelecionado}</p></div></div></div>}
-        <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar reserva" : "Entrar ou cadastrar"}</Button></DialogFooter>
+        <DialogHeader><DialogTitle className="font-heading text-2xl font-black">Confirmar solicitação</DialogTitle><DialogDescription>Edite seus dados e confira todos os períodos escolhidos.</DialogDescription></DialogHeader>
+        <div className="max-h-[65vh] space-y-5 overflow-y-auto pr-1">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><Label htmlFor="confirmar-nome">Nome completo</Label><Input id="confirmar-nome" maxLength={100} value={dadosEditados.nome} onChange={(e) => setDadosEditados((atual) => ({ ...atual, nome: e.target.value }))} /></div>
+            <div><Label htmlFor="confirmar-email">E-mail</Label><Input id="confirmar-email" type="email" maxLength={255} value={dadosEditados.email} onChange={(e) => setDadosEditados((atual) => ({ ...atual, email: e.target.value }))} /></div>
+            <div><Label htmlFor="confirmar-whatsapp">WhatsApp</Label><Input id="confirmar-whatsapp" type="tel" maxLength={30} value={dadosEditados.whatsapp} onChange={(e) => setDadosEditados((atual) => ({ ...atual, whatsapp: e.target.value }))} /></div>
+            <div><Label htmlFor="confirmar-negocio">Tipo de negócio</Label><Input id="confirmar-negocio" maxLength={120} value={dadosEditados.tipoNegocio} onChange={(e) => setDadosEditados((atual) => ({ ...atual, tipoNegocio: e.target.value }))} /></div>
+          </div>
+          {salaDosPeriodos && <div className="rounded-md border bg-muted/40 p-4"><p className="font-heading text-lg font-bold">{salaDosPeriodos.nome}</p><p className="text-sm text-muted-foreground">{salaDosPeriodos.unidadeNome}</p><div className="mt-3 space-y-2">{periodos.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"><div><p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p><p className="text-sm text-muted-foreground">{item.inicio} às {item.fim}</p></div><Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}><Trash2 className="h-4 w-4" /></Button></div>)}</div></div>}
+          <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}><Plus className="mr-2 h-4 w-4" />Adicionar outra data ou horário</Button>
+        </div>
+        <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp} disabled={!periodos.length}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando || !periodos.length}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar períodos" : "Entrar ou cadastrar"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
     <ReservaDialog open={consultaAberta} onOpenChange={(aberta) => { if (dadosConsulta || aberta) setConsultaAberta(aberta); }} onSuccess={() => { const dados = lerConsulta(); setDadosConsulta(dados); setConsultaAberta(false); if (selecaoRef.current) setConfirmacaoAberta(true); }} />

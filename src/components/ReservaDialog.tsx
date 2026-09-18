@@ -33,7 +33,12 @@ export default function ReservaDialog({ open, onOpenChange, onSuccess }: Reserva
     if (!open) return;
     try {
       const salvo = consultaSchema.safeParse(JSON.parse(localStorage.getItem(CONSULTA_STORAGE_KEY) || "null"));
-      if (salvo.success) setForm(salvo.data);
+      if (salvo.success) setForm({
+        nome: salvo.data.nome,
+        email: salvo.data.email,
+        whatsapp: salvo.data.whatsapp,
+        tipoNegocio: salvo.data.tipoNegocio,
+      });
     } catch { /* Mantém o formulário vazio quando o armazenamento estiver inválido. */ }
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
