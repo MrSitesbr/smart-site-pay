@@ -1069,6 +1069,8 @@ export type Database = {
           endereco: string | null
           foto_url: string | null
           galeria: string[] | null
+          horario_abertura: string
+          horario_fechamento: string
           id: string
           nome: string
           servicos_infra: Json | null
@@ -1080,6 +1082,8 @@ export type Database = {
           endereco?: string | null
           foto_url?: string | null
           galeria?: string[] | null
+          horario_abertura?: string
+          horario_fechamento?: string
           id?: string
           nome: string
           servicos_infra?: Json | null
@@ -1091,6 +1095,8 @@ export type Database = {
           endereco?: string | null
           foto_url?: string | null
           galeria?: string[] | null
+          horario_abertura?: string
+          horario_fechamento?: string
           id?: string
           nome?: string
           servicos_infra?: Json | null
