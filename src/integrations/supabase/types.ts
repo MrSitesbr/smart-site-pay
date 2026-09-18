@@ -232,7 +232,7 @@ export type Database = {
           status: string
           telefone: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -254,7 +254,7 @@ export type Database = {
           status?: string
           telefone: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -276,7 +276,7 @@ export type Database = {
           status?: string
           telefone?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1275,12 +1275,39 @@ export type Database = {
     }
     Functions: {
       current_cliente_id: { Args: never; Returns: string }
+      get_public_room_availability: {
+        Args: { p_end_date: string; p_sala_id?: string; p_start_date: string }
+        Returns: {
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          sala_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      request_authenticated_reservation: {
+        Args: {
+          p_data: string
+          p_hora_fim: string
+          p_hora_inicio: string
+          p_sala_id: string
+        }
+        Returns: string
+      }
+      submit_public_consultation: {
+        Args: {
+          p_email: string
+          p_nome: string
+          p_tipo_negocio: string
+          p_whatsapp: string
+        }
+        Returns: string
       }
     }
     Enums: {
