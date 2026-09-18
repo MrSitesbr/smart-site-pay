@@ -16,8 +16,8 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
 
-type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string };
-type UnidadePublica = { id: string; nome: string };
+type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number };
+type UnidadePublica = { id: string; nome: string; horario_abertura: string; horario_fechamento: string };
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
@@ -26,7 +26,7 @@ const UNIDADES_PERMANENTES = new Set([
   "66a610f6-1f6b-4673-903d-80aa57657982",
   "40840fbd-f575-4ff7-9e6d-1e9231985ce6",
 ]);
-const SLOTS = Array.from({ length: 20 }, (_, index) => 8 * 60 + index * 30);
+const SLOTS = Array.from({ length: 24 }, (_, index) => 8 * 60 + index * 30);
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const CORES = ["bg-primary", "bg-secondary", "bg-destructive", "bg-accent", "bg-foreground", "bg-muted-foreground"];
 const WHATSAPP = "5513988050358";
@@ -71,15 +71,18 @@ export default function CalendarioPublico() {
     let ativo = true;
     Promise.all([
       supabase.from("salas").select("id, nome, unidade_id, status").in("status", ["disponivel", "ativa"]).order("nome"),
-      supabase.from("unidades").select("id, nome").ilike("status", "ativ%").order("nome"),
+      supabase.from("unidades").select("id, nome, horario_abertura, horario_fechamento").ilike("status", "ativ%").order("nome"),
       supabase.auth.getSession(),
     ]).then(([salasResponse, unidadesResponse, sessaoResponse]) => {
       if (!ativo) return;
       if (salasResponse.error) toast({ title: "Não foi possível carregar as salas", description: salasResponse.error.message, variant: "destructive" });
       const listaUnidades = (unidadesResponse.data || []).filter((unidade) => !UNIDADES_PERMANENTES.has(unidade.id));
-      const nomes = new Map(listaUnidades.map((unidade) => [unidade.id, unidade.nome]));
+      const dadosUnidades = new Map(listaUnidades.map((unidade) => [unidade.id, unidade]));
       setUnidades(listaUnidades);
-      setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && nomes.has(sala.unidade_id))).map((sala) => ({ id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: nomes.get(String(sala.unidade_id)) || "Unidade" })));
+      setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && dadosUnidades.has(sala.unidade_id))).map((sala) => {
+        const unidade = dadosUnidades.get(String(sala.unidade_id));
+        return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "20:00") };
+      }));
       setAutenticado(Boolean(sessaoResponse.data.session));
       setCarregandoSalas(false);
     });
@@ -103,27 +106,38 @@ export default function CalendarioPublico() {
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
   const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(dia)}T12:00:00`));
   const salasGantt = salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId);
+  const slotsVisiveis = useMemo(() => {
+    if (!salasGantt.length) return SLOTS;
+    const abertura = Math.min(...salasGantt.map((sala) => sala.abertura));
+    const fechamento = Math.max(...salasGantt.map((sala) => sala.fechamento));
+    return SLOTS.filter((slot) => slot >= abertura && slot < fechamento);
+  }, [salasGantt]);
+  const foraDoExpediente = (id: string, index: number) => {
+    const sala = salas.find((item) => item.id === id);
+    const slot = slotsVisiveis[index];
+    return !sala || slot < sala.abertura || slot + 30 > sala.fechamento;
+  };
   const ocupacaoNoSlot = (id: string, index: number) => {
-    const inicio = SLOTS[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 30;
     return ocupacoesDoDia.find((item) => item.sala_id === id && inicio < minutos(item.hora_fim) && fim > minutos(item.hora_inicio));
   };
   const periodoNoSlot = (id: string, index: number) => {
-    const inicio = SLOTS[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 30;
     return periodos.find((item) => item.salaId === id && item.data === isoDate(dia) && inicio < minutos(item.fim) && fim > minutos(item.inicio));
   };
   const intervaloLivre = (id: string, a: number, b: number) => {
     const inicio = Math.min(a, b), fim = Math.max(a, b);
-    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => !ocupacaoNoSlot(id, index) && !periodoNoSlot(id, index));
+    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => !foraDoExpediente(id, index) && !ocupacaoNoSlot(id, index) && !periodoNoSlot(id, index));
   };
   const slotSelecionado = (id: string, index: number) => Boolean(periodoNoSlot(id, index)) || (selecao?.salaId === id && index >= Math.min(selecao.inicioIndex, selecao.fimIndex) && index <= Math.max(selecao.inicioIndex, selecao.fimIndex));
 
   const adicionarSelecao = useCallback((atual: Selecao) => {
-    const inicio = horarioMinutos(SLOTS[Math.min(atual.inicioIndex, atual.fimIndex)]);
-    const fim = horarioMinutos(SLOTS[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
+    const inicio = horarioMinutos(slotsVisiveis[Math.min(atual.inicioIndex, atual.fimIndex)]);
+    const fim = horarioMinutos(slotsVisiveis[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
     const novo: Periodo = { id: `${isoDate(dia)}-${inicio}-${fim}`, salaId: atual.salaId, data: isoDate(dia), inicio, fim };
     setPeriodos((lista) => lista.some((item) => item.id === novo.id) ? lista : [...lista, novo].sort((a, b) => `${a.data}${a.inicio}`.localeCompare(`${b.data}${b.inicio}`)));
     setConfirmacaoAberta(true);
-  }, [dia]);
+  }, [dia, slotsVisiveis]);
 
   useEffect(() => {
     const finalizar = () => {
@@ -154,12 +168,12 @@ export default function CalendarioPublico() {
   }, [carregandoSalas, salas]);
 
   const salaSelecionada = selecao ? salas.find((sala) => sala.id === selecao.salaId) : null;
-  const inicioSelecionado = selecao ? horarioMinutos(SLOTS[Math.min(selecao.inicioIndex, selecao.fimIndex)]) : "";
-  const fimSelecionado = selecao ? horarioMinutos(SLOTS[Math.max(selecao.inicioIndex, selecao.fimIndex)] + 30) : "";
+  const inicioSelecionado = selecao ? horarioMinutos(slotsVisiveis[Math.min(selecao.inicioIndex, selecao.fimIndex)]) : "";
+  const fimSelecionado = selecao ? horarioMinutos(slotsVisiveis[Math.max(selecao.inicioIndex, selecao.fimIndex)] + 30) : "";
   const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function iniciarSelecao(id: string, index: number) {
-    if (ocupacaoNoSlot(id, index) || periodoNoSlot(id, index)) return;
+    if (foraDoExpediente(id, index) || ocupacaoNoSlot(id, index) || periodoNoSlot(id, index)) return;
     if (periodos.length && periodos[0].salaId !== id) {
       toast({ title: "Escolha a mesma sala", description: "Envie esta solicitação ou remova os períodos antes de escolher outra sala." });
       return;
@@ -224,19 +238,19 @@ export default function CalendarioPublico() {
 
   return <div className="min-h-screen bg-muted/30">
     <Navbar />
-    <main className="mx-auto w-full max-w-[1400px] px-4 pb-16 pt-28 sm:px-6 lg:px-8">
-      <div className="mb-8 max-w-3xl"><p className="mb-2 font-heading text-sm font-bold uppercase text-primary">Agendamento</p><h1 className="font-heading text-3xl font-black sm:text-4xl">Agenda de salas</h1><p className="mt-3 text-muted-foreground">Escolha uma data e arraste pelos horários livres. As reservas aparecem sem dados dos clientes.</p></div>
-      <section className="mb-6 rounded-lg border bg-card p-4 shadow-sm sm:p-6">
-        <div className="mb-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+    <main className="mx-auto w-full max-w-[1280px] px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+      <div className="mb-5 max-w-3xl"><p className="mb-1 font-heading text-xs font-bold uppercase text-primary">Agendamento</p><h1 className="font-heading text-3xl font-black sm:text-4xl">Agenda de salas</h1><p className="mt-2 text-sm text-foreground/70">Escolha uma data e arraste pelos horários livres. As reservas aparecem sem dados dos clientes.</p></div>
+      <section className="mb-4 rounded-lg border-2 border-border bg-card p-3 shadow-sm sm:p-4">
+        <div className="mb-4 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
           <div><label className="mb-2 block text-sm font-semibold">Unidade</label><Select value={unidadeId} onValueChange={setUnidadeId} disabled={carregandoSalas}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as unidades</SelectItem>{unidades.map((unidade) => <SelectItem key={unidade.id} value={unidade.id}>{unidade.nome}</SelectItem>)}</SelectContent></Select></div>
           <div><label className="mb-2 block text-sm font-semibold">Sala</label><Select value={salaId} onValueChange={setSalaId} disabled={carregandoSalas}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as salas</SelectItem>{salasFiltradas.map((sala) => <SelectItem key={sala.id} value={sala.id}>{sala.nome} · {sala.unidadeNome}</SelectItem>)}</SelectContent></Select></div>
           <div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => setMes((atual) => subMonths(atual, 1))} aria-label="Mês anterior"><ChevronLeft className="h-4 w-4" /></Button><p className="min-w-40 text-center font-heading font-bold capitalize">{format(mes, "MMMM 'de' yyyy", { locale: ptBR })}</p><Button variant="outline" size="icon" onClick={() => setMes((atual) => addMonths(atual, 1))} aria-label="Próximo mês"><ChevronRight className="h-4 w-4" /></Button></div>
         </div>
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">{DIAS_SEMANA.map((nome) => <div key={nome} className="py-2 text-center text-xs font-bold text-muted-foreground sm:text-sm">{nome}</div>)}{Array.from({ length: getDay(startOfMonth(mes)) }).map((_, index) => <div key={`empty-${index}`} />)}{dias.map((data) => { const selecionado = isSameDay(data, dia); const bloqueado = isBefore(data, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(data)}T12:00:00`)); const qtd = ocupacoes.filter((item) => item.data === isoDate(data) && salasFiltradas.some((sala) => sala.id === item.sala_id)).length; return <Button key={isoDate(data)} variant={selecionado ? "default" : "outline"} className="h-16 flex-col gap-1 p-1 sm:h-20" onClick={() => { setDia(data); atualizarSelecao(null); }} disabled={bloqueado}><span className="text-base font-bold">{format(data, "d")}</span><span className="text-[10px] font-medium sm:text-xs">{bloqueado ? "Fechado" : qtd ? `${qtd} ocupado${qtd > 1 ? "s" : ""}` : "Livre"}</span></Button>; })}</div>
+        <div className="grid grid-cols-7 gap-1">{DIAS_SEMANA.map((nome) => <div key={nome} className="py-1 text-center text-[11px] font-bold text-foreground/70 sm:text-xs">{nome}</div>)}{Array.from({ length: getDay(startOfMonth(mes)) }).map((_, index) => <div key={`empty-${index}`} />)}{dias.map((data) => { const selecionado = isSameDay(data, dia); const bloqueado = isBefore(data, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(data)}T12:00:00`)); const qtd = ocupacoes.filter((item) => item.data === isoDate(data) && salasFiltradas.some((sala) => sala.id === item.sala_id)).length; return <Button key={isoDate(data)} variant={selecionado ? "default" : "outline"} className="h-11 flex-col gap-0 border-border p-0.5 sm:h-12" onClick={() => { setDia(data); atualizarSelecao(null); }} disabled={bloqueado}><span className="text-sm font-bold">{format(data, "d")}</span><span className="text-[9px] font-semibold sm:text-[10px]">{bloqueado ? "Fechado" : qtd ? `${qtd} ocupado${qtd > 1 ? "s" : ""}` : "Livre"}</span></Button>; })}</div>
       </section>
-      <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6" aria-label="Agenda de horários do dia">
-        <div className="mb-5 flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary"><CalendarDays className="h-5 w-5" /></div><div><h2 className="font-heading text-lg font-bold capitalize">{format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}</h2><p className="text-sm text-muted-foreground">Clique e arraste para selecionar um período</p></div></div>
-        {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="overflow-x-auto select-none"><div className="min-w-[720px]" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="sticky top-0 z-20 grid border-b bg-card" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="p-3 text-xs font-bold text-muted-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l p-3 text-center"><p className="text-sm font-bold">{sala.nome}</p><p className="text-xs text-muted-foreground">{sala.unidadeNome}</p></div>)}</div>{SLOTS.map((slot, index) => <div key={slot} className="grid" style={{ gridTemplateColumns: `76px repeat(${salasGantt.length}, minmax(180px, 1fr))` }}><div className="border-b p-2 text-xs font-semibold text-muted-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); return <div key={sala.id} role="button" tabIndex={ocupacao ? -1 : 0} aria-label={ocupacao ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onKeyDown={(event) => { if (!ocupacao && !periodoNoSlot(sala.id, index) && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); iniciarSelecao(sala.id, index); arrastandoRef.current = false; adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index }); } }} className={`relative min-h-12 border-b border-l transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : selecionado ? "bg-primary/20 ring-2 ring-inset ring-primary cursor-grabbing" : "cursor-crosshair bg-card hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-2 text-xs font-bold"><LockKeyhole className="mr-1 h-3.5 w-3.5" />Indisponível</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
+      <section className="overflow-hidden rounded-lg border-2 border-border bg-card shadow-sm" aria-label="Agenda de horários do dia">
+        <div className="flex items-center gap-3 border-b-2 border-border bg-muted/50 px-4 py-3"><div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-primary"><CalendarDays className="h-4 w-4" /></div><div><h2 className="font-heading text-base font-bold capitalize text-foreground">{format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}</h2><p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p></div></div>
+        {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="max-h-[620px] overflow-auto select-none"><div className="min-w-[680px]"><div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex items-center px-2 py-2 text-xs font-bold text-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l-2 border-border px-2 py-2 text-center"><p className="text-xs font-bold text-foreground sm:text-sm">{sala.nome}</p><p className="text-[10px] font-medium text-foreground/70">{sala.unidadeNome} · {horarioMinutos(sala.abertura)}–{horarioMinutos(sala.fechamento)}</p></div>)}</div>{slotsVisiveis.map((slot, index) => <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex min-h-9 items-center border-r border-border px-2 text-[11px] font-bold text-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); const fechado = foraDoExpediente(sala.id, index); const indisponivel = Boolean(ocupacao || fechado); return <div key={sala.id} role="button" tabIndex={indisponivel ? -1 : 0} aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onKeyDown={(event) => { if (!indisponivel && !periodoNoSlot(sala.id, index) && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); iniciarSelecao(sala.id, index); arrastandoRef.current = false; adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index }); } }} className={`relative min-h-9 border-l border-border transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : fechado ? "cursor-not-allowed bg-muted text-muted-foreground" : selecionado ? "cursor-grabbing bg-primary/20 ring-2 ring-inset ring-primary" : "cursor-crosshair hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-1 text-[10px] font-bold"><LockKeyhole className="mr-1 h-3 w-3" />Indisponível</div> : fechado ? <div className="flex h-full items-center justify-center text-[9px] font-semibold uppercase">Fechado</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
       </section>
     </main>
     <Footer />
