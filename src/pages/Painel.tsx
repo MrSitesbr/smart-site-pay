@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Calendar } from "@/components/ui/calendar";
 import { Loader2, LogOut, ExternalLink, Copy, Home, CalendarPlus, ArrowRight, ChevronLeft, ChevronRight, Building2, FileText, LifeBuoy, Calculator, Plus, Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -334,14 +333,12 @@ export default function Painel() {
                     </DialogHeader>
 
                     {selectedIsBusiness && !selectedInPast && (
-                      <InlineReservaForm
-                        user={user}
-                        date={selectedDay}
-                        onDone={(newContrato) => {
-                          setContratos((prev) => [newContrato, ...prev]);
-                          setSelectedDay(undefined);
-                        }}
-                      />
+                      <div className="rounded-lg border border-border bg-muted/20 p-4">
+                        <p className="mb-3 text-sm text-muted-foreground">Consulte as salas e escolha horários livres na agenda completa.</p>
+                        <Button className="w-full" onClick={() => navigate("/agendamento")}>
+                          <CalendarPlus className="mr-2 h-4 w-4" /> Abrir agenda de salas
+                        </Button>
+                      </div>
                     )}
                     {!selectedIsBusiness && (
                       <div className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
@@ -704,135 +701,4 @@ function GoogleStyleCalendar({
     </Card>
   );
 }
-
-/* ============ INLINE RESERVATION FORM (dentro do modal do dia) ============ */
-function InlineReservaForm({
-  user, date, onDone,
-}: {
-  user: any;
-  date: Date;
-  onDone: (novo: any) => void;
-}) {
-  const [ambiente, setAmbiente] = useState<string>("estacao");
-  const [plano, setPlano] = useState<string>("diaria");
-  const [horaInicio, setHoraInicio] = useState("09:00");
-  const [horaFim, setHoraFim] = useState("10:00");
-  const [saving, setSaving] = useState(false);
-
-  const preco = PRICING[ambiente]?.[plano] ?? null;
-  const dateKey = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-
-  async function submit() {
-    if (preco === null) {
-      toast({ title: "Combinação indisponível", description: "Este plano não está disponível para esse ambiente.", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    const payload: any = {
-      user_id: user.id,
-      nome: user.user_metadata?.nome || user.email,
-      email: user.email,
-      telefone: user.user_metadata?.telefone || null,
-      nicho: user.user_metadata?.nicho || null,
-      ambiente,
-      plano_tipo: plano,
-      preco,
-      data_inicio: dateKey,
-      dias_selecionados: [dateKey],
-      observacoes: plano === "hora" ? `Horário solicitado: ${horaInicio} - ${horaFim}` : null,
-      status: "pendente",
-    };
-    const { data, error } = await supabase.from("contract_requests").insert(payload).select().single();
-    setSaving(false);
-    if (error) {
-      toast({ title: "Erro ao solicitar", description: error.message, variant: "destructive" });
-      return;
-    }
-    toast({ title: "Solicitação enviada!", description: "Aguarde a aprovação do admin." });
-    onDone(data);
-  }
-
-  return (
-    <div className="rounded-2xl border border-border p-4 space-y-4 bg-muted/20">
-      <div>
-        <p className="text-xs font-heading font-bold uppercase tracking-widest text-muted-foreground mb-2">Qual espaço?</p>
-        <div className="grid grid-cols-3 gap-2">
-          {AMBIENTES.map((a) => (
-            <button
-              key={a}
-              onClick={() => setAmbiente(a)}
-              className={`text-xs font-heading font-bold rounded-xl p-2 border transition ${
-                ambiente === a
-                  ? "bg-secondary text-secondary-foreground border-secondary"
-                  : "bg-card hover:bg-accent/50 border-border"
-              }`}
-            >
-              {AMBIENTE_LABEL[a]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="text-xs font-heading font-bold uppercase tracking-widest text-muted-foreground mb-2">Qual formato?</p>
-        <div className="grid grid-cols-2 gap-2">
-          {PLANOS.map((p) => {
-            const price = PRICING[ambiente]?.[p];
-            const disabled = price === null;
-            return (
-              <button
-                key={p}
-                disabled={disabled}
-                onClick={() => setPlano(p)}
-                className={`text-left rounded-xl p-3 border transition ${
-                  disabled
-                    ? "opacity-40 cursor-not-allowed bg-muted"
-                    : plano === p
-                      ? "bg-secondary text-secondary-foreground border-secondary"
-                      : "bg-card hover:bg-accent/50 border-border"
-                }`}
-              >
-                <div className="text-xs font-heading font-bold">{PLANO_LABEL[p]}</div>
-                <div className="text-sm font-black mt-0.5">
-                  {price === null ? "Indisponível" : fmtBRL(price)}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {plano === "hora" && (
-        <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs font-heading font-bold">
-            Início
-            <input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" />
-          </label>
-          <label className="text-xs font-heading font-bold">
-            Fim
-            <input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" />
-          </label>
-        </div>
-      )}
-
-      {(plano === "pacote" || plano === "mensal") && (
-        <p className="text-[11px] text-muted-foreground">
-          Você está solicitando o início do plano nesta data. Os demais dias serão combinados com o admin após a aprovação.
-        </p>
-      )}
-
-      <Button
-        onClick={submit}
-        disabled={saving || preco === null}
-        className="w-full rounded-full font-heading font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90"
-      >
-        {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CalendarPlus className="w-4 h-4 mr-2" />}
-        Enviar solicitação {preco !== null && `— ${fmtBRL(preco)}`}
-      </Button>
-    </div>
-  );
-}
-
 
