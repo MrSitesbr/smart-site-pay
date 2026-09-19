@@ -122,10 +122,8 @@ const Footer = () => {
 
   // Dados das unidades
   const unidades = [
-    "Unidade 01: R. Jaú, 955 Conj. 26, Boqueirão - Praia Grande - SP",
     "Unidade 02: Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP",
-    "Unidade 03: R. São Caetano, 86, Boqueirão - Praia Grande - SP (Sede Administrativa)",
-    "Unidade 04: Rua Benjamin Constant, 61, Centro - São Vicente - SP"
+    "Unidade 03: R. São Caetano, 86, Boqueirão - Praia Grande - SP (Sede Administrativa)"
   ];
 
   const cols = cmsContent?.columns || defaultCols;
@@ -135,9 +133,6 @@ const Footer = () => {
   const description = cmsContent?.description || "O seu espaço de trabalho e networking na Praia Grande.";
   const phone = cmsContent?.phone || "(13) 98805-0358";
   const email = cmsContent?.email || "contato@coworking013.com.br";
-  const address1 = cmsContent?.address_1 || "Av. P. Costa e Silva, 609 - S. 906 - Boqueirão - Praia Grande - SP";
-  const address2 = cmsContent?.address_2 || "R. São Caetano, 86 - Boqueirão - Praia Grande - SP";
-  const address3 = cmsContent?.address_3 || "R. Jaú, 955 Conj. 26 - Boqueirão - Praia Grande - SP";
   const workingHoursWeek = cmsContent?.working_hours_week || "Seg. à Sex.: 08h às 21h";
   const workingHoursSat = cmsContent?.working_hours_sat || "Sáb: 08h às 12h";
   const logoTop = cmsContent?.logo_text_top || "CoWorking";
