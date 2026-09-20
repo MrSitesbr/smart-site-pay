@@ -19,9 +19,6 @@ Deno.serve(async (req) => {
       responsavel_telefone,
       responsavel_cpf,
       cnpj,
-      unidade_id,
-      plano_id,
-      sala_id,
     } = body ?? {};
 
     if (!email || !password || !razao_social || !responsavel_nome || !responsavel_telefone) {
@@ -42,13 +39,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: setting } = await admin
-      .from("app_settings")
-      .select("value")
-      .eq("key", "auto_aprovar_cadastros")
-      .maybeSingle();
-    const autoAprovar = Boolean((setting?.value as any)?.enabled);
-
     const { data: created, error: signErr } = await admin.auth.admin.createUser({
       email,
       password,
@@ -66,7 +56,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const userId = created.user!.id;
+    const userId = created.user?.id;
+    if (!userId) throw new Error("Não foi possível criar o usuário.");
 
     const payload: Record<string, unknown> = {
       razao_social,
@@ -75,11 +66,11 @@ Deno.serve(async (req) => {
       responsavel_telefone,
       responsavel_cpf: responsavel_cpf || null,
       cnpj: cnpj || null,
-      unidade_id: unidade_id || null,
-      plano_id: plano_id || null,
-      sala_id: sala_id || null,
+      unidade_id: null,
+      plano_id: null,
+      sala_id: null,
       user_id: userId,
-      status_acesso: autoAprovar ? "aprovado" : "pendente",
+      status_acesso: "aprovado",
     };
 
     const { data: existing } = await admin

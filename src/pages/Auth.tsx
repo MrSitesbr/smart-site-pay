@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 type Mode = "login" | "signup";
 
@@ -17,13 +16,11 @@ export default function Auth() {
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "";
   const [mode, setMode] = useState<Mode>("login");
-  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notRobot, setNotRobot] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [enviado, setEnviado] = useState<null | "pendente" | "aprovado">(null);
 
   // Cadastro
   const [form, setForm] = useState({
@@ -35,14 +32,7 @@ export default function Auth() {
     email: "",
     senha: "",
     confirmar: "",
-    unidade_id: "",
-    plano_id: "",
-    sala_id: "",
   });
-  const [unidades, setUnidades] = useState<any[]>([]);
-  const [planos, setPlanos] = useState<any[]>([]);
-  const [salas, setSalas] = useState<any[]>([]);
-  const [loadingOpcoes, setLoadingOpcoes] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -51,65 +41,6 @@ export default function Auth() {
     });
     // eslint-disable-next-line
   }, []);
-
-  useEffect(() => {
-    if (mode !== "signup") return;
-    supabase.from("unidades").select("id, nome, status").order("nome")
-      .then(({ data }) => {
-        const todas = data || [];
-        const ativas = todas.filter((u: any) => !u.status || String(u.status).toLowerCase().startsWith("ativ"));
-        setUnidades(ativas.length ? ativas : todas);
-      });
-  }, [mode]);
-
-  // Planos e salas coerentes com a unidade escolhida
-  useEffect(() => {
-    if (!form.unidade_id) { setPlanos([]); setSalas([]); return; }
-    let cancelado = false;
-    setLoadingOpcoes(true);
-    (async () => {
-      const [{ data: todos }, { data: todosVinculos }, { data: salasUnidade }] = await Promise.all([
-        (supabase.from("planos") as any).select("id, nome, tipo, unidade_id").is("deleted_at", null).order("nome"),
-        supabase.from("plano_unidades").select("plano_id, unidade_id"),
-        (supabase.from("salas") as any).select("id, nome, tipo").eq("unidade_id", form.unidade_id).order("nome"),
-      ]);
-      if (cancelado) return;
-
-      const vinculados = new Set(
-        (todosVinculos || []).filter((v: any) => v.unidade_id === form.unidade_id).map((v: any) => v.plano_id),
-      );
-      const comVinculo = new Set((todosVinculos || []).map((v: any) => v.plano_id));
-
-      // plano vale para a unidade se: pertence a ela, está vinculado a ela,
-      // ou não tem nenhum vínculo/unidade definida (vale para todas)
-      const finalPlanos = (todos || []).filter((p: any) =>
-        p.unidade_id
-          ? p.unidade_id === form.unidade_id
-          : vinculados.has(p.id) || !comVinculo.has(p.id),
-      );
-
-      setPlanos(finalPlanos);
-      setSalas(salasUnidade || []);
-      setForm((f) => ({
-        ...f,
-        plano_id: finalPlanos.some((p: any) => p.id === f.plano_id) ? f.plano_id : "",
-      }));
-      setLoadingOpcoes(false);
-    })();
-    return () => { cancelado = true; };
-  }, [form.unidade_id]);
-
-  // Salas compatíveis com o plano escolhido (quando o plano define salas)
-  const [salasPlano, setSalasPlano] = useState<string[] | null>(null);
-  useEffect(() => {
-    if (!form.plano_id) { setSalasPlano(null); return; }
-    supabase.from("sala_planos").select("sala_id").eq("plano_id", form.plano_id)
-      .then(({ data }) => setSalasPlano(data && data.length ? data.map((s: any) => s.sala_id) : null));
-  }, [form.plano_id]);
-
-  const salasDisponiveis = salasPlano
-    ? salas.filter((s) => salasPlano.includes(s.id))
-    : salas;
 
   async function routeAfterLogin(userId: string) {
     const { data: cliente } = await (supabase.from("clientes_corp") as any)
@@ -165,7 +96,8 @@ export default function Auth() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: emailLimpo, password });
       if (error) throw error;
-      await routeAfterLogin(data.user!.id);
+      if (!data.user) throw new Error("Não foi possível identificar o usuário.");
+      await routeAfterLogin(data.user.id);
     } catch (e: any) {
       if (e.message === "Invalid login credentials") {
         const { data: st } = await supabase.functions.invoke("client-access-status", {
@@ -205,7 +137,7 @@ export default function Auth() {
     } finally { setLoading(false); }
   }
 
-  function validarEtapa1() {
+  function validarCadastro() {
     const obrig: [string, string][] = [
       ["razao_social", "Nome / Razão social"],
       ["responsavel_nome", "Nome do responsável"],
@@ -233,10 +165,7 @@ export default function Auth() {
 
   async function cadastrar(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.unidade_id || !form.plano_id) {
-      toast({ title: "Escolha a unidade e o plano", variant: "destructive" });
-      return;
-    }
+    if (!validarCadastro()) return;
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("client-signup", {
@@ -248,14 +177,19 @@ export default function Auth() {
           responsavel_telefone: form.responsavel_telefone,
           responsavel_cpf: form.responsavel_cpf,
           cnpj: form.cnpj,
-          unidade_id: form.unidade_id,
-          plano_id: form.plano_id,
-          sala_id: form.sala_id || null,
         },
       });
       const err = (data as any)?.error || error?.message;
       if (err) throw new Error(err);
-      setEnviado((data as any).status === "aprovado" ? "aprovado" : "pendente");
+      const emailLimpo = form.email.trim().toLowerCase();
+      const { data: login, error: loginError } = await supabase.auth.signInWithPassword({
+        email: emailLimpo,
+        password: form.senha,
+      });
+      if (loginError) throw loginError;
+      if (!login.user) throw new Error("Não foi possível iniciar o acesso.");
+      toast({ title: "Cadastro concluído", description: "Seu painel já está disponível." });
+      navigate(redirect || "/painel", { replace: true });
     } catch (e: any) {
       toast({ title: "Não foi possível concluir o cadastro", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
@@ -281,23 +215,7 @@ export default function Auth() {
           <h1 className="font-heading font-bold text-xl text-center mt-2 text-white">Área do Cliente</h1>
         </div>
 
-        {enviado ? (
-          <div className="space-y-5 text-center">
-            <CheckCircle2 className="w-12 h-12 text-orange-500 mx-auto" />
-            <h2 className="font-heading font-bold text-lg">Cadastro enviado!</h2>
-            <p className="text-sm text-slate-400">
-              {enviado === "aprovado"
-                ? "Seu acesso já está liberado. Entre com seu e-mail e senha."
-                : "Recebemos seus dados. Assim que a equipe do Coworking 013 liberar seu cadastro, você poderá entrar com seu e-mail e senha."}
-            </p>
-            <Button
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-12 font-heading font-black"
-              onClick={() => { setEnviado(null); setMode("login"); setStep(1); setEmail(form.email); }}
-            >
-              IR PARA O ACESSO
-            </Button>
-          </div>
-        ) : mode === "login" ? (
+        {mode === "login" ? (
           <>
             <p className="text-sm text-slate-400 mb-8 border-l-2 border-orange-500 pl-4 py-1 italic">
               Acesse suas reservas e contratações.
@@ -352,7 +270,7 @@ export default function Auth() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => { setMode("signup"); setStep(1); }}
+                onClick={() => setMode("signup")}
                 className="w-full h-12 rounded-xl border-orange-500/40 bg-transparent text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 font-heading font-bold"
               >
                 CRIAR CONTA
@@ -367,23 +285,17 @@ export default function Auth() {
               </button>
 
               <p className="text-xs text-center text-slate-500 pt-2">
-                Novos cadastros passam por liberação da equipe do Coworking 013.
+                Novos cadastros acessam o painel automaticamente.
               </p>
             </form>
           </>
         ) : (
-          <form onSubmit={step === 1 ? (e) => { e.preventDefault(); if (validarEtapa1()) setStep(2); } : cadastrar} className="space-y-5">
-            <div className="flex items-center gap-2 mb-2">
-              {[1, 2].map((n) => (
-                <div key={n} className={`h-1.5 flex-1 rounded-full ${step >= n ? "bg-orange-500" : "bg-slate-700"}`} />
-              ))}
-            </div>
+          <form onSubmit={cadastrar} className="space-y-5">
             <p className="text-sm text-slate-400 border-l-2 border-orange-500 pl-4 py-1 italic">
-              {step === 1 ? "Etapa 1 de 2 — seus dados cadastrais" : "Etapa 2 de 2 — plano, unidade e sala"}
+              Preencha seus dados para criar a conta.
             </p>
 
-            {step === 1 ? (
-              <>
+            <>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Nome / Razão social *</Label>
                   <Input value={form.razao_social} onChange={(e) => setForm({ ...form, razao_social: e.target.value })} className={inputCls} />
@@ -425,54 +337,13 @@ export default function Auth() {
                 <p className="text-[11px] text-slate-500 leading-snug -mt-2">
                   A senha deve ter no mínimo 6 caracteres. Recomendamos incluir letras maiúsculas, números e caracteres especiais (ex.: @, #, $, !) para maior segurança.
                 </p>
-              </>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Unidade *</Label>
-                  <Select value={form.unidade_id} onValueChange={(v) => setForm({ ...form, unidade_id: v, sala_id: "" })}>
-                    <SelectTrigger className={inputCls}><SelectValue placeholder="Escolha a unidade" /></SelectTrigger>
-                    <SelectContent>
-                      {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Plano *</Label>
-                  <Select value={form.plano_id} onValueChange={(v) => setForm({ ...form, plano_id: v, sala_id: "" })} disabled={!form.unidade_id || loadingOpcoes}>
-                    <SelectTrigger className={inputCls}>
-                      <SelectValue placeholder={!form.unidade_id ? "Escolha a unidade primeiro" : loadingOpcoes ? "Carregando planos..." : "Escolha o plano"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {planos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  {form.unidade_id && !loadingOpcoes && planos.length === 0 && (
-                    <p className="text-xs text-slate-500">Nenhum plano disponível nesta unidade.</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Sala que pretende usar</Label>
-                  <Select value={form.sala_id} onValueChange={(v) => setForm({ ...form, sala_id: v })} disabled={!form.unidade_id}>
-                    <SelectTrigger className={inputCls}>
-                      <SelectValue placeholder={form.unidade_id ? "Escolha a sala" : "Escolha a unidade primeiro"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {salasDisponiveis.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  {form.plano_id && salasDisponiveis.length === 0 && (
-                    <p className="text-xs text-slate-500">Nenhuma sala vinculada a este plano nesta unidade.</p>
-                  )}
-                </div>
-              </>
-            )}
+            </>
 
             <div className="flex gap-3 pt-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => (step === 1 ? setMode("login") : setStep(1))}
+                onClick={() => setMode("login")}
                 className="h-12 rounded-xl border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
               >
                 Voltar
@@ -482,7 +353,7 @@ export default function Auth() {
                 disabled={loading}
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl h-12 font-heading font-black"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : step === 1 ? "CONTINUAR" : "ENVIAR CADASTRO"}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "CRIAR CONTA"}
               </Button>
             </div>
           </form>
