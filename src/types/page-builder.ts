@@ -26,7 +26,8 @@ export type WidgetType =
   | 'social_icons'
   | 'testimonials'
   | 'accordion'
-  | 'blog_articles';
+  | 'blog_articles'
+  | 'virtual_address';
 
 export interface WidgetData {
   id: string;
