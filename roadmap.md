@@ -26,3 +26,4 @@
 - [x] Permitir solicitar períodos para qualquer sala disponível, deixando a definição final com o administrador.
 - [x] Mostrar miniatura e detalhes de cada sala no cabeçalho da agenda.
 - [x] Validar a solicitação flexível e o popup de informações das salas.
+- [ ] Simplificar o cadastro do cliente para uma etapa e entrar automaticamente no painel.
