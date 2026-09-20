@@ -20,7 +20,7 @@ type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: 
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
 
-const SLOTS = Array.from({ length: 24 }, (_, index) => 8 * 60 + index * 30);
+const SLOTS = Array.from({ length: 12 }, (_, index) => 8 * 60 + index * 60);
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const CORES = ["bg-primary", "bg-secondary", "bg-destructive", "bg-accent", "bg-foreground", "bg-muted-foreground"];
 const MAX_PERIODOS = 20;
@@ -180,16 +180,16 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const foraDoExpediente = (id: string, index: number) => {
     const sala = salas.find((item) => item.id === id);
     const slot = slotsVisiveis[index];
-    return !sala || slot < sala.abertura || slot + 30 > sala.fechamento;
+    return !sala || slot < sala.abertura || slot + 60 > sala.fechamento;
   };
   
   const ocupacaoNoSlot = (id: string, index: number) => {
-    const inicio = slotsVisiveis[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 60;
     return ocupacoesDoDia.find((item) => item.sala_id === id && inicio < minutos(item.hora_fim) && fim > minutos(item.hora_inicio));
   };
   
   const reservaDoUsuarioNoSlot = (id: string, index: number) => {
-    const inicio = slotsVisiveis[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 60;
     return reservasDoUsuario.find((r: any) => 
       r.sala_id === id && 
       r.data === isoDate(dia) && 
@@ -199,7 +199,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   };
   
   const periodoNoSlot = (id: string, index: number) => {
-    const inicio = slotsVisiveis[index], fim = inicio + 30;
+    const inicio = slotsVisiveis[index], fim = inicio + 60;
     return periodos.find((item) => item.salaId === id && item.data === isoDate(dia) && inicio < minutos(item.fim) && fim > minutos(item.inicio));
   };
   
@@ -218,7 +218,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
 
   const adicionarSelecao = useCallback((atual: Selecao) => {
     const inicio = horarioMinutos(slotsVisiveis[Math.min(atual.inicioIndex, atual.fimIndex)]);
-    const fim = horarioMinutos(slotsVisiveis[Math.max(atual.inicioIndex, atual.fimIndex)] + 30);
+    const fim = horarioMinutos(slotsVisiveis[Math.max(atual.inicioIndex, atual.fimIndex)] + 60);
     const novo: Periodo = { id: `${isoDate(dia)}-${inicio}-${fim}`, salaId: atual.salaId, data: isoDate(dia), inicio, fim };
     setPeriodos((lista) => lista.some((item) => item.id === novo.id) ? lista : [...lista, novo].sort((a, b) => `${a.data}${a.inicio}`.localeCompare(`${b.data}${b.inicio}`)));
     setConfirmacaoAberta(true);
