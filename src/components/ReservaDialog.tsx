@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CalendarSearch, Loader2 } from "lucide-react";
+import { CalendarSearch, Loader2, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { consultaSchema } from "@/lib/consultaValidation";
@@ -115,6 +115,12 @@ export default function ReservaDialog({ open, onOpenChange, onSuccess }: Reserva
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarSearch className="mr-2 h-4 w-4" />}
               Consultar
             </Button>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              <button onClick={() => navigate("/auth")} className="flex items-center justify-center w-full gap-2 text-brand-orange hover:underline">
+                <LogIn className="w-4 h-4" />
+                Já sou cliente
+              </button>
+            </p>
           </div>
         </div>
       </DialogContent>

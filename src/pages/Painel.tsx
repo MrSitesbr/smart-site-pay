@@ -6,18 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, LogOut, ExternalLink, Copy, Home, CalendarPlus, ArrowRight, ChevronLeft, ChevronRight, Building2, FileText, LifeBuoy, Calculator, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, LogOut, ExternalLink, Copy, Home, ArrowRight, Building2, FileText, LifeBuoy, Calculator, Plus, Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import NovoVisitanteDialog from "@/components/admin/NovoVisitanteDialog";
-import { isBusinessDay, isHoliday, getDateInfo } from "@/lib/holidays";
 import MeusDados from "@/components/painel/MeusDados";
 import Colaboradores from "@/components/painel/Colaboradores";
 import VisitantesCliente from "@/components/painel/VisitantesCliente";
 import MeuPlano from "@/components/painel/MeuPlano";
 import DocumentosCliente from "@/components/painel/DocumentosCliente";
 import SuporteCliente from "@/components/painel/SuporteCliente";
+import PainelAgendamento from "@/components/painel/PainelAgendamento";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Espaço de Trabalho",
@@ -47,16 +47,12 @@ const PRICING: Record<string, Record<string, number | null>> = {
 const AMBIENTES = ["estacao", "sala_privativa", "sala_reuniao"] as const;
 const PLANOS = ["hora", "diaria", "pacote", "mensal"] as const;
 
-function todayStart() { const d = new Date(); d.setHours(0,0,0,0); return d; }
-
 export default function Painel() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [contratos, setContratos] = useState<any[]>([]);
   const [reservas, setReservas] = useState<any[]>([]);
-  const [selectedDay, setSelectedDay] = useState<Date | undefined>();
-  const [month, setMonth] = useState<Date>(new Date());
   const [cliente, setCliente] = useState<any>(null);
   const [funcionarios, setFuncionarios] = useState<any[]>([]);
   const [visitantes, setVisitantes] = useState<any[]>([]);
@@ -101,33 +97,7 @@ export default function Painel() {
     })();
   }, [navigate]);
 
-  // Aggregate dates that have anything from the user
-  const eventsByDay = useMemo(() => {
-    const map = new Map<string, { contratos: any[]; reservas: any[] }>();
-    const push = (key: string, kind: "contratos" | "reservas", obj: any) => {
-      if (!map.has(key)) map.set(key, { contratos: [], reservas: [] });
-      map.get(key)![kind].push(obj);
-    };
-    contratos.forEach((c) => {
-      const dias: string[] = c.dias_selecionados || [];
-      dias.forEach((d: string) => push(d, "contratos", c));
-      if (c.data_inicio && !dias.includes(c.data_inicio)) push(c.data_inicio, "contratos", c);
-    });
-    reservas.forEach((r) => push(r.data, "reservas", r));
-    return map;
-  }, [contratos, reservas]);
 
-  const eventDates = useMemo(
-    () => Array.from(eventsByDay.keys()).map((k) => new Date(k + "T00:00")),
-    [eventsByDay]
-  );
-
-  const selectedKey = selectedDay
-    ? `${selectedDay.getFullYear()}-${String(selectedDay.getMonth()+1).padStart(2,"0")}-${String(selectedDay.getDate()).padStart(2,"0")}`
-    : "";
-  const selectedInfo = selectedKey ? eventsByDay.get(selectedKey) : undefined;
-  const selectedIsBusiness = selectedDay ? isBusinessDay(selectedDay) : false;
-  const selectedInPast = selectedDay ? selectedDay < todayStart() : false;
 
   async function logout() { await supabase.auth.signOut(); navigate("/auth"); }
   function copyPix(code: string) { navigator.clipboard.writeText(code); toast({ title: "Código PIX copiado" }); }
@@ -308,79 +278,20 @@ export default function Painel() {
 
           <TabsContent value="suporte"><Card className="p-5 max-w-2xl"><div className="flex items-center gap-2 mb-3"><LifeBuoy className="w-5 h-5 text-secondary" /><h2 className="font-heading font-black text-xl">Suporte</h2></div><p className="text-sm text-muted-foreground mb-4">Precisa de ajuda com sua unidade, plano ou reserva?</p><Button asChild><a href="mailto:contato@coworking013.com.br?subject=Suporte%20do%20painel">Entrar em contato</a></Button></Card></TabsContent>
 
-          {/* CALENDÁRIO — estilo Google Calendar (mês maximizado) */}
+          {/* CALENDÁRIO — idêntico ao público com filtros e Gantt */}
           <TabsContent value="calendario">
-            <GoogleStyleCalendar
-              month={month}
-              setMonth={setMonth}
-              eventsByDay={eventsByDay}
-              onSelectDay={setSelectedDay}
+            <PainelAgendamento
+              cliente={cliente}
+              user={user}
+              onRefresh={async () => {
+                const { data, error } = await supabase
+                  .from("reservations")
+                  .select("*")
+                  .eq("email", user?.email)
+                  .order("data", { ascending: false });
+                if (!error) setReservas(data || []);
+              }}
             />
-
-            <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(undefined)}>
-              <DialogContent className="max-w-lg">
-                {selectedDay && (
-                  <>
-                    <DialogHeader>
-                      <DialogTitle className="font-heading">
-                        <span className="block text-xs uppercase tracking-widest text-muted-foreground">
-                          {selectedDay.toLocaleDateString("pt-BR", { weekday: "long" })}
-                        </span>
-                        <span className="text-2xl font-black">
-                          {selectedDay.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-                        </span>
-                      </DialogTitle>
-                    </DialogHeader>
-
-                    {selectedIsBusiness && !selectedInPast && (
-                      <div className="rounded-lg border border-border bg-muted/20 p-4">
-                        <p className="mb-3 text-sm text-muted-foreground">Consulte as salas e escolha horários livres na agenda completa.</p>
-                        <Button className="w-full" onClick={() => navigate("/agendamento")}>
-                          <CalendarPlus className="mr-2 h-4 w-4" /> Abrir agenda de salas
-                        </Button>
-                      </div>
-                    )}
-                    {!selectedIsBusiness && (
-                      <div className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
-                        Este dia não está disponível para reserva (final de semana ou feriado).
-                      </div>
-                    )}
-                    {selectedIsBusiness && selectedInPast && (
-                      <div className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
-                        Data no passado — não é possível criar reserva.
-                      </div>
-                    )}
-
-                    {selectedInfo && (selectedInfo.contratos.length > 0 || selectedInfo.reservas.length > 0) ? (
-                      <div className="space-y-3 mt-2 max-h-[50vh] overflow-y-auto">
-                        {selectedInfo.contratos.map((c) => (
-                          <div key={c.id} className="rounded-xl border border-border p-3">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <Badge className={`${STATUS_STYLE[c.status]} text-white`}>{STATUS_LABEL[c.status] || c.status}</Badge>
-                              <Badge variant="outline">{AMBIENTE_LABEL[c.ambiente]}</Badge>
-                              <Badge variant="secondary">{PLANO_LABEL[c.plano_tipo]}</Badge>
-                              <span className="ml-auto font-heading font-black">{fmtBRL(Number(c.preco))}</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">Dia incluído no seu plano</p>
-                          </div>
-                        ))}
-                        {selectedInfo.reservas.map((r) => (
-                          <div key={r.id} className="rounded-xl border border-border p-3">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <Badge className="bg-blue-500 text-white">{r.status}</Badge>
-                              <Badge variant="outline">{AMBIENTE_LABEL[r.ambiente]}</Badge>
-                            </div>
-                            <p className="text-sm">{r.hora_inicio.slice(0,5)} - {r.hora_fim.slice(0,5)}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : selectedIsBusiness && !selectedInPast ? (
-                      <p className="text-sm text-muted-foreground">Nada agendado para este dia.</p>
-                    ) : null}
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
           </TabsContent>
 
 
@@ -551,154 +462,6 @@ export default function Painel() {
         </Dialog>
       </main>
     </div>
-  );
-}
-
-/* ============ GOOGLE-CALENDAR-STYLE MONTH VIEW ============ */
-const WEEKDAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-
-function dayKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
-
-function GoogleStyleCalendar({
-  month, setMonth, eventsByDay, onSelectDay,
-}: {
-  month: Date;
-  setMonth: (d: Date) => void;
-  eventsByDay: Map<string, { contratos: any[]; reservas: any[] }>;
-  onSelectDay: (d: Date) => void;
-}) {
-  const today = todayStart();
-  const first = new Date(month.getFullYear(), month.getMonth(), 1);
-  const gridStart = new Date(first);
-  gridStart.setDate(1 - first.getDay()); // back to Sunday
-  const days: Date[] = [];
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(gridStart);
-    d.setDate(gridStart.getDate() + i);
-    days.push(d);
-  }
-
-  const goPrev = () => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
-  const goNext = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
-  const goToday = () => setMonth(new Date());
-
-  return (
-    <Card className="overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-card">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToday} className="rounded-full font-heading font-bold">Hoje</Button>
-          <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="w-5 h-5" /></Button>
-          <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="w-5 h-5" /></Button>
-          <h2 className="font-heading font-black text-2xl ml-2 capitalize">
-            {MONTH_NAMES[month.getMonth()]} <span className="text-muted-foreground font-bold">{month.getFullYear()}</span>
-          </h2>
-        </div>
-        <div className="hidden md:flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-secondary" />Suas reservas</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500/30" /><span className="text-red-600 font-bold">Feriado</span></span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-muted" />Fim de semana</span>
-        </div>
-      </div>
-
-      {/* Weekday header */}
-      <div className="grid grid-cols-7 border-b bg-brand-blue-dark">
-        {WEEKDAYS.map((w) => (
-          <div key={w} className="px-2 py-2 text-[11px] font-heading font-bold tracking-widest text-white text-center">
-            {w}
-          </div>
-        ))}
-      </div>
-
-      {/* Grid — 6 rows × 7 cols, maximized */}
-      <div className="grid grid-cols-7 grid-rows-6 h-[calc(100vh-260px)] min-h-[600px]">
-        {days.map((d, i) => {
-          const inMonth = d.getMonth() === month.getMonth();
-          const isToday = d.getTime() === today.getTime();
-          const business = isBusinessDay(d);
-          const holiday = isHoliday(d);
-          const dateInfo = getDateInfo(d);
-          const isPast = d < today;
-          const key = dayKey(d);
-          const info = eventsByDay.get(key);
-          const events = [
-            ...(info?.contratos.map((c) => ({ kind: "contrato" as const, obj: c })) || []),
-            ...(info?.reservas.map((r) => ({ kind: "reserva" as const, obj: r })) || []),
-          ];
-          const isSunday = i % 7 === 0;
-          const isLastRow = i >= 35;
-
-          return (
-            <button
-              key={i}
-              onClick={() => onSelectDay(new Date(d))}
-              className={[
-                "text-left p-1.5 border-border transition-colors relative flex flex-col gap-1 overflow-hidden",
-                !isSunday && "border-l",
-                !isLastRow && "border-b",
-                inMonth ? "bg-card" : "bg-muted/60",
-                holiday && inMonth && "bg-red-500/15",
-                !business && !holiday && inMonth && "bg-secondary/5",
-                "hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary",
-              ].filter(Boolean).join(" ")}
-              title={dateInfo?.name}
-            >
-              <div className="flex items-center justify-between">
-                <span
-                  className={[
-                    "text-sm font-heading font-black w-7 h-7 flex items-center justify-center rounded-full",
-                    isToday && "bg-primary text-primary-foreground shadow-md",
-                    !isToday && holiday && inMonth && "text-red-700",
-                    !isToday && !holiday && !inMonth && "text-muted-foreground/60",
-                    !isToday && !holiday && inMonth && isPast && "text-muted-foreground",
-                    !isToday && !holiday && inMonth && !isPast && "text-foreground",
-                  ].filter(Boolean).join(" ")}
-                >
-                  {d.getDate()}
-                </span>
-              </div>
-
-              {dateInfo && (
-                <div
-                  className={`text-[10px] leading-tight px-1 truncate font-heading font-bold ${
-                    dateInfo.holiday ? "text-red-600" : "text-muted-foreground"
-                  }`}
-                  title={dateInfo.name}
-                >
-                  {dateInfo.name}
-                </div>
-              )}
-
-              <div className="flex-1 space-y-1 overflow-hidden">
-                {events.slice(0, 3).map((e, idx) => {
-                  const label = e.kind === "contrato"
-                    ? `${PLANO_LABEL[e.obj.plano_tipo] || ""} · ${AMBIENTE_LABEL[e.obj.ambiente] || ""}`
-                    : `${e.obj.hora_inicio?.slice(0,5)} ${AMBIENTE_LABEL[e.obj.ambiente] || ""}`;
-                  const color = e.kind === "contrato"
-                    ? (STATUS_STYLE[e.obj.status] || "bg-secondary")
-                    : "bg-blue-500";
-                  return (
-                    <div
-                      key={idx}
-                      className={`${color} text-white text-[10px] leading-tight rounded px-1.5 py-0.5 truncate font-medium`}
-                      title={label}
-                    >
-                      {label}
-                    </div>
-                  );
-                })}
-                {events.length > 3 && (
-                  <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} mais</div>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </Card>
   );
 }
 
