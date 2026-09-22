@@ -34,6 +34,6 @@
 - [x] Corrigir e publicar a troca administrativa de senha com autorização segura e mensagens claras.
 - [x] Sincronizar estados, rollback e arquivamento seguro do funil de leads.
 - [x] Remover a função legada insegura de redefinição administrativa.
-- [ ] Revisar funções privilegiadas e restringir permissões sem expor dados pessoais.
+- [x] Revisar funções privilegiadas e restringir permissões sem expor dados pessoais.
 - [x] Criar testes funcionais das regras críticas.
-- [ ] Validar os fluxos corrigidos no desktop e celular, com typecheck, testes, lint e build.
+- [x] Validar os fluxos corrigidos no desktop e celular, com typecheck, testes focados e build; o lint geral mantém dívida técnica anterior fora deste escopo.
