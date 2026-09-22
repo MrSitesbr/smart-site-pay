@@ -1407,6 +1407,26 @@ export type Database = {
             }
             Returns: string[]
           }
+      save_admin_room: {
+        Args: {
+          p_capacidade: number
+          p_categorias: string[]
+          p_descricao: string
+          p_foto_url: string
+          p_galeria: string[]
+          p_id: string
+          p_metadata: Json
+          p_modalidades: string[]
+          p_nome: string
+          p_planos: string[]
+          p_preco_avulso: number
+          p_preco_mensal: number
+          p_status: string
+          p_tipo: string
+          p_unidade_id: string
+        }
+        Returns: string
+      }
       submit_public_consultation: {
         Args: {
           p_email: string
