@@ -181,7 +181,7 @@ export default function AdminSalaDetalhe() {
                   {planos.length === 0 && <span className="text-sm text-muted-foreground italic">Nenhum plano associado.</span>}
                 </div>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {(sala.categorias || [sala.categoria]).filter(Boolean).map((categoria: string) => <Badge key={categoria} variant="outline">{categoria.replaceAll("_", " ")}</Badge>)}
+                  {(sala.categorias || [sala.categoria]).filter(Boolean).map((categoria: string) => <Badge key={categoria} variant="outline">{categoria.replace(/_/g, " ")}</Badge>)}
                   {(sala.modalidades_locacao || []).map((modalidade: string) => <Badge key={modalidade} variant="secondary">{modalidade}</Badge>)}
                 </div>
               </div>
