@@ -47,7 +47,7 @@ export function horasDaReserva(r: any): number {
 }
 
 /** Consumo do plano de um cliente: reservas confirmadas/realizadas dentro do período vigente. */
-export async function calcularUsoPlano(emails: string[], plano: any): Promise<PlanoUso> {
+export async function calcularUsoPlano(emails: string[], plano: any, excludeReservationId?: string): Promise<PlanoUso> {
   const periodo = periodoDoPlano(plano);
   const contratadas = Number(plano?.horas_incluidas ?? plano?.quantidade_horas ?? 0);
   const lista = emails.filter(Boolean).map((e) => e.trim().toLowerCase());
@@ -62,7 +62,7 @@ export async function calcularUsoPlano(emails: string[], plano: any): Promise<Pl
       .gte("data", iso(periodo.inicio))
       .lte("data", iso(periodo.fim))
       .order("data", { ascending: false });
-    reservas = data || [];
+    reservas = (data || []).filter((reserva) => reserva.id !== excludeReservationId);
   }
 
   const usadas = reservas.reduce((acc, r) => acc + horasDaReserva(r), 0);

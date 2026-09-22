@@ -24,10 +24,10 @@ export async function verificarConflitos(
   // Capacidade da sala (estações compartilhadas aceitam várias reservas simultâneas)
   const { data: salaInfo } = await supabase
     .from('salas')
-    .select('capacidade, tipo, unidades(horario_abertura, horario_fechamento)')
+    .select('capacidade, tipo, categorias, unidades(horario_abertura, horario_fechamento)')
     .eq('id', salaId)
     .maybeSingle();
-  const isCompartilhada = /comp|estac|estaç|coworking/i.test(String(salaInfo?.tipo || ''));
+  const isCompartilhada = (salaInfo?.categorias || []).includes("compartilhado") || /comp|estac|estaç|coworking/i.test(String(salaInfo?.tipo || ''));
   const capacidade = isCompartilhada ? Math.max(1, Number(salaInfo?.capacidade) || 1) : 1;
   const unidade = Array.isArray(salaInfo?.unidades) ? salaInfo.unidades[0] : salaInfo?.unidades;
   const abertura = String(unidade?.horario_abertura || "08:00").slice(0, 5);

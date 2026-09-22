@@ -10,6 +10,7 @@ import { MediaPickerModal } from "./MediaPickerModal";
 import { ArrowLeft, CheckCircle2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mensagemBancoSala, SALA_CATEGORIAS, SALA_MODALIDADES, tipoAmbienteDasCategorias } from "@/lib/salaOptions";
+import { numberOrNull, roomSchema } from "@/lib/validation";
 
 const statusOptions = [
   { value: "disponivel", label: "Disponível" },
@@ -34,6 +35,7 @@ const defaultForm = {
   planos_permitidos: [] as string[],
   preco_locacao_mensal: "",
   preco_periodo_locacao_avulsa: "",
+  preco_diaria: "",
 };
 
 export default function AdminSalaFormPage() {
@@ -96,6 +98,7 @@ export default function AdminSalaFormPage() {
           planos_permitidos: (planosRes.data || []).map((p: any) => p.plano_id),
           preco_locacao_mensal: sala.preco_locacao_mensal?.toString() || "",
           preco_periodo_locacao_avulsa: sala.preco_periodo_locacao_avulsa?.toString() || "",
+          preco_diaria: sala.preco_diaria?.toString() || "",
         });
         setLoading(false);
       })();
@@ -115,15 +118,20 @@ export default function AdminSalaFormPage() {
   }, [id, isEditing, isNew, navigate, unidadeId]);
 
   async function saveSala() {
-    if (!form.nome?.trim()) {
-      toast.error("Nome da sala é obrigatório");
-      return;
-    }
-
-    const precoLocacaoMensal = form.preco_locacao_mensal === "" ? null : Number(form.preco_locacao_mensal);
-    const precoPeriodoLocacaoAvulsa = form.preco_periodo_locacao_avulsa === "" ? null : Number(form.preco_periodo_locacao_avulsa);
-    if (!form.categorias?.length) return toast.error("Selecione ao menos uma categoria");
-    if (!form.modalidades_locacao?.length) return toast.error("Selecione ao menos uma modalidade");
+    const parsed = roomSchema.safeParse({
+      nome: form.nome,
+      unidadeId: form.unidade_id || unidadeId,
+      categorias: form.categorias,
+      modalidades: form.modalidades_locacao,
+      capacidade: Number(form.capacidade),
+      descricao: form.descricao || "",
+      precoMensal: numberOrNull(form.preco_locacao_mensal),
+      precoHora: numberOrNull(form.preco_periodo_locacao_avulsa),
+      precoDiaria: numberOrNull(form.preco_diaria),
+      planos: form.planos_permitidos || [],
+    });
+    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message || "Revise os campos da sala.");
+    const values = parsed.data;
     const { data, error } = await supabase.rpc("save_admin_room", {
       p_id: id || undefined,
       p_unidade_id: form.unidade_id || unidadeId,
@@ -131,14 +139,15 @@ export default function AdminSalaFormPage() {
       p_tipo: tipoAmbienteDasCategorias(form.categorias),
       p_categorias: form.categorias,
       p_modalidades: form.modalidades_locacao,
-      p_capacidade: Number(form.capacidade) || 1,
+      p_capacidade: values.capacidade,
       p_descricao: form.descricao || "",
       p_foto_url: form.galeria?.[0] || form.foto_url || "",
       p_galeria: form.galeria || [],
       p_status: form.status || "disponivel",
       p_metadata: form.metadata || {},
-      p_preco_mensal: precoLocacaoMensal || 0,
-      p_preco_avulso: precoPeriodoLocacaoAvulsa || 0,
+      p_preco_mensal: values.precoMensal || 0,
+      p_preco_hora: values.precoHora || 0,
+      p_preco_diaria: values.precoDiaria || 0,
       p_planos: form.planos_permitidos || [],
     });
     if (error) {
@@ -220,12 +229,12 @@ export default function AdminSalaFormPage() {
 
               <div className="space-y-2">
                 <Label>Capacidade</Label>
-                <Input value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
+                <Input type="number" min={1} step={1} value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
               </div>
 
               {form.modalidades_locacao.includes("avulso") && (
                   <div className="space-y-2">
-                    <Label>Preço Locação Avulsa</Label>
+                    <Label>Preço avulso por hora</Label>
                     <Input
                       type="number"
                       min={0}
@@ -233,6 +242,10 @@ export default function AdminSalaFormPage() {
                       onChange={(e) => setForm({ ...form, preco_periodo_locacao_avulsa: e.target.value })}
                       placeholder="R$ 0,00"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Preço da diária</Label>
+                    <Input type="number" min={0} value={form.preco_diaria} onChange={(e) => setForm({ ...form, preco_diaria: e.target.value })} placeholder="Sob consulta" />
                   </div>
               )}
             </div>
