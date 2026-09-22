@@ -111,7 +111,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   useEffect(() => {
     if (selectedUnidade) {
-      supabase.from("salas").select("id, nome, tipo, modalidades_locacao, preco_periodo_locacao_avulsa").eq("unidade_id", selectedUnidade).then(({ data }) => {
+      supabase.from("salas").select("id, nome, tipo, modalidades_locacao, preco_hora_avulsa, preco_diaria").eq("unidade_id", selectedUnidade).then(({ data }) => {
         setSalas(data || []);
         setSelectedSala("");
       });
