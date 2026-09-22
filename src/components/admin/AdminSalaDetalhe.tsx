@@ -5,18 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Edit, Info, Users, Clock, CheckCircle2, Save, X, ImageIcon } from "lucide-react";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ImageUpload } from "./ImageUpload";
-import { MediaPickerModal } from "./MediaPickerModal";
+import { ArrowLeft, Edit, Info, Users, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminSalaDetalhe() {
@@ -26,9 +15,6 @@ export default function AdminSalaDetalhe() {
   const [unidade, setUnidade] = useState<any>(null);
   const [planos, setPlanos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingSala, setEditingSala] = useState<any>(null);
-  const [allPlanos, setAllPlanos] = useState<any[]>([]);
-  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -46,61 +32,15 @@ export default function AdminSalaDetalhe() {
       return;
     }
 
-    const [uRes, pRes, allPRes] = await Promise.all([
+    const [uRes, pRes] = await Promise.all([
       supabase.from('unidades').select('*').eq('id', salaData.unidade_id).single(),
-      supabase.from('sala_planos').select('plano_id, planos(*)').eq('sala_id', id),
-      supabase.from('planos').select('*').order('nome')
+      supabase.from('sala_planos').select('plano_id, planos(*)').eq('sala_id', id)
     ]);
 
     setSala(salaData);
     setUnidade(uRes.data);
     setPlanos((pRes.data || []).map((item: any) => item.planos));
-    setAllPlanos(allPRes.data || []);
     setLoading(false);
-  }
-
-  async function handleSaveSala() {
-    if (!editingSala.nome) return toast.error("Nome é obrigatório");
-
-    const updatePayload: any = {
-      nome: editingSala.nome,
-      categoria: editingSala.categoria,
-      tipo_locacao: editingSala.tipo_locacao,
-      subtipo_periodo: editingSala.tipo_locacao === 'locacao_periodo' ? editingSala.subtipo_periodo : null,
-      capacidade: parseInt(editingSala.capacidade) || null,
-      descricao: editingSala.descricao,
-      foto_url: editingSala.galeria?.[0] || '',
-      galeria: editingSala.galeria || [],
-      status: editingSala.status || 'disponivel',
-      metadata: editingSala.metadata || {},
-      preco_locacao_mensal: editingSala.preco_locacao_mensal == null ? null : Number(editingSala.preco_locacao_mensal),
-      preco_periodo_pacote_mensal: editingSala.preco_periodo_pacote_mensal == null ? null : Number(editingSala.preco_periodo_pacote_mensal),
-      preco_periodo_locacao_avulsa: editingSala.preco_periodo_locacao_avulsa == null ? null : Number(editingSala.preco_periodo_locacao_avulsa),
-    };
-
-    const { error } = await supabase
-      .from('salas')
-      .update(updatePayload)
-      .eq('id', id);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    // Update plans
-    await supabase.from('sala_planos').delete().eq('sala_id', id);
-    if (editingSala.planos_permitidos?.length > 0) {
-      const relations = editingSala.planos_permitidos.map((planoId: string) => ({
-        sala_id: id,
-        plano_id: planoId
-      }));
-      await supabase.from('sala_planos').insert(relations);
-    }
-
-    toast.success("Sala atualizada!");
-    setEditingSala(null);
-    fetchData();
   }
 
   if (loading) return <div className="p-8"><Skeleton className="h-64 w-full" /></div>;
@@ -214,225 +154,6 @@ export default function AdminSalaDetalhe() {
         </div>
       </div>
 
-      <Dialog open={!!editingSala} onOpenChange={() => setEditingSala(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Sala</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome da Sala</label>
-                <Input 
-                  value={editingSala?.nome || ''} 
-                  onChange={(e) => setEditingSala({...editingSala, nome: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Categoria</label>
-                <select 
-                  className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
-                  value={editingSala?.categoria || ''}
-                  onChange={(e) => setEditingSala({...editingSala, categoria: e.target.value})}
-                >
-                  <option value="Coworking">Coworking</option>
-                  <option value="privativa">Sala Privativa</option>
-                  <option value="compartilhado">Escritório Compartilhado</option>
-                  <option value="consultorio_poltrona">Consultório com Poltrona</option>
-                  <option value="consultorio_maca">Consultório com Maca</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Capacidade (Pessoas)</label>
-
-                <label className="text-sm font-medium">Tipo de Locação</label>
-                <select 
-                  className="w-full h-10 px-3 py-2 bg-background border rounded-md text-sm"
-                  value={editingSala?.tipo_locacao || ''}
-                  onChange={(e) => setEditingSala({...editingSala, tipo_locacao: e.target.value})}
-                >
-                  <option value="locacao_mensal">Locação Mensal</option>
-                  <option value="locacao_periodo">Locação por Período</option>
-                </select>
-
-                {editingSala.tipo_locacao === 'locacao_periodo' ? (
-                  <div className="mt-2 space-y-1">
-                    <label className="text-xs text-muted-foreground">Subtipo</label>
-                    <select 
-                      className="w-full px-3 py-1 bg-white border rounded-md text-sm"
-                      value={editingSala?.subtipo_periodo || ''}
-                      onChange={(e) => setEditingSala({...editingSala, subtipo_periodo: e.target.value})}
-                    >
-                      <option value="pacote_mensal">Pacote Mensal</option>
-                      <option value="locacao_avulsa">Locação Avulsa</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div className="mt-2 space-y-1">
-                    <label className="text-xs text-muted-foreground">Status</label>
-                    <select 
-                      className="w-full px-3 py-1 bg-white border rounded-md text-sm"
-                      value={editingSala?.status || 'disponivel'}
-                      onChange={(e) => setEditingSala({...editingSala, status: e.target.value})}
-                    >
-                      <option value="disponivel">Disponível</option>
-                      <option value="indisponivel">Indisponível</option>
-                      <option value="oculto">Oculto</option>
-                    </select>
-                  </div>
-                )}
-
-                <label className="text-sm font-medium">Capacidade (Pessoas)</label>
-                <Input 
-                  type="number"
-                  value={editingSala?.capacidade || ''} 
-                  onChange={(e) => setEditingSala({...editingSala, capacidade: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Metragem (m²)</label>
-                <Input 
-                  type="number"
-                  value={editingSala?.metadata?.metragem || ''} 
-                  onChange={(e) => setEditingSala({
-                    ...editingSala, 
-                    metadata: { ...editingSala.metadata, metragem: parseFloat(e.target.value) }
-                  })}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer">
-                <input 
-                  type="checkbox"
-                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
-                  checked={editingSala?.metadata?.tem_janela || false}
-                  onChange={(e) => setEditingSala({
-                    ...editingSala,
-                    metadata: { ...editingSala.metadata, tem_janela: e.target.checked }
-                  })}
-                />
-                <span className="text-sm font-medium">Tem Janela</span>
-              </div>
-              <div className="flex items-center gap-2 p-3 border rounded-xl hover:bg-slate-50 cursor-pointer">
-                <input 
-                  type="checkbox"
-                  className="w-4 h-4 rounded text-brand-orange focus:ring-brand-orange"
-                  checked={editingSala?.metadata?.tem_lavatorio || false}
-                  onChange={(e) => setEditingSala({
-                    ...editingSala,
-                    metadata: { ...editingSala.metadata, tem_lavatorio: e.target.checked }
-                  })}
-                />
-                <span className="text-sm font-medium">Tem Lavatório</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Preços da Sala</label>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Preço Locação Mensal</label>
-                  <Input 
-                    type="number"
-                    min={0}
-                    value={editingSala?.preco_locacao_mensal ?? ''}
-                    onChange={(e) => setEditingSala({...editingSala, preco_locacao_mensal: e.target.value === '' ? null : Number(e.target.value)})}
-                  />
-                </div>
-                {editingSala?.tipo_locacao === 'locacao_periodo' ? (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Preço Pacote Mensal</label>
-                      <Input 
-                        type="number"
-                        min={0}
-                        value={editingSala?.preco_periodo_pacote_mensal ?? ''}
-                        onChange={(e) => setEditingSala({...editingSala, preco_periodo_pacote_mensal: e.target.value === '' ? null : Number(e.target.value)})}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Preço Locação Avulsa</label>
-                      <Input 
-                        type="number"
-                        min={0}
-                        value={editingSala?.preco_periodo_locacao_avulsa ?? ''}
-                        onChange={(e) => setEditingSala({...editingSala, preco_periodo_locacao_avulsa: e.target.value === '' ? null : Number(e.target.value)})}
-                      />
-                    </div>
-                  </>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Galeria de Fotos</label>
-                <Button variant="outline" size="sm" onClick={() => setIsMediaPickerOpen(true)} className="h-8 text-xs">
-                  <ImageIcon className="w-3 h-3 mr-2" /> Biblioteca
-                </Button>
-              </div>
-              <ImageUpload 
-                value={editingSala?.galeria || []} 
-                onChange={(urls) => setEditingSala({...editingSala, galeria: urls})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Planos de Horas Permitidos</label>
-              <div className="grid grid-cols-3 gap-2 mt-1">
-                {allPlanos.map(p => (
-                  <label key={p.id} className="flex items-center gap-2 text-xs border p-2 rounded hover:bg-muted/50 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="rounded"
-                      checked={(editingSala?.planos_permitidos || []).includes(p.id)}
-                      onChange={(e) => {
-                        const current = editingSala?.planos_permitidos || [];
-                        const next = e.target.checked 
-                          ? [...current, p.id] 
-                          : current.filter((id: string) => id !== p.id);
-                        setEditingSala({...editingSala, planos_permitidos: next});
-                      }}
-                    />
-                    <span className="truncate">{p.nome}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descrição / Observações</label>
-              <Textarea 
-                value={editingSala?.descricao || ''} 
-                onChange={(e) => setEditingSala({...editingSala, descricao: e.target.value})}
-                placeholder="Recursos disponíveis, metragem, etc."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingSala(null)}>Cancelar</Button>
-            <Button onClick={handleSaveSala} className="bg-brand-orange text-white">Salvar Alterações</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <MediaPickerModal 
-        isOpen={isMediaPickerOpen}
-        onClose={() => setIsMediaPickerOpen(false)}
-        onSelect={(url) => {
-          const current = editingSala?.galeria || [];
-          setEditingSala({...editingSala, galeria: [...current, url]});
-          setIsMediaPickerOpen(false);
-        }}
-      />
     </div>
   );
 }
