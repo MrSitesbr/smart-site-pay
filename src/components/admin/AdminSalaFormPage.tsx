@@ -133,7 +133,7 @@ export default function AdminSalaFormPage() {
     if (!parsed.success) return toast.error(parsed.error.issues[0]?.message || "Revise os campos da sala.");
     const values = parsed.data;
     const { data, error } = await supabase.rpc("save_admin_room", {
-      p_id: id || undefined,
+      p_id: id || null,
       p_unidade_id: form.unidade_id || unidadeId,
       p_nome: form.nome.trim(),
       p_tipo: tipoAmbienteDasCategorias(form.categorias),

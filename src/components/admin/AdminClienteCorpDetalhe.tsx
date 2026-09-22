@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
+import { friendlyError } from "@/lib/appErrors";
+import { passwordSchema } from "@/lib/validation";
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
@@ -75,7 +77,7 @@ export default function AdminClienteCorpDetalhe() {
       }, 0);
       setUsoPlano({ horas, reservas: reservasAtivas.length, solicitacoes: (contratoRes.data || []).length });
     } catch (error: any) {
-      toast.error("Erro ao carregar dados: " + error.message);
+      toast.error(friendlyError(error, "Não foi possível carregar os dados do cliente."));
       navigate("/admin");
     } finally {
       setLoading(false);
@@ -100,7 +102,7 @@ export default function AdminClienteCorpDetalhe() {
       documentos: cliente.documentos || []
     }).eq('id', id);
 
-    if (error) toast.error("Erro ao salvar: " + error.message);
+    if (error) toast.error(friendlyError(error, "Não foi possível salvar os dados do cliente."));
     else toast.success("Cliente atualizado");
     setSaving(false);
   }
@@ -115,7 +117,7 @@ export default function AdminClienteCorpDetalhe() {
       ? await supabase.from('funcionarios_cliente').update(payload).eq('id', editingFunc.id)
       : await supabase.from('funcionarios_cliente').insert([payload]);
     
-    if (error) toast.error(error.message);
+    if (error) toast.error(friendlyError(error, "Não foi possível salvar o colaborador."));
     else {
       toast.success("Colaborador salvo");
       setEditingFunc(null);
@@ -124,7 +126,8 @@ export default function AdminClienteCorpDetalhe() {
   }
 
   async function saveAccessPassword() {
-    if (accessPassword.length < 6) return toast.error("A senha deve ter pelo menos 6 caracteres");
+    const passwordResult = passwordSchema.safeParse(accessPassword);
+    if (!passwordResult.success) return toast.error(passwordResult.error.issues[0]?.message || "Informe uma senha válida.");
     if (!id) return toast.error("Cliente não identificado. Reabra a ficha e tente novamente.");
     setSavingPassword(true);
     try {
@@ -147,7 +150,7 @@ export default function AdminClienteCorpDetalhe() {
   async function deleteFunc(fid: string) {
     if (!confirm("Excluir colaborador?")) return;
     const { error } = await supabase.from('funcionarios_cliente').delete().eq('id', fid);
-    if (error) toast.error(error.message);
+    if (error) toast.error(friendlyError(error, "Não foi possível remover o colaborador."));
     else {
       toast.success("Colaborador removido");
       fetchData();
