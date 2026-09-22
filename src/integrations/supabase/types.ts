@@ -215,6 +215,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
+          archived_at: string | null
           created_at: string
           data_inicio: string | null
           dias_selecionados: Json
@@ -237,6 +238,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
+          archived_at?: string | null
           created_at?: string
           data_inicio?: string | null
           dias_selecionados?: Json
@@ -259,6 +261,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_tipo"]
+          archived_at?: string | null
           created_at?: string
           data_inicio?: string | null
           dias_selecionados?: Json
@@ -867,6 +870,8 @@ export type Database = {
           metadata: Json | null
           modalidades_locacao: string[]
           nome: string
+          preco_diaria: number | null
+          preco_hora_avulsa: number | null
           preco_locacao_mensal: number | null
           preco_periodo_locacao_avulsa: number | null
           preco_periodo_pacote_mensal: number | null
@@ -888,6 +893,8 @@ export type Database = {
           metadata?: Json | null
           modalidades_locacao?: string[]
           nome: string
+          preco_diaria?: number | null
+          preco_hora_avulsa?: number | null
           preco_locacao_mensal?: number | null
           preco_periodo_locacao_avulsa?: number | null
           preco_periodo_pacote_mensal?: number | null
@@ -909,6 +916,8 @@ export type Database = {
           metadata?: Json | null
           modalidades_locacao?: string[]
           nome?: string
+          preco_diaria?: number | null
+          preco_hora_avulsa?: number | null
           preco_locacao_mensal?: number | null
           preco_periodo_locacao_avulsa?: number | null
           preco_periodo_pacote_mensal?: number | null
@@ -1419,7 +1428,8 @@ export type Database = {
           p_modalidades: string[]
           p_nome: string
           p_planos: string[]
-          p_preco_avulso: number
+          p_preco_diaria: number
+          p_preco_hora: number
           p_preco_mensal: number
           p_status: string
           p_tipo: string

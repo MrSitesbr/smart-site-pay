@@ -9,12 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MessageCircle, Mail, UserRoundCheck, UserPlus, Send, Handshake, CheckCircle2, GripVertical, Eye, Trash2, Archive } from "lucide-react";
+import { Search, MessageCircle, Mail, UserRoundCheck, UserPlus, Send, Handshake, CheckCircle2, GripVertical, Eye, Archive } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor } from "@/lib/clientColors";
 import { toast } from "@/hooks/use-toast";
 import { DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
+import { friendlyError } from "@/lib/appErrors";
+import { leadSchema } from "@/lib/validation";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Estação", sala_privativa: "Sala Privativa", sala_reuniao: "Sala Reunião",
@@ -62,35 +64,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
   const [leadEtapas, setLeadEtapas] = useState<Record<string, string>>({});
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [crmClientes, setCrmClientes] = useState<any[]>([]);
-  const [loadingApagarTudo, setLoadingApagarTudo] = useState(false);
   const { overrides } = useClientColors();
-
-  // Função para APAGAR TUDO - todos os leads, reservas e contratos
-  async function apagarTudo() {
-    const senha = prompt("DIGITE 'APAGAR TUDO' para confirmar (maiúsculas):");
-    if (senha !== "APAGAR TUDO") {
-      toast({ title: "Cancelado", description: "Ação cancelada. Digite exatamente 'APAGAR TUDO' em maiúsculas.", variant: "default" });
-      return;
-    }
-
-    setLoadingApagarTudo(true);
-    try {
-      // Apagar todas as reservas
-      const { error: errorReservas } = await (supabase.from("reservations") as any).delete().neq("id", "");
-      if (errorReservas) throw new Error("Erro ao apagar reservas: " + errorReservas.message);
-
-      // Apagar todos os contratos
-      const { error: errorContratos } = await (supabase.from("contract_requests") as any).delete().neq("id", "");
-      if (errorContratos) throw new Error("Erro ao apagar contratos: " + errorContratos.message);
-
-      toast({ title: "SUCCESSO", description: `TODOS os leads, reservas e contratos foram apagados! Total: ${reservas.length} reservas + ${contratos.length} contratos.` });
-      onRefresh?.();
-    } catch (err: any) {
-      toast({ title: "ERRO", description: err.message, variant: "destructive" });
-    } finally {
-      setLoadingApagarTudo(false);
-    }
-  }
 
   useEffect(() => {
     let mounted = true;
@@ -114,7 +88,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
       };
       map.set(key, { ...cur, ...patch, ambientes: new Set([...cur.ambientes, ...(patch.ambientes || [])]) } as Cliente);
     };
-    contratos.forEach((c) => {
+    contratos.filter((c) => !c.archived_at).forEach((c) => {
       const cur = map.get((c.email || "").toLowerCase());
       const paga = c.status === "paga" || c.status === "concluida";
       const pend = c.status === "pendente" || c.status === "aprovada";
@@ -183,17 +157,22 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
     const { error } = await (supabase.from("contract_requests") as any).update({ status: etapa }).in("id", leads.map((lead) => lead.id));
     if (error) {
       setLeadEtapas((current) => ({ ...current, [cliente.email]: etapaAnterior }));
-      toast({ title: "Não foi possível mover o lead", description: LEAD_ERROR, variant: "destructive" });
+      toast({ title: "Não foi possível mover o lead", description: friendlyError(error, LEAD_ERROR), variant: "destructive" });
       return;
     }
     toast({ title: `Lead movido para ${FUNIL.find((item) => item.id === etapa)?.label}` });
   }
 
   async function salvarLead(lead: Cliente, patch: { nome: string; email: string; telefone: string; status: string; preco: number }) {
+    const validation = leadSchema.safeParse(patch);
+    if (!validation.success) {
+      toast({ title: "Revise os dados do lead", description: "Informe nome, e-mail, telefone, etapa e valor válidos.", variant: "destructive" });
+      return;
+    }
     const relacionados = contratos.filter((contrato) => (contrato.email || "").toLowerCase() === lead.email.toLowerCase());
     const { error } = await (supabase.from("contract_requests") as any).update(patch).in("id", relacionados.map((contrato) => contrato.id));
     if (error) {
-      toast({ title: "Não foi possível salvar o lead", description: error.message, variant: "destructive" });
+      toast({ title: "Não foi possível salvar o lead", description: friendlyError(error), variant: "destructive" });
       return;
     }
     toast({ title: "Lead atualizado" });
@@ -203,114 +182,12 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
 
   async function limparHistoricoLead(cliente: Cliente) {
     const emailLower = cliente.email.toLowerCase();
-    
-    console.log("DEBUG limparHistoricoLead:", { nome: cliente.nome, email: cliente.email, emailLower });
-    console.log("DEBUG - Total contratos:", contratos.length, "Total reservas:", reservas.length);
-    
-    const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
-    const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
-    
-    console.log("DEBUG - Contratos do lead:", contratosDoLead.length, "Reservas do lead:", reservasDoLead.length);
-    
-    if (contratosDoLead.length === 0 && reservasDoLead.length === 0) {
-      toast({ title: "Aviso", description: `Lead "${cliente.nome}" (${cliente.email}) não tem contratos ou reservas para limpar.`, variant: "default" });
-      return;
-    }
-    
-    if (!confirm(`Tem certeza que deseja LIMPAR TODAS as solicitações (${cliente.total_solicitacoes}) do lead "${cliente.nome}" (${cliente.email})? Esta ação excluirá todos os contratos e reservas associados, mas NÃO excluirá o lead. Esta ação não pode ser desfeita.`)) {
-      return;
-    }
-
-    // Excluir as reservas do lead (tabela: reservations)
-    const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
-    if (reservasParaExcluir.length > 0) {
-      console.log("DEBUG - Excluindo reservas:", reservasParaExcluir.map(r => r.id));
-      const { error: reservasError } = await (supabase.from("reservations") as any)
-        .delete()
-        .in("id", reservasParaExcluir.map((r) => r.id));
-      if (reservasError) {
-        console.log("DEBUG - Erro ao excluir reservas:", reservasError);
-        toast({ title: "Erro", description: "Não foi possível excluir as reservas: " + reservasError.message, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Sucesso", description: `Excluídas ${reservasParaExcluir.length} reserva(s) do lead.` });
-    }
-
-    // Excluir os contratos do lead (tabela: contract_requests)
     const contratosParaExcluir = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
-    if (contratosParaExcluir.length > 0) {
-      console.log("DEBUG - Excluindo contratos:", contratosParaExcluir.map(c => c.id));
-      const { error: contratosError } = await (supabase.from("contract_requests") as any)
-        .delete()
-        .in("id", contratosParaExcluir.map((c) => c.id));
-      if (contratosError) {
-        console.log("DEBUG - Erro ao excluir contratos:", contratosError);
-        toast({ title: "Erro", description: "Não foi possível excluir os contratos: " + contratosError.message, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Sucesso", description: `Excluídos ${contratosParaExcluir.length} contrato(s) do lead.` });
-    }
-
-    toast({ title: "Histórico limpo", description: `Todas as ${cliente.total_solicitacoes} solicitações do lead foram removidas.` });
-    onRefresh?.();
-  }
-
-  async function excluirLead(cliente: Cliente) {
-    const emailLower = cliente.email.toLowerCase();
-    
-    console.log("DEBUG excluirLead:", { nome: cliente.nome, email: cliente.email, emailLower });
-    
-    // Debug: verificar emails relacionados
-    const contratosDoLead = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
-    const reservasDoLead = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
-    
-    console.log("DEBUG - Contratos do lead:", contratosDoLead.length, "Reservas do lead:", reservasDoLead.length);
-    
-    if (contratosDoLead.length === 0 && reservasDoLead.length === 0) {
-      // Se não há nada para excluir, apenas remove o lead
-      if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}" (${cliente.email})? Não há contratos ou reservas associados.`)) {
-        return;
-      }
-      toast({ title: "Lead excluído com sucesso" });
-      onRefresh?.();
-      return;
-    }
-    
-    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead "${cliente.nome}" (${cliente.email})? Esta ação não pode ser desfeita. Todos os contratos e reservas associados também serão excluídos.`)) {
-      return;
-    }
-
-    // Excluir as reservas do lead (tabela: reservations)
-    const reservasParaExcluir = reservas.filter((r) => (r.email || "").toLowerCase() === emailLower);
-    if (reservasParaExcluir.length > 0) {
-      console.log("DEBUG - Excluindo reservas:", reservasParaExcluir.map(r => r.id));
-      const { error: reservasError } = await (supabase.from("reservations") as any)
-        .delete()
-        .in("id", reservasParaExcluir.map((r) => r.id));
-      if (reservasError) {
-        console.log("DEBUG - Erro ao excluir reservas:", reservasError);
-        toast({ title: "Erro", description: "Não foi possível excluir as reservas: " + reservasError.message, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Sucesso", description: `Excluídas ${reservasParaExcluir.length} reserva(s) do lead.` });
-    }
-
-    // Excluir os contratos do lead (tabela: contract_requests)
-    const contratosParaExcluir = contratos.filter((c) => (c.email || "").toLowerCase() === emailLower);
-    if (contratosParaExcluir.length > 0) {
-      console.log("DEBUG - Excluindo contratos:", contratosParaExcluir.map(c => c.id));
-      const { error: contratosError } = await (supabase.from("contract_requests") as any)
-        .delete()
-        .in("id", contratosParaExcluir.map((c) => c.id));
-      if (contratosError) {
-        console.log("DEBUG - Erro ao excluir contratos:", contratosError);
-        toast({ title: "Erro", description: "Não foi possível excluir os contratos: " + contratosError.message, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Sucesso", description: `Excluídos ${contratosParaExcluir.length} contrato(s) do lead.` });
-    }
-
-    toast({ title: "Lead excluído com sucesso" });
+    if (!contratosParaExcluir.length) return toast({ title: "Nada para arquivar" });
+    if (!confirm(`Arquivar o lead "${cliente.nome}"? O histórico financeiro e as reservas serão preservados.`)) return;
+    const { error } = await (supabase.from("contract_requests") as any).update({ archived_at: new Date().toISOString() }).in("id", contratosParaExcluir.map((c) => c.id));
+    if (error) return toast({ title: "Não foi possível arquivar o lead", description: friendlyError(error), variant: "destructive" });
+    toast({ title: "Lead arquivado", description: "O cartão saiu do funil e o histórico foi preservado." });
     onRefresh?.();
   }
 
@@ -335,18 +212,6 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
         <GripVertical className="h-4 w-4 text-brand-orange" /> Arraste um card para outra coluna do funil.
       </div>
-      {contratos.length > 0 || reservas.length > 0 ? (
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={apagarTudo}
-          disabled={loadingApagarTudo}
-          className="mb-4 bg-red-600 hover:bg-red-700 text-white"
-        >
-          {loadingApagarTudo ? "Apagando..." : `APAGAR TUDO (${reservas.length} reservas + ${contratos.length} contratos)`}
-        </Button>
-      ) : null}
-
       {filtered.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">Nenhum lead encontrado.</Card>
       ) : (
@@ -385,9 +250,6 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
                               <Archive className="h-3.5 w-3.5 text-amber-600" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); e.preventDefault(); console.log("CLICOU EXCLUIR LEAD:", c.nome, c.email); excluirLead(c); }} title="Excluir lead">
-                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                          </Button>
                         </div>
                       </div>
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{c.email}</p>

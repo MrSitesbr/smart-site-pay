@@ -20,6 +20,9 @@ import { CalendarGanttView } from "./CalendarGanttView";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import NovoEventoDialog from "./NovoEventoDialog";
 import { verificarConflitos } from "@/lib/disponibilidade";
+import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
+import { calculateReservationPrice } from "@/lib/reservationPricing";
+import { friendlyError } from "@/lib/appErrors";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -69,10 +72,12 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [checkin, setCheckin] = useState<any | null>(null);
   const [roomCapacity, setRoomCapacity] = useState<number | null>(null);
   const [editSalas, setEditSalas] = useState<any[]>([]);
+  const [editPlanos, setEditPlanos] = useState<any[]>([]);
   const [savingCheckin, setSavingCheckin] = useState(false);
 
   useEffect(() => {
     supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+    supabase.from('planos').select('*').is('deleted_at', null).order('nome').then(({ data }) => setEditPlanos(data || []));
     supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || []));
   }, []);
 
@@ -99,7 +104,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
   useEffect(() => {
     if (!editingReserva?.unidade_id) { setEditSalas([]); return; }
-    supabase.from("salas").select("id, nome, unidade_id, tipo").eq("unidade_id", editingReserva.unidade_id).order("nome").then(({ data }) => setEditSalas(data || []));
+    supabase.from("salas").select("id, nome, unidade_id, tipo, preco_hora_avulsa, preco_diaria").eq("unidade_id", editingReserva.unidade_id).order("nome").then(({ data }) => setEditSalas(data || []));
   }, [editingReserva?.unidade_id]);
 
   async function toggleCheckin(reserva: any) {
@@ -259,6 +264,22 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       }
     }
 
+    const horas = horasDaReserva(editingReserva);
+    const sala = editSalas.find((item) => item.id === editingReserva.sala_id);
+    let pricing = calculateReservationPrice({ tipo: editingReserva.tipo === "diaria" ? "diaria" : "hora", horas, saldo: 0, precoHora: sala?.preco_hora_avulsa == null ? null : Number(sala.preco_hora_avulsa), precoDiaria: sala?.preco_diaria == null ? null : Number(sala.preco_diaria) });
+    let justificativa = "Reserva avulsa conforme o preço configurado para a sala.";
+    if (editingReserva.plano_id) {
+      const plano = editPlanos.find((item) => item.id === editingReserva.plano_id);
+      const { data: vinculo } = await supabase.from("sala_planos").select("plano_id").eq("sala_id", editingReserva.sala_id).eq("plano_id", editingReserva.plano_id).maybeSingle();
+      if (!plano || !vinculo) {
+        toast({ title: "Plano indisponível", description: "O plano selecionado não está vinculado a esta sala.", variant: "destructive" });
+        return;
+      }
+      const uso = await calcularUsoPlano([editingReserva.email], plano, editingReserva.id);
+      pricing = calculateReservationPrice({ tipo: editingReserva.tipo === "diaria" ? "diaria" : "hora", horas, saldo: uso.saldo, precoHora: sala?.preco_hora_avulsa == null ? null : Number(sala.preco_hora_avulsa), precoDiaria: sala?.preco_diaria == null ? null : Number(sala.preco_diaria) });
+      justificativa = `${pricing.cobertas}h cobertas pelo plano ${plano.nome}${pricing.excedentes ? `; ${pricing.excedentes}h excedentes` : ""}.`;
+    }
+
     const payload = {
       nome: editingReserva.nome,
       email: editingReserva.email,
@@ -274,13 +295,18 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       unidade_id: editingReserva.unidade_id || null,
       sala_id: editingReserva.sala_id || null,
       plano_id: editingReserva.plano_id || null,
-      valor: editingReserva.valor == null ? null : Number(editingReserva.valor),
+      valor: pricing.valor,
+      valor_original: pricing.valor,
+      horas_reservadas: pricing.horas,
+      horas_cobertas_plano: pricing.cobertas,
+      horas_excedentes: pricing.excedentes,
+      calculo_justificativa: justificativa,
     };
 
     const { error } = await (supabase.from("reservations") as any).update(payload).eq("id", editingReserva.id);
 
     if (error) {
-      console.error("Erro ao editar reserva:", error);
+      toast({ title: "Não foi possível atualizar a reserva", description: friendlyError(error), variant: "destructive" });
       return;
     }
 
@@ -760,6 +786,10 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                       <Select value={editingReserva.sala_id || ""} onValueChange={(v) => setEditingReserva({ ...editingReserva, sala_id: v })}><SelectTrigger><SelectValue placeholder="Sala" /></SelectTrigger><SelectContent>{editSalas.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select>
                     </div>
                     <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Plano</label>
+                      <Select value={editingReserva.plano_id || "avulso"} onValueChange={(v) => setEditingReserva({ ...editingReserva, plano_id: v === "avulso" ? null : v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="avulso">Avulso / sem plano</SelectItem>{editPlanos.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select>
+                    </div>
+                    <div>
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data</label>
                       <Input type="date" value={editingReserva.data || ""} onChange={(e) => setEditingReserva({ ...editingReserva, data: e.target.value })} />
                     </div>
@@ -771,7 +801,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                       </div>
                     </div>
                   </div>
-                  <div><label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor</label><Input type="number" min="0" step="0.01" value={editingReserva.valor ?? ""} onChange={(e) => setEditingReserva({ ...editingReserva, valor: e.target.value })} /></div>
+                  <p className="rounded-md bg-muted p-2 text-xs text-muted-foreground">O valor e o consumo do plano serão recalculados ao salvar.</p>
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observações</label>
                     <textarea

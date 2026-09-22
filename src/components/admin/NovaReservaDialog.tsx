@@ -12,6 +12,8 @@ import { linkCobrancaWhatsApp, fmtBRL } from "@/lib/cobranca";
 import { verificarConflitos, ConflitoReserva } from "@/lib/disponibilidade";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
+import { calculateReservationPrice } from "@/lib/reservationPricing";
+import { friendlyError } from "@/lib/appErrors";
 
 type Cliente = { id?: string; nome: string; email: string; telefone: string; plano_id?: string | null };
 type CalculoPlano = { plano: any; horas: number; cobertas: number; excedentes: number; saldoDepois: number; valor: number | null; justificativa: string };
@@ -200,20 +202,14 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   const datasPrevistas = useMemo(() => gerarDatas(), [dataStr, recorrente, recFreq, recAte]);
 
-  const RATES: Record<string, { hora: number; diaria: number }> = {
-    estacao: { hora: 20, diaria: 65 },
-    sala_privativa: { hora: 40, diaria: 150 },
-    sala_reuniao: { hora: 90, diaria: 450 },
-  };
-
   const precoTabela = useMemo(() => {
     const sala = salas.find((item) => item.id === selectedSala);
-    if (tipo === "diaria") return Number(sala?.preco_periodo_locacao_avulsa || 0);
-    if (!horaInicio || !horaFim || horaFim <= horaInicio) return 0;
+    if (tipo === "diaria") return sala?.preco_diaria == null ? null : Number(sala.preco_diaria);
+    if (!horaInicio || !horaFim || horaFim <= horaInicio) return null;
     const [h1, m1] = horaInicio.split(":").map(Number);
     const [h2, m2] = horaFim.split(":").map(Number);
     const horas = (h2 * 60 + m2 - h1 * 60 - m1) / 60;
-    return horas * Number(sala?.preco_periodo_locacao_avulsa || 0);
+    return sala?.preco_hora_avulsa == null ? null : horas * Number(sala.preco_hora_avulsa);
   }, [salas, selectedSala, tipo, horaInicio, horaFim]);
 
   useEffect(() => {
@@ -229,20 +225,18 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       if (!plano || !vinculo) { setCalculoPlano(null); setCalculandoPlano(false); return; }
       const uso = await calcularUsoPlano([selected.email], plano);
       const horas = horasDaReserva({ hora_inicio: horaInicio, hora_fim: horaFim });
-      const cobertas = Math.min(horas, uso.saldo);
-      const excedentes = Math.max(0, horas - cobertas);
-      const precoHora = Number(salas.find((item) => item.id === selectedSala)?.preco_periodo_locacao_avulsa || 0);
-      const valor = excedentes === 0 ? 0 : precoHora > 0 ? excedentes * precoHora : null;
-      setCalculoPlano({ plano, horas, cobertas, excedentes, saldoDepois: Math.max(0, uso.saldo - cobertas), valor, justificativa: `${cobertas}h cobertas pelo plano ${plano.nome}${excedentes ? `; ${excedentes}h excedentes` : ""}.` });
+      const sala = salas.find((item) => item.id === selectedSala);
+      const resultado = calculateReservationPrice({ tipo: tipo as "hora" | "diaria", horas, saldo: uso.saldo, precoHora: sala?.preco_hora_avulsa == null ? null : Number(sala.preco_hora_avulsa), precoDiaria: sala?.preco_diaria == null ? null : Number(sala.preco_diaria) });
+      setCalculoPlano({ plano, ...resultado, justificativa: `${resultado.cobertas}h cobertas pelo plano ${plano.nome}${resultado.excedentes ? `; ${resultado.excedentes}h excedentes` : ""}.` });
       setCalculandoPlano(false);
     }
     void calcular();
     return () => { active = false; };
-  }, [selected, selectedSala, horaInicio, horaFim, salas]);
+  }, [selected, selectedSala, horaInicio, horaFim, salas, tipo]);
 
-  const valorBase = calculoPlano?.valor === null ? 0 : calculoPlano?.valor ?? precoTabela;
+  const valorBase = calculoPlano?.valor ?? precoTabela;
   const valorFinal = valorManual.trim() !== "" ? Number(valorManual.replace(",", ".")) || 0 : valorBase;
-  const temDesconto = valorFinal < valorBase;
+  const temDesconto = valorFinal != null && valorBase != null && valorFinal < valorBase;
 
   const temBloqueio = conflitos.some(c => c.tipo === 'bloqueio');
   const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
@@ -317,6 +311,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     const criadas: string[] = [];
     const puladas: string[] = [];
 
+    let saldoRestante = calculoPlano ? calculoPlano.saldoDepois + calculoPlano.cobertas : 0;
     for (const dt of datas) {
       // Revalida cada data no servidor antes de inserir
       if (selectedSala) {
@@ -326,6 +321,12 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
           continue;
         }
       }
+      const sala = salas.find((item) => item.id === selectedSala);
+      const horas = horasDaReserva({ hora_inicio: horaInicio, hora_fim: horaFim });
+      const ocorrencia = calculoPlano ? calculateReservationPrice({ tipo: tipo as "hora" | "diaria", horas, saldo: saldoRestante, precoHora: sala?.preco_hora_avulsa == null ? null : Number(sala.preco_hora_avulsa), precoDiaria: sala?.preco_diaria == null ? null : Number(sala.preco_diaria) }) : null;
+      const valorOcorrenciaBase = ocorrencia?.valor ?? precoTabela;
+      const valorOcorrencia = valorManual.trim() !== "" ? Number(valorManual.replace(",", ".")) || 0 : valorOcorrenciaBase;
+      const descontoOcorrencia = valorOcorrencia != null && valorOcorrenciaBase != null && valorOcorrencia < valorOcorrenciaBase;
       const payload: any = {
         nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
         ambiente, tipo, data: dt,
@@ -333,24 +334,25 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         status, origem, observacoes: observacoes.trim() || null,
         unidade_id: selectedUnidade || null,
         sala_id: selectedSala || null,
-        valor: valorFinal,
-        valor_original: valorBase,
+        valor: valorOcorrencia,
+        valor_original: valorOcorrenciaBase,
         plano_id: calculoPlano?.plano?.id || null,
-        horas_reservadas: calculoPlano?.horas || horasDaReserva({ hora_inicio: horaInicio, hora_fim: horaFim }),
-        horas_cobertas_plano: calculoPlano?.cobertas || 0,
-        horas_excedentes: calculoPlano?.excedentes || 0,
-        calculo_justificativa: calculoPlano?.justificativa || "Reserva avulsa conforme o preço configurado para a sala.",
-        desconto_motivo: temDesconto ? (descontoMotivo.trim() || "Desconto concedido pelo gestor") : null,
-        desconto_por: temDesconto ? "admin" : null,
+        horas_reservadas: horas,
+        horas_cobertas_plano: ocorrencia?.cobertas || 0,
+        horas_excedentes: ocorrencia?.excedentes || 0,
+        calculo_justificativa: ocorrencia ? `${ocorrencia.cobertas}h cobertas pelo plano ${calculoPlano?.plano?.nome}${ocorrencia.excedentes ? `; ${ocorrencia.excedentes}h excedentes` : ""}.` : "Reserva avulsa conforme o preço configurado para a sala.",
+        desconto_motivo: descontoOcorrencia ? (descontoMotivo.trim() || "Desconto concedido pelo gestor") : null,
+        desconto_por: descontoOcorrencia ? "admin" : null,
         serie_id: serieId,
       };
       const { data: ins, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
       if (error) {
-        toast({ title: "Erro ao criar reserva", description: error.message, variant: "destructive" });
+        toast({ title: "Erro ao criar reserva", description: friendlyError(error, "Não foi possível criar a reserva."), variant: "destructive" });
         setSaving(false);
         onCreated?.();
         return;
       }
+      if (ocorrencia) saldoRestante = ocorrencia.saldoDepois;
       criadas.push(ins.id);
       try {
         await invokeGoogleSync({ action: "upsert", type: "reserva", id: ins.id });
@@ -604,17 +606,17 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             const [h2, m2] = horaFim.split(":").map(Number);
             horas = (h2 * 60 + m2 - h1 * 60 - m1) / 60;
           }
-          const preco = valorFinal;
+           const preco = valorFinal;
           const detalhe = calculandoPlano ? "Calculando uso do plano…" : calculoPlano
             ? `${calculoPlano.plano.nome} · ${calculoPlano.cobertas.toFixed(1)}h cobertas · saldo após: ${calculoPlano.saldoDepois.toFixed(1)}h`
-            : precoTabela > 0 ? `Avulso · ${fmtBRL(precoTabela)}` : "Valor sob consulta";
+             : precoTabela != null ? `Avulso · ${fmtBRL(precoTabela)}` : "Valor sob consulta";
           const AMB_LBL: Record<string,string> = { estacao:"Estação de Trabalho", sala_privativa:"Sala Privativa", sala_reuniao:"Sala de Reunião" };
           const dataTxt = dataStr ? dataStr.split("-").reverse().join("/") : "";
           const hiTxt = tipo === "diaria" ? "09:00" : horaInicio;
           const hfTxt = tipo === "diaria" ? "17:00" : horaFim;
           const desc = `Reserva ${AMB_LBL[ambiente]} (${tipo==="diaria"?"Diaria":"Por Hora"}) - ${dataTxt} ${hiTxt}-${hfTxt}`;
-          const cobrarHref = linkCobrancaWhatsApp({ nome, telefone, valor: preco, descricao: desc });
-          const cobrarDisabled = !nome.trim() || !telefone.trim() || preco <= 0;
+           const cobrarHref = linkCobrancaWhatsApp({ nome, telefone, valor: preco || 0, descricao: desc });
+           const cobrarDisabled = !nome.trim() || !telefone.trim() || preco == null || preco <= 0;
           return (
             <div className="mt-3 p-3 rounded-lg border-2 border-primary/30 bg-primary/5 space-y-2">
               <div className="flex items-center justify-between">

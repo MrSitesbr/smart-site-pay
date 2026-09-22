@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { friendlyError } from "@/lib/appErrors";
+import { passwordSchema } from "@/lib/validation";
 
 type Props = {
   open: boolean;
@@ -49,8 +51,9 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       toast({ title: "Razão Social é obrigatória", variant: "destructive" });
       return;
     }
-    if (accessPassword && accessPassword.length < 6) {
-      toast({ title: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
+    const passwordResult = accessPassword ? passwordSchema.safeParse(accessPassword) : null;
+    if (passwordResult && !passwordResult.success) {
+      toast({ title: passwordResult.error.issues[0]?.message || "Informe uma senha válida.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -60,7 +63,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       .select("id, razao_social, responsavel_email, responsavel_telefone");
 
     if (buscaErr) {
-      toast({ title: "Erro ao verificar cliente corporativo", description: buscaErr.message, variant: "destructive" });
+      toast({ title: "Erro ao verificar cliente corporativo", description: friendlyError(buscaErr), variant: "destructive" });
       setSaving(false);
       return;
     }
@@ -88,7 +91,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       const { data, error } = await supabase.from("clientes_corp").update(payload).eq("id", match.id).select().single();
       result = data;
       if (error) {
-        toast({ title: "Erro ao atualizar cliente corporativo", description: error.message, variant: "destructive" });
+        toast({ title: "Erro ao atualizar cliente corporativo", description: friendlyError(error), variant: "destructive" });
         setSaving(false);
         return;
       }
@@ -96,7 +99,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       const { data, error } = await supabase.from("clientes_corp").insert(payload).select().single();
       result = data;
       if (error) {
-        toast({ title: "Erro ao criar cliente corporativo", description: error.message, variant: "destructive" });
+        toast({ title: "Erro ao criar cliente corporativo", description: friendlyError(error), variant: "destructive" });
         setSaving(false);
         return;
       }

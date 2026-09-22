@@ -21,5 +21,7 @@ export function mensagemBancoSala(message?: string) {
   if (message.includes("salas_categorias_check")) return "Selecione ao menos uma categoria válida.";
   if (message.includes("salas_modalidades_locacao_check")) return "Selecione ao menos uma modalidade válida.";
   if (message.includes("permission denied") || message.includes("42501")) return "Sua sessão administrativa expirou. Entre novamente.";
+  if (message.includes("plano inválido") || message.includes("plano inativo")) return "Um dos planos selecionados não está mais disponível.";
+  if (message.includes("preços não podem")) return "Os preços não podem ser negativos.";
   return "Não foi possível salvar a sala. Revise os campos e tente novamente.";
 }
