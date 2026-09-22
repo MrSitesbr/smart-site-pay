@@ -82,15 +82,6 @@ export default function Admin() {
 
   useEffect(() => {
     (async () => {
-      // SOLUÇÃO DE CONTORNO: Se o bypass estiver ativo no localStorage, permitimos o acesso
-      const bypass = localStorage.getItem("admin_bypass") === "true";
-      if (bypass) {
-        setIsAdmin(true);
-        await Promise.all([fetchReservas(), fetchContratos()]);
-        setLoading(false);
-        return;
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/auth-admin"); return; }
       
@@ -249,7 +240,6 @@ export default function Admin() {
   }
 
   async function logout() { 
-    localStorage.removeItem("admin_bypass");
     await supabase.auth.signOut(); 
     navigate("/auth-admin"); 
   }

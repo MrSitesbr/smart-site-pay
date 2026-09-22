@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { isBusinessDay } from "@/lib/holidays";
+import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 
 interface PainelAgendamentoProps {
@@ -19,6 +19,13 @@ type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidad
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
+type Ambiente = "estacao" | "sala_privativa" | "sala_reuniao";
+
+function ambienteDaSala(tipo: string): Ambiente {
+  if (/privativ/i.test(tipo)) return "sala_privativa";
+  if (/reuni|consult|audit/i.test(tipo)) return "sala_reuniao";
+  return "estacao";
+}
 
 const SLOTS = Array.from({ length: 12 }, (_, index) => 8 * 60 + index * 60);
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -279,7 +286,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           data: periodo.data,
           hora_inicio: periodo.inicio,
           hora_fim: periodo.fim,
-          ambiente: salaDosPeriodos?.tipo || "estacao",
+          ambiente: ambienteDaSala(salaDosPeriodos?.tipo || "estacao"),
           status: "pendente",
           nome: cliente.responsavel_nome || user.user_metadata?.nome || user.email,
           email: cliente.responsavel_email || user.email,

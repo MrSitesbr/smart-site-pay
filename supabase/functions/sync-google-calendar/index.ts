@@ -88,19 +88,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Admin check — supports both a real session JWT and the hardcoded admin bypass mode
-    const bypass = req.headers.get("x-admin-bypass") === "admin@coworking013.com.br";
-    if (!bypass) {
-      const authHeader = req.headers.get("Authorization") || "";
-      const jwt = authHeader.replace("Bearer ", "");
-      const { data: userData } = jwt ? await supabase.auth.getUser(jwt) : { data: null as any };
-      if (!userData?.user) {
-        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id);
-      if (!(roles || []).some((r: any) => r.role === "admin")) {
-        return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
+    const authHeader = req.headers.get("Authorization") || "";
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: userData } = jwt ? await supabase.auth.getUser(jwt) : { data: null as any };
+    if (!userData?.user) {
+      return new Response(JSON.stringify({ error: "Sua sessão administrativa expirou. Entre novamente." }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id);
+    if (!(roles || []).some((r: any) => r.role === "admin")) {
+      return new Response(JSON.stringify({ error: "Você não tem permissão para sincronizar a agenda." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const body = await req.json();

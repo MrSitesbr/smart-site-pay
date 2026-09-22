@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { isBusinessDay, getDateInfo } from "./holidays";
+import { getBookingBlockReason, isBookableDay } from "./holidays";
 
 export type ConflitoReserva = {
   tipo: 'reserva' | 'visita' | 'bloqueio';
@@ -30,12 +30,11 @@ export async function verificarConflitos(
   const isCompartilhada = /comp|estac|estaç|coworking/i.test(String(salaInfo?.tipo || ''));
   const capacidade = isCompartilhada ? Math.max(1, Number(salaInfo?.capacidade) || 1) : 1;
 
-  // 0. Verificar Feriados e Domingos
-  if (!isBusinessDay(dateObj)) {
-    const info = getDateInfo(dateObj);
+  // 0. Verificar feriados reais e domingos. Sábados são permitidos.
+  if (!isBookableDay(dateObj)) {
     conflitos.push({
       tipo: 'bloqueio',
-      nome: info?.name || (dateObj.getDay() === 0 ? "Domingo" : "Feriado"),
+      nome: getBookingBlockReason(dateObj) || "Data indisponível",
       hora_inicio: "00:00",
       hora_fim: "23:59"
     });

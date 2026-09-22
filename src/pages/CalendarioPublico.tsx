@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { isBusinessDay } from "@/lib/holidays";
+import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
@@ -106,7 +106,7 @@ export default function CalendarioPublico() {
 
   const dias = useMemo(() => eachDayOfInterval({ start: startOfMonth(mes), end: endOfMonth(mes) }), [mes]);
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
-  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(dia)}T12:00:00`));
+  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(dia)}T12:00:00`));
   const salasGantt = salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId);
   const slotsVisiveis = useMemo(() => {
     if (!salasGantt.length) return SLOTS;

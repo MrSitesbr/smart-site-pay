@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-bypass",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -21,25 +21,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Autorização: sessão de administrador OU chave de contingência do painel.
-    let authorized = false;
-
-    const bypass = req.headers.get("x-admin-bypass");
-    if (bypass && bypass === Deno.env.get("ADMIN_PASSWORD")) authorized = true;
-
-    if (!authorized) {
-      const token = (req.headers.get("Authorization") || "").replace("Bearer ", "");
-      if (token) {
-        const { data: userData } = await admin.auth.getUser(token);
-        const uid = userData?.user?.id;
-        if (uid) {
-          const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
-          authorized = (roles || []).some((r: { role: string }) => r.role === "admin");
-        }
-      }
+    const token = (req.headers.get("Authorization") || "").replace("Bearer ", "");
+    if (!token) return json({ error: "Sua sessão administrativa expirou. Entre novamente." }, 401);
+    const { data: userData, error: userError } = await admin.auth.getUser(token);
+    if (userError || !userData?.user) return json({ error: "Sua sessão administrativa expirou. Entre novamente." }, 401);
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userData.user.id);
+    if (!(roles || []).some((r: { role: string }) => r.role === "admin")) {
+      return json({ error: "Você não tem permissão para alterar senhas de clientes." }, 403);
     }
-
-    if (!authorized) return json({ error: "Não autorizado." }, 401);
 
     const body = await req.json().catch(() => null) as { cliente_id?: string; password?: string } | null;
     const clienteId = body?.cliente_id?.trim();
@@ -75,10 +64,13 @@ Deno.serve(async (req) => {
     }
 
     // Reaproveita conta existente com o mesmo e-mail, se houver.
-    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const found = list?.users?.find(
-      (u) => u.email?.toLowerCase() === cliente.responsavel_email!.toLowerCase(),
-    );
+    let found = null;
+    for (let page = 1; page <= 20 && !found; page += 1) {
+      const { data: list, error: listError } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (listError) throw listError;
+      found = list?.users?.find((u) => u.email?.toLowerCase() === cliente.responsavel_email!.toLowerCase()) || null;
+      if ((list?.users?.length || 0) < 1000) break;
+    }
 
     let userId = found?.id ?? null;
     if (userId) {
@@ -96,7 +88,8 @@ Deno.serve(async (req) => {
         user_metadata: { nome: cliente.responsavel_nome },
       });
       if (error) throw error;
-      userId = created.user!.id;
+      if (!created.user) return json({ error: "Não foi possível criar a conta deste cliente." }, 500);
+      userId = created.user.id;
     }
 
     const { error: upErr } = await admin
@@ -107,6 +100,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, created: !found, user_id: userId });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error("admin-set-client-password:", e instanceof Error ? e.message : "unknown error");
+    return json({ error: "Não foi possível atualizar a conta deste cliente." }, 500);
   }
 });
