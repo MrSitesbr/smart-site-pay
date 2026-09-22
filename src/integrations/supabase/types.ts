@@ -794,6 +794,7 @@ export type Database = {
       salas: {
         Row: {
           capacidade: number | null
+          categoria: string | null
           created_at: string
           descricao: string | null
           foto_url: string | null
@@ -801,12 +802,18 @@ export type Database = {
           id: string
           metadata: Json | null
           nome: string
+          preco_locacao_mensal: number | null
+          preco_periodo_locacao_avulsa: number | null
+          preco_periodo_pacote_mensal: number | null
           status: string
+          subtipo_periodo: string | null
           tipo: string
+          tipo_locacao: string | null
           unidade_id: string | null
         }
         Insert: {
           capacidade?: number | null
+          categoria?: string | null
           created_at?: string
           descricao?: string | null
           foto_url?: string | null
@@ -814,12 +821,18 @@ export type Database = {
           id?: string
           metadata?: Json | null
           nome: string
+          preco_locacao_mensal?: number | null
+          preco_periodo_locacao_avulsa?: number | null
+          preco_periodo_pacote_mensal?: number | null
           status?: string
+          subtipo_periodo?: string | null
           tipo: string
+          tipo_locacao?: string | null
           unidade_id?: string | null
         }
         Update: {
           capacidade?: number | null
+          categoria?: string | null
           created_at?: string
           descricao?: string | null
           foto_url?: string | null
@@ -827,8 +840,13 @@ export type Database = {
           id?: string
           metadata?: Json | null
           nome?: string
+          preco_locacao_mensal?: number | null
+          preco_periodo_locacao_avulsa?: number | null
+          preco_periodo_pacote_mensal?: number | null
           status?: string
+          subtipo_periodo?: string | null
           tipo?: string
+          tipo_locacao?: string | null
           unidade_id?: string | null
         }
         Relationships: [
