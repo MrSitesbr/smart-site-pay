@@ -43,6 +43,8 @@ const FUNIL = [
   { id: "paga", label: "Fechado / Ganho", help: "Conversão", icon: CheckCircle2, color: "border-emerald-200 bg-emerald-50/50" },
 ] as const;
 
+const LEAD_ERROR = "Não foi possível atualizar a etapa do lead. Tente novamente.";
+
 function etapaDoLead(status: string) {
   if (status === "paga" || status === "concluida") return "paga";
   if (status === "contato") return "contato";
@@ -181,7 +183,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
     const { error } = await (supabase.from("contract_requests") as any).update({ status: etapa }).in("id", leads.map((lead) => lead.id));
     if (error) {
       setLeadEtapas((current) => ({ ...current, [cliente.email]: etapaAnterior }));
-      toast({ title: "Não foi possível mover o lead", description: error.message, variant: "destructive" });
+      toast({ title: "Não foi possível mover o lead", description: LEAD_ERROR, variant: "destructive" });
       return;
     }
     toast({ title: `Lead movido para ${FUNIL.find((item) => item.id === etapa)?.label}` });

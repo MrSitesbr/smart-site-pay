@@ -257,10 +257,7 @@ export default function AdminUnidades() {
                         {s.descricao && <p className="text-xs italic mt-1 line-clamp-1">{s.descricao}</p>}
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={async () => {
-                          const { data } = await supabase.from('sala_planos').select('plano_id').eq('sala_id', s.id);
-                          setEditingSala({...s, planos_permitidos: (data || []).map(d => d.plano_id)});
-                        }}><Edit2 className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/unidades/salas/${s.id}/editar`)}><Edit2 className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/unidades/sala/${s.id}`)}><Eye className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => deleteSala(s.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                       </div>
