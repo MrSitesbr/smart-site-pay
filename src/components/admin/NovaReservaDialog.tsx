@@ -11,8 +11,10 @@ import { Loader2, UserPlus, User, DollarSign, Plus, AlertTriangle, Building, Lay
 import { linkCobrancaWhatsApp, fmtBRL } from "@/lib/cobranca";
 import { verificarConflitos, ConflitoReserva } from "@/lib/disponibilidade";
 import { invokeGoogleSync } from "@/lib/googleSync";
+import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
 
-type Cliente = { nome: string; email: string; telefone: string };
+type Cliente = { id?: string; nome: string; email: string; telefone: string; plano_id?: string | null };
+type CalculoPlano = { plano: any; horas: number; cobertas: number; excedentes: number; saldoDepois: number; valor: number | null; justificativa: string };
 
 type Props = {
   open: boolean;
@@ -32,7 +34,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
   useEffect(() => {
     let mounted = true;
-    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone").then(({ data }) => {
+    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone, plano_id").then(({ data }) => {
       if (mounted) setCrmClientes(data || []);
     });
     return () => { mounted = false; };
@@ -43,13 +45,13 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     const add = (c: any) => {
       const key = (c.email || c.telefone || c.nome || "").toLowerCase().trim();
       if (!key || map.has(key)) return;
-      map.set(key, { nome: c.nome || "", email: c.email || "", telefone: c.telefone || "" });
+      map.set(key, { id: c.id, nome: c.nome || "", email: c.email || "", telefone: c.telefone || "", plano_id: c.plano_id });
     };
     crmClientes.forEach((c) => {
       const nomeCliente = c.razao_social || c.responsavel_nome || "";
       const emailCliente = c.responsavel_email || "";
       const telefoneCliente = c.responsavel_telefone || "";
-      add({ nome: nomeCliente, email: emailCliente, telefone: telefoneCliente });
+      add({ id: c.id, nome: nomeCliente, email: emailCliente, telefone: telefoneCliente, plano_id: c.plano_id });
     });
     reservas.forEach(add); contratos.forEach(add);
     return Array.from(map.values()).filter((c) => c.nome).sort((a,b) => a.nome.localeCompare(b.nome));
@@ -79,6 +81,8 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const [saving, setSaving] = useState(false);
   const [valorManual, setValorManual] = useState<string>("");
   const [descontoMotivo, setDescontoMotivo] = useState("");
+  const [calculoPlano, setCalculoPlano] = useState<CalculoPlano | null>(null);
+  const [calculandoPlano, setCalculandoPlano] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   // Data digitável (integrada ao calendário: inicia na data clicada)
@@ -99,13 +103,13 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setRecorrente(false); setRecFreq("semanal"); setRecAte("");
       setValorManual(""); setDescontoMotivo("");
 
-      supabase.from("unidades").select("id, nome").then(({ data }) => setUnidades(data || []));
+      supabase.from("unidades").select("id, nome, horario_abertura, horario_fechamento").then(({ data }) => setUnidades(data || []));
     }
   }, [open, date]);
 
   useEffect(() => {
     if (selectedUnidade) {
-      supabase.from("salas").select("id, nome, tipo").eq("unidade_id", selectedUnidade).then(({ data }) => {
+      supabase.from("salas").select("id, nome, tipo, modalidades_locacao, preco_periodo_locacao_avulsa").eq("unidade_id", selectedUnidade).then(({ data }) => {
         setSalas(data || []);
         setSelectedSala("");
       });
@@ -203,17 +207,42 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   };
 
   const precoTabela = useMemo(() => {
-    const r = RATES[ambiente] || RATES.estacao;
-    if (tipo === "diaria") return r.diaria;
+    const sala = salas.find((item) => item.id === selectedSala);
+    if (tipo === "diaria") return Number(sala?.preco_periodo_locacao_avulsa || 0);
     if (!horaInicio || !horaFim || horaFim <= horaInicio) return 0;
     const [h1, m1] = horaInicio.split(":").map(Number);
     const [h2, m2] = horaFim.split(":").map(Number);
     const horas = (h2 * 60 + m2 - h1 * 60 - m1) / 60;
-    return Math.ceil(horas) * r.hora;
-  }, [ambiente, tipo, horaInicio, horaFim]);
+    return horas * Number(sala?.preco_periodo_locacao_avulsa || 0);
+  }, [salas, selectedSala, tipo, horaInicio, horaFim]);
 
-  const valorFinal = valorManual.trim() !== "" ? Number(valorManual.replace(",", ".")) || 0 : precoTabela;
-  const temDesconto = valorFinal < precoTabela;
+  useEffect(() => {
+    let active = true;
+    async function calcular() {
+      if (!selected?.id || !selected.plano_id || !selectedSala || horaFim <= horaInicio) { setCalculoPlano(null); return; }
+      setCalculandoPlano(true);
+      const [{ data: plano }, { data: vinculo }] = await Promise.all([
+        supabase.from("planos").select("*").eq("id", selected.plano_id).is("deleted_at", null).maybeSingle(),
+        supabase.from("sala_planos").select("plano_id").eq("sala_id", selectedSala).eq("plano_id", selected.plano_id).maybeSingle(),
+      ]);
+      if (!active) return;
+      if (!plano || !vinculo) { setCalculoPlano(null); setCalculandoPlano(false); return; }
+      const uso = await calcularUsoPlano([selected.email], plano);
+      const horas = horasDaReserva({ hora_inicio: horaInicio, hora_fim: horaFim });
+      const cobertas = Math.min(horas, uso.saldo);
+      const excedentes = Math.max(0, horas - cobertas);
+      const precoHora = Number(salas.find((item) => item.id === selectedSala)?.preco_periodo_locacao_avulsa || 0);
+      const valor = excedentes === 0 ? 0 : precoHora > 0 ? excedentes * precoHora : null;
+      setCalculoPlano({ plano, horas, cobertas, excedentes, saldoDepois: Math.max(0, uso.saldo - cobertas), valor, justificativa: `${cobertas}h cobertas pelo plano ${plano.nome}${excedentes ? `; ${excedentes}h excedentes` : ""}.` });
+      setCalculandoPlano(false);
+    }
+    void calcular();
+    return () => { active = false; };
+  }, [selected, selectedSala, horaInicio, horaFim, salas]);
+
+  const valorBase = calculoPlano?.valor === null ? 0 : calculoPlano?.valor ?? precoTabela;
+  const valorFinal = valorManual.trim() !== "" ? Number(valorManual.replace(",", ".")) || 0 : valorBase;
+  const temDesconto = valorFinal < valorBase;
 
   const temBloqueio = conflitos.some(c => c.tipo === 'bloqueio');
   const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
@@ -305,7 +334,12 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         unidade_id: selectedUnidade || null,
         sala_id: selectedSala || null,
         valor: valorFinal,
-        valor_original: precoTabela,
+        valor_original: valorBase,
+        plano_id: calculoPlano?.plano?.id || null,
+        horas_reservadas: calculoPlano?.horas || horasDaReserva({ hora_inicio: horaInicio, hora_fim: horaFim }),
+        horas_cobertas_plano: calculoPlano?.cobertas || 0,
+        horas_excedentes: calculoPlano?.excedentes || 0,
+        calculo_justificativa: calculoPlano?.justificativa || "Reserva avulsa conforme o preço configurado para a sala.",
         desconto_motivo: temDesconto ? (descontoMotivo.trim() || "Desconto concedido pelo gestor") : null,
         desconto_por: temDesconto ? "admin" : null,
         serie_id: serieId,
@@ -564,7 +598,6 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         </div>
 
         {(() => {
-          const r = RATES[ambiente] || RATES.estacao;
           let horas = 0;
           if (horaInicio && horaFim && horaFim > horaInicio) {
             const [h1, m1] = horaInicio.split(":").map(Number);
@@ -572,9 +605,9 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             horas = (h2 * 60 + m2 - h1 * 60 - m1) / 60;
           }
           const preco = valorFinal;
-          const detalhe = tipo === "diaria"
-            ? `Diária · R$ ${r.diaria.toFixed(2)}`
-            : `R$ ${r.hora.toFixed(2)}/h × ${horas > 0 ? horas.toFixed(1) : 0}h (cobra ${Math.ceil(horas)}h)`;
+          const detalhe = calculandoPlano ? "Calculando uso do plano…" : calculoPlano
+            ? `${calculoPlano.plano.nome} · ${calculoPlano.cobertas.toFixed(1)}h cobertas · saldo após: ${calculoPlano.saldoDepois.toFixed(1)}h`
+            : precoTabela > 0 ? `Avulso · ${fmtBRL(precoTabela)}` : "Valor sob consulta";
           const AMB_LBL: Record<string,string> = { estacao:"Estação de Trabalho", sala_privativa:"Sala Privativa", sala_reuniao:"Sala de Reunião" };
           const dataTxt = dataStr ? dataStr.split("-").reverse().join("/") : "";
           const hiTxt = tipo === "diaria" ? "09:00" : horaInicio;
@@ -594,7 +627,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                     <div className="text-[11px] line-through text-muted-foreground">R$ {precoTabela.toFixed(2).replace(".", ",")}</div>
                   )}
                   <div className="font-heading font-black text-2xl text-primary">
-                    R$ {preco.toFixed(2).replace(".", ",")}
+                     {calculoPlano?.valor === null ? "Sob consulta" : `R$ ${preco.toFixed(2).replace(".", ",")}`}
                   </div>
                 </div>
               </div>
@@ -605,7 +638,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                     inputMode="decimal"
                     value={valorManual}
                     onChange={(e) => setValorManual(e.target.value)}
-                    placeholder={precoTabela.toFixed(2).replace(".", ",")}
+                     placeholder={valorBase.toFixed(2).replace(".", ",")}
                   />
                 </div>
                 <div>
@@ -613,7 +646,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                   <Input value={descontoMotivo} onChange={(e) => setDescontoMotivo(e.target.value)} placeholder="Ex: cliente parceiro" />
                 </div>
               </div>
-              <Button
+                {preco > 0 && <Button
                 type="button"
                 size="sm"
                 className="w-full bg-[#25D366] hover:bg-[#1ebe57] text-white"
@@ -622,7 +655,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                 title={cobrarDisabled ? "Preencha nome, telefone e horário" : "Enviar cobrança PIX via WhatsApp"}
               >
                 <DollarSign className="w-4 h-4 mr-1" /> Enviar cobrança PIX ({fmtBRL(preco)}) via WhatsApp
-              </Button>
+                </Button>}
             </div>
           );
         })()}

@@ -7,25 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "./ImageUpload";
 import { MediaPickerModal } from "./MediaPickerModal";
-import { ArrowLeft, Building2, CheckCircle2, ImageIcon, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-
-const categorias = [
-  { value: "privativa", label: "Sala Privativa" },
-  { value: "compartilhado", label: "Escritório Compartilhado" },
-  { value: "consultorio_poltrona", label: "Consultório com Poltrona" },
-  { value: "consultorio_maca", label: "Consultório com Maca" },
-] as const;
-
-const tiposLocacao = [
-  { value: "locacao_mensal", label: "Locação Mensal" },
-  { value: "locacao_periodo", label: "Locação por Período" },
-] as const;
-
-const subtiposPeriodo = [
-  { value: "pacote_mensal", label: "Pacote Mensal" },
-  { value: "locacao_avulsa", label: "Locação Avulsa" },
-] as const;
+import { mensagemBancoSala, SALA_CATEGORIAS, SALA_MODALIDADES, tipoAmbienteDasCategorias } from "@/lib/salaOptions";
 
 const statusOptions = [
   { value: "disponivel", label: "Disponível" },
@@ -35,9 +19,8 @@ const statusOptions = [
 
 const defaultForm = {
   nome: "",
-  categoria: categorias[0].value,
-  tipo_locacao: tiposLocacao[0].value,
-  subtipo_periodo: "",
+  categorias: [SALA_CATEGORIAS[0].value] as string[],
+  modalidades_locacao: ["mensal"] as string[],
   capacidade: "",
   descricao: "",
   foto_url: "",
@@ -50,7 +33,6 @@ const defaultForm = {
   },
   planos_permitidos: [] as string[],
   preco_locacao_mensal: "",
-  preco_periodo_pacote_mensal: "",
   preco_periodo_locacao_avulsa: "",
 };
 
@@ -67,7 +49,7 @@ export default function AdminSalaFormPage() {
 
   useEffect(() => {
     const loadPlanos = async () => {
-      const { data, error } = await supabase.from("planos").select("*").order("nome");
+      const { data, error } = await supabase.from("planos").select("*").is("deleted_at", null).order("nome");
       if (!error) setAllPlanos(data || []);
     };
 
@@ -97,15 +79,10 @@ export default function AdminSalaFormPage() {
         }
 
         const sala = salaRes.data || {};
-        const tipoLocacao = sala.tipo_locacao || tiposLocacao[0].value;
-        const needsSubTipo = tipoLocacao === "locacao_periodo";
-        const subtipo = needsSubTipo ? (sala.subtipo_periodo || subtiposPeriodo[0].value) : "";
-
         setForm({
           nome: sala.nome || "",
-          categoria: sala.categoria || categorias[0].value,
-          tipo_locacao: tipoLocacao,
-          subtipo_periodo: subtipo,
+          categorias: sala.categorias?.length ? sala.categorias : [sala.categoria || SALA_CATEGORIAS[0].value],
+          modalidades_locacao: sala.modalidades_locacao?.length ? sala.modalidades_locacao : [sala.tipo_locacao === "locacao_periodo" ? "avulso" : "mensal"],
           capacidade: sala.capacidade?.toString() || "",
           descricao: sala.descricao || "",
           foto_url: sala.foto_url || "",
@@ -118,7 +95,6 @@ export default function AdminSalaFormPage() {
           },
           planos_permitidos: (planosRes.data || []).map((p: any) => p.plano_id),
           preco_locacao_mensal: sala.preco_locacao_mensal?.toString() || "",
-          preco_periodo_pacote_mensal: sala.preco_periodo_pacote_mensal?.toString() || "",
           preco_periodo_locacao_avulsa: sala.preco_periodo_locacao_avulsa?.toString() || "",
         });
         setLoading(false);
@@ -145,61 +121,32 @@ export default function AdminSalaFormPage() {
     }
 
     const precoLocacaoMensal = form.preco_locacao_mensal === "" ? null : Number(form.preco_locacao_mensal);
-    const precoPeriodoPacoteMensal = form.preco_periodo_pacote_mensal === "" ? null : Number(form.preco_periodo_pacote_mensal);
     const precoPeriodoLocacaoAvulsa = form.preco_periodo_locacao_avulsa === "" ? null : Number(form.preco_periodo_locacao_avulsa);
-
-    const payload: any = {
-      nome: form.nome,
-      categoria: form.categoria,
-      tipo_locacao: form.tipo_locacao,
-      subtipo_periodo: form.tipo_locacao === "locacao_periodo" ? form.subtipo_periodo : null,
-      capacidade: Number(form.capacidade) || null,
-      descricao: form.descricao,
-      foto_url: form.galeria?.[0] || form.foto_url || "",
-      galeria: form.galeria || [],
-      status: form.status || "disponivel",
-      metadata: form.metadata || {
-        metragem: 0,
-        tem_janela: false,
-        tem_lavatorio: false,
-      },
-      unidade_id: isEditing ? undefined : unidadeId,
-      preco_locacao_mensal: precoLocacaoMensal,
-      preco_periodo_pacote_mensal: precoPeriodoPacoteMensal,
-      preco_periodo_locacao_avulsa: precoPeriodoLocacaoAvulsa,
-    };
-
-    if (isEditing && id) {
-      const { error } = await supabase.from("salas").update(payload).eq("id", id);
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      await supabase.from("sala_planos").delete().eq("sala_id", id);
-      if (form.planos_permitidos?.length) {
-        const relations = form.planos_permitidos.map((planoId: string) => ({ sala_id: id, plano_id: planoId }));
-        await supabase.from("sala_planos").insert(relations);
-      }
-
-      toast.success("Sala atualizada com sucesso!");
-      navigate(`/admin/unidades/sala/${id}`);
-      return;
-    }
-
-    const { data, error } = await supabase.from("salas").insert([payload]).select().single();
+    if (!form.categorias?.length) return toast.error("Selecione ao menos uma categoria");
+    if (!form.modalidades_locacao?.length) return toast.error("Selecione ao menos uma modalidade");
+    const { data, error } = await supabase.rpc("save_admin_room", {
+      p_id: id || undefined,
+      p_unidade_id: form.unidade_id || unidadeId,
+      p_nome: form.nome.trim(),
+      p_tipo: tipoAmbienteDasCategorias(form.categorias),
+      p_categorias: form.categorias,
+      p_modalidades: form.modalidades_locacao,
+      p_capacidade: Number(form.capacidade) || 1,
+      p_descricao: form.descricao || "",
+      p_foto_url: form.galeria?.[0] || form.foto_url || "",
+      p_galeria: form.galeria || [],
+      p_status: form.status || "disponivel",
+      p_metadata: form.metadata || {},
+      p_preco_mensal: precoLocacaoMensal || 0,
+      p_preco_avulso: precoPeriodoLocacaoAvulsa || 0,
+      p_planos: form.planos_permitidos || [],
+    });
     if (error) {
-      toast.error(error.message);
+      toast.error(mensagemBancoSala(error.message));
       return;
     }
-
-    if (form.planos_permitidos?.length) {
-      const relations = form.planos_permitidos.map((planoId: string) => ({ sala_id: data.id, plano_id: planoId }));
-      await supabase.from("sala_planos").insert(relations);
-    }
-
-    toast.success("Sala criada com sucesso!");
-    navigate(`/admin/unidades/sala/${data.id}`);
+    toast.success(isEditing ? "Sala atualizada com sucesso!" : "Sala criada com sucesso!");
+    navigate(`/admin/unidades/sala/${data}`);
   }
 
   if (loading) {
@@ -232,54 +179,18 @@ export default function AdminSalaFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Categoria</Label>
-                <select
-                  className="w-full border rounded-md px-3 py-2 bg-white"
-                  value={form.categoria}
-                  onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-                >
-                  {categorias.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
+                <Label>Categorias</Label>
+                <div className="grid gap-2 rounded-md border p-3">
+                  {SALA_CATEGORIAS.map((cat) => <label key={cat.value} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.categorias.includes(cat.value)} onChange={(e) => setForm({ ...form, categorias: e.target.checked ? [...form.categorias, cat.value] : form.categorias.filter((value: string) => value !== cat.value) })} />{cat.label}</label>)}
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Tipo de Locação</Label>
-                <select
-                  className="w-full border rounded-md px-3 py-2 bg-white"
-                  value={form.tipo_locacao}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setForm({ ...form, tipo_locacao: next, subtipo_periodo: next === "locacao_periodo" ? form.subtipo_periodo || subtiposPeriodo[0].value : "" });
-                  }}
-                >
-                  {tiposLocacao.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {form.tipo_locacao === "locacao_periodo" && (
-                <div className="space-y-2">
-                  <Label>Subtipo de Período</Label>
-                  <select
-                    className="w-full border rounded-md px-3 py-2 bg-white"
-                    value={form.subtipo_periodo}
-                    onChange={(e) => setForm({ ...form, subtipo_periodo: e.target.value })}
-                  >
-                    {subtiposPeriodo.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
+                <Label>Modalidades de locação</Label>
+                <div className="grid grid-cols-2 gap-2 rounded-md border p-3">
+                  {SALA_MODALIDADES.map((item) => <label key={item.value} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.modalidades_locacao.includes(item.value)} onChange={(e) => setForm({ ...form, modalidades_locacao: e.target.checked ? [...form.modalidades_locacao, item.value] : form.modalidades_locacao.filter((value: string) => value !== item.value) })} />{item.label}</label>)}
                 </div>
-              )}
+              </div>
 
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -296,12 +207,7 @@ export default function AdminSalaFormPage() {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Capacidade</Label>
-                <Input value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
-              </div>
-
-              <div className="space-y-2">
+              {form.modalidades_locacao.includes("mensal") && <div className="space-y-2">
                 <Label>Preço Locação Mensal</Label>
                 <Input
                   type="number"
@@ -310,21 +216,14 @@ export default function AdminSalaFormPage() {
                   onChange={(e) => setForm({ ...form, preco_locacao_mensal: e.target.value })}
                   placeholder="R$ 0,00"
                 />
+              </div>}
+
+              <div className="space-y-2">
+                <Label>Capacidade</Label>
+                <Input value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
               </div>
 
-              {form.tipo_locacao === "locacao_periodo" && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Preço Pacote Mensal</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={form.preco_periodo_pacote_mensal}
-                      onChange={(e) => setForm({ ...form, preco_periodo_pacote_mensal: e.target.value })}
-                      placeholder="R$ 0,00"
-                    />
-                  </div>
-
+              {form.modalidades_locacao.includes("avulso") && (
                   <div className="space-y-2">
                     <Label>Preço Locação Avulsa</Label>
                     <Input
@@ -335,7 +234,6 @@ export default function AdminSalaFormPage() {
                       placeholder="R$ 0,00"
                     />
                   </div>
-                </>
               )}
             </div>
 
@@ -393,7 +291,7 @@ export default function AdminSalaFormPage() {
                             setForm({ ...form, planos_permitidos: next });
                           }}
                         />
-                        <span className="truncate">{p.nome}</span>
+                        <span className="truncate">{p.nome} · {p.horas_incluidas || p.quantidade_horas || 0}h</span>
                       </label>
                     );
                   })}

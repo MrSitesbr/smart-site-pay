@@ -58,20 +58,6 @@ export default function AuthAdmin() {
     }
     setLoading(true);
 
-    // SOLUÇÃO DE CONTORNO TEMPORÁRIA: Hardcoded admin auth
-    const HARDCODED_EMAIL = "admin@coworking013.com.br";
-    const HARDCODED_PASS = "976431852@#Wt";
-
-    if (email === HARDCODED_EMAIL && password === HARDCODED_PASS) {
-      // Simulamos uma sessão no localStorage para o Admin.tsx reconhecer o bypass se necessário
-      localStorage.setItem("admin_bypass", "true");
-      localStorage.setItem("admin_key", password);
-      toast({ title: "Acesso Liberado (Modo de Contingência)" });
-      navigate("/admin");
-      setLoading(false);
-      return;
-    }
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -93,7 +79,7 @@ export default function AuthAdmin() {
     } catch (e: any) {
       let message = e.message === "Invalid login credentials" ? "Credenciais inválidas." : e.message;
       if (e.message?.includes("Database error querying schema") || e.message?.includes("permission denied for function")) {
-        message = "O servidor de autenticação está sendo sincronizado. Por favor, tente novamente em alguns segundos ou use as credenciais de contingência fornecidas.";
+        message = "Não foi possível validar sua permissão agora. Tente novamente em alguns segundos.";
       }
 
       toast({ 

@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
-import { adminFnHeaders } from "@/lib/googleSync";
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
@@ -131,10 +130,9 @@ export default function AdminClienteCorpDetalhe() {
     try {
       const { data, error } = await supabase.functions.invoke("admin-set-client-password", {
         body: { cliente_id: id, password: accessPassword },
-        headers: adminFnHeaders(),
       });
       const response = data as { ok?: boolean; error?: string } | null;
-      const message = response?.error || error?.message;
+      const message = response?.error || (error ? "Sua sessão administrativa expirou. Entre novamente." : undefined);
       if (message || !response?.ok) throw new Error(message || "A senha não foi confirmada pelo sistema.");
       toast.success("Senha de acesso atualizada e confirmada");
       setAccessPassword("");

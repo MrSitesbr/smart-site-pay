@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { isBusinessDay } from "@/lib/holidays";
+import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 
 interface PainelAgendamentoProps {
@@ -19,6 +19,13 @@ type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidad
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
+type Ambiente = "estacao" | "sala_privativa" | "sala_reuniao";
+
+function ambienteDaSala(tipo: string): Ambiente {
+  if (/privativ/i.test(tipo)) return "sala_privativa";
+  if (/reuni|consult|audit/i.test(tipo)) return "sala_reuniao";
+  return "estacao";
+}
 
 const SLOTS = Array.from({ length: 12 }, (_, index) => 8 * 60 + index * 60);
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -168,7 +175,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
 
   const dias = useMemo(() => eachDayOfInterval({ start: startOfMonth(mes), end: endOfMonth(mes) }), [mes]);
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
-  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(dia)}T12:00:00`));
+  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(dia)}T12:00:00`));
   const salasGantt = salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId);
   const slotsVisiveis = useMemo(() => {
     if (!salasGantt.length) return SLOTS;
@@ -270,28 +277,18 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     setSolicitando(true);
     
     try {
-      // Criar solicitação de reserva para cada período
-      for (const periodo of periodos) {
-        const { error } = await supabase.from("reservations").insert({
-          user_id: user.id,
-          cliente_corp_id: cliente.id,
-          sala_id: modoSala === "qualquer" ? null : salaDosPeriodos.id,
-          data: periodo.data,
-          hora_inicio: periodo.inicio,
-          hora_fim: periodo.fim,
-          ambiente: salaDosPeriodos?.tipo || "estacao",
-          status: "pendente",
-          nome: cliente.responsavel_nome || user.user_metadata?.nome || user.email,
-          email: cliente.responsavel_email || user.email,
-          whatsapp: cliente.responsavel_telefone || user.user_metadata?.telefone || "",
-          tipo_negocio: user.user_metadata?.nicho || "",
-        });
-        
-        if (error) {
-          toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
-          setSolicitando(false);
-          return;
-        }
+      const { error } = await supabase.rpc("request_authenticated_reservations", {
+        p_sala_id: modoSala === "qualquer" ? undefined : salaDosPeriodos.id,
+        p_periodos: periodos.map(({ data, inicio, fim }) => ({ data, hora_inicio: inicio, hora_fim: fim })),
+        p_nome: cliente.responsavel_nome || cliente.razao_social || user.email,
+        p_email: cliente.responsavel_email || user.email,
+        p_whatsapp: cliente.responsavel_telefone || "",
+        p_tipo_negocio: user.user_metadata?.nicho || "Cliente Coworking 013",
+      });
+      if (error) {
+        toast({ title: "Não foi possível solicitar", description: "Revise os períodos escolhidos e tente novamente.", variant: "destructive" });
+        setSolicitando(false);
+        return;
       }
       
       toast({ 
@@ -387,7 +384,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           ))}
           {dias.map((data) => {
             const selecionado = isSameDay(data, dia);
-            const bloqueado = isBefore(data, startOfDay(new Date())) || !isBusinessDay(new Date(`${isoDate(data)}T12:00:00`));
+            const bloqueado = isBefore(data, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(data)}T12:00:00`));
             const key = isoDate(data);
             const info = reservasPorDia.get(key);
             const qtd = info ? info.length : 0;

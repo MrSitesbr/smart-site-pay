@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { isBusinessDay, getDateInfo } from "./holidays";
+import { getBookingBlockReason, isBookableDay } from "./holidays";
 
 export type ConflitoReserva = {
   tipo: 'reserva' | 'visita' | 'bloqueio';
@@ -24,21 +24,26 @@ export async function verificarConflitos(
   // Capacidade da sala (estações compartilhadas aceitam várias reservas simultâneas)
   const { data: salaInfo } = await supabase
     .from('salas')
-    .select('capacidade, tipo')
+    .select('capacidade, tipo, unidades(horario_abertura, horario_fechamento)')
     .eq('id', salaId)
     .maybeSingle();
   const isCompartilhada = /comp|estac|estaç|coworking/i.test(String(salaInfo?.tipo || ''));
   const capacidade = isCompartilhada ? Math.max(1, Number(salaInfo?.capacidade) || 1) : 1;
+  const unidade = Array.isArray(salaInfo?.unidades) ? salaInfo.unidades[0] : salaInfo?.unidades;
+  const abertura = String(unidade?.horario_abertura || "08:00").slice(0, 5);
+  const fechamento = String(unidade?.horario_fechamento || "20:00").slice(0, 5);
 
-  // 0. Verificar Feriados e Domingos
-  if (!isBusinessDay(dateObj)) {
-    const info = getDateInfo(dateObj);
+  // 0. Verificar feriados reais e domingos. Sábados são permitidos.
+  if (!isBookableDay(dateObj)) {
     conflitos.push({
       tipo: 'bloqueio',
-      nome: info?.name || (dateObj.getDay() === 0 ? "Domingo" : "Feriado"),
+      nome: getBookingBlockReason(dateObj) || "Data indisponível",
       hora_inicio: "00:00",
       hora_fim: "23:59"
     });
+  }
+  if (horaInicio < abertura || horaFim > fechamento) {
+    conflitos.push({ tipo: "bloqueio", nome: "Horário fora do funcionamento desta unidade.", hora_inicio: abertura, hora_fim: fechamento });
   }
 
   // 1. Verificar Reservas

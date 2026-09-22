@@ -117,3 +117,15 @@ export function isWeekend(d: Date): boolean {
 export function isBusinessDay(d: Date): boolean {
   return !isWeekend(d) && !isHoliday(d);
 }
+
+/** Regra operacional da agenda: sábado é permitido; domingo e feriado real são bloqueados. */
+export function isBookableDay(d: Date): boolean {
+  return d.getDay() !== 0 && !isHoliday(d);
+}
+
+export function getBookingBlockReason(d: Date): string | null {
+  if (d.getDay() === 0) return "A unidade não realiza agendamentos aos domingos.";
+  const info = getDateInfo(d);
+  if (info?.holiday) return `Data bloqueada: ${info.name}.`;
+  return null;
+}

@@ -36,27 +36,6 @@ export default function AdminSalaDetalhe() {
     }
   }, [id]);
 
-  useEffect(() => {
-    if (sala && !editingSala) {
-      setEditingSala({
-        nome: sala.nome,
-        categoria: sala.categoria || '',
-        tipo_locacao: sala.tipo_locacao || '',
-        subtipo_periodo: sala.subtipo_periodo || '',
-        status: sala.status || 'disponivel',
-        capacidade: sala.capacidade || '',
-        descricao: sala.descricao || '',
-        foto_url: sala.foto_url || '',
-        galeria: sala.galeria || [],
-        metadata: sala.metadata || {},
-        preco_locacao_mensal: sala.preco_locacao_mensal ?? '',
-        preco_periodo_pacote_mensal: sala.preco_periodo_pacote_mensal ?? '',
-        preco_periodo_locacao_avulsa: sala.preco_periodo_locacao_avulsa ?? '',
-        planos_permitidos: planos.map((p: any) => p.id),
-      });
-    }
-  }, [sala]);
-
   async function fetchData() {
     setLoading(true);
     const { data: salaData, error: sErr } = await supabase.from('salas').select('*').eq('id', id).single();
@@ -200,6 +179,10 @@ export default function AdminSalaDetalhe() {
                     </Badge>
                   ))}
                   {planos.length === 0 && <span className="text-sm text-muted-foreground italic">Nenhum plano associado.</span>}
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {(sala.categorias || [sala.categoria]).filter(Boolean).map((categoria: string) => <Badge key={categoria} variant="outline">{categoria.replaceAll("_", " ")}</Badge>)}
+                  {(sala.modalidades_locacao || []).map((modalidade: string) => <Badge key={modalidade} variant="secondary">{modalidade}</Badge>)}
                 </div>
               </div>
             </div>

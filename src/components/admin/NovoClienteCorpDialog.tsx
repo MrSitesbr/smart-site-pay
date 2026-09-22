@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { adminFnHeaders } from "@/lib/googleSync";
 
 type Props = {
   open: boolean;
@@ -107,10 +106,9 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
     if (accessPassword) {
       const { data: pwData, error: passwordError } = await supabase.functions.invoke("admin-set-client-password", {
         body: { cliente_id: result.id, password: accessPassword },
-        headers: adminFnHeaders(),
       });
       const passwordResult = pwData as { ok?: boolean; error?: string } | null;
-      const pwErr = passwordResult?.error || passwordError?.message;
+      const pwErr = passwordResult?.error || (passwordError ? "Sua sessão administrativa expirou. Entre novamente." : undefined);
       if (pwErr || !passwordResult?.ok) {
         toast({
           title: "Cliente salvo, mas a senha não foi definida",
