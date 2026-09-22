@@ -157,7 +157,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
     const { error } = await (supabase.from("contract_requests") as any).update({ status: etapa }).in("id", leads.map((lead) => lead.id));
     if (error) {
       setLeadEtapas((current) => ({ ...current, [cliente.email]: etapaAnterior }));
-      toast({ title: "Não foi possível mover o lead", description: LEAD_ERROR, variant: "destructive" });
+      toast({ title: "Não foi possível mover o lead", description: friendlyError(error, LEAD_ERROR), variant: "destructive" });
       return;
     }
     toast({ title: `Lead movido para ${FUNIL.find((item) => item.id === etapa)?.label}` });
