@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogScrollContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, ExternalLink, Trash2, DollarSign } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Trash2, DollarSign, Pencil } from "lucide-react";
 import EventAvatar from "./EventAvatar";
 import { useClientColors } from "@/hooks/useClientColors";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
@@ -63,9 +63,10 @@ type Props = {
   gEvents: any[];
   onDeleteReserva?: (r: any) => Promise<void> | void;
   onDeleteContrato?: (c: any) => Promise<void> | void;
+  onEditReserva?: (r: any) => void;
 };
 
-export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas, contratos, gEvents, onDeleteReserva, onDeleteContrato }: Props) {
+export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas, contratos, gEvents, onDeleteReserva, onDeleteContrato, onEditReserva }: Props) {
   const [selected, setSelected] = useState<Bar | null>(null);
   const { overrides: colorOverrides } = useClientColors();
 
@@ -359,6 +360,7 @@ export default function DayTimelineDialog({ day, onChangeDay, onClose, reservas,
                         </Button>
                       );
                     })()}
+                    {b.kind === "reserva" && onEditReserva && <Button variant="outline" size="sm" onClick={() => { onEditReserva(b.obj); setSelected(null); onClose(); }}><Pencil className="w-4 h-4 mr-2" /> Editar</Button>}
                     {!isGoogle && (
                       <Button
                         variant="outline" size="sm"

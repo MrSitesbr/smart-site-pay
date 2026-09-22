@@ -68,6 +68,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [visitantes, setVisitantes] = useState<any[]>([]);
   const [checkin, setCheckin] = useState<any | null>(null);
   const [roomCapacity, setRoomCapacity] = useState<number | null>(null);
+  const [editSalas, setEditSalas] = useState<any[]>([]);
   const [savingCheckin, setSavingCheckin] = useState(false);
 
   useEffect(() => {
@@ -95,6 +96,11 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         .then(({ data }: any) => setRoomCapacity(Number(data?.capacidade) || null));
     }
   }, [fullView]);
+
+  useEffect(() => {
+    if (!editingReserva?.unidade_id) { setEditSalas([]); return; }
+    supabase.from("salas").select("id, nome, unidade_id, tipo").eq("unidade_id", editingReserva.unidade_id).order("nome").then(({ data }) => setEditSalas(data || []));
+  }, [editingReserva?.unidade_id]);
 
   async function toggleCheckin(reserva: any) {
     setSavingCheckin(true);
@@ -265,6 +271,10 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       status: editingReserva.status,
       observacoes: editingReserva.observacoes || null,
       admin_notes: editingReserva.admin_notes || null,
+      unidade_id: editingReserva.unidade_id || null,
+      sala_id: editingReserva.sala_id || null,
+      plano_id: editingReserva.plano_id || null,
+      valor: editingReserva.valor == null ? null : Number(editingReserva.valor),
     };
 
     const { error } = await (supabase.from("reservations") as any).update(payload).eq("id", editingReserva.id);
@@ -278,6 +288,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
     setFullView({ ...fullView, obj: updated });
     setIsEditingReserva(false);
     setEditingReserva(null);
+    const syncResult = await invokeGoogleSync({ action: "upsert", type: "reserva", id: editingReserva.id });
+    if (syncResult.error || syncResult.data?.error) toast({ title: "Reserva salva", description: "A alteração foi salva, mas não foi possível atualizar o Google Agenda.", variant: "destructive" });
+    else toast({ title: "Reserva atualizada" });
     onCreated?.();
   };
 
@@ -630,6 +643,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                                 <Button size="icon" variant="ghost" className="h-7 w-7" title="Ver reserva completa" onClick={() => setFullView({ kind: e.kind, obj: e.obj })}>
                                   <Eye className="w-4 h-4" />
                                 </Button>
+                                {e.kind === "reserva" && <Button size="icon" variant="ghost" className="h-7 w-7" title="Editar reserva" onClick={() => { setFullView({ kind: "reserva", obj: e.obj }); setEditingReserva({ ...e.obj }); setIsEditingReserva(true); }}><Pencil className="w-4 h-4" /></Button>}
                                 <Button
                                   size="icon" variant="ghost"
                                   className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -738,6 +752,14 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                       </Select>
                     </div>
                     <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unidade</label>
+                      <Select value={editingReserva.unidade_id || ""} onValueChange={(v) => setEditingReserva({ ...editingReserva, unidade_id: v, sala_id: null })}><SelectTrigger><SelectValue placeholder="Unidade" /></SelectTrigger><SelectContent>{unidades.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sala</label>
+                      <Select value={editingReserva.sala_id || ""} onValueChange={(v) => setEditingReserva({ ...editingReserva, sala_id: v })}><SelectTrigger><SelectValue placeholder="Sala" /></SelectTrigger><SelectContent>{editSalas.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}</SelectContent></Select>
+                    </div>
+                    <div>
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data</label>
                       <Input type="date" value={editingReserva.data || ""} onChange={(e) => setEditingReserva({ ...editingReserva, data: e.target.value })} />
                     </div>
@@ -749,6 +771,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                       </div>
                     </div>
                   </div>
+                  <div><label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Valor</label><Input type="number" min="0" step="0.01" value={editingReserva.valor ?? ""} onChange={(e) => setEditingReserva({ ...editingReserva, valor: e.target.value })} /></div>
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observações</label>
                     <textarea
@@ -860,6 +883,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
         onDeleteReserva={onDeleteReserva}
         onDeleteContrato={onDeleteContrato}
+        onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
       />
 
       <NovoVisitanteDialog
