@@ -27,10 +27,13 @@
 - [x] Mostrar miniatura e detalhes de cada sala no cabeçalho da agenda.
 - [x] Validar a solicitação flexível e o popup de informações das salas.
 - [x] Simplificar o cadastro do cliente para uma etapa e entrar automaticamente no painel.
-- [ ] Corrigir e ampliar o cadastro de salas com múltiplas categorias, modalidades e planos.
-- [ ] Aplicar corretamente o plano e o saldo de horas no cálculo das reservas.
-- [ ] Completar a edição de reservas com revalidação e sincronização.
-- [ ] Permitir sábados e distinguir domingos de feriados nos agendamentos.
-- [ ] Corrigir a troca administrativa de senha com autorização segura e mensagens claras.
-- [ ] Sincronizar os estados do funil de leads com as regras do banco.
-- [ ] Validar os fluxos corrigidos no desktop e celular, com typecheck e testes.
+- [ ] Consolidar cadastro de salas com múltiplas categorias, modalidades, planos e validação estruturada.
+- [ ] Finalizar preço configurável, saldo progressivo e cálculo de planos nas recorrências.
+- [ ] Completar a edição de reservas com recálculo, revalidação, histórico e sincronização.
+- [ ] Garantir sábado permitido, domingo/feriado bloqueados e expediente por unidade em todos os fluxos.
+- [ ] Corrigir e publicar a troca administrativa de senha com autorização segura e mensagens claras.
+- [ ] Sincronizar estados, rollback e arquivamento seguro do funil de leads.
+- [ ] Remover a função legada insegura de redefinição administrativa.
+- [ ] Revisar funções privilegiadas e restringir permissões sem expor dados pessoais.
+- [ ] Criar testes funcionais das regras críticas.
+- [ ] Validar os fluxos corrigidos no desktop e celular, com typecheck, testes, lint e build.
