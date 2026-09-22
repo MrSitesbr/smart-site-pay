@@ -192,7 +192,7 @@ export default function AdminSalaFormPage() {
                 </div>
               </div>
 
-              {form.modalidades_locacao.includes("mensal") && <div className="space-y-2">
+              <div className="space-y-2">
                 <Label>Status</Label>
                 <select
                   className="w-full border rounded-md px-3 py-2 bg-white"
@@ -207,12 +207,7 @@ export default function AdminSalaFormPage() {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Capacidade</Label>
-                <Input value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
-              </div>
-
-              <div className="space-y-2">
+              {form.modalidades_locacao.includes("mensal") && <div className="space-y-2">
                 <Label>Preço Locação Mensal</Label>
                 <Input
                   type="number"
@@ -222,6 +217,11 @@ export default function AdminSalaFormPage() {
                   placeholder="R$ 0,00"
                 />
               </div>}
+
+              <div className="space-y-2">
+                <Label>Capacidade</Label>
+                <Input value={form.capacidade} onChange={(e) => setForm({ ...form, capacidade: e.target.value })} placeholder="Ex.: 4" />
+              </div>
 
               {form.modalidades_locacao.includes("avulso") && (
                   <div className="space-y-2">
