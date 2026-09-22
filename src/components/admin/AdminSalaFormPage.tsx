@@ -233,6 +233,7 @@ export default function AdminSalaFormPage() {
               </div>
 
               {form.modalidades_locacao.includes("avulso") && (
+                <>
                   <div className="space-y-2">
                     <Label>Preço avulso por hora</Label>
                     <Input
@@ -247,6 +248,7 @@ export default function AdminSalaFormPage() {
                     <Label>Preço da diária</Label>
                     <Input type="number" min={0} value={form.preco_diaria} onChange={(e) => setForm({ ...form, preco_diaria: e.target.value })} placeholder="Sob consulta" />
                   </div>
+                </>
               )}
             </div>
 
