@@ -662,9 +662,45 @@ export type Database = {
           },
         ]
       }
+      reservation_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_data: Json
+          previous_data: Json
+          reservation_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data: Json
+          previous_data: Json
+          reservation_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json
+          previous_data?: Json
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_history_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
+          calculo_justificativa: string | null
           cancel_motivo: string | null
           cancelled_at: string | null
           created_at: string
@@ -676,10 +712,16 @@ export type Database = {
           google_event_id: string | null
           hora_fim: string
           hora_inicio: string
+          horas_cobertas_plano: number
+          horas_excedentes: number
+          horas_reservadas: number
           id: string
+          modified_at: string | null
+          modified_by: string | null
           nome: string
           observacoes: string | null
           origem: string
+          plano_id: string | null
           sala_id: string | null
           serie_id: string | null
           status: Database["public"]["Enums"]["reserva_status"]
@@ -692,6 +734,7 @@ export type Database = {
         }
         Insert: {
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
+          calculo_justificativa?: string | null
           cancel_motivo?: string | null
           cancelled_at?: string | null
           created_at?: string
@@ -703,10 +746,16 @@ export type Database = {
           google_event_id?: string | null
           hora_fim: string
           hora_inicio: string
+          horas_cobertas_plano?: number
+          horas_excedentes?: number
+          horas_reservadas?: number
           id?: string
+          modified_at?: string | null
+          modified_by?: string | null
           nome: string
           observacoes?: string | null
           origem?: string
+          plano_id?: string | null
           sala_id?: string | null
           serie_id?: string | null
           status?: Database["public"]["Enums"]["reserva_status"]
@@ -719,6 +768,7 @@ export type Database = {
         }
         Update: {
           ambiente?: Database["public"]["Enums"]["ambiente_tipo"]
+          calculo_justificativa?: string | null
           cancel_motivo?: string | null
           cancelled_at?: string | null
           created_at?: string
@@ -730,10 +780,16 @@ export type Database = {
           google_event_id?: string | null
           hora_fim?: string
           hora_inicio?: string
+          horas_cobertas_plano?: number
+          horas_excedentes?: number
+          horas_reservadas?: number
           id?: string
+          modified_at?: string | null
+          modified_by?: string | null
           nome?: string
           observacoes?: string | null
           origem?: string
+          plano_id?: string | null
           sala_id?: string | null
           serie_id?: string | null
           status?: Database["public"]["Enums"]["reserva_status"]
@@ -745,6 +801,13 @@ export type Database = {
           valor_original?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_sala_id_fkey"
             columns: ["sala_id"]
@@ -795,12 +858,14 @@ export type Database = {
         Row: {
           capacidade: number | null
           categoria: string | null
+          categorias: string[]
           created_at: string
           descricao: string | null
           foto_url: string | null
           galeria: string[] | null
           id: string
           metadata: Json | null
+          modalidades_locacao: string[]
           nome: string
           preco_locacao_mensal: number | null
           preco_periodo_locacao_avulsa: number | null
@@ -814,12 +879,14 @@ export type Database = {
         Insert: {
           capacidade?: number | null
           categoria?: string | null
+          categorias?: string[]
           created_at?: string
           descricao?: string | null
           foto_url?: string | null
           galeria?: string[] | null
           id?: string
           metadata?: Json | null
+          modalidades_locacao?: string[]
           nome: string
           preco_locacao_mensal?: number | null
           preco_periodo_locacao_avulsa?: number | null
@@ -833,12 +900,14 @@ export type Database = {
         Update: {
           capacidade?: number | null
           categoria?: string | null
+          categorias?: string[]
           created_at?: string
           descricao?: string | null
           foto_url?: string | null
           galeria?: string[] | null
           id?: string
           metadata?: Json | null
+          modalidades_locacao?: string[]
           nome?: string
           preco_locacao_mensal?: number | null
           preco_periodo_locacao_avulsa?: number | null
