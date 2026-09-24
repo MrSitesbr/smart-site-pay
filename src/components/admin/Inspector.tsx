@@ -136,14 +136,26 @@ export const Inspector: React.FC<InspectorProps> = ({ type, data, onUpdate, onCl
                   )}
 
                   {data.type === 'image' && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem</Label>
-                      <div className="flex gap-2">
-                        <Input value={data.content.url || ''} onChange={(e) => handleChange('content.url', e.target.value)} />
-
-                        <Button variant="outline" size="icon" onClick={() => openPicker('content.url')}>
-                          <ImageIcon className="w-4 h-4" />
-                        </Button>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Imagem</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={data.content.url || data.content.image || ''}
+                            onChange={(e) => handleChange('content.url', e.target.value)}
+                          />
+                          <Button variant="outline" size="icon" onClick={() => openPicker('content.url')}>
+                            <ImageIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Texto alternativo</Label>
+                        <Input
+                          value={data.content.alt || ''}
+                          onChange={(e) => handleChange('content.alt', e.target.value)}
+                          placeholder="Descreva a imagem"
+                        />
                       </div>
                     </div>
                   )}
