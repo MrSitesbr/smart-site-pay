@@ -37,7 +37,7 @@ const WhatsappIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 
 const Footer = () => {
   const [cmsContent, setCmsContent] = useState<any>(null);
-  const [unitAddresses, setUnitAddresses] = useState<string[]>([]);
+  const [unitAddresses, setUnitAddresses] = useState<Array<{ name: string; address: string }>>([]);
 
   useEffect(() => {
     loadCms();
@@ -47,12 +47,13 @@ const Footer = () => {
     const { data: unitsData } = await supabase
       .from('unidades')
       .select('nome, endereco')
-      .order('created_at', { ascending: true });
+      .order('nome', { ascending: true });
 
     if (unitsData?.length) {
-      setUnitAddresses(unitsData.map((unit) =>
-        `${unit.nome}: ${unit.endereco || "Endereço não informado"}`
-      ));
+      setUnitAddresses(unitsData.map((unit) => ({
+        name: unit.nome,
+        address: unit.endereco || "Endereço não informado",
+      })));
     }
 
     // Load Navigation Menus for Footer
@@ -133,10 +134,10 @@ const Footer = () => {
   ];
 
   const defaultUnitAddresses = [
-    "Unidade 01 - Rua Jaú: R. Jaú, 955 Conj. 26, Boqueirão - Praia Grande - SP",
-    "Unidade 02 - Av. Costa e Silva: Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP",
-    "Unidade 03 - Rua São Caetano: R. São Caetano, 86, Boqueirão - Praia Grande - SP",
-    "Unidade 04 - Helbor São Vicente: Rua Benjamin Constant, 61, Centro - São Vicente - SP"
+    { name: "Unidade 01 - Rua Jaú", address: "R. Jaú, 955 Conj. 26, Boqueirão - Praia Grande - SP" },
+    { name: "Unidade 02 - Av. Costa e Silva", address: "Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP" },
+    { name: "Unidade 03 - Rua São Caetano", address: "R. São Caetano, 86, Boqueirão - Praia Grande - SP" },
+    { name: "Unidade 04 - Helbor São Vicente", address: "Rua Benjamin Constant, 61, Centro - São Vicente - SP" }
   ];
   const unidades = unitAddresses.length > 0 ? unitAddresses : defaultUnitAddresses;
 
@@ -205,7 +206,10 @@ const Footer = () => {
             <h4 className="font-heading font-bold mb-4">Unidades</h4>
             <ul className="space-y-3 text-sm text-white/70">
               {unidades.map((unidade, i) => (
-                <li key={i}>{unidade}</li>
+                <li key={i}>
+                  <strong className="text-white">{unidade.name}:</strong>{" "}
+                  <span>{unidade.address}</span>
+                </li>
               ))}
             </ul>
           </div>
@@ -214,9 +218,9 @@ const Footer = () => {
             <h4 className="font-heading font-bold mb-4">Informações</h4>
             <div className="space-y-3 text-sm text-white/70">
               <p><strong className="text-white">Contatos e Atendimento</strong></p>
-              <p>Telefone / WhatsApp: {phone}</p>
-              <p>E-mail: {email}</p>
-              <p>Horário de Atendimento: {workingHoursWeek} | {workingHoursSat} (atendimento e telefone centralizados na sede)</p>
+              <p><strong className="text-white">Telefone / WhatsApp:</strong> {phone}</p>
+              <p><strong className="text-white">E-mail:</strong> {email}</p>
+              <p><strong className="text-white">Horário de Atendimento:</strong> {workingHoursWeek} | {workingHoursSat} (atendimento e telefone centralizados na sede)</p>
             </div>
             <div className="flex gap-3 mt-6">
               <a href={cmsContent?.instagram_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
