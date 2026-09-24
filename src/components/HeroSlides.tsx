@@ -18,7 +18,7 @@ function VirtualAddressSlide() {
             <span className="text-xs font-bold uppercase tracking-widest text-brand-orange">Endereço Virtual</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-snug tracking-tight">
-            Sua empresa com <span className="text-brand-orange">endereço fiscal e comercial</span> em Santos
+            Sua empresa com <span className="text-brand-orange">endereço fiscal e comercial</span>
           </h2>
           <p className="text-base sm:text-lg text-white/80 leading-relaxed max-w-md">
             Formalize seu negócio, ganhe credibilidade e receba correspondências sem pagar por um escritório físico.
