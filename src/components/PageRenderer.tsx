@@ -17,6 +17,18 @@ const LUCIDE_ICONS: Record<string, any> = {
   Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout: LayoutIcon
 };
 
+const resolveMediaUrl = (value?: string) => {
+  if (!value) return '';
+  if (
+    value.startsWith('/__l5e/assets-v1/') &&
+    typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  ) {
+    return `https://smart-site-pay.lovable.app${value}`;
+  }
+  return value;
+};
+
 interface PageRendererProps {
   layout: SectionData[];
   isAdmin?: boolean;
@@ -68,7 +80,7 @@ const SectionRenderer: React.FC<{
   
   const sectionStyle: React.CSSProperties = {
     backgroundColor: settings.backgroundColor,
-    backgroundImage: settings.backgroundImage ? `url(${settings.backgroundImage})` : undefined,
+    backgroundImage: settings.backgroundImage ? `url(${resolveMediaUrl(settings.backgroundImage)})` : undefined,
     backgroundSize: settings.backgroundSize || 'cover',
     backgroundPosition: settings.backgroundPosition || 'center',
     backgroundAttachment: settings.backgroundAttachment || 'scroll',
@@ -96,7 +108,7 @@ const SectionRenderer: React.FC<{
   
   // Also ensure classic type respects image
   if ((settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundImage) {
-    sectionStyle.backgroundImage = `url(${settings.backgroundImage})`;
+    sectionStyle.backgroundImage = `url(${resolveMediaUrl(settings.backgroundImage)})`;
     sectionStyle.background = undefined; // Clear gradient if image is present
   }
 
@@ -277,7 +289,7 @@ const WidgetRenderer: React.FC<{
       case 'image':
         return (
           <img 
-            src={content.url || content.image} 
+            src={resolveMediaUrl(content.url || content.image)}
             alt={content.alt || ''} 
             className="w-full h-auto" 
             style={{ borderRadius: styles.borderRadius ? `${styles.borderRadius}px` : undefined }} 
@@ -409,7 +421,7 @@ const WidgetRenderer: React.FC<{
             ) : content.image ? (
               <>
                 <img 
-                  src={content.image} 
+                  src={resolveMediaUrl(content.image)}
                   className="absolute inset-0 w-full h-full object-cover"
                   alt="" 
                 />
@@ -507,7 +519,7 @@ const WidgetRenderer: React.FC<{
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {content.services?.map((service: any, i: number) => (
                   <div key={i} className="group relative h-80 rounded-3xl overflow-hidden shadow-2xl">
-                    <img src={service.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={service.title} />
+                    <img src={resolveMediaUrl(service.image)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={service.title} />
                     <div className="absolute inset-0 bg-gradient-to-t from-brand-blue-dark via-transparent to-transparent opacity-90" />
                     <div className="absolute bottom-0 left-0 p-8 text-white">
                       <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">{service.title}</h3>
