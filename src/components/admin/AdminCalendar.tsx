@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import EventAvatar from "./EventAvatar";
 import NovaReservaDialog from "./NovaReservaDialog";
-import DayTimelineDialog from "./DayTimelineDialog";
+import DayTimelinePanel from "./DayTimelinePanel";
 import { useClientColors } from "@/hooks/useClientColors";
 import { toast } from "@/hooks/use-toast";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
@@ -76,7 +76,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [savingCheckin, setSavingCheckin] = useState(false);
 
   useEffect(() => {
-    supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+    supabase.from('unidades').select('id, nome, horario_abertura, horario_fechamento').then(({ data }) => setUnidades(data || []));
     supabase.from('planos').select('*').is('deleted_at', null).order('nome').then(({ data }) => setEditPlanos(data || []));
     supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || []));
   }, []);
