@@ -247,6 +247,19 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
   const selectedInfo = selectedDay ? eventsByDay.get(dayKey(selectedDay)) : undefined;
 
+  // Expediente do dia em Gantt: usa o horário de abertura/fechamento das unidades filtradas
+  const { openHour, closeHour } = useMemo(() => {
+    const pool = selectedUnidade === "todas" ? unidades : unidades.filter((u) => u.id === selectedUnidade);
+    const parseHour = (v: any, fallback: number) => {
+      const h = parseInt(String(v || "").split(":")[0], 10);
+      return Number.isFinite(h) ? h : fallback;
+    };
+    if (!pool.length) return { openHour: 9, closeHour: 20 };
+    const abertura = Math.min(...pool.map((u) => parseHour(u.horario_abertura, 9)));
+    const fechamento = Math.max(...pool.map((u) => parseHour(u.horario_fechamento, 20)));
+    return { openHour: abertura, closeHour: Math.max(fechamento, abertura + 1) };
+  }, [unidades, selectedUnidade]);
+
   const handleSaveReserva = async () => {
     if (!fullView || fullView.kind !== "reserva" || !editingReserva) return;
 
@@ -495,8 +508,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                   key={i}
                   role="button"
                   tabIndex={0}
-                  onClick={() => setSelectedDay(new Date(d))}
-                  onKeyDown={(ev) => { if (ev.key === "Enter") setSelectedDay(new Date(d)); }}
+                  onClick={() => setTimelineDay(new Date(d))}
+                  onKeyDown={(ev) => { if (ev.key === "Enter") setTimelineDay(new Date(d)); }}
                   className={[
                     "group text-left p-1.5 border-border transition-colors relative flex flex-col gap-1 overflow-hidden min-h-[100px] cursor-pointer",
                     !isSunday && "border-l",
