@@ -1,4 +1,5 @@
 import React from 'react';
+import HeroSlides from './HeroSlides';
 import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -416,7 +417,7 @@ const WidgetRenderer: React.FC<{
             ) : null}
 
             {/* Content Container */}
-            <div className="relative z-10 w-full">
+            <HeroSlides first={
               <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-12 py-16 lg:py-20">
                 <div className={`grid gap-8 lg:gap-16 items-center ${content.desktopColumns !== false ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
                   
@@ -460,7 +461,7 @@ const WidgetRenderer: React.FC<{
                   )}
                 </div>
               </div>
-            </div>
+            } />
 
             {/* Mobile CTA */}
             {content.cta && content.desktopColumns === false && (
