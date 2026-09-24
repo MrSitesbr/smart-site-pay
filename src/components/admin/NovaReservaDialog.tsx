@@ -608,7 +608,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
           }
            const preco = valorFinal;
           const detalhe = calculandoPlano ? "Calculando uso do plano…" : calculoPlano
-            ? `${calculoPlano.plano.nome} · ${calculoPlano.cobertas.toFixed(1)}h cobertas · saldo após: ${calculoPlano.saldoDepois.toFixed(1)}h`
+            ? `${calculoPlano.plano.nome} · ${Number(calculoPlano.cobertas ?? 0).toFixed(1)}h cobertas · saldo após: ${Number(calculoPlano.saldoDepois ?? 0).toFixed(1)}h`
              : precoTabela != null ? `Avulso · ${fmtBRL(precoTabela)}` : "Valor sob consulta";
           const AMB_LBL: Record<string,string> = { estacao:"Estação de Trabalho", sala_privativa:"Sala Privativa", sala_reuniao:"Sala de Reunião" };
           const dataTxt = dataStr ? dataStr.split("-").reverse().join("/") : "";
@@ -640,7 +640,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                     inputMode="decimal"
                     value={valorManual}
                     onChange={(e) => setValorManual(e.target.value)}
-                     placeholder={valorBase.toFixed(2).replace(".", ",")}
+                     placeholder={Number(valorBase ?? 0).toFixed(2).replace(".", ",")}
                   />
                 </div>
                 <div>
