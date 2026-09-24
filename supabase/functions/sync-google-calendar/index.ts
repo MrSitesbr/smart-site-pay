@@ -82,6 +82,9 @@ function buildContratoEvent(c: any) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!Deno.env.get("LOVABLE_API_KEY") || !Deno.env.get("GOOGLE_CALENDAR_API_KEY")) {
+    return new Response(JSON.stringify({ skipped: true, configured: false, events: [], results: [], message: "Google Agenda não está conectado." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
