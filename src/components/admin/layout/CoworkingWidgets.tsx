@@ -167,7 +167,7 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
     const fetchRooms = async () => {
       const { data, error } = await supabase
         .from('salas')
-        .select('*, unidades(nome)')
+        .select('id, nome, tipo, capacidade, status, unidade_id, foto_url, unidades(nome)')
         .order('nome', { ascending: true });
 
       if (!error && data) {
@@ -190,7 +190,7 @@ export const RoomsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
       {rooms.map((room) => (
         <div key={room.id} className="group relative bg-brand-blue-dark rounded-3xl overflow-hidden shadow-2xl h-80">
           <img 
-            src={room.foto_url || room.galeria?.[0] || "https://images.unsplash.com/photo-1497366216548-37526070297c"} 
+            src={room.foto_url || "https://images.unsplash.com/photo-1497366216548-37526070297c"} 
             alt={room.nome}
             className="w-full h-full object-cover opacity-60 group-hover:scale-110 group-hover:opacity-40 transition-all duration-700"
           />
