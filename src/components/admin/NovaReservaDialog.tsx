@@ -625,11 +625,11 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
                   <div className="text-[11px] text-muted-foreground">{detalhe}</div>
                 </div>
                 <div className="text-right">
-                  {temDesconto && (
-                    <div className="text-[11px] line-through text-muted-foreground">R$ {precoTabela.toFixed(2).replace(".", ",")}</div>
+                  {temDesconto && precoTabela != null && (
+                    <div className="text-[11px] line-through text-muted-foreground">R$ {Number(precoTabela).toFixed(2).replace(".", ",")}</div>
                   )}
                   <div className="font-heading font-black text-2xl text-primary">
-                     {calculoPlano?.valor === null ? "Sob consulta" : `R$ ${preco.toFixed(2).replace(".", ",")}`}
+                     {preco == null || calculoPlano?.valor === null ? "Sob consulta" : `R$ ${Number(preco).toFixed(2).replace(".", ",")}`}
                   </div>
                 </div>
               </div>
