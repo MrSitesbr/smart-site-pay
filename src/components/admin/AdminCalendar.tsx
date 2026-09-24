@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import EventAvatar from "./EventAvatar";
 import NovaReservaDialog from "./NovaReservaDialog";
-import DayTimelinePanel from "./DayTimelinePanel";
+import AdminRoomDayGantt from "./AdminRoomDayGantt";
 import { useClientColors } from "@/hooks/useClientColors";
 import { toast } from "@/hooks/use-toast";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
@@ -606,17 +606,15 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
           </div>
 
           {timelineDay && (
-            <DayTimelinePanel
+            <AdminRoomDayGantt
               day={timelineDay}
               onChangeDay={(d) => setTimelineDay(d)}
               onClose={() => setTimelineDay(null)}
               reservas={reservas}
-              contratos={contratos}
-              gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
-              openHour={openHour}
-              closeHour={closeHour}
+              unidadeId={selectedUnidade}
+              salaId={selectedSala}
               onDeleteReserva={onDeleteReserva}
-              onDeleteContrato={onDeleteContrato}
+              onNovaReserva={(d) => setNovaDay(d)}
               onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
             />
           )}
