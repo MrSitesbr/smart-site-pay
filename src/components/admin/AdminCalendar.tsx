@@ -604,6 +604,22 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               );
             })}
           </div>
+
+          {timelineDay && (
+            <DayTimelinePanel
+              day={timelineDay}
+              onChangeDay={(d) => setTimelineDay(d)}
+              onClose={() => setTimelineDay(null)}
+              reservas={reservas}
+              contratos={contratos}
+              gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
+              openHour={openHour}
+              closeHour={closeHour}
+              onDeleteReserva={onDeleteReserva}
+              onDeleteContrato={onDeleteContrato}
+              onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
+            />
+          )}
         </>
       ) : viewMode === "list" ? (
         <CalendarListView 
@@ -915,18 +931,6 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         reservas={reservas}
         contratos={contratos}
         onCreated={() => { onCreated?.(); }}
-      />
-
-      <DayTimelineDialog
-        day={timelineDay}
-        onChangeDay={(d) => setTimelineDay(d)}
-        onClose={() => setTimelineDay(null)}
-        reservas={reservas}
-        contratos={contratos}
-        gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
-        onDeleteReserva={onDeleteReserva}
-        onDeleteContrato={onDeleteContrato}
-        onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
       />
 
       <NovoVisitanteDialog
