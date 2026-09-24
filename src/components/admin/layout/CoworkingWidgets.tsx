@@ -88,7 +88,7 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
     const fetchPlans = async () => {
       let query = (supabase as any).from('planos').select('*');
       
-      if (content.type) {
+      if (content.type && content.type !== 'all') {
         query = query.eq('tipo', content.type);
       }
       
@@ -105,16 +105,15 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
   </div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pt-8">
       {plans.map((plan) => (
-        <div key={plan.id} className="bg-white rounded-[2rem] p-8 shadow-xl border-2 border-transparent hover:border-brand-orange transition-all relative overflow-hidden flex flex-col min-h-[400px]">
+        <div key={plan.id} className="bg-background rounded-lg p-8 shadow-lg border border-border hover:border-brand-orange transition-all relative overflow-hidden flex flex-col min-h-[360px]">
           <div className="mb-6">
             <h3 className="text-xl font-black text-brand-blue-dark mb-2 uppercase tracking-tighter leading-tight min-h-[3rem] flex items-center">{plan.nome}</h3>
             <div className="flex items-baseline gap-1">
               <span className="text-brand-orange font-black text-3xl">
-                {plan.preco > 0 ? `R$ ${plan.preco}` : 'Sob Consulta'}
+                Sob consulta
               </span>
-              {plan.preco > 0 && <span className="text-muted-foreground text-xs font-bold uppercase">/ {plan.validade_dias === 30 ? 'mês' : 'período'}</span>}
             </div>
           </div>
           <div className="flex-1 space-y-3 mb-8">
@@ -136,9 +135,9 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
                </>
              )}
           </div>
-          <button className="w-full py-4 bg-brand-blue-dark text-white font-black rounded-2xl hover:bg-brand-orange transition-colors uppercase tracking-widest text-xs mt-auto">
-            {plan.preco > 0 ? 'Assinar Agora' : 'Consultar'}
-          </button>
+          <Button className="w-full py-6 bg-brand-blue-dark text-primary-foreground font-black rounded-md hover:bg-brand-orange transition-colors uppercase text-xs mt-auto" onClick={() => window.open('https://wa.me/5513988050358?text=Olá%2C%20quero%20saber%20mais%20sobre%20o%20plano%20de%20Endereço%20Virtual', '_blank')}>
+            Consultar
+          </Button>
         </div>
       ))}
     </div>

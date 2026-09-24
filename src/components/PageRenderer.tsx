@@ -29,6 +29,8 @@ const resolveMediaUrl = (value?: string) => {
   return value;
 };
 
+const plainText = (value?: string) => DOMPurify.sanitize(value || '', { ALLOWED_TAGS: [] });
+
 interface PageRendererProps {
   layout: SectionData[];
   isAdmin?: boolean;
@@ -93,8 +95,13 @@ const SectionRenderer: React.FC<{
     marginBottom: settings.margin?.bottom ? `${settings.margin.bottom}px` : undefined,
     position: 'relative',
     zIndex: settings.zIndex,
-    background: settings.backgroundType === 'gradient' ? settings.backgroundGradient : (settings.backgroundType === 'color' ? settings.backgroundColor : undefined),
   };
+
+  if (settings.backgroundType === 'gradient') {
+    sectionStyle.background = settings.backgroundGradient;
+  } else if (settings.backgroundType === 'color') {
+    sectionStyle.background = settings.backgroundColor;
+  }
 
   // Ensure background color is applied even if backgroundType is 'color' (compatibility fix)
   if ((settings.backgroundType === 'color' || settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundColor) {
@@ -108,8 +115,7 @@ const SectionRenderer: React.FC<{
   
   // Also ensure classic type respects image
   if ((settings.backgroundType === 'classic' || !settings.backgroundType) && settings.backgroundImage) {
-    sectionStyle.backgroundImage = `url(${resolveMediaUrl(settings.backgroundImage)})`;
-    sectionStyle.background = undefined; // Clear gradient if image is present
+    sectionStyle.background = `url(${resolveMediaUrl(settings.backgroundImage)}) ${settings.backgroundPosition || 'center'} / ${settings.backgroundSize || 'cover'} ${settings.backgroundRepeat || 'no-repeat'}`;
   }
 
   const getShapeDivider = () => {
@@ -145,6 +151,7 @@ const SectionRenderer: React.FC<{
         ...sectionStyle, 
         width: '100%', 
       }} 
+      id={settings.className === 'plans-section' ? 'planos-endereco-virtual' : undefined}
       className={`relative ${isAdmin ? 'hover:outline hover:outline-2 hover:outline-brand-orange cursor-pointer group/section' : ''} ${settings.animation && settings.animation !== 'none' ? `animate-${settings.animation}` : ''} ${settings.hideMobile ? 'hidden md:block' : ''}`}
       onClick={(e) => {
         if (isAdmin && onElementClick) {
@@ -170,7 +177,7 @@ const SectionRenderer: React.FC<{
       {(settings.backgroundImage || (settings.backgroundType === 'video' && settings.backgroundVideoUrl)) && <div style={{ ...overlayStyle, zIndex: 1 }} />}
       {getShapeDivider()}
       
-      <div className={`page-builder-columns relative z-10 w-full grid gap-4 grid-cols-1 ${settings.layoutType === 'full' || settings.fullWidth ? '' : 'px-4'}`}
+      <div className={`page-builder-columns relative z-10 w-full grid gap-6 lg:gap-8 grid-cols-1 ${settings.layoutType === 'full' || settings.fullWidth ? 'px-5 sm:px-8 lg:px-12' : ''}`}
            style={{
              '--page-columns': columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr',
              width: '100%',
@@ -287,6 +294,7 @@ const WidgetRenderer: React.FC<{
         return <div style={widgetStyle} className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.text || '') }} />;
       
       case 'image':
+        if (!(content.url || content.image)) return null;
         return (
           <img 
             src={resolveMediaUrl(content.url || content.image)}
@@ -325,7 +333,7 @@ const WidgetRenderer: React.FC<{
               className="inline-block px-8 py-3 bg-brand-orange text-white font-bold rounded-full hover:bg-brand-orange/90 transition-colors"
               style={widgetStyle}
             >
-              {content.text}
+              {plainText(content.text)}
             </a>
           </div>
         );
@@ -493,17 +501,17 @@ const WidgetRenderer: React.FC<{
 
       case 'features':
         return (
-          <div className="py-20 bg-white">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-black text-brand-blue-dark mb-12 text-center uppercase tracking-tighter">{content.title}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="pt-8">
+            <div>
+              {content.title && <h2 className="text-3xl font-black text-brand-blue-dark mb-12 text-center">{content.title}</h2>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {content.items?.map((item: any, i: number) => (
-                  <div key={i} className="p-8 rounded-3xl bg-brand-gray/30 border border-brand-gray/50 hover:shadow-xl transition-all">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-orange flex items-center justify-center text-white mb-6">
-                      <LayoutIcon className="w-6 h-6" />
+                  <div key={i} className="p-7 rounded-lg bg-background border border-border hover:border-brand-orange hover:shadow-lg transition-all">
+                    <div className="w-12 h-12 rounded-md bg-brand-orange flex items-center justify-center text-primary-foreground mb-6">
+                      <Check className="w-6 h-6" />
                     </div>
-                    <h3 className="text-xl font-bold text-brand-blue-dark mb-4">{item.title}</h3>
-                    <p className="text-muted-foreground font-medium">{item.description}</p>
+                    <h3 className="text-xl font-bold text-brand-blue-dark mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -556,12 +564,12 @@ const WidgetRenderer: React.FC<{
       case 'icon_box':
         const IconComponent = LUCIDE_ICONS[content.icon || 'Check'] || LUCIDE_ICONS.Info;
         return (
-          <div style={widgetStyle} className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-brand-orange transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange mb-4 group-hover:scale-110 transition-transform">
+          <div style={widgetStyle} className="flex h-full flex-col items-start p-1 transition-all group">
+            <div className="w-12 h-12 rounded-md bg-brand-orange/10 flex items-center justify-center text-brand-orange mb-5 group-hover:scale-105 transition-transform">
               <IconComponent className="w-6 h-6" />
             </div>
-            <h4 className="text-lg font-black text-brand-blue-dark mb-2 uppercase tracking-tight">{content.title}</h4>
-            <p className="text-sm text-muted-foreground font-medium leading-relaxed">{content.description}</p>
+            <h4 className="text-2xl font-bold text-brand-blue-dark mb-3">{content.title}</h4>
+            <p className="text-base text-muted-foreground leading-relaxed">{content.description}</p>
           </div>
         );
       case 'icon_list':
@@ -570,8 +578,8 @@ const WidgetRenderer: React.FC<{
             {(content.items || []).map((item: any, idx: number) => {
               const ItemIcon = LUCIDE_ICONS[item.icon || 'Check'] || LUCIDE_ICONS.Check;
               return (
-                <li key={idx} className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="text-brand-orange"><ItemIcon className="w-4 h-4" /></span>
+                <li key={idx} className="flex items-start gap-3 text-base text-muted-foreground leading-relaxed">
+                  <span className="mt-1 text-brand-orange"><ItemIcon className="w-4 h-4" /></span>
                   {item.text}
                 </li>
               );
