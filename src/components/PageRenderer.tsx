@@ -1,5 +1,6 @@
 import React from 'react';
 import HeroSlides from './HeroSlides';
+import { CalendarDays } from 'lucide-react';
 import { SectionData, WidgetData, ColumnData } from '@/types/page-builder';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -449,6 +450,7 @@ const WidgetRenderer: React.FC<{
                     <div className="flex items-center justify-center lg:justify-center">
                       <div className="w-full sm:w-72 p-6 sm:p-8 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all">
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Próximo passo</p>
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-orange/20 text-brand-orange"><CalendarDays className="h-6 w-6" /></div>
                         <h3 className="text-xl font-bold text-white mb-5">Consultar reserva</h3>
                         <a 
                           href={content.ctaUrl || '/reservar'} 
