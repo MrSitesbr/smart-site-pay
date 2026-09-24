@@ -35,6 +35,12 @@ const WhatsappIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 );
 
+const getExternalUrl = (url?: string) => {
+  const trimmedUrl = url?.trim();
+  if (!trimmedUrl) return "#";
+  return /^https?:\/\//i.test(trimmedUrl) ? trimmedUrl : `https://${trimmedUrl}`;
+};
+
 const Footer = () => {
   const [cmsContent, setCmsContent] = useState<any>(null);
   const [unitAddresses, setUnitAddresses] = useState<Array<{ name: string; address: string }>>([]);
@@ -223,16 +229,16 @@ const Footer = () => {
               <p><strong className="text-white">Horário de Atendimento:</strong> {workingHoursWeek} | {workingHoursSat} (atendimento e telefone centralizados na sede)</p>
             </div>
             <div className="flex gap-3 mt-6">
-              <a href={cmsContent?.instagram_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+              <a href={getExternalUrl(cmsContent?.instagram_url)} target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram em nova aba" className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
                 <InstagramIcon className="w-4 h-4" />
               </a>
-              <a href={cmsContent?.facebook_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+              <a href={getExternalUrl(cmsContent?.facebook_url)} target="_blank" rel="noopener noreferrer" aria-label="Abrir Facebook em nova aba" className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
                 <FacebookIcon className="w-4 h-4" />
               </a>
-              <a href={cmsContent?.youtube_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+              <a href={getExternalUrl(cmsContent?.youtube_url)} target="_blank" rel="noopener noreferrer" aria-label="Abrir YouTube em nova aba" className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
                 <YoutubeIcon className="w-4 h-4" />
               </a>
-              <a href={cmsContent?.whatsapp_url || "#"} className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
+              <a href={getExternalUrl(cmsContent?.whatsapp_url)} target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp em nova aba" className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors">
                 <WhatsappIcon className="w-4 h-4" />
               </a>
             </div>

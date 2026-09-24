@@ -282,6 +282,7 @@ export default function AdminHeaderFooterSimple() {
                   <Label htmlFor="f-instagram">Instagram URL</Label>
                   <Input 
                     id="f-instagram" 
+                    type="url"
                     value={footerContent.instagram_url || ""} 
                     onChange={e => setFooterContent({...footerContent, instagram_url: e.target.value})} 
                     placeholder="https://instagram.com/..."
@@ -291,6 +292,7 @@ export default function AdminHeaderFooterSimple() {
                   <Label htmlFor="f-facebook">Facebook URL</Label>
                   <Input 
                     id="f-facebook" 
+                    type="url"
                     value={footerContent.facebook_url || ""} 
                     onChange={e => setFooterContent({...footerContent, facebook_url: e.target.value})} 
                     placeholder="https://facebook.com/..."
@@ -300,6 +302,7 @@ export default function AdminHeaderFooterSimple() {
                   <Label htmlFor="f-youtube">YouTube URL</Label>
                   <Input 
                     id="f-youtube" 
+                    type="url"
                     value={footerContent.youtube_url || ""} 
                     onChange={e => setFooterContent({...footerContent, youtube_url: e.target.value})} 
                     placeholder="https://youtube.com/..."
@@ -309,6 +312,7 @@ export default function AdminHeaderFooterSimple() {
                   <Label htmlFor="f-whatsapp">WhatsApp URL</Label>
                   <Input 
                     id="f-whatsapp" 
+                    type="url"
                     value={footerContent.whatsapp_url || ""} 
                     onChange={e => setFooterContent({...footerContent, whatsapp_url: e.target.value})} 
                     placeholder="https://wa.me/..."
