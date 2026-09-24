@@ -19,12 +19,10 @@ const LUCIDE_ICONS: Record<string, any> = {
 
 const resolveMediaUrl = (value?: string) => {
   if (!value) return '';
-  if (
-    value.startsWith('/__l5e/assets-v1/') &&
-    typeof window !== 'undefined' &&
-    ['localhost', '127.0.0.1'].includes(window.location.hostname)
-  ) {
-    return `https://smart-site-pay.lovable.app${value}`;
+  if (value.startsWith('/__l5e/assets-v1/')) {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const servedByLovable = host.endsWith('.lovable.app');
+    if (!servedByLovable) return `https://smart-site-pay.lovable.app${value}`;
   }
   return value;
 };
