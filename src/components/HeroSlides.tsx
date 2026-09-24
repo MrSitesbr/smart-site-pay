@@ -52,9 +52,14 @@ export default function HeroSlides({ first }: { first: React.ReactNode }) {
   }, [paused, slides.length]);
   return (
     <div className="relative z-10 w-full" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      {slides.map((s, idx) => (
-        <div key={idx} className={idx === i ? "animate-fade-in" : "hidden"}>{s}</div>
-      ))}
+      <div className="grid">
+        {slides.map((s, idx) => (
+          <div key={idx} aria-hidden={idx !== i}
+            className={`col-start-1 row-start-1 transition-all duration-700 ease-out ${idx === i ? "opacity-100 translate-x-0 pointer-events-auto" : `opacity-0 pointer-events-none ${idx < i ? "-translate-x-12" : "translate-x-12"}`}`}>
+            {s}
+          </div>
+        ))}
+      </div>
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
         {slides.map((_, idx) => (
           <button key={idx} type="button" aria-label={`Ir para o destaque ${idx + 1}`} onClick={() => setI(idx)}
