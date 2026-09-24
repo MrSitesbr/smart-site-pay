@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import EventAvatar from "./EventAvatar";
 import NovaReservaDialog from "./NovaReservaDialog";
-import DayTimelineDialog from "./DayTimelineDialog";
+import DayTimelinePanel from "./DayTimelinePanel";
 import { useClientColors } from "@/hooks/useClientColors";
 import { toast } from "@/hooks/use-toast";
 import { getClientColor, readableTextOn, WOBA_COLOR } from "@/lib/clientColors";
@@ -76,7 +76,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [savingCheckin, setSavingCheckin] = useState(false);
 
   useEffect(() => {
-    supabase.from('unidades').select('id, nome').then(({ data }) => setUnidades(data || []));
+    supabase.from('unidades').select('id, nome, horario_abertura, horario_fechamento').then(({ data }) => setUnidades(data || []));
     supabase.from('planos').select('*').is('deleted_at', null).order('nome').then(({ data }) => setEditPlanos(data || []));
     supabase.from('visitantes').select('*, clientes_corp(razao_social), salas(nome, unidade_id)').then(({ data }) => setVisitantes(data || []));
   }, []);
@@ -246,6 +246,19 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const goNext = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
   const selectedInfo = selectedDay ? eventsByDay.get(dayKey(selectedDay)) : undefined;
+
+  // Expediente do dia em Gantt: usa o horário de abertura/fechamento das unidades filtradas
+  const { openHour, closeHour } = useMemo(() => {
+    const pool = selectedUnidade === "todas" ? unidades : unidades.filter((u) => u.id === selectedUnidade);
+    const parseHour = (v: any, fallback: number) => {
+      const h = parseInt(String(v || "").split(":")[0], 10);
+      return Number.isFinite(h) ? h : fallback;
+    };
+    if (!pool.length) return { openHour: 9, closeHour: 20 };
+    const abertura = Math.min(...pool.map((u) => parseHour(u.horario_abertura, 9)));
+    const fechamento = Math.max(...pool.map((u) => parseHour(u.horario_fechamento, 20)));
+    return { openHour: abertura, closeHour: Math.max(fechamento, abertura + 1) };
+  }, [unidades, selectedUnidade]);
 
   const handleSaveReserva = async () => {
     if (!fullView || fullView.kind !== "reserva" || !editingReserva) return;
@@ -495,8 +508,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                   key={i}
                   role="button"
                   tabIndex={0}
-                  onClick={() => setSelectedDay(new Date(d))}
-                  onKeyDown={(ev) => { if (ev.key === "Enter") setSelectedDay(new Date(d)); }}
+                  onClick={() => setTimelineDay(new Date(d))}
+                  onKeyDown={(ev) => { if (ev.key === "Enter") setTimelineDay(new Date(d)); }}
                   className={[
                     "group text-left p-1.5 border-border transition-colors relative flex flex-col gap-1 overflow-hidden min-h-[100px] cursor-pointer",
                     !isSunday && "border-l",
@@ -519,9 +532,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                       <span
                         role="button"
                         tabIndex={0}
-                        title="Ver dia em linha do tempo"
-                        onClick={(ev) => { ev.stopPropagation(); setTimelineDay(new Date(d)); }}
-                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setTimelineDay(new Date(d)); } }}
+                        title="Ver eventos do dia"
+                        onClick={(ev) => { ev.stopPropagation(); setSelectedDay(new Date(d)); }}
+                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setSelectedDay(new Date(d)); } }}
                         className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center hover:scale-110 cursor-pointer"
                       >
                         <Eye className="w-3 h-3" />
@@ -591,6 +604,22 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
               );
             })}
           </div>
+
+          {timelineDay && (
+            <DayTimelinePanel
+              day={timelineDay}
+              onChangeDay={(d) => setTimelineDay(d)}
+              onClose={() => setTimelineDay(null)}
+              reservas={reservas}
+              contratos={contratos}
+              gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
+              openHour={openHour}
+              closeHour={closeHour}
+              onDeleteReserva={onDeleteReserva}
+              onDeleteContrato={onDeleteContrato}
+              onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
+            />
+          )}
         </>
       ) : viewMode === "list" ? (
         <CalendarListView 
@@ -902,18 +931,6 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
         reservas={reservas}
         contratos={contratos}
         onCreated={() => { onCreated?.(); }}
-      />
-
-      <DayTimelineDialog
-        day={timelineDay}
-        onChangeDay={(d) => setTimelineDay(d)}
-        onClose={() => setTimelineDay(null)}
-        reservas={reservas}
-        contratos={contratos}
-        gEvents={gEvents.filter((g: any) => !deletedGoogleIds.has(g.id))}
-        onDeleteReserva={onDeleteReserva}
-        onDeleteContrato={onDeleteContrato}
-        onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
       />
 
       <NovoVisitanteDialog
