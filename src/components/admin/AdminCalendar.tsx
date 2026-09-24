@@ -532,9 +532,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                       <span
                         role="button"
                         tabIndex={0}
-                        title="Ver dia em linha do tempo"
-                        onClick={(ev) => { ev.stopPropagation(); setTimelineDay(new Date(d)); }}
-                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setTimelineDay(new Date(d)); } }}
+                        title="Ver eventos do dia"
+                        onClick={(ev) => { ev.stopPropagation(); setSelectedDay(new Date(d)); }}
+                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.stopPropagation(); setSelectedDay(new Date(d)); } }}
                         className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center hover:scale-110 cursor-pointer"
                       >
                         <Eye className="w-3 h-3" />
