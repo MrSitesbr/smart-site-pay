@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MessageCircle, LayoutDashboard, ChevronRight } from "lucide-react";
+import { LayoutDashboard, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 const logoIconUrlDefault = "/assets/logo.png";
@@ -37,12 +37,24 @@ const WhatsappIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 
 const Footer = () => {
   const [cmsContent, setCmsContent] = useState<any>(null);
+  const [unitAddresses, setUnitAddresses] = useState<string[]>([]);
 
   useEffect(() => {
     loadCms();
   }, []);
 
   const loadCms = async () => {
+    const { data: unitsData } = await supabase
+      .from('unidades')
+      .select('nome, endereco')
+      .order('created_at', { ascending: true });
+
+    if (unitsData?.length) {
+      setUnitAddresses(unitsData.map((unit) =>
+        `${unit.nome}: ${unit.endereco || "Endereço não informado"}`
+      ));
+    }
+
     // Load Navigation Menus for Footer
     const { data: navData } = await supabase
       .from('navigation_menus')
@@ -120,11 +132,13 @@ const Footer = () => {
     },
   ];
 
-  // Dados das unidades
-  const unidades = [
-    "Unidade 02: Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP",
-    "Unidade 03: R. São Caetano, 86, Boqueirão - Praia Grande - SP (Sede Administrativa)"
+  const defaultUnitAddresses = [
+    "Unidade 01 - Rua Jaú: R. Jaú, 955 Conj. 26, Boqueirão - Praia Grande - SP",
+    "Unidade 02 - Av. Costa e Silva: Av. P. Costa e Silva, 609 - S. 906, Boqueirão - Praia Grande - SP",
+    "Unidade 03 - Rua São Caetano: R. São Caetano, 86, Boqueirão - Praia Grande - SP",
+    "Unidade 04 - Helbor São Vicente: Rua Benjamin Constant, 61, Centro - São Vicente - SP"
   ];
+  const unidades = unitAddresses.length > 0 ? unitAddresses : defaultUnitAddresses;
 
   const cols = cmsContent?.columns || defaultCols;
   const footerCols = cols.map((col: any, index: number) => index === 0 && !col.links.some((link: any) => link.href === "/agendamento")
@@ -142,8 +156,8 @@ const Footer = () => {
   return (
     <footer className="bg-[#031d36] text-white pt-16 pb-6">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-10 mb-12">
-          <div>
+        <div className="grid gap-y-8 md:grid-cols-2 md:gap-x-8 lg:grid-cols-[18%_16%_18%_25%_23%] lg:gap-x-0 mb-12">
+          <div className="lg:pr-4">
             <div className="flex items-center gap-3 mb-4">
               <img src={logoIconUrl} alt="Logo" className="h-10 w-auto object-contain" />
               <div className="flex flex-col leading-none">
@@ -155,24 +169,13 @@ const Footer = () => {
                 </span>
               </div>
             </div>
-            <p className="text-sm text-white/60 leading-relaxed mb-5">
+            <p className="text-base text-white/70 leading-relaxed">
               {description}
             </p>
-            <div className="flex gap-3">
-              {[MessageCircle, LayoutDashboard].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-9 h-9 rounded-lg bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
            {footerCols.map((col: any, i: number) => (
-            <div key={i}>
+            <div key={i} className="lg:px-2">
               <h4 className="font-heading font-bold mb-4">{col.title}</h4>
               <ul className="space-y-2">
                 {col.links.map((l, j) => (
@@ -198,7 +201,7 @@ const Footer = () => {
             </div>
           ))}
 
-          <div>
+          <div className="lg:px-2">
             <h4 className="font-heading font-bold mb-4">Unidades</h4>
             <ul className="space-y-3 text-sm text-white/70">
               {unidades.map((unidade, i) => (
@@ -207,7 +210,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="lg:pl-3">
             <h4 className="font-heading font-bold mb-4">Informações</h4>
             <div className="space-y-3 text-sm text-white/70">
               <p><strong className="text-white">Contatos e Atendimento</strong></p>
