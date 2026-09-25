@@ -442,17 +442,14 @@ const WidgetRenderer: React.FC<{
             {/* Background Video */}
             {heroVideoId ? (
               <>
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="pointer-events-none absolute inset-0 w-full h-full object-cover z-0"
-                >
-                  <source src="/assets/videoplayback.mp4" type="video/mp4" />
-                  Seu navegador não suporta vídeos em HTML5.
-                </video>
+                <iframe
+                  src={`https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${heroVideoId}&playsinline=1&rel=0&modestbranding=1&disablekb=1`}
+                  title="Vídeo de fundo do Coworking 013"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  allow="autoplay; encrypted-media"
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 border-0"
+                />
                 {/* Dark overlay for text contrast */}
                 <div className="absolute inset-0 z-[1] bg-black/45 pointer-events-none" />
               </>
