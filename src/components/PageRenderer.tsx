@@ -608,7 +608,7 @@ const WidgetRenderer: React.FC<{
             {(content.items || []).map((item: any, idx: number) => {
               const ItemIcon = LUCIDE_ICONS[item.icon || 'Check'] || LUCIDE_ICONS.Check;
               return (
-                <li key={idx} className="flex items-start gap-3 text-base text-muted-foreground leading-relaxed">
+                <li key={idx} className="flex items-start gap-3 text-base leading-relaxed" style={{ color: styles.color }}>
                   <span className="mt-1 text-brand-orange"><ItemIcon className="w-4 h-4" /></span>
                   {item.text}
                 </li>
