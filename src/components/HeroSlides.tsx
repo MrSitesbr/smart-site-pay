@@ -17,7 +17,7 @@ function VirtualAddressSlide() {
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl bg-brand-blue-dark px-5 sm:px-8 lg:px-12">
       <div className="grid h-full w-full grid-rows-[minmax(0,1fr)_130px] gap-1 sm:grid-rows-[minmax(0,1fr)_190px] sm:gap-3 lg:grid-cols-[minmax(0,55fr)_minmax(0,45fr)] lg:grid-rows-1 lg:gap-10">
-        <div className="flex min-h-0 flex-col justify-center space-y-2.5 py-4 sm:space-y-4 sm:py-8 lg:py-14">
+        <div className="flex min-h-0 translate-y-5 flex-col justify-center space-y-2.5 py-4 sm:translate-y-0 sm:space-y-4 sm:py-8 lg:py-14">
           <div className="inline-flex items-center w-max gap-3">
             <div className="h-1 w-10 bg-brand-orange rounded-full" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-brand-orange sm:text-xs">Endereço Virtual</span>

@@ -467,7 +467,7 @@ const WidgetRenderer: React.FC<{
             {/* Content Container */}
             <HeroSlides first={
               <div className="mx-auto flex h-full w-full max-w-6xl items-center px-5 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
-                <div className={`grid w-full items-center gap-7 lg:gap-16 ${content.desktopColumns !== false ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid w-full translate-y-4 items-center gap-7 sm:translate-y-0 lg:gap-16 ${content.desktopColumns !== false ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
                   
                   {/* Left: Text Content */}
                   <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
