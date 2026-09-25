@@ -177,7 +177,7 @@ const SectionRenderer: React.FC<{
       
       <div className={`page-builder-columns relative z-10 w-full grid gap-6 lg:gap-8 grid-cols-1 ${settings.layoutType === 'full' || settings.fullWidth ? 'px-5 sm:px-8 lg:px-12' : ''}`}
            style={{
-             '--page-columns': columns.length > 1 ? columns.map(c => `${c?.widthPercentage || (100 / columns.length)}%`).join(' ') : '1fr',
+              '--page-columns': columns.length > 1 ? columns.map(c => `minmax(0, ${c?.widthPercentage || (100 / columns.length)}fr)`).join(' ') : '1fr',
              width: '100%',
              maxWidth: (settings.layoutType === 'full' || settings.fullWidth) ? 'none' : (settings.maxWidth ? `${settings.maxWidth}px` : '1400px'),
              marginLeft: 'auto',
@@ -608,7 +608,7 @@ const WidgetRenderer: React.FC<{
             {(content.items || []).map((item: any, idx: number) => {
               const ItemIcon = LUCIDE_ICONS[item.icon || 'Check'] || LUCIDE_ICONS.Check;
               return (
-                <li key={idx} className="flex items-start gap-3 text-base text-muted-foreground leading-relaxed">
+                <li key={idx} className="flex items-start gap-3 text-base leading-relaxed" style={{ color: styles.color }}>
                   <span className="mt-1 text-brand-orange"><ItemIcon className="w-4 h-4" /></span>
                   {item.text}
                 </li>
