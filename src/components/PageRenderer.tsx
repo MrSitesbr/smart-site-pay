@@ -603,14 +603,27 @@ const WidgetRenderer: React.FC<{
           </div>
         );
       case 'icon_list':
+        const iconListCards = content.variant === 'cards';
         return (
-          <ul style={widgetStyle} className="space-y-3">
+          <ul style={widgetStyle} className={iconListCards ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
             {(content.items || []).map((item: any, idx: number) => {
               const ItemIcon = LUCIDE_ICONS[item.icon || 'Check'] || LUCIDE_ICONS.Check;
               return (
-                <li key={idx} className="flex items-start gap-3 text-base leading-relaxed" style={{ color: styles.color }}>
-                  <span className="mt-1 text-brand-orange"><ItemIcon className="w-4 h-4" /></span>
-                  {item.text}
+                <li
+                  key={idx}
+                  className={iconListCards
+                    ? "rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-sm"
+                    : "flex items-start gap-3 text-base leading-relaxed"
+                  }
+                  style={{ color: styles.color }}
+                >
+                  <span className={iconListCards ? "mb-3 block text-brand-orange" : "mt-1 text-brand-orange"}>
+                    <ItemIcon className={iconListCards ? "h-6 w-6" : "h-4 w-4"} />
+                  </span>
+                  <span>
+                    <span className={iconListCards ? "block font-bold" : undefined}>{item.text}</span>
+                    {item.description && <span className="mt-1 block text-sm opacity-75">{item.description}</span>}
+                  </span>
                 </li>
               );
             })}

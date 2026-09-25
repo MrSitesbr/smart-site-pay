@@ -1,41 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { MapPin, FileCheck2, Building2, Mail, ArrowRight } from "lucide-react";
+import { Building2, MapPin, Mail, Check, ArrowRight } from "lucide-react";
+import virtualAddressPeople from "@/assets/home/endereco-virtual-profissionais.png.asset.json";
 
-const VANTAGENS = [
-  { icon: FileCheck2, t: "Endereço fiscal para CNPJ", d: "Abra ou transfira sua empresa com endereço aceito pela Receita e pela Prefeitura." },
-  { icon: Building2, t: "Endereço comercial de prestígio", d: "Mais credibilidade para clientes, sites, cartões e Google Meu Negócio." },
-  { icon: Mail, t: "Recebimento de correspondências", d: "Cuidamos das suas cartas e avisamos quando chegarem." },
-  { icon: MapPin, t: "Privacidade e economia", d: "Proteja o endereço da sua casa e economize com aluguel." },
+const BENEFICIOS = [
+  { icon: Building2, text: "Endereço fiscal para abertura ou transferência do CNPJ" },
+  { icon: MapPin, text: "Endereço comercial para site, cartões e divulgação" },
+  { icon: Mail, text: "Recebimento e gestão de correspondências" },
+  { icon: Check, text: "Mais credibilidade sem o custo de um escritório físico" },
 ];
+
+const virtualAddressPeopleUrl = virtualAddressPeople.url.startsWith('/__l5e/assets-v1/')
+  ? `https://smart-site-pay.lovable.app${virtualAddressPeople.url}`
+  : virtualAddressPeople.url;
 
 function VirtualAddressSlide() {
   return (
-    <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-12 py-16 lg:py-20">
-      <div className="grid gap-8 lg:gap-16 items-center lg:grid-cols-2">
-        <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
+    <div className="mx-auto flex min-h-[500px] max-w-6xl bg-brand-blue-dark px-6 sm:px-8 lg:min-h-[650px] lg:px-12">
+      <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,55fr)_minmax(0,45fr)] lg:gap-10">
+        <div className="flex flex-col justify-center space-y-4 py-14 sm:space-y-6 lg:py-20">
           <div className="inline-flex items-center w-max gap-3">
             <div className="h-1 w-10 bg-brand-orange rounded-full" />
             <span className="text-xs font-bold uppercase tracking-widest text-brand-orange">Endereço Virtual</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-snug tracking-tight">
-            Sua empresa com <span className="text-brand-orange">endereço fiscal e comercial</span>
+            Endereço fiscal e comercial para a sua empresa
           </h2>
           <p className="text-base sm:text-lg text-white/80 leading-relaxed max-w-md">
-            Formalize seu negócio, ganhe credibilidade e receba correspondências sem pagar por um escritório físico.
+            Tenha um endereço profissional para registrar seu CNPJ, divulgar sua empresa e preservar a privacidade da sua casa.
           </p>
+          <ul className="space-y-3">
+            {BENEFICIOS.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3 text-sm text-white sm:text-base">
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" />
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
           <a href="/endereco-virtual" className="inline-flex w-max items-center gap-2 px-6 py-3 bg-brand-orange text-white font-bold text-sm rounded-lg hover:bg-brand-orange/90 transition-colors">
             Conheça o Endereço Virtual <ArrowRight className="h-4 w-4" />
           </a>
         </div>
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {VANTAGENS.map(({ icon: Icon, t, d }) => (
-            <li key={t} className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 p-4">
-              <Icon className="h-6 w-6 text-brand-orange mb-2" />
-              <p className="text-sm font-bold text-white">{t}</p>
-              <p className="text-xs text-white/70 mt-1 leading-relaxed">{d}</p>
-            </li>
-          ))}
-        </ul>
+        <div className="flex min-h-[320px] items-end justify-center self-end lg:min-h-0">
+          <img
+            src={virtualAddressPeopleUrl}
+            alt="Profissionais atendidos pelo serviço de endereço virtual do Coworking 013"
+            className="block max-h-[520px] w-full max-w-[540px] object-contain object-bottom"
+          />
+        </div>
       </div>
     </div>
   );
@@ -52,7 +63,7 @@ export default function HeroSlides({ first }: { first: React.ReactNode }) {
   }, [paused, slides.length]);
   return (
     <div className="relative z-10 w-full" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="grid">
+      <div className="grid overflow-hidden bg-brand-blue-dark">
         {slides.map((s, idx) => (
           <div key={idx} aria-hidden={idx !== i}
             className={`col-start-1 row-start-1 transition-all duration-700 ease-out ${idx === i ? "opacity-100 translate-x-0 pointer-events-auto" : `opacity-0 pointer-events-none ${idx < i ? "-translate-x-12" : "translate-x-12"}`}`}>
