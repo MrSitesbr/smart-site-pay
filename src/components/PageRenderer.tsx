@@ -302,6 +302,38 @@ const WidgetRenderer: React.FC<{
           />
         );
 
+      case 'gallery': {
+        const images = Array.isArray(content.images)
+          ? content.images
+              .map((image: string | { url?: string; image?: string; alt?: string }) => {
+                if (typeof image === 'string') return { url: image, alt: '' };
+                return { url: image?.url || image?.image || '', alt: image?.alt || '' };
+              })
+              .filter((image: { url: string }) => Boolean(image.url))
+          : [];
+
+        if (images.length === 0) {
+          return content.emptyText ? (
+            <p className="py-8 text-center text-muted-foreground">{content.emptyText}</p>
+          ) : null;
+        }
+
+        return (
+          <div style={widgetStyle} className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {images.map((image: { url: string; alt: string }, index: number) => (
+              <div key={`${image.url}-${index}`} className="aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+                <img
+                  src={resolveMediaUrl(image.url)}
+                  alt={image.alt || `Foto ${index + 1}`}
+                  className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        );
+      }
+
       case 'video': {
         const videoUrl = content.url || content.videoUrl;
         const youtubeId = videoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^?&/]+)/)?.[1];
