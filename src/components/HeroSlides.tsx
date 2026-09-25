@@ -63,10 +63,10 @@ export default function HeroSlides({ first }: { first: React.ReactNode }) {
   }, [paused, slides.length]);
   return (
     <div className="relative z-10 w-full" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="grid overflow-hidden bg-brand-blue-dark">
+      <div className="grid overflow-hidden">
         {slides.map((s, idx) => (
           <div key={idx} aria-hidden={idx !== i}
-            className={`col-start-1 row-start-1 transition-all duration-700 ease-out ${idx === i ? "opacity-100 translate-x-0 pointer-events-auto" : `opacity-0 pointer-events-none ${idx < i ? "-translate-x-12" : "translate-x-12"}`}`}>
+            className={`col-start-1 row-start-1 transition-all duration-700 ease-out ${idx === 1 ? "bg-brand-blue-dark" : ""} ${idx === i ? "opacity-100 translate-x-0 pointer-events-auto" : `opacity-0 pointer-events-none ${idx < i ? "-translate-x-12" : "translate-x-12"}`}`}>
             {s}
           </div>
         ))}
