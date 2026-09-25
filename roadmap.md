@@ -37,3 +37,4 @@
 - [x] Revisar funções privilegiadas e restringir permissões sem expor dados pessoais.
 - [x] Criar testes funcionais das regras críticas.
 - [x] Validar os fluxos corrigidos no desktop e celular, com typecheck, testes focados e build; o lint geral mantém dívida técnica anterior fora deste escopo.
+- [x] Adicionar à home uma seção sobre Endereço Virtual com fundo azul, benefícios e a imagem enviada.
