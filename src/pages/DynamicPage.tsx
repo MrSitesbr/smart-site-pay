@@ -9,6 +9,15 @@ import { SectionData } from "@/types/page-builder";
 import { supabase } from "@/integrations/supabase/client";
 import { unidadeDetailPageLayout, unidadesPageLayout } from "@/lib/defaultPageLayouts";
 
+const getVisibleLayout = (sections: any[] | null | undefined): SectionData[] => {
+  if (!Array.isArray(sections)) return [];
+
+  return [...sections]
+    .filter((section) => section?.is_visible !== false && Array.isArray(section?.content?.layout))
+    .sort((first, second) => (first.order_index ?? 0) - (second.order_index ?? 0))
+    .flatMap((section) => section.content.layout.filter(Boolean));
+};
+
 const DynamicPage = ({ isAdmin = false, unidadeId }: { isAdmin?: boolean, unidadeId?: string }) => {
   const [layout, setLayout] = useState<SectionData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,27 +29,17 @@ const DynamicPage = ({ isAdmin = false, unidadeId }: { isAdmin?: boolean, unidad
       const pageData = await getPageContent(location.pathname, unidadeId);
       
       if (pageData && pageData.site_sections) {
-        // Filtra seções visíveis e prioriza 'dynamic-layout'
-        // Se não houver 'dynamic-layout', tenta usar a primeira seção que contenha um layout
-        let dynamicSection = pageData.site_sections.find((s: any) => 
-          s.section_key === 'dynamic-layout' && s.is_visible
-        );
+        const visibleLayout = getVisibleLayout(pageData.site_sections);
 
-        if (!dynamicSection) {
-          dynamicSection = pageData.site_sections.find((s: any) => 
-            s.is_visible && s.content?.layout
-          );
-        }
-        
-        if (dynamicSection?.content?.layout) {
-          setLayout(dynamicSection.content.layout);
+        if (visibleLayout.length > 0) {
+          setLayout(visibleLayout);
         } else if (unidadeId) {
           const { data: unidade } = await supabase
             .from("unidades")
-            .select("id, nome, descricao, endereco")
+            .select("id, nome, descricao, endereco, foto_url, galeria, servicos_infra")
             .eq("id", unidadeId)
             .maybeSingle();
-          setLayout(unidade ? unidadeDetailPageLayout(unidade.nome, unidade.descricao || "", unidade.endereco || "", unidade.id) : []);
+          setLayout(unidade ? unidadeDetailPageLayout(unidade) : []);
         } else if (location.pathname === "/unidades") {
           setLayout(unidadesPageLayout);
         } else {
@@ -49,10 +48,10 @@ const DynamicPage = ({ isAdmin = false, unidadeId }: { isAdmin?: boolean, unidad
       } else if (unidadeId) {
         const { data: unidade } = await supabase
           .from("unidades")
-          .select("id, nome, descricao, endereco")
+          .select("id, nome, descricao, endereco, foto_url, galeria, servicos_infra")
           .eq("id", unidadeId)
           .maybeSingle();
-        setLayout(unidade ? unidadeDetailPageLayout(unidade.nome, unidade.descricao || "", unidade.endereco || "", unidade.id) : []);
+        setLayout(unidade ? unidadeDetailPageLayout(unidade) : []);
       } else if (location.pathname === "/unidades") {
         setLayout(unidadesPageLayout);
       } else {
