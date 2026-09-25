@@ -438,7 +438,7 @@ const WidgetRenderer: React.FC<{
         const heroVideoUrl = content.backgroundVideoUrl;
         const heroVideoId = heroVideoUrl?.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^?&/]+)/)?.[1];
         return (
-          <div className="relative w-full min-h-[500px] lg:min-h-[650px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-brand-blue-dark via-brand-blue-dark to-brand-blue-dark/90">
+          <div className="relative flex h-[590px] w-full items-center justify-center overflow-hidden bg-gradient-to-br from-brand-blue-dark via-brand-blue-dark to-brand-blue-dark/90 sm:h-[620px] lg:h-[630px]">
             {/* Background Video */}
             {heroVideoId ? (
               <>
@@ -448,7 +448,7 @@ const WidgetRenderer: React.FC<{
                   aria-hidden="true"
                   tabIndex={-1}
                   allow="autoplay; encrypted-media"
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 border-0"
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[56.25vw] min-h-[112%] w-[177.78vh] min-w-[112%] -translate-x-1/2 -translate-y-1/2 border-0"
                 />
                 {/* Dark overlay for text contrast */}
                 <div className="absolute inset-0 z-[1] bg-black/45 pointer-events-none" />
@@ -466,8 +466,8 @@ const WidgetRenderer: React.FC<{
 
             {/* Content Container */}
             <HeroSlides first={
-              <div className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-12 py-16 lg:py-20">
-                <div className={`grid gap-8 lg:gap-16 items-center ${content.desktopColumns !== false ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+              <div className="mx-auto flex h-full w-full max-w-6xl items-center px-5 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
+                <div className={`grid w-full translate-y-4 items-center gap-7 sm:translate-y-0 lg:gap-16 ${content.desktopColumns !== false ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
                   
                   {/* Left: Text Content */}
                   <div className="flex flex-col justify-center space-y-4 sm:space-y-6">
@@ -481,21 +481,21 @@ const WidgetRenderer: React.FC<{
 
                     {/* Title - Reduced and moderate weight */}
                     <h1 
-                      className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-snug tracking-tight"
+                      className="text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl"
                       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.title || '') }}
                     />
 
                     {/* Subtitle */}
                     <p 
-                      className="text-base sm:text-lg text-white/80 leading-relaxed max-w-md font-normal"
+                      className="max-w-md text-sm font-normal leading-relaxed text-white/80 sm:text-base lg:text-lg"
                       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.subtitle || '') }}
                     />
                   </div>
 
                   {/* Right: CTA Card */}
                   {content.cta && content.desktopColumns !== false && (
-                    <div className="flex items-center justify-center lg:justify-center">
-                      <div className="w-full sm:w-72 p-6 sm:p-8 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-center lg:justify-end">
+                      <div className="w-full max-w-sm rounded-xl border border-white/20 bg-white/10 p-5 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl sm:w-72 sm:p-7">
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-3">Próximo passo</p>
                         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-orange/20 text-brand-orange"><CalendarDays className="h-6 w-6" /></div>
                         <h3 className="text-xl font-bold text-white mb-5">Consultar reserva</h3>
