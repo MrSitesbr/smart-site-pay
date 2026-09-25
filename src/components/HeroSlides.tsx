@@ -9,9 +9,13 @@ const BENEFICIOS = [
   { icon: Check, text: "Mais credibilidade sem o custo de um escritório físico" },
 ];
 
+const virtualAddressPeopleUrl = virtualAddressPeople.url.startsWith('/__l5e/assets-v1/')
+  ? `https://smart-site-pay.lovable.app${virtualAddressPeople.url}`
+  : virtualAddressPeople.url;
+
 function VirtualAddressSlide() {
   return (
-    <div className="mx-auto flex min-h-[500px] max-w-6xl px-6 sm:px-8 lg:min-h-[650px] lg:px-12">
+    <div className="mx-auto flex min-h-[500px] max-w-6xl bg-brand-blue-dark px-6 sm:px-8 lg:min-h-[650px] lg:px-12">
       <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,55fr)_minmax(0,45fr)] lg:gap-10">
         <div className="flex flex-col justify-center space-y-4 py-14 sm:space-y-6 lg:py-20">
           <div className="inline-flex items-center w-max gap-3">
@@ -38,7 +42,7 @@ function VirtualAddressSlide() {
         </div>
         <div className="flex min-h-[320px] items-end justify-center self-end lg:min-h-0">
           <img
-            src={virtualAddressPeople.url}
+            src={virtualAddressPeopleUrl}
             alt="Profissionais atendidos pelo serviço de endereço virtual do Coworking 013"
             className="block max-h-[520px] w-full max-w-[540px] object-contain object-bottom"
           />
@@ -59,7 +63,7 @@ export default function HeroSlides({ first }: { first: React.ReactNode }) {
   }, [paused, slides.length]);
   return (
     <div className="relative z-10 w-full" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="grid">
+      <div className="grid overflow-hidden bg-brand-blue-dark">
         {slides.map((s, idx) => (
           <div key={idx} aria-hidden={idx !== i}
             className={`col-start-1 row-start-1 transition-all duration-700 ease-out ${idx === i ? "opacity-100 translate-x-0 pointer-events-auto" : `opacity-0 pointer-events-none ${idx < i ? "-translate-x-12" : "translate-x-12"}`}`}>
