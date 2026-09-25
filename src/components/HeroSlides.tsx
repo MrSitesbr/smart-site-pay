@@ -16,19 +16,19 @@ const virtualAddressPeopleUrl = virtualAddressPeople.url.startsWith('/__l5e/asse
 function VirtualAddressSlide() {
   return (
     <div className="mx-auto flex h-full w-full max-w-6xl bg-brand-blue-dark px-5 sm:px-8 lg:px-12">
-      <div className="grid h-full w-full grid-rows-[minmax(0,1fr)_180px] gap-2 sm:grid-rows-[minmax(0,1fr)_220px] sm:gap-4 lg:grid-cols-[minmax(0,55fr)_minmax(0,45fr)] lg:grid-rows-1 lg:gap-10">
-        <div className="flex flex-col justify-center space-y-3 py-7 sm:space-y-4 sm:py-9 lg:py-14">
+      <div className="grid h-full w-full grid-rows-[minmax(0,1fr)_130px] gap-1 sm:grid-rows-[minmax(0,1fr)_190px] sm:gap-3 lg:grid-cols-[minmax(0,55fr)_minmax(0,45fr)] lg:grid-rows-1 lg:gap-10">
+        <div className="flex min-h-0 flex-col justify-center space-y-2.5 py-4 sm:space-y-4 sm:py-8 lg:py-14">
           <div className="inline-flex items-center w-max gap-3">
             <div className="h-1 w-10 bg-brand-orange rounded-full" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-brand-orange sm:text-xs">Endereço Virtual</span>
           </div>
-          <h2 className="max-w-xl text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
+          <h2 className="max-w-xl text-[22px] font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
             Endereço fiscal e comercial para a sua empresa
           </h2>
           <p className="max-w-lg text-sm leading-relaxed text-white/80 sm:text-base">
             Tenha um endereço profissional para registrar seu CNPJ, divulgar sua empresa e preservar a privacidade da sua casa.
           </p>
-          <ul className="space-y-1.5 sm:space-y-2">
+          <ul className="space-y-1 sm:space-y-2">
             {BENEFICIOS.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-start gap-2.5 text-xs leading-snug text-white sm:text-sm">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" />
@@ -36,7 +36,7 @@ function VirtualAddressSlide() {
               </li>
             ))}
           </ul>
-          <a href="/endereco-virtual" className="inline-flex w-max items-center gap-2 rounded-lg bg-brand-orange px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-brand-orange/90 sm:text-sm">
+          <a href="/endereco-virtual" className="inline-flex w-max items-center gap-2 rounded-lg bg-brand-orange px-5 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-orange/90 sm:py-2.5 sm:text-sm">
             Conheça o Endereço Virtual <ArrowRight className="h-4 w-4" />
           </a>
         </div>
