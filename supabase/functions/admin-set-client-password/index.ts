@@ -36,8 +36,8 @@ Deno.serve(async (req) => {
     if (!clienteId) {
       return json({ error: "Cliente não identificado. Reabra a ficha e tente novamente." }, 400);
     }
-    if (password.length < 6 || !/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-      return json({ error: "A senha deve ter no mínimo 6 caracteres, com letra, número e caractere especial." }, 400);
+    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      return json({ error: "A senha deve ter no mínimo 8 caracteres, com letra, número e caractere especial." }, 400);
     }
 
     const { data: cliente, error: cliErr } = await admin

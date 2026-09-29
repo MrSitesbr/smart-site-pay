@@ -82,6 +82,7 @@ export default function AdminSalaFormPage() {
 
         const sala = salaRes.data || {};
         setForm({
+          unidade_id: sala.unidade_id || unidadeId || "",
           nome: sala.nome || "",
           categorias: sala.categorias?.length ? sala.categorias : [sala.categoria || SALA_CATEGORIAS[0].value],
           modalidades_locacao: sala.modalidades_locacao?.length ? sala.modalidades_locacao : [sala.tipo_locacao === "locacao_periodo" ? "avulso" : "mensal"],

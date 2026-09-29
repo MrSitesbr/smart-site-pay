@@ -27,7 +27,7 @@ function ambienteDaSala(tipo: string): Ambiente {
   return "estacao";
 }
 
-const SLOTS = Array.from({ length: 12 }, (_, index) => 8 * 60 + index * 60);
+const SLOTS = Array.from({ length: 13 }, (_, index) => 8 * 60 + index * 60);
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const CORES = ["bg-primary", "bg-secondary", "bg-destructive", "bg-accent", "bg-foreground", "bg-muted-foreground"];
 const MAX_PERIODOS = 20;
@@ -72,36 +72,36 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     let ativo = true;
     async function carregarDados() {
       setCarregandoSalas(true);
-      
+
       // Carregar salas disponíveis
       const { data: salasData, error: salasError } = await supabase
         .from("salas")
         .select("id, nome, unidade_id, status, foto_url, galeria, descricao, tipo, capacidade, unidades(nome, horario_abertura, horario_fechamento)")
         .in("status", ["disponivel", "ativa"])
         .order("nome");
-      
+
       if (!ativo) return;
       if (salasError) {
         toast({ title: "Não foi possível carregar as salas", description: salasError.message, variant: "destructive" });
         setCarregandoSalas(false);
         return;
       }
-      
+
       const { data: unidadesData, error: unidadesError } = await supabase
         .from("unidades")
         .select("id, nome, horario_abertura, horario_fechamento")
         .ilike("status", "ativ%")
         .order("nome");
-      
+
       if (unidadesError) {
         toast({ title: "Não foi possível carregar as unidades", description: unidadesError.message, variant: "destructive" });
         setCarregandoSalas(false);
         return;
       }
-      
+
       const dadosUnidades = new Map<string, any>(unidadesData.map((u: any) => [u.id, u]));
       setUnidades(unidadesData || []);
-      
+
       const salasProcessadas = (salasData || []).map((sala: any) => {
         const unidade = dadosUnidades.get(String(sala.unidade_id));
         return {
@@ -117,11 +117,11 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           capacidade: sala.capacidade
         };
       }).filter((sala: any) => sala.unidade_id);
-      
+
       setSalas(salasProcessadas);
       setCarregandoSalas(false);
     }
-    
+
     void carregarDados();
     return () => { ativo = false; };
   }, []);
@@ -130,7 +130,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     if (unidadeId === "todas") return salas;
     return salas.filter((sala) => sala.unidade_id === unidadeId);
   }, [salas, unidadeId]);
-  
+
   useEffect(() => {
     if (salaId !== "todas" && !salasFiltradas.some((sala) => sala.id === salaId)) setSalaId("todas");
   }, [salaId, salasFiltradas]);
@@ -138,21 +138,21 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   // Carregar agenda
   const carregarAgenda = useCallback(async () => {
     setCarregandoAgenda(true);
-    
+
     // Carregar ocupacoes (todas as reservas de todos os usuários)
     const { data: ocupacoesData, error: ocupacoesError } = await supabase.rpc("get_public_room_availability", {
       p_start_date: isoDate(startOfMonth(mes)),
       p_end_date: isoDate(endOfMonth(mes)),
       p_sala_id: salaId === "todas" ? undefined : salaId
     });
-    
+
     if (ocupacoesError) {
       toast({ title: "Não foi possível consultar a agenda", description: ocupacoesError.message, variant: "destructive" });
       setOcupacoes([]);
     } else {
       setOcupacoes((ocupacoesData || []) as Ocupacao[]);
     }
-    
+
     // Carregar reservas do usuário logado
     const { data: reservasData, error: reservasError } = await supabase
       .from("reservations")
@@ -161,16 +161,16 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       .gte("data", isoDate(startOfMonth(mes)))
       .lte("data", isoDate(endOfMonth(mes)))
       .order("data", { ascending: true });
-    
+
     if (reservasError) {
       console.error("Erro ao carregar reservas:", reservasError);
     } else {
       setReservasDoUsuario(reservasData || []);
     }
-    
+
     setCarregandoAgenda(false);
   }, [mes, salaId, user?.email]);
-  
+
   useEffect(() => { void carregarAgenda(); }, [carregarAgenda]);
 
   const dias = useMemo(() => eachDayOfInterval({ start: startOfMonth(mes), end: endOfMonth(mes) }), [mes]);
@@ -189,38 +189,38 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     const slot = slotsVisiveis[index];
     return !sala || slot < sala.abertura || slot + 60 > sala.fechamento;
   };
-  
+
   const ocupacaoNoSlot = (id: string, index: number) => {
     const inicio = slotsVisiveis[index], fim = inicio + 60;
     return ocupacoesDoDia.find((item) => item.sala_id === id && inicio < minutos(item.hora_fim) && fim > minutos(item.hora_inicio));
   };
-  
+
   const reservaDoUsuarioNoSlot = (id: string, index: number) => {
     const inicio = slotsVisiveis[index], fim = inicio + 60;
-    return reservasDoUsuario.find((r: any) => 
-      r.sala_id === id && 
-      r.data === isoDate(dia) && 
-      inicio < minutos(r.hora_fim) && 
+    return reservasDoUsuario.find((r: any) =>
+      r.sala_id === id &&
+      r.data === isoDate(dia) &&
+      inicio < minutos(r.hora_fim) &&
       fim > minutos(r.hora_inicio)
     );
   };
-  
+
   const periodoNoSlot = (id: string, index: number) => {
     const inicio = slotsVisiveis[index], fim = inicio + 60;
     return periodos.find((item) => item.salaId === id && item.data === isoDate(dia) && inicio < minutos(item.fim) && fim > minutos(item.inicio));
   };
-  
+
   const intervaloLivre = (id: string, a: number, b: number) => {
     const inicio = Math.min(a, b), fim = Math.max(a, b);
-    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) => 
-      !foraDoExpediente(id, index) && 
-      !ocupacaoNoSlot(id, index) && 
+    return Array.from({ length: fim - inicio + 1 }, (_, offset) => inicio + offset).every((index) =>
+      !foraDoExpediente(id, index) &&
+      !ocupacaoNoSlot(id, index) &&
       !periodoNoSlot(id, index)
     );
   };
-  
-  const slotSelecionado = (id: string, index: number) => 
-    Boolean(periodoNoSlot(id, index)) || 
+
+  const slotSelecionado = (id: string, index: number) =>
+    Boolean(periodoNoSlot(id, index)) ||
     (selecao?.salaId === id && index >= Math.min(selecao.inicioIndex, selecao.fimIndex) && index <= Math.max(selecao.inicioIndex, selecao.fimIndex));
 
   const adicionarSelecao = useCallback((atual: Selecao) => {
@@ -240,9 +240,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     };
     window.addEventListener("pointerup", finalizar);
     window.addEventListener("pointercancel", finalizar);
-    return () => { 
-      window.removeEventListener("pointerup", finalizar); 
-      window.removeEventListener("pointercancel", finalizar); 
+    return () => {
+      window.removeEventListener("pointerup", finalizar);
+      window.removeEventListener("pointercancel", finalizar);
     };
   }, [adicionarSelecao]);
 
@@ -250,7 +250,12 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function iniciarSelecao(id: string, index: number) {
-    if (foraDoExpediente(id, index) || ocupacaoNoSlot(id, index) || periodoNoSlot(id, index)) return;
+    const periodoSelecionado = periodoNoSlot(id, index);
+    if (periodoSelecionado) {
+      removerPeriodo(periodoSelecionado.id);
+      return;
+    }
+    if (foraDoExpediente(id, index) || ocupacaoNoSlot(id, index)) return;
     if (periodos.length && periodos[0].salaId !== id) {
       toast({ title: "Escolha a mesma sala", description: "Envie esta solicitação ou remova os períodos antes de escolher outra sala." });
       return;
@@ -273,9 +278,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   // Função para solicitar nova reserva
   async function solicitarNovaReserva() {
     if (!periodos.length || !salaDosPeriodos || !cliente) return;
-    
+
     setSolicitando(true);
-    
+
     try {
       const { error } = await supabase.rpc("request_authenticated_reservations", {
         p_sala_id: modoSala === "qualquer" ? undefined : salaDosPeriodos.id,
@@ -290,9 +295,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
         setSolicitando(false);
         return;
       }
-      
-      toast({ 
-        title: "Reserva(s) solicitada(s)", 
+
+      toast({
+        title: "Reserva(s) solicitada(s)",
         description: `${periodos.length} período${periodos.length > 1 ? "s" : ""} solicitado${periodos.length > 1 ? "s" : ""}`
       });
       setConfirmacaoAberta(false);
@@ -301,7 +306,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       setModoSala("especifica");
       await carregarAgenda();
       if (onRefresh) await onRefresh();
-      
+
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     }
@@ -335,7 +340,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
         <h1 className="font-heading text-3xl font-black sm:text-4xl">Agenda de salas</h1>
         <p className="mt-2 text-sm text-foreground/70">Escolha uma data e arraste pelos horários livres para reservar.</p>
       </div>
-      
+
       {/* Controles de filtro e mês */}
       <section className="mb-4 rounded-lg border-2 border-border bg-card p-3 shadow-sm sm:p-4">
         <div className="mb-4 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
@@ -373,7 +378,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
             </Button>
           </div>
         </div>
-        
+
         {/* Calendário mensal */}
         <div className="grid grid-cols-7 gap-1">
           {DIAS_SEMANA.map((nome) => (
@@ -388,7 +393,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
             const key = isoDate(data);
             const info = reservasPorDia.get(key);
             const qtd = info ? info.length : 0;
-            
+
             return (
               <Button
                 key={key}
@@ -420,7 +425,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
             <p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p>
           </div>
         </div>
-        
+
         {carregandoAgenda ? (
           <div className="flex min-h-56 items-center justify-center text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...
@@ -437,8 +442,8 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           <div className="max-h-[620px] overflow-auto select-none">
             <div className="min-w-[680px]">
               {/* Header das salas */}
-              <div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{ 
-                gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` 
+              <div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{
+                gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))`
               }}>
                 <div className="flex items-center px-2 py-2 text-xs font-bold text-foreground">Hora</div>
                 {salasGantt.map((sala) => (
@@ -475,11 +480,11 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                   </div>
                 ))}
               </div>
-              
+
               {/* Slots de tempo */}
               {slotsVisiveis.map((slot, index) => (
-                <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{ 
-                  gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` 
+                <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{
+                  gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))`
                 }}>
                   <div className="flex min-h-9 items-center border-r border-border px-2 text-[11px] font-bold text-foreground">
                     {horarioMinutos(slot)}
@@ -490,7 +495,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                     const selecionado = slotSelecionado(sala.id, index);
                     const fechado = foraDoExpediente(sala.id, index);
                     const indisponivel = Boolean(ocupacao || fechado);
-                    
+
                     // Se tem reserva do usuário, mostrar com cor do status
                     if (reservaUser) {
                       const statusColor = STATUS_COLORS[reservaUser.status] || "bg-blue-500";
@@ -509,25 +514,29 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                         </div>
                       );
                     }
-                    
+
                     return (
                       <div
                         key={sala.id}
                         role="button"
                         tabIndex={indisponivel ? -1 : 0}
-                        aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`}
-                        onPointerDown={(event) => { 
-                          event.preventDefault(); 
-                          iniciarSelecao(sala.id, index); 
+                          aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : periodoNoSlot(sala.id, index) ? `${sala.nome}, ${horarioMinutos(slot)}, selecionado; pressione Enter para remover` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`}
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          iniciarSelecao(sala.id, index);
                         }}
                         onPointerEnter={() => ampliarSelecao(sala.id, index)}
-                        onKeyDown={(event) => { 
-                          if (!indisponivel && !periodoNoSlot(sala.id, index) && (event.key === "Enter" || event.key === " ")) { 
-                            event.preventDefault(); 
-                            iniciarSelecao(sala.id, index); 
-                            arrastandoRef.current = false; 
-                            adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index }); 
-                          } 
+                        onKeyDown={(event) => {
+                          if (!indisponivel && (event.key === "Enter" || event.key === " ")) {
+                            event.preventDefault();
+                            const periodo = periodoNoSlot(sala.id, index);
+                            if (periodo) removerPeriodo(periodo.id);
+                            else {
+                              iniciarSelecao(sala.id, index);
+                              arrastandoRef.current = false;
+                              adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index });
+                            }
+                          }
                         }}
                         className={`relative min-h-9 border-l border-border transition-colors ${
                           ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` :

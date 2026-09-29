@@ -135,8 +135,16 @@ export default function AdminClienteCorpDetalhe() {
         body: { cliente_id: id, password: accessPassword },
       });
       const response = data as { ok?: boolean; error?: string } | null;
-      const message = response?.error || (error ? "Sua sessão administrativa expirou. Entre novamente." : undefined);
-      if (message || !response?.ok) throw new Error(message || "A senha não foi confirmada pelo sistema.");
+      if (error) {
+        const errorResponse = (error as { context?: Response }).context;
+        const errorBody = errorResponse instanceof Response
+          ? await errorResponse.clone().json().catch(() => null) as { error?: string } | null
+          : null;
+        const detail = typeof errorBody?.error === "string" ? errorBody.error : error.message;
+        throw new Error(detail || "Não foi possível atualizar a senha. Tente novamente.");
+      }
+      if (response?.error) throw new Error(response.error);
+      if (!response?.ok) throw new Error("A senha não foi confirmada pelo sistema.");
       toast.success("Senha de acesso atualizada e confirmada");
       setAccessPassword("");
       await fetchData();

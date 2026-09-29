@@ -43,10 +43,25 @@ export default function Auth() {
   }, []);
 
   async function routeAfterLogin(userId: string) {
-    const { data: cliente } = await (supabase.from("clientes_corp") as any)
+    let { data: cliente } = await (supabase.from("clientes_corp") as any)
       .select("status_acesso")
       .eq("user_id", userId)
       .maybeSingle();
+
+    if (!cliente) {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData.user?.user_metadata?.self_service_signup === true) {
+        const { data, error } = await supabase.functions.invoke("client-signup", { body: {} });
+        if (error || (data as any)?.error) {
+          await supabase.auth.signOut();
+          toast({ title: "Não foi possível concluir o cadastro", description: (data as any)?.error || error?.message || "Tente novamente.", variant: "destructive" });
+          return;
+        }
+        await supabase.auth.signOut();
+        toast({ title: "Cadastro em análise", description: "Seu e-mail foi confirmado. A equipe do Coworking 013 precisa liberar seu acesso antes do primeiro login." });
+        return;
+      }
+    }
 
     if (cliente && cliente.status_acesso === "pendente") {
       await supabase.auth.signOut();
@@ -152,8 +167,8 @@ export default function Auth() {
         return false;
       }
     }
-    if (form.senha.length < 6) {
-      toast({ title: "A senha deve ter no mínimo 6 caracteres", variant: "destructive" });
+    if (form.senha.length < 8) {
+      toast({ title: "A senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return false;
     }
     if (form.senha !== form.confirmar) {
@@ -168,28 +183,28 @@ export default function Auth() {
     if (!validarCadastro()) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("client-signup", {
-        body: {
-          email: form.email.trim(),
-          password: form.senha,
-          razao_social: form.razao_social,
-          responsavel_nome: form.responsavel_nome,
-          responsavel_telefone: form.responsavel_telefone,
-          responsavel_cpf: form.responsavel_cpf,
-          cnpj: form.cnpj,
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email.trim().toLowerCase(),
+        password: form.senha,
+        options: {
+          emailRedirectTo: "https://coworking013.com.br/auth",
+          data: {
+            self_service_signup: true,
+            razao_social: form.razao_social.trim(),
+            responsavel_nome: form.responsavel_nome.trim(),
+            responsavel_telefone: form.responsavel_telefone.trim(),
+            responsavel_cpf: form.responsavel_cpf.trim(),
+            cnpj: form.cnpj.trim(),
+          },
         },
       });
-      const err = (data as any)?.error || error?.message;
-      if (err) throw new Error(err);
-      const emailLimpo = form.email.trim().toLowerCase();
-      const { data: login, error: loginError } = await supabase.auth.signInWithPassword({
-        email: emailLimpo,
-        password: form.senha,
-      });
-      if (loginError) throw loginError;
-      if (!login.user) throw new Error("Não foi possível iniciar o acesso.");
-      toast({ title: "Cadastro concluído", description: "Seu painel já está disponível." });
-      navigate(redirect || "/painel", { replace: true });
+      if (error) throw error;
+      if (data.session && data.user) {
+        await routeAfterLogin(data.user.id);
+      } else {
+        toast({ title: "Confirme seu e-mail", description: "Enviamos um link de confirmação. Após confirmá-lo, entre para concluir o cadastro, que ficará aguardando liberação da equipe." });
+        setMode("login");
+      }
     } catch (e: any) {
       toast({ title: "Não foi possível concluir o cadastro", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
@@ -285,7 +300,7 @@ export default function Auth() {
               </button>
 
               <p className="text-xs text-center text-slate-500 pt-2">
-                Novos cadastros acessam o painel automaticamente.
+                Cadastros novos precisam confirmar o e-mail e aguardar a liberação da equipe.
               </p>
             </form>
           </>
@@ -335,7 +350,7 @@ export default function Auth() {
                   </div>
                 </div>
                 <p className="text-[11px] text-slate-500 leading-snug -mt-2">
-                  A senha deve ter no mínimo 6 caracteres. Recomendamos incluir letras maiúsculas, números e caracteres especiais (ex.: @, #, $, !) para maior segurança.
+                  A senha deve ter no mínimo 8 caracteres. Recomendamos incluir letras maiúsculas, números e caracteres especiais (ex.: @, #, $, !) para maior segurança.
                 </p>
             </>
 

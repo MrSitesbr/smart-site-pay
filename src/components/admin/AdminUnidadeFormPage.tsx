@@ -239,12 +239,12 @@ export default function AdminUnidadeFormPage() {
                 <Input
                   type="time"
                   min="08:30"
-                  max="20:00"
+                  max="21:00"
                   step="1800"
                   value={form.horario_fechamento || "20:00"}
                   onChange={(e) => setForm({ ...form, horario_fechamento: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 20h.</p>
+                <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 21h.</p>
               </div>
             </div>
 
