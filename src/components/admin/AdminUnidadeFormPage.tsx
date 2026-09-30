@@ -17,7 +17,7 @@ const defaultForm = {
   galeria: [] as string[],
   status: "ativa",
   horario_abertura: "08:00",
-  horario_fechamento: "20:00",
+  horario_fechamento: "21:00",
   servicos_infra: [] as any[],
 };
 
@@ -63,7 +63,7 @@ export default function AdminUnidadeFormPage() {
         galeria: data.galeria || [],
         status: (data as any).status || "ativa",
         horario_abertura: data.horario_abertura?.slice(0, 5) || "08:00",
-        horario_fechamento: data.horario_fechamento?.slice(0, 5) || "20:00",
+        horario_fechamento: data.horario_fechamento?.slice(0, 5) || "21:00",
         servicos_infra: data.servicos_infra || [],
       });
       setLoading(false);
@@ -88,7 +88,7 @@ export default function AdminUnidadeFormPage() {
       galeria: form.galeria || [],
       status: form.status || "ativa",
       horario_abertura: form.horario_abertura || "08:00",
-      horario_fechamento: form.horario_fechamento || "20:00",
+      horario_fechamento: form.horario_fechamento || "21:00",
       servicos_infra: form.servicos_infra || [],
     };
 
@@ -226,7 +226,7 @@ export default function AdminUnidadeFormPage() {
                 <Input
                   type="time"
                   min="08:00"
-                  max="19:30"
+                  max="20:30"
                   step="1800"
                   value={form.horario_abertura || "08:00"}
                   onChange={(e) => setForm({ ...form, horario_abertura: e.target.value })}
@@ -241,7 +241,7 @@ export default function AdminUnidadeFormPage() {
                   min="08:30"
                   max="21:00"
                   step="1800"
-                  value={form.horario_fechamento || "20:00"}
+                  value={form.horario_fechamento || "21:00"}
                   onChange={(e) => setForm({ ...form, horario_fechamento: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 21h.</p>

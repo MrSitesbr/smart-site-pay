@@ -34,7 +34,7 @@ export default function AdminRoomDayGantt({
       id: s.id, nome: s.nome, unidade_id: s.unidade_id, foto_url: s.foto_url,
       unidadeNome: s.unidades?.nome || "",
       abertura: toMin(s.unidades?.horario_abertura || "08:00"),
-      fechamento: toMin(s.unidades?.horario_fechamento || "20:00"),
+      fechamento: toMin(s.unidades?.horario_fechamento || "21:00"),
     }))));
   }, [unidadeId]);
 

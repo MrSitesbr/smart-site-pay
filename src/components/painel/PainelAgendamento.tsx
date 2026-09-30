@@ -110,7 +110,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           unidade_id: sala.unidade_id,
           unidadeNome: unidade?.nome || "Unidade",
           abertura: minutos(unidade?.horario_abertura || "08:00"),
-          fechamento: minutos(unidade?.horario_fechamento || "20:00"),
+          fechamento: minutos(unidade?.horario_fechamento || "21:00"),
           fotoUrl: sala.foto_url || sala.galeria?.[0] || null,
           descricao: sala.descricao,
           tipo: sala.tipo,

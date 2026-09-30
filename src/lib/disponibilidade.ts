@@ -31,7 +31,7 @@ export async function verificarConflitos(
   const capacidade = isCompartilhada ? Math.max(1, Number(salaInfo?.capacidade) || 1) : 1;
   const unidade = Array.isArray(salaInfo?.unidades) ? salaInfo.unidades[0] : salaInfo?.unidades;
   const abertura = String(unidade?.horario_abertura || "08:00").slice(0, 5);
-  const fechamento = String(unidade?.horario_fechamento || "20:00").slice(0, 5);
+  const fechamento = String(unidade?.horario_fechamento || "21:00").slice(0, 5);
 
   // 0. Verificar feriados reais e domingos. Sábados são permitidos.
   if (!isBookableDay(dateObj)) {

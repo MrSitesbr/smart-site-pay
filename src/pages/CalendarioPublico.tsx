@@ -83,7 +83,7 @@ export default function CalendarioPublico() {
       setUnidades(listaUnidades);
       setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && dadosUnidades.has(sala.unidade_id))).map((sala) => {
         const unidade = dadosUnidades.get(String(sala.unidade_id));
-         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "20:00"), fotoUrl: sala.foto_url || sala.galeria?.[0] || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade };
+         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "21:00"), fotoUrl: sala.foto_url || sala.galeria?.[0] || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade };
       }));
       setAutenticado(Boolean(sessaoResponse.data.session));
       setCarregandoSalas(false);

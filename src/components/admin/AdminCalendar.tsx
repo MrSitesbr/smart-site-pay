@@ -254,16 +254,28 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       const h = parseInt(String(v || "").split(":")[0], 10);
       return Number.isFinite(h) ? h : fallback;
     };
-    if (!pool.length) return { openHour: 9, closeHour: 20 };
-    const abertura = Math.min(...pool.map((u) => parseHour(u.horario_abertura, 9)));
-    const fechamento = Math.max(...pool.map((u) => parseHour(u.horario_fechamento, 20)));
+    if (!pool.length) return { openHour: 7, closeHour: 22 };
+    const abertura = Math.min(...pool.map((u) => parseHour(u.horario_abertura, 7)));
+    const fechamento = Math.max(...pool.map((u) => parseHour(u.horario_fechamento, 22)));
     return { openHour: abertura, closeHour: Math.max(fechamento, abertura + 1) };
   }, [unidades, selectedUnidade]);
 
   const handleSaveReserva = async () => {
     if (!fullView || fullView.kind !== "reserva" || !editingReserva) return;
 
-    if (editingReserva.sala_id) {
+    const editableFields = [
+      "nome", "email", "telefone", "ambiente", "tipo", "data",
+      "hora_inicio", "hora_fim", "observacoes", "admin_notes",
+      "unidade_id", "sala_id", "plano_id",
+    ] as const;
+    const originalReservation = fullView.obj as Record<string, unknown>;
+    const sameValue = (a: unknown, b: unknown) => {
+      const normalize = (value: unknown) => value === "" || value == null ? null : String(value);
+      return normalize(a) === normalize(b);
+    };
+    const statusOnly = editableFields.every((field) => sameValue(editingReserva[field], originalReservation[field]));
+
+    if (!statusOnly && editingReserva.sala_id) {
       const conflitos = await verificarConflitos(
         editingReserva.sala_id,
         editingReserva.data,
@@ -316,14 +328,22 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       calculo_justificativa: justificativa,
     };
 
-    const { error } = await (supabase.from("reservations") as any).update(payload).eq("id", editingReserva.id);
+    const updateResult = statusOnly
+      ? await supabase.rpc("admin_update_reservation_status", {
+          p_reservation_id: editingReserva.id,
+          p_status: editingReserva.status,
+        })
+      : await supabase.from("reservations").update(payload).eq("id", editingReserva.id);
+    const error = updateResult.error;
 
     if (error) {
-      toast({ title: "Não foi possível atualizar a reserva", description: friendlyError(error), variant: "destructive" });
+      console.error("Falha ao atualizar reserva", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+      const diagnostic = [error.code, error.message, error.details, error.hint].filter(Boolean).join(" — ");
+      toast({ title: "Não foi possível atualizar a reserva", description: diagnostic || friendlyError(error), variant: "destructive" });
       return;
     }
 
-    const updated = { ...fullView.obj, ...payload };
+    const updated = { ...fullView.obj, ...(statusOnly ? { status: editingReserva.status } : payload) };
     setFullView({ ...fullView, obj: updated });
     setIsEditingReserva(false);
     setEditingReserva(null);

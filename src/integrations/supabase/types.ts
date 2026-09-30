@@ -1377,6 +1377,10 @@ export type Database = {
     }
     Functions: {
       current_cliente_id: { Args: never; Returns: string }
+      admin_update_reservation_status: {
+        Args: { p_reservation_id: string; p_status: Database["public"]["Enums"]["reserva_status"] }
+        Returns: string
+      }
       get_public_room_availability: {
         Args: { p_end_date: string; p_sala_id?: string; p_start_date: string }
         Returns: {
