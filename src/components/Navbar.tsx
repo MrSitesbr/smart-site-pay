@@ -184,23 +184,22 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <a
             href={phoneHref}
-            className={`flex items-center gap-2 text-sm font-medium ${
+            className={`hidden lg:flex items-center gap-2 text-sm font-medium ${
               scrolled ? "text-foreground" : "text-white"
             }`}
           >
             <Phone className="w-4 h-4 text-primary" />
             {phone}
           </a>
-          <Link to="/auth">
-  <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-6">
-    <User className="w-4 h-4 mr-2" />
-    Acessar
-  </Button>
-</Link>
-
+          <Link to="/auth" className="relative z-10">
+            <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full font-heading font-bold px-4 sm:px-6 text-xs sm:text-sm">
+              <User className="w-4 h-4 sm:mr-2" />
+              <span>Área do Cliente</span>
+            </Button>
+          </Link>
         </div>
 
         <button
