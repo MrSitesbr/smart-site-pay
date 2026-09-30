@@ -1,13 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CalendarSearch, Loader2, LogIn } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { consultaSchema } from "@/lib/consultaValidation";
 
 interface ReservaDialogProps {
   open: boolean;
@@ -17,111 +13,47 @@ interface ReservaDialogProps {
   onSuccess?: () => void;
 }
 
-export const CONSULTA_STORAGE_KEY = "coworking013_consulta";
+const REDIRECT = "/agendamento";
 
+/**
+ * A consulta de reservas exige cliente logado: quem ainda não tem conta entra
+ * no cadastro pelo mesmo diálogo, sem criar mais pré-cadastro de lead.
+ */
 export default function ReservaDialog({ open, onOpenChange, onSuccess }: ReservaDialogProps) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    nome: "",
-    email: "",
-    whatsapp: "",
-    tipoNegocio: "",
-  });
+  const destino = `/auth?redirect=${encodeURIComponent(REDIRECT)}`;
 
   useEffect(() => {
     if (!open) return;
-    try {
-      const salvo = consultaSchema.safeParse(JSON.parse(localStorage.getItem(CONSULTA_STORAGE_KEY) || "null"));
-      if (salvo.success) setForm({
-        nome: salvo.data.nome,
-        email: salvo.data.email,
-        whatsapp: salvo.data.whatsapp,
-        tipoNegocio: salvo.data.tipoNegocio,
-      });
-    } catch { /* Mantém o formulário vazio quando o armazenamento estiver inválido. */ }
+    let ativo = true;
     supabase.auth.getSession().then(({ data }) => {
-      const u = data.session?.user;
-      if (!u) return;
-      setForm((f) => ({
-        ...f,
-        nome: f.nome || String(u.user_metadata?.nome || ""),
-        whatsapp: f.whatsapp || String(u.user_metadata?.telefone || ""),
-        email: f.email || u.email || "",
-      }));
+      if (!ativo || !data.session) return;
+      onOpenChange(false);
+      if (onSuccess) onSuccess();
+      else navigate(REDIRECT, { replace: true });
     });
-  }, [open]);
-
-  const set = (campo: keyof typeof form, valor: string) => setForm((atual) => ({ ...atual, [campo]: valor }));
-
-  async function consultar() {
-    const validacao = consultaSchema.safeParse(form);
-    if (!validacao.success) {
-      toast({ title: "Revise seus dados", description: validacao.error.issues[0]?.message, variant: "destructive" });
-      return;
-    }
-    const dados = validacao.data;
-    setLoading(true);
-    const { error } = await supabase.rpc("submit_public_consultation", {
-      p_nome: dados.nome,
-      p_email: dados.email,
-      p_whatsapp: dados.whatsapp,
-      p_tipo_negocio: dados.tipoNegocio,
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Não foi possível consultar", description: error.message, variant: "destructive" });
-      return;
-    }
-    localStorage.setItem(CONSULTA_STORAGE_KEY, JSON.stringify(dados));
-    toast({ title: "Consulta registrada", description: "Agora escolha uma sala, data e horário." });
-    onOpenChange(false);
-    if (onSuccess) onSuccess();
-    else navigate("/agendamento");
-  }
+    return () => { ativo = false; };
+  }, [open, navigate, onOpenChange, onSuccess]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-2xl font-black md:text-3xl">Consulte</DialogTitle>
+          <DialogTitle className="font-heading text-2xl font-black md:text-3xl">Consultar reserva</DialogTitle>
           <DialogDescription>
-            Informe seus dados para consultar a disponibilidade das salas.
+            Entre na sua conta para consultar a agenda e enviar solicitações de reserva.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 pt-2">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label>Nome completo</Label>
-              <Input maxLength={100} value={form.nome} onChange={(e) => set("nome", e.target.value)} />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input type="email" maxLength={255} value={form.email} onChange={(e) => set("email", e.target.value)} />
-            </div>
-            <div>
-              <Label>WhatsApp</Label>
-              <Input type="tel" maxLength={30} value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="(13) 9..." />
-            </div>
-            <div>
-              <Label>Tipo de negócio</Label>
-              <Input maxLength={120} value={form.tipoNegocio} onChange={(e) => set("tipoNegocio", e.target.value)} placeholder="Ex.: advocacia, saúde, tecnologia" />
-            </div>
-          </div>
-
-          <div className="border-t pt-4">
-            <Button onClick={() => void consultar()} disabled={loading || !form.nome || !form.email || !form.whatsapp || !form.tipoNegocio} className="w-full font-heading font-bold">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarSearch className="mr-2 h-4 w-4" />}
-              Consultar
-            </Button>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              <button onClick={() => navigate("/auth")} className="flex items-center justify-center w-full gap-2 text-brand-orange hover:underline">
-                <LogIn className="w-4 h-4" />
-                Já sou cliente
-              </button>
-            </p>
-          </div>
+        <div className="space-y-4 pt-2">
+          <Button onClick={() => navigate(destino)} className="w-full font-heading font-bold">
+            <LogIn className="mr-2 h-4 w-4" />
+            Já sou cliente
+          </Button>
+          <Button variant="outline" onClick={() => navigate(destino)} className="w-full font-heading font-bold">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Criar cadastro
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

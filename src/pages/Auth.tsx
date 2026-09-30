@@ -11,11 +11,17 @@ import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 type Mode = "login" | "signup";
 
+/** Só redireciona para rotas internas do site; qualquer URL externa é ignorada. */
+function destinoInterno(valor: string | null) {
+  if (!valor || !valor.startsWith("/") || valor.startsWith("//")) return "";
+  return valor;
+}
+
 export default function Auth() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirect = params.get("redirect") || "";
-  const [mode, setMode] = useState<Mode>("login");
+  const redirect = destinoInterno(params.get("redirect"));
+  const [mode, setMode] = useState<Mode>(() => (params.get("cadastro") === "1" ? "signup" : "login"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notRobot, setNotRobot] = useState(false);
@@ -63,7 +69,7 @@ export default function Auth() {
       }
     }
 
-    if (cliente && cliente.status_acesso === "pendente") {
+    if (cliente && cliente.status_acesso === "pendente" && !redirect) {
       await supabase.auth.signOut();
       toast({
         title: "Cadastro em análise",
@@ -72,7 +78,7 @@ export default function Auth() {
       });
       return;
     }
-    if (cliente && cliente.status_acesso === "recusado") {
+    if (cliente && cliente.status_acesso === "recusado" && !redirect) {
       await supabase.auth.signOut();
       toast({ title: "Acesso não liberado", description: "Fale com a equipe do Coworking 013.", variant: "destructive" });
       return;
