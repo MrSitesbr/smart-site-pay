@@ -35,6 +35,7 @@ export default function Auth() {
     responsavel_cpf: "",
     cnpj: "",
     responsavel_telefone: "",
+    endereco: "",
     email: "",
     senha: "",
     confirmar: "",
@@ -201,6 +202,7 @@ export default function Auth() {
             responsavel_telefone: form.responsavel_telefone.trim(),
             responsavel_cpf: form.responsavel_cpf.trim(),
             cnpj: form.cnpj.trim(),
+            endereco: form.endereco.trim(),
           },
         },
       });
@@ -340,6 +342,10 @@ export default function Auth() {
                     <Label className="text-slate-300">WhatsApp *</Label>
                     <Input value={form.responsavel_telefone} onChange={(e) => setForm({ ...form, responsavel_telefone: e.target.value })} className={inputCls} />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Endereço</Label>
+                  <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} placeholder="Rua, número, bairro, cidade e CEP" className={inputCls} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">E-mail *</Label>

@@ -15,13 +15,21 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  let isAdmin = false;
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRoleKey) {
+      return json({ error: "A Edge Function está sem SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY no ambiente do servidor." }, 500);
+    }
+
     const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      supabaseUrl,
+      serviceRoleKey,
     );
 
-    const token = (req.headers.get("Authorization") || "").replace("Bearer ", "");
+    const authorization = req.headers.get("Authorization") || "";
+    const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
     if (!token) return json({ error: "Sua sessão administrativa expirou. Entre novamente." }, 401);
     const { data: userData, error: userError } = await admin.auth.getUser(token);
     if (userError || !userData?.user) return json({ error: "Sua sessão administrativa expirou. Entre novamente." }, 401);
@@ -29,6 +37,7 @@ Deno.serve(async (req) => {
     if (!(roles || []).some((r: { role: string }) => r.role === "admin")) {
       return json({ error: "Você não tem permissão para alterar senhas de clientes." }, 403);
     }
+    isAdmin = true;
 
     const body = await req.json().catch(() => null) as { cliente_id?: string; password?: string } | null;
     const clienteId = body?.cliente_id?.trim();
@@ -100,7 +109,10 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, created: !found, user_id: userId });
   } catch (e) {
-    console.error("admin-set-client-password:", e instanceof Error ? e.message : "unknown error");
-    return json({ error: "Não foi possível atualizar a conta deste cliente." }, 500);
+    const detail = e instanceof Error ? e.message : "Erro desconhecido.";
+    console.error("admin-set-client-password:", detail);
+    return json({
+      error: isAdmin ? `Falha ao criar ou atualizar a conta Auth: ${detail}` : "Não foi possível validar a solicitação administrativa.",
+    }, 500);
   }
 });

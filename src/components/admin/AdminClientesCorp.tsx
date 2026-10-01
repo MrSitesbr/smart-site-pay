@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import NovoClienteCorpDialog from "./NovoClienteCorpDialog";
 import { toast } from "@/hooks/use-toast";
+import { friendlyError } from "@/lib/appErrors";
 
 export default function AdminClientesCorp() {
   const navigate = useNavigate();
@@ -16,9 +17,9 @@ export default function AdminClientesCorp() {
   useEffect(() => { fetchClientes(); }, []);
 
   async function fetchClientes() {
-    const { data, error } = await (supabase.from('clientes_corp') as any).select('*');
+    const { data, error } = await supabase.from('clientes_corp').select('*');
     if (error) {
-      toast({ title: "Erro", description: "Erro ao carregar empresas clientes: " + error.message, variant: "destructive" });
+      toast({ title: "Erro ao carregar empresas clientes", description: friendlyError(error), variant: "destructive" });
       return;
     }
     setClientes((data || []).filter((cliente: any) => !cliente.deleted_at));
@@ -26,8 +27,12 @@ export default function AdminClientesCorp() {
 
   async function arquivarCliente(id: string) {
     if (!confirm("Arquivar este cliente? O histórico será preservado.")) return;
-    const { error } = await (supabase.from('clientes_corp') as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    if (error) return;
+    const { error } = await supabase.from('clientes_corp').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    if (error) {
+      toast({ title: "Não foi possível arquivar o cliente", description: friendlyError(error), variant: "destructive" });
+      return;
+    }
+    toast({ title: "Cliente arquivado" });
     fetchClientes();
   }
 
@@ -58,9 +63,9 @@ export default function AdminClientesCorp() {
       return;
     }
 
-    const { error } = await (supabase.from('clientes_corp') as any).delete().eq('id', id);
+    const { error } = await supabase.from('clientes_corp').delete().eq('id', id);
     if (error) {
-      toast({ title: "Erro", description: "Erro ao excluir cliente: " + error.message, variant: "destructive" });
+      toast({ title: "Erro ao excluir cliente", description: friendlyError(error), variant: "destructive" });
       return;
     }
     toast({ title: "Sucesso", description: "Cliente excluído com sucesso" });
@@ -68,8 +73,8 @@ export default function AdminClientesCorp() {
   }
 
   async function setAccess(id: string, status_acesso: string) {
-    const { error } = await (supabase.from("clientes_corp") as any).update({ status_acesso }).eq("id", id);
-    if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
+    const { error } = await supabase.from("clientes_corp").update({ status_acesso }).eq("id", id);
+    if (error) toast({ title: "Não foi possível alterar o acesso", description: friendlyError(error), variant: "destructive" });
     else { toast({ title: "Sucesso", description: status_acesso === "aprovado" ? "Cadastro liberado" : "Cadastro recusado" }); fetchClientes(); }
   }
 

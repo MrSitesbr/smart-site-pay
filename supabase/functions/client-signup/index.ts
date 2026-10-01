@@ -42,13 +42,14 @@ Deno.serve(async (req) => {
     const razaoSocial = typeof meta.razao_social === "string" ? meta.razao_social.trim() : "";
     const responsavelNome = typeof meta.responsavel_nome === "string" ? meta.responsavel_nome.trim() : "";
     const telefone = typeof meta.responsavel_telefone === "string" ? meta.responsavel_telefone.trim() : "";
+    const endereco = typeof meta.endereco === "string" ? meta.endereco.trim() : "";
     const cpf = typeof meta.responsavel_cpf === "string" ? meta.responsavel_cpf.trim() : "";
     const cnpj = typeof meta.cnpj === "string" ? meta.cnpj.trim() : "";
 
     if (!email || email.length > 255 || razaoSocial.length < 2 || razaoSocial.length > 160 || responsavelNome.length < 2 || responsavelNome.length > 120 || telefone.length < 10 || telefone.length > 30) {
       return json({ error: "Os dados do cadastro estão incompletos ou inválidos. Atualize-os e tente novamente." }, 400);
     }
-    if (cpf.length > 20 || cnpj.length > 24) return json({ error: "CPF ou CNPJ inválido." }, 400);
+    if (cpf.length > 20 || cnpj.length > 24 || endereco.length > 300) return json({ error: "CPF, CNPJ ou endereço inválido." }, 400);
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -80,6 +81,7 @@ Deno.serve(async (req) => {
         responsavel_nome: responsavelNome,
         responsavel_email: email,
         responsavel_telefone: telefone,
+        endereco: endereco || null,
         responsavel_cpf: cpf || null,
         cnpj: cnpj || null,
         unidade_id: null,

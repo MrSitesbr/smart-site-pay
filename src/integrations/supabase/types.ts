@@ -141,6 +141,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           documentos: string[] | null
+          endereco: string | null
           id: string
           plano_id: string | null
           razao_social: string
@@ -158,6 +159,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           documentos?: string[] | null
+          endereco?: string | null
           id?: string
           plano_id?: string | null
           razao_social: string
@@ -175,6 +177,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           documentos?: string[] | null
+          endereco?: string | null
           id?: string
           plano_id?: string | null
           razao_social?: string

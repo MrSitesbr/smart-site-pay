@@ -68,8 +68,13 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
 
   useEffect(() => {
     let mounted = true;
-    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone, created_at").then(({ data }) => {
-      if (mounted) setCrmClientes(data || []);
+    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone, created_at").then(({ data, error }) => {
+      if (!mounted) return;
+      if (error) {
+        toast({ title: "Não foi possível carregar clientes", description: friendlyError(error), variant: "destructive" });
+        return;
+      }
+      setCrmClientes(data || []);
     });
     return () => { mounted = false; };
   }, []);
@@ -139,10 +144,10 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
       responsavel_email: cliente.email,
       responsavel_telefone: cliente.telefone || lead?.telefone || "",
     };
-    const query = (supabase.from("clientes_corp") as any).insert(payload);
+    const query = supabase.from("clientes_corp").insert(payload);
     const { data: clienteCriado, error } = await query.select("id").single();
     if (error) {
-      toast({ title: "Não foi possível converter o lead", description: error.message, variant: "destructive" });
+      toast({ title: "Não foi possível converter o lead", description: friendlyError(error), variant: "destructive" });
       return;
     }
     toast({ title: "Lead convertido em cliente" });

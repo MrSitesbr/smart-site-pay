@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, LogOut, ExternalLink, Copy, Home, ArrowRight, Building2, FileText, LifeBuoy, Calculator, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, LogOut, ExternalLink, Copy, Home, ArrowRight, Building2, FileText, LifeBuoy, Calculator, Plus, Pencil, Trash2, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import MeuPlano from "@/components/painel/MeuPlano";
 import DocumentosCliente from "@/components/painel/DocumentosCliente";
 import SuporteCliente from "@/components/painel/SuporteCliente";
 import PainelAgendamento from "@/components/painel/PainelAgendamento";
+import { passwordSchema } from "@/lib/validation";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Espaço de Trabalho",
@@ -67,6 +68,10 @@ export default function Painel() {
   const [requestedAmbiente, setRequestedAmbiente] = useState<(typeof AMBIENTES)[number]>("estacao");
   const [requestedPlano, setRequestedPlano] = useState<(typeof PLANOS)[number]>("mensal");
   const [saving, setSaving] = useState(false);
+  const [newClientPassword, setNewClientPassword] = useState("");
+  const [confirmClientPassword, setConfirmClientPassword] = useState("");
+  const [showClientPassword, setShowClientPassword] = useState(false);
+  const [savingClientPassword, setSavingClientPassword] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -125,6 +130,7 @@ export default function Painel() {
       responsavel_cpf: editingCliente.responsavel_cpf || null,
       responsavel_email: editingCliente.responsavel_email || null,
       responsavel_telefone: editingCliente.responsavel_telefone || null,
+      endereco: editingCliente.endereco || null,
     }).eq("id", cliente.id).select("*, unidades(nome), planos(nome), salas(nome)").single();
     if (error) toast({ title: "Erro ao salvar dados", description: error.message, variant: "destructive" });
     else {
@@ -133,6 +139,27 @@ export default function Painel() {
       toast({ title: "Dados atualizados" });
     }
     setSaving(false);
+  }
+
+  async function saveOwnPassword() {
+    const validation = passwordSchema.safeParse(newClientPassword);
+    if (!validation.success) {
+      toast({ title: "Senha inválida", description: validation.error.issues[0]?.message, variant: "destructive" });
+      return;
+    }
+    if (newClientPassword !== confirmClientPassword) {
+      toast({ title: "As senhas não conferem", variant: "destructive" });
+      return;
+    }
+    setSavingClientPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newClientPassword });
+    if (error) toast({ title: "Não foi possível atualizar a senha", description: error.message, variant: "destructive" });
+    else {
+      setNewClientPassword("");
+      setConfirmClientPassword("");
+      toast({ title: "Senha atualizada" });
+    }
+    setSavingClientPassword(false);
   }
 
   async function saveFunc() {
@@ -264,8 +291,28 @@ export default function Painel() {
 
           <TabsContent value="dados">
             <div className="grid gap-4 lg:grid-cols-3">
-              <Card className="p-5 lg:col-span-2"><div className="flex items-start justify-between gap-4"><h2 className="font-heading font-black text-xl mb-3">{cliente?.razao_social || "Empresa vinculada"}</h2><Button size="sm" variant="outline" onClick={() => setEditingCliente({ ...cliente })}><Pencil className="w-4 h-4 mr-2" /> Editar informações</Button></div><div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></Card>
+              <Card className="p-5 lg:col-span-2"><div className="flex items-start justify-between gap-4"><h2 className="font-heading font-black text-xl mb-3">{cliente?.razao_social || "Empresa vinculada"}</h2><Button size="sm" variant="outline" onClick={() => setEditingCliente({ ...cliente })}><Pencil className="w-4 h-4 mr-2" /> Editar informações</Button></div><div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Endereço:</span> {cliente?.endereco || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></Card>
             </div>
+            <Card className="mt-4 max-w-2xl p-5 space-y-4">
+              <div>
+                <h2 className="flex items-center gap-2 font-heading font-black text-lg"><KeyRound className="h-4 w-4" /> Minha senha</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Defina uma nova senha para sua conta.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="relative">
+                  <Input type={showClientPassword ? "text" : "password"} value={newClientPassword} onChange={(e) => setNewClientPassword(e.target.value)} placeholder="Nova senha" autoComplete="new-password" />
+                  <button type="button" onClick={() => setShowClientPassword((visible) => !visible)} aria-label={showClientPassword ? "Ocultar senha" : "Mostrar senha"} title={showClientPassword ? "Ocultar senha" : "Mostrar senha"} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showClientPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Input type={showClientPassword ? "text" : "password"} value={confirmClientPassword} onChange={(e) => setConfirmClientPassword(e.target.value)} placeholder="Confirmar nova senha" autoComplete="new-password" />
+              </div>
+              <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres, com letra, número e símbolo.</p>
+              <Button onClick={saveOwnPassword} disabled={savingClientPassword}>
+                {savingClientPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Atualizar senha
+              </Button>
+            </Card>
           </TabsContent>
 
           <TabsContent value="colaboradores"><Card className="p-5"><div className="flex items-center justify-between gap-4 mb-4"><h2 className="font-heading font-black text-xl">Colaboradores autorizados</h2><Button size="sm" onClick={() => setEditingFunc({ nome: "", cargo: "", telefone: "", email: "" })}><Plus className="w-4 h-4 mr-2" /> Adicionar</Button></div>{funcionarios.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{funcionarios.map(f => <div key={f.id} className="border rounded-lg p-4"><div className="flex items-start justify-between gap-2"><div><p className="font-medium">{f.nome}</p><p className="text-sm text-muted-foreground">{f.cargo || "Colaborador autorizado"}</p>{f.email && <p className="text-xs text-muted-foreground mt-1">{f.email}</p>}</div><div className="flex gap-1"><Button variant="ghost" size="icon" onClick={() => setEditingFunc({ ...f })} aria-label="Editar colaborador"><Pencil className="w-4 h-4" /></Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteFunc(f.id)} aria-label="Excluir colaborador"><Trash2 className="w-4 h-4" /></Button></div></div></div>)}</div> : <p className="text-sm text-muted-foreground">Nenhum colaborador cadastrado.</p>}</Card></TabsContent>
@@ -410,6 +457,7 @@ export default function Painel() {
               <div className="grid gap-2"><Label>CPF do responsável</Label><Input value={editingCliente?.responsavel_cpf || ""} onChange={(e) => setEditingCliente({ ...editingCliente, responsavel_cpf: e.target.value })} /></div>
               <div className="grid gap-2"><Label>E-mail</Label><Input type="email" value={editingCliente?.responsavel_email || ""} onChange={(e) => setEditingCliente({ ...editingCliente, responsavel_email: e.target.value })} /></div>
               <div className="grid gap-2"><Label>WhatsApp</Label><Input value={editingCliente?.responsavel_telefone || ""} onChange={(e) => setEditingCliente({ ...editingCliente, responsavel_telefone: e.target.value })} /></div>
+              <div className="grid gap-2 sm:col-span-2"><Label>Endereço</Label><Input value={editingCliente?.endereco || ""} onChange={(e) => setEditingCliente({ ...editingCliente, endereco: e.target.value })} placeholder="Rua, número, bairro, cidade e CEP" /></div>
             </div>
             <DialogFooter><Button variant="outline" onClick={() => setEditingCliente(null)}>Cancelar</Button><Button onClick={saveCliente} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}</Button></DialogFooter>
           </DialogContent>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { friendlyError } from "@/lib/appErrors";
 import { passwordSchema } from "@/lib/validation";
 
@@ -22,9 +22,12 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [nomeResp, setNomeResp] = useState("");
   const [emailResp, setEmailResp] = useState("");
   const [telResp, setTelResp] = useState("");
+  const [endereco, setEndereco] = useState("");
   const [cpfResp, setCpfResp] = useState("");
   const [planoId, setPlanoId] = useState<string | null>(null);
   const [accessPassword, setAccessPassword] = useState("");
+  const [confirmAccessPassword, setConfirmAccessPassword] = useState("");
+  const [showAccessPassword, setShowAccessPassword] = useState(false);
   const [planos, setPlanos] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -34,9 +37,12 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       setNomeResp("");
       setEmailResp("");
       setTelResp("");
+      setEndereco("");
       setCpfResp("");
       setPlanoId(null);
       setAccessPassword("");
+      setConfirmAccessPassword("");
+      setShowAccessPassword(false);
       fetchPlanos();
     }
   }, [open, initialNome]);
@@ -51,9 +57,18 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       toast({ title: "Razão Social é obrigatória", variant: "destructive" });
       return;
     }
-    const passwordResult = accessPassword ? passwordSchema.safeParse(accessPassword) : null;
-    if (passwordResult && !passwordResult.success) {
+    const passwordResult = passwordSchema.safeParse(accessPassword);
+    if (!passwordResult.success) {
       toast({ title: passwordResult.error.issues[0]?.message || "Informe uma senha válida.", variant: "destructive" });
+      return;
+    }
+    if (accessPassword !== confirmAccessPassword) {
+      toast({ title: "As senhas não conferem", variant: "destructive" });
+      return;
+    }
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      toast({ title: "Sessão administrativa expirada", description: "Entre novamente no painel antes de salvar o cliente e a senha.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -80,9 +95,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       responsavel_nome: nomeResp,
       responsavel_email: emailResp,
       responsavel_telefone: telResp,
-      // @ts-ignore
+      endereco,
       responsavel_cpf: cpfResp,
-      // @ts-ignore
       plano_id: planoId
     };
 
@@ -109,9 +123,17 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
     if (accessPassword) {
       const { data: pwData, error: passwordError } = await supabase.functions.invoke("admin-set-client-password", {
         body: { cliente_id: result.id, password: accessPassword },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const passwordResult = pwData as { ok?: boolean; error?: string } | null;
-      const pwErr = passwordResult?.error || (passwordError ? "Sua sessão administrativa expirou. Entre novamente." : undefined);
+      let pwErr = passwordResult?.error;
+      if (passwordError) {
+        const response = (passwordError as { context?: Response }).context;
+        const errorBody = response instanceof Response
+          ? await response.clone().json().catch(() => null) as { error?: string; message?: string } | null
+          : null;
+        pwErr = errorBody?.error || errorBody?.message || passwordError.message;
+      }
       if (pwErr || !passwordResult?.ok) {
         toast({
           title: "Cliente salvo, mas a senha não foi definida",
@@ -156,6 +178,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
             <Input value={telResp} onChange={(e) => setTelResp(e.target.value)} placeholder="(00) 00000-0000" />
           </div>
           <div className="grid gap-2">
+            <Label>Endereço</Label>
+            <Input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro, cidade e CEP" />
+          </div>
+          <div className="grid gap-2">
             <Label>Plano (Opcional)</Label>
             <Select 
               value={planoId || ""} 
@@ -173,8 +199,39 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Senha de acesso (Opcional)</Label>
-            <Input type="password" value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" />
+            <Label htmlFor="cliente-access-password">Senha de acesso *</Label>
+            <div className="relative">
+              <Input
+                id="cliente-access-password"
+                type={showAccessPassword ? "text" : "password"}
+                value={accessPassword}
+                onChange={(e) => setAccessPassword(e.target.value)}
+                placeholder="Mínimo de 8 caracteres, letra, número e símbolo"
+                autoComplete="new-password"
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowAccessPassword((visible) => !visible)}
+                aria-label={showAccessPassword ? "Ocultar senha" : "Mostrar senha"}
+                title={showAccessPassword ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showAccessPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cliente-confirm-access-password">Confirmar senha *</Label>
+            <Input
+              id="cliente-confirm-access-password"
+              type={showAccessPassword ? "text" : "password"}
+              value={confirmAccessPassword}
+              onChange={(e) => setConfirmAccessPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
           </div>
         </div>
         <DialogFooter>

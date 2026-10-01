@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText, KeyRound } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
@@ -40,6 +40,8 @@ export default function AdminClienteCorpDetalhe() {
   const [editingFunc, setEditingFunc] = useState<any>(null);
   const [showNovoVisita, setShowNovoVisita] = useState(false);
   const [accessPassword, setAccessPassword] = useState("");
+  const [confirmAccessPassword, setConfirmAccessPassword] = useState("");
+  const [showAccessPassword, setShowAccessPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
@@ -91,14 +93,11 @@ export default function AdminClienteCorpDetalhe() {
       responsavel_nome: cliente.responsavel_nome,
       responsavel_email: cliente.responsavel_email,
       responsavel_telefone: cliente.responsavel_telefone,
-      // @ts-ignore
+      endereco: cliente.endereco,
       responsavel_cpf: cliente.responsavel_cpf,
       cnpj: cliente.cnpj,
-      // @ts-ignore
       unidade_id: cliente.unidade_id,
-      // @ts-ignore
       plano_id: cliente.plano_id,
-      // @ts-ignore
       documentos: cliente.documentos || []
     }).eq('id', id);
 
@@ -128,11 +127,15 @@ export default function AdminClienteCorpDetalhe() {
   async function saveAccessPassword() {
     const passwordResult = passwordSchema.safeParse(accessPassword);
     if (!passwordResult.success) return toast.error(passwordResult.error.issues[0]?.message || "Informe uma senha válida.");
+    if (accessPassword !== confirmAccessPassword) return toast.error("As senhas não conferem.");
     if (!id) return toast.error("Cliente não identificado. Reabra a ficha e tente novamente.");
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) return toast.error("Sessão administrativa expirada. Entre novamente no painel.");
     setSavingPassword(true);
     try {
       const { data, error } = await supabase.functions.invoke("admin-set-client-password", {
         body: { cliente_id: id, password: accessPassword },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const response = data as { ok?: boolean; error?: string } | null;
       if (error) {
@@ -147,6 +150,7 @@ export default function AdminClienteCorpDetalhe() {
       if (!response?.ok) throw new Error("A senha não foi confirmada pelo sistema.");
       toast.success("Senha de acesso atualizada e confirmada");
       setAccessPassword("");
+      setConfirmAccessPassword("");
       await fetchData();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a senha");
@@ -211,6 +215,10 @@ export default function AdminClienteCorpDetalhe() {
                 <Label>Whatsapp</Label>
                 <Input value={cliente.responsavel_telefone || ''} onChange={e => setCliente({...cliente, responsavel_telefone: e.target.value})} />
               </div>
+              <div className="space-y-2 col-span-2 lg:col-span-4">
+                <Label>Endereço</Label>
+                <Input value={cliente.endereco || ''} onChange={e => setCliente({...cliente, endereco: e.target.value})} placeholder="Rua, número, bairro, cidade e CEP" />
+              </div>
             </div>
             
             <div className="mt-4 space-y-4 border-t pt-4">
@@ -228,7 +236,22 @@ export default function AdminClienteCorpDetalhe() {
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Salvar Alterações
             </Button>
-            <div className="border-t pt-4 space-y-2"><Label className="flex items-center gap-2"><KeyRound className="w-4 h-4" /> Senha de acesso do cliente</Label><div className="flex gap-2"><Input type="password" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" /><Button onClick={saveAccessPassword} disabled={savingPassword}>{savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : "Definir senha"}</Button></div></div>
+            <div className="border-t pt-4 space-y-3">
+              <Label className="flex items-center gap-2"><KeyRound className="w-4 h-4" /> Senha de acesso do cliente</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="relative">
+                  <Input type={showAccessPassword ? "text" : "password"} value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Nova senha" autoComplete="new-password" />
+                  <button type="button" onClick={() => setShowAccessPassword((visible) => !visible)} aria-label={showAccessPassword ? "Ocultar senha" : "Mostrar senha"} title={showAccessPassword ? "Ocultar senha" : "Mostrar senha"} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showAccessPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Input type={showAccessPassword ? "text" : "password"} value={confirmAccessPassword} onChange={e => setConfirmAccessPassword(e.target.value)} placeholder="Confirmar nova senha" autoComplete="new-password" />
+                <p className="text-xs text-muted-foreground sm:col-span-2">Mínimo de 8 caracteres, com letra, número e símbolo.</p>
+                <Button onClick={saveAccessPassword} disabled={savingPassword} className="sm:col-span-2 sm:w-fit">
+                  {savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : "Definir senha"}
+                </Button>
+              </div>
+            </div>
           </Card>
         </TabsContent>
 
