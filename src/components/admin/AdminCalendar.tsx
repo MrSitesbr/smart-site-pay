@@ -67,6 +67,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [gLoading, setGLoading] = useState(false);
   const [gError, setGError] = useState<string | null>(null);
   const [showGoogle, setShowGoogle] = useState(true);
+  const timelineRef = useRef<HTMLDivElement>(null);
   const { overrides: colorOverrides } = useClientColors();
   const [visitantes, setVisitantes] = useState<any[]>([]);
   const [checkin, setCheckin] = useState<any | null>(null);
@@ -246,6 +247,14 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const goNext = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
   const selectedInfo = selectedDay ? eventsByDay.get(dayKey(selectedDay)) : undefined;
+
+  useEffect(() => {
+    if (!timelineDay) return;
+    const frame = requestAnimationFrame(() => {
+      timelineRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [timelineDay]);
 
   // Expediente do dia em Gantt: usa o horário de abertura/fechamento das unidades filtradas
   const { openHour, closeHour } = useMemo(() => {
@@ -626,17 +635,19 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
           </div>
 
           {timelineDay && (
-            <AdminRoomDayGantt
-              day={timelineDay}
-              onChangeDay={(d) => setTimelineDay(d)}
-              onClose={() => setTimelineDay(null)}
-              reservas={reservas}
-              unidadeId={selectedUnidade}
-              salaId={selectedSala}
-              onDeleteReserva={onDeleteReserva}
-              onNovaReserva={(d) => setNovaDay(d)}
-              onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
-            />
+            <div ref={timelineRef}>
+              <AdminRoomDayGantt
+                day={timelineDay}
+                onChangeDay={(d) => setTimelineDay(d)}
+                onClose={() => setTimelineDay(null)}
+                reservas={reservas}
+                unidadeId={selectedUnidade}
+                salaId={selectedSala}
+                onDeleteReserva={onDeleteReserva}
+                onNovaReserva={(d) => setNovaDay(d)}
+                onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
+              />
+            </div>
           )}
         </>
       ) : viewMode === "list" ? (
