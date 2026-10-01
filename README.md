@@ -1,26 +1,39 @@
-# Remix of SmartFit Revamp
+# Coworking 013
 
-crie uma nova vesrsão do site cwkennedy.com.br com essa nova ideia de layout identico ao https://www.smartfit.com.br/. alem de um sistema simples de pagamento pelas reservas e pagamentos mensais e avulsos. crie o site agora
+Aplicação React + Vite com backend Supabase externo. O projeto é desenvolvido pelo GitHub/Copilot e não depende do Lovable Cloud.
 
-This project was built with [Lovable](https://lovable.dev).
+## Supabase
 
-**Live app**: https://smart-site-pay.lovable.app
+- Projeto: `rvotuxwzgbxpbrlwcqps`
+- URL: `https://rvotuxwzgbxpbrlwcqps.supabase.co`
+- Variáveis necessárias: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PROJECT_ID` e `VITE_SUPABASE_PUBLISHABLE_KEY`
+- Edge Functions usam `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` configuradas como secrets no Supabase; nunca coloque secrets no frontend ou no Git.
 
-## Build with Lovable
+Copie `.env.example` para `.env` e preencha a chave pública obtida no Supabase Dashboard.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6e291cf1-6efe-49d4-a1d9-b7bb4f6c208a).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Desenvolvimento local
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone https://github.com/MrSitesbr/smart-site-pay.git
+cd smart-site-pay
+npm install
+cp .env.example .env
 npm run dev
 ```
+
+## Build e testes
+
+```sh
+npm run build
+npm test
+```
+
+## Banco de dados
+
+As alterações estruturais ficam em `supabase/migrations/`. A migration de migração inicial é `20260930150000_lovable_cloud_to_supabase_core.sql`. Dados exportados da origem foram importados preservando UUIDs e relações; dumps com dados pessoais não são versionados.
+
+## Deploy
+
+Publique o frontend em qualquer hospedagem Vite/Node (por exemplo, Cloudflare Pages, Vercel, Netlify ou um servidor próprio) usando as três variáveis `VITE_SUPABASE_*`. Publique as Edge Functions pelo Supabase CLI autenticado e configure seus secrets diretamente no projeto Supabase.
+
+A integração Google Calendar é opcional e deve ser reimplementada com credenciais próprias do Google; o código não usa gateway ou chave do Lovable.

@@ -49,7 +49,7 @@ Antes de editar, faca uma busca objetiva. Depois de editar, nao continue explora
 
 ## Supabase e dados do CMS
 
-O projeto esta vinculado ao projeto Supabase `zhqelgjcvhpcjylaaesk`. A tabela de artigos do blog e `public.site_articles` e e usada pelo admin em `src/components/admin/AdminArtigos.tsx` e `src/components/admin/AdminArtigoDetalhe.tsx`.
+O projeto esta vinculado ao projeto Supabase `rvotuxwzgbxpbrlwcqps`. A tabela de artigos do blog e `public.site_articles` e e usada pelo admin em `src/components/admin/AdminArtigos.tsx` e `src/components/admin/AdminArtigoDetalhe.tsx`.
 
 Para operacoes simples de conteudo solicitadas pelo usuario, como criar, atualizar ou publicar um artigo:
 
@@ -107,7 +107,7 @@ Nao me de apenas instrucoes para fazer manualmente.
 ### Criar ou alterar conteudo no Supabase
 
 ```text
-Neste projeto Lovable conectado ao Supabase, crie/atualize diretamente o registro solicitado usando a API ja configurada no projeto.
+Neste projeto conectado ao Supabase, crie/atualize diretamente o registro solicitado usando a API ja configurada no projeto.
 Nao me envie para o SQL Editor e nao solicite login, senha ou chaves.
 Use o mesmo formato dos registros existentes, evite duplicatas e confirme o resultado e a URL final.
 ```
@@ -115,14 +115,14 @@ Use o mesmo formato dos registros existentes, evite duplicatas e confirme o resu
 ### Alteracao visual
 
 ```text
-No projeto Lovable, implemente diretamente esta alteracao visual: [descreva o resultado desejado].
+No projeto, implemente diretamente esta alteracao visual: [descreva o resultado desejado].
 Preserve o design existente, garanta responsividade e valide com build.
 ```
 
 ### Correcao de bug
 
 ```text
-Investigue e corrija diretamente este problema no projeto Lovable: [descreva o comportamento atual e o esperado].
+Investigue e corrija diretamente este problema no projeto: [descreva o comportamento atual e o esperado].
 Encontre a causa raiz, faca a menor alteracao necessaria e rode uma validacao focada.
 ```
 

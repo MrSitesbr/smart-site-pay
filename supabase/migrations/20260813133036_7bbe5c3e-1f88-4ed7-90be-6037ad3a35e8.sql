@@ -50,7 +50,7 @@ BEGIN
                 "fullWidth": true,
                 "padding": {"top": 150, "bottom": 150, "left": 0, "right": 0},
                 "backgroundColor": "#002855",
-                "backgroundImage": "https://zhqelgjcvhpcjylaaesk.supabase.co/storage/v1/object/public/assets/240-vista-aerea-praia-grande-sp-1.jpg",
+                "backgroundImage": "https://rvotuxwzgbxpbrlwcqps.supabase.co/storage/v1/object/public/assets/240-vista-aerea-praia-grande-sp-1.jpg",
                 "overlayOpacity": 0.6
               }
             },
@@ -83,7 +83,7 @@ BEGIN
                 {
                   "id": "col_inst_1", "widthPercentage": 50,
                   "widgets": [
-                    {"id": "w_i_img", "type": "image", "content": {"url": "https://zhqelgjcvhpcjylaaesk.supabase.co/storage/v1/object/public/assets/1572-sabrina-coworking-013-praia-grande-3-1.png", "alt": "Sabrina"}, "styles": {"borderRadius": 20}}
+                    {"id": "w_i_img", "type": "image", "content": {"url": "https://rvotuxwzgbxpbrlwcqps.supabase.co/storage/v1/object/public/assets/1572-sabrina-coworking-013-praia-grande-3-1.png", "alt": "Sabrina"}, "styles": {"borderRadius": 20}}
                   ]
                 },
                 {

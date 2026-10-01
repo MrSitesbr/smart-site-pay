@@ -1,0 +1,19 @@
+{
+  "destination_project": "rvotuxwzgbxpbrlwcqps",
+  "status": "ACTIVE_HEALTHY",
+  "counts": {
+    "app_settings": 1,
+    "media_library": 8,
+    "navigation_items": 19,
+    "navigation_menus": 3,
+    "plano_unidades": 6,
+    "planos": 6,
+    "sala_planos": 11,
+    "salas": 4,
+    "servicos": 6,
+    "site_articles": 3,
+    "site_pages": 13,
+    "site_sections": 18,
+    "unidades": 4
+  }
+}

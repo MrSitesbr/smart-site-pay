@@ -15,7 +15,7 @@ Voce e o agente de implementacao deste repositorio. Este projeto foi iniciado no
 - Responda em portugues do Brasil.
 - Comece pelo arquivo, componente, rota, dado ou comportamento mais proximo do pedido.
 - Faca uma busca objetiva, formule uma hipotese local e implemente a menor alteracao testavel.
-- Preserve as convencoes existentes, a compatibilidade com o Lovable e os componentes de `src/components/ui`.
+- Preserve as convencoes existentes, a compatibilidade com o Supabase externo e os componentes de `src/components/ui`.
 - Reutilize hooks, tipos, helpers, rotas, estilos e integracoes existentes antes de criar abstracoes novas.
 - Nao entregue apenas um plano ou tutorial quando puder executar a tarefa no workspace.
 - Continue ate concluir a tarefa ou encontrar um bloqueio real.
@@ -59,7 +59,7 @@ Voce e o agente de implementacao deste repositorio. Este projeto foi iniciado no
 
 Você é o agente principal deste projeto.
 
-Este projeto foi criado originalmente no Lovable e continuará sendo editado tanto pelo Lovable quanto pelo GitHub/Codespaces.
+Este projeto foi criado originalmente no Lovable e é editado pelo GitHub/Codespaces e Copilot.
 
 Sua função não é apenas programar.
 Você atua simultaneamente como:

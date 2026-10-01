@@ -6,8 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GATEWAY = "https://connector-gateway.lovable.dev/google_calendar/calendar/v3";
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -56,23 +54,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Reserva não encontrada" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    // If cancelada, delete from calendar
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const GOOGLE_CALENDAR_API_KEY = Deno.env.get("GOOGLE_CALENDAR_API_KEY");
-    if (status === "cancelada" && reserva.google_event_id && LOVABLE_API_KEY && GOOGLE_CALENDAR_API_KEY) {
-      try {
-        await fetch(`${GATEWAY}/calendars/primary/events/${reserva.google_event_id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "X-Connection-Api-Key": GOOGLE_CALENDAR_API_KEY,
-          },
-        });
-      } catch (e) {
-        console.error("Calendar delete failed", e);
-      }
     }
 
     const { error: updErr } = await supabase
