@@ -17,7 +17,7 @@ A chave pública da origem retornou HTTP 401 para algumas tabelas protegidas por
 - O frontend usa variáveis `VITE_SUPABASE_*` e `localStorage`, sem broker de sessão do Lovable.
 - Plugins, tagger e fallback de mídia do Lovable foram removidos do build.
 - Edge Functions de reservas e disponibilidade usam somente Supabase.
-- A função de calendário não chama mais `connector-gateway.lovable.dev`; retorna integração não configurada até que um provedor Google externo seja configurado.
+- A função de calendário não chama mais o gateway da plataforma anterior; retorna integração não configurada até que um provedor Google externo seja configurado.
 - README e instruções do Copilot foram atualizados para GitHub/Copilot + Supabase.
 
 ## Validação
