@@ -28,25 +28,33 @@ export default function AdminRoomDayGantt({
   const [sel, setSel] = useState<any | null>(null);
 
   useEffect(() => {
-    let q = supabase.from("salas").select("id, nome, unidade_id, foto_url, unidades(nome, horario_abertura, horario_fechamento)").order("nome");
-    if (unidadeId !== "todas") q = q.eq("unidade_id", unidadeId);
-    q.then(({ data }) => setSalas((data || []).map((s: any) => ({
+    supabase.from("salas").select("id, nome, unidade_id, foto_url, unidades(nome, horario_abertura, horario_fechamento)").order("nome").then(({ data }) => setSalas((data || []).map((s: any) => ({
       id: s.id, nome: s.nome, unidade_id: s.unidade_id, foto_url: s.foto_url,
       unidadeNome: s.unidades?.nome || "",
       abertura: toMin(s.unidades?.horario_abertura || "08:00"),
       fechamento: toMin(s.unidades?.horario_fechamento || "21:00"),
     }))));
-  }, [unidadeId]);
+  }, []);
+
+  const salasVisiveis = useMemo(
+    () => unidadeId === "todas" ? salas : salas.filter((s) => s.unidade_id === unidadeId),
+    [salas, unidadeId],
+  );
 
   const key = dayKey(day);
-  const doDia = useMemo(() => reservas.filter((r) => r.data === key && r.status !== "cancelada"), [reservas, key]);
+  const doDia = useMemo(() => reservas.filter((r) => {
+    if (r.data !== key || r.status === "cancelada") return false;
+    if (unidadeId === "todas") return true;
+    const salaUnidadeId = salas.find((s) => s.id === r.sala_id)?.unidade_id;
+    return (salaUnidadeId || r.unidade_id) === unidadeId;
+  }), [reservas, key, salas, unidadeId]);
 
   const colunas = useMemo(() => {
-    let cols = salaId === "todas" ? salas : salas.filter((s) => s.id === salaId);
+    let cols = salaId === "todas" ? salasVisiveis : salasVisiveis.filter((s) => s.id === salaId);
     const semSala = doDia.filter((r) => !r.sala_id || !salas.some((s) => s.id === r.sala_id));
     if (salaId === "todas" && semSala.length) cols = [...cols, { id: "__sem", nome: "Sem sala definida", unidade_id: null, foto_url: null, unidadeNome: "", abertura: 480, fechamento: 1200 }];
     return cols;
-  }, [salas, salaId, doDia]);
+  }, [salas, salasVisiveis, salaId, doDia]);
 
   const inicio = colunas.length ? Math.floor(Math.min(...colunas.map((c) => c.abertura)) / 60) * 60 : 480;
   const fim = colunas.length ? Math.ceil(Math.max(...colunas.map((c) => c.fechamento)) / 60) * 60 : 1200;
