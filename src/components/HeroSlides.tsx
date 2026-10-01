@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Building2, MapPin, Mail, Check, ArrowRight } from "lucide-react";
 import virtualAddressPeople from "@/assets/home/endereco-virtual-profissionais.png.asset.json";
+import { resolveAssetUrl } from "@/lib/asset-host";
 
 const BENEFICIOS = [
   { icon: Building2, text: "Endereço fiscal para abertura ou transferência do CNPJ" },
@@ -9,9 +10,7 @@ const BENEFICIOS = [
   { icon: Check, text: "Mais credibilidade sem o custo de um escritório físico" },
 ];
 
-const virtualAddressPeopleUrl = virtualAddressPeople.url.startsWith('/__l5e/assets-v1/')
-  ? `https://smart-site-pay.lovable.app${virtualAddressPeople.url}`
-  : virtualAddressPeople.url;
+const virtualAddressPeopleUrl = resolveAssetUrl(virtualAddressPeople.url);
 
 function VirtualAddressSlide() {
   return (

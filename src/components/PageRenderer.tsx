@@ -12,20 +12,13 @@ import { ContactForm } from "./ContactForm";
 import ReservaDialog from "./ReservaDialog";
 import BlogHighlights from "./BlogHighlights";
 import DOMPurify from "dompurify";
+import { resolveAssetUrl } from "@/lib/asset-host";
 
 const LUCIDE_ICONS: Record<string, any> = {
   Check, Star, HelpCircle, MapPin, Calendar, Clock, Info, User, Mail, Phone, ArrowRight, Building2, CreditCard, Armchair, MessageSquare, Layout: LayoutIcon
 };
 
-const resolveMediaUrl = (value?: string) => {
-  if (!value) return '';
-  if (value.startsWith('/__l5e/assets-v1/')) {
-    const host = typeof window !== 'undefined' ? window.location.hostname : '';
-    const servedByLovable = host.endsWith('.lovable.app');
-    if (!servedByLovable) return `https://smart-site-pay.lovable.app${value}`;
-  }
-  return value;
-};
+const resolveMediaUrl = (value?: string) => resolveAssetUrl(value);
 
 const plainText = (value?: string) => DOMPurify.sanitize(value || '', { ALLOWED_TAGS: [] });
 
