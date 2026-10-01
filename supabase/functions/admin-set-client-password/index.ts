@@ -63,9 +63,10 @@ Deno.serve(async (req) => {
         password,
         email_confirm: true,
       });
-      if (error) throw error;
-      if (!updated.user) throw new Error("A conta não confirmou a atualização da senha.");
-      return json({ ok: true, created: false, user_id: updated.user.id });
+      if (!error && updated.user) {
+        return json({ ok: true, created: false, user_id: updated.user.id });
+      }
+      if (error && !/user not found/i.test(error.message)) throw error;
     }
 
     if (!cliente.responsavel_email) {
