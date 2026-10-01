@@ -35,6 +35,7 @@ import {
   LogOut
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavSubItem {
   title: string;
@@ -50,6 +51,13 @@ interface NavItem {
 
 export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: string, onTabChange: (id: string) => void }) {
   const navigate = useNavigate();
+
+  async function logout() {
+    await supabase.auth.signOut({ scope: "local" });
+    localStorage.removeItem("admin_bypass");
+    navigate("/auth-admin", { replace: true });
+  }
+
   const menuItems: NavItem[] = [
     { 
       title: "Calendário", 
@@ -202,10 +210,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
           <span>Ver Site</span>
         </button>
         <button
-          onClick={() => {
-            localStorage.removeItem("admin_bypass");
-            window.location.href = "/auth-admin";
-          }}
+          onClick={logout}
           className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium"
         >
           <LogOut className="w-4 h-4" />
