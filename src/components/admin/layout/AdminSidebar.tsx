@@ -13,7 +13,8 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
   SidebarProvider,
-  SidebarFooter
+  SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -32,7 +33,9 @@ import {
   Globe,
   Settings2,
   ExternalLink,
-  LogOut
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +54,7 @@ interface NavItem {
 
 export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: string, onTabChange: (id: string) => void }) {
   const navigate = useNavigate();
+  const { state, toggleSidebar } = useSidebar();
 
   async function logout() {
     await supabase.auth.signOut({ scope: "local" });
@@ -134,22 +138,25 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
   ];
 
   return (
-    <Sidebar className="border-r border-brand-blue-dark/10 bg-[#2c3338] text-[#eee]">
+    <Sidebar collapsible="icon" className="border-r border-brand-blue-dark/10 bg-[#2c3338] text-[#eee]">
       <SidebarContent className="bg-[#2c3338]">
-        <div className="flex items-center justify-center py-6 px-4 gap-3">
-          <img 
-            src="/assets/logo.png" 
-            alt="Logo" 
-            className="h-10 w-auto object-contain"
-          />
-          <div className="flex flex-col leading-none text-left">
-            <span className="font-heading font-bold text-[12px] tracking-tighter text-[#eee]">
-              CoWorking
-            </span>
-            <span className="font-heading font-bold text-[28px] tracking-tighter leading-[0.8] text-brand-orange">
-              013
-            </span>
+        <div className="flex items-center justify-between py-4 px-3 group-data-[collapsible=icon]:justify-center">
+          <div className="flex min-w-0 items-center gap-3 group-data-[collapsible=icon]:hidden">
+            <img src="/assets/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+            <div className="flex flex-col leading-none text-left">
+              <span className="font-heading font-bold text-[12px] text-[#eee]">CoWorking</span>
+              <span className="font-heading font-bold text-[28px] leading-[0.8] text-brand-orange">013</span>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={state === "expanded" ? "Recolher menu lateral" : "Expandir menu lateral"}
+            title={state === "expanded" ? "Recolher menu lateral" : "Expandir menu lateral"}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#eee] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange"
+          >
+            {state === "expanded" ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+          </button>
         </div>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -204,17 +211,21 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       <SidebarFooter className="bg-[#2c3338] border-t border-white/10 p-4 space-y-2">
         <button
           onClick={() => navigate("/")}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-[#eee] hover:bg-white/10 transition-colors rounded-md text-sm font-medium"
+          aria-label="Ver Site"
+          title="Ver Site"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-[#eee] hover:bg-white/10 transition-colors rounded-md text-sm font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
           <ExternalLink className="w-4 h-4" />
-          <span>Ver Site</span>
+          <span className="group-data-[collapsible=icon]:hidden">Ver Site</span>
         </button>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium"
+          aria-label="Sair"
+          title="Sair"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
           <LogOut className="w-4 h-4" />
-          <span>Sair</span>
+          <span className="group-data-[collapsible=icon]:hidden">Sair</span>
         </button>
       </SidebarFooter>
     </Sidebar>
