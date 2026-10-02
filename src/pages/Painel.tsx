@@ -18,6 +18,8 @@ import MeuPlano from "@/components/painel/MeuPlano";
 import DocumentosCliente from "@/components/painel/DocumentosCliente";
 import SuporteCliente from "@/components/painel/SuporteCliente";
 import PainelAgendamento from "@/components/painel/PainelAgendamento";
+import ClientAvatarEditor from "@/components/admin/ClientAvatarEditor";
+import EventAvatar from "@/components/admin/EventAvatar";
 import { passwordSchema } from "@/lib/validation";
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -131,6 +133,7 @@ export default function Painel() {
       responsavel_email: editingCliente.responsavel_email || null,
       responsavel_telefone: editingCliente.responsavel_telefone || null,
       endereco: editingCliente.endereco || null,
+      avatar_url: editingCliente.avatar_url || null,
     }).eq("id", cliente.id).select("*, unidades(nome), planos(nome), salas(nome)").single();
     if (error) toast({ title: "Erro ao salvar dados", description: error.message, variant: "destructive" });
     else {
@@ -291,7 +294,7 @@ export default function Painel() {
 
           <TabsContent value="dados">
             <div className="grid gap-4 lg:grid-cols-3">
-              <Card className="p-5 lg:col-span-2"><div className="flex items-start justify-between gap-4"><h2 className="font-heading font-black text-xl mb-3">{cliente?.razao_social || "Empresa vinculada"}</h2><Button size="sm" variant="outline" onClick={() => setEditingCliente({ ...cliente })}><Pencil className="w-4 h-4 mr-2" /> Editar informações</Button></div><div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Endereço:</span> {cliente?.endereco || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></Card>
+              <Card className="p-5 lg:col-span-2"><div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-start gap-3"><EventAvatar name={cliente?.razao_social || cliente?.responsavel_nome || "Cliente"} photoUrl={cliente?.avatar_url} size={56} /><div><h2 className="font-heading font-black text-xl mb-3">{cliente?.razao_social || "Empresa vinculada"}</h2><div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Endereço:</span> {cliente?.endereco || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></div></div><Button size="sm" variant="outline" onClick={() => setEditingCliente({ ...cliente })}><Pencil className="w-4 h-4 mr-2" /> Editar informações</Button></div></Card>
             </div>
             <Card className="mt-4 max-w-2xl p-5 space-y-4">
               <div>
@@ -451,6 +454,7 @@ export default function Painel() {
           <DialogContent>
             <DialogHeader><DialogTitle>Editar informações</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-2">
+              {editingCliente?.id && <ClientAvatarEditor clientId={editingCliente.id} name={editingCliente.razao_social || editingCliente.responsavel_nome || "Cliente"} value={editingCliente.avatar_url} onChange={(avatar_url) => setEditingCliente({ ...editingCliente, avatar_url })} size={72} />}
               <div className="grid gap-2"><Label>Razão social</Label><Input value={editingCliente?.razao_social || ""} onChange={(e) => setEditingCliente({ ...editingCliente, razao_social: e.target.value })} /></div>
               <div className="grid gap-2"><Label>CNPJ</Label><Input value={editingCliente?.cnpj || ""} onChange={(e) => setEditingCliente({ ...editingCliente, cnpj: e.target.value })} /></div>
               <div className="grid gap-2"><Label>Responsável</Label><Input value={editingCliente?.responsavel_nome || ""} onChange={(e) => setEditingCliente({ ...editingCliente, responsavel_nome: e.target.value })} /></div>

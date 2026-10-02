@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
+import ClientAvatarEditor from "./ClientAvatarEditor";
 import { friendlyError } from "@/lib/appErrors";
 import { passwordSchema } from "@/lib/validation";
 
@@ -27,6 +28,7 @@ export default function AdminClienteCorpDetalhe() {
     responsavel_telefone: "",
     responsavel_cpf: "",
     cnpj: "",
+    avatar_url: null,
     unidade_id: null,
     plano_id: null,
     documentos: []
@@ -96,6 +98,7 @@ export default function AdminClienteCorpDetalhe() {
       endereco: cliente.endereco,
       responsavel_cpf: cliente.responsavel_cpf,
       cnpj: cliente.cnpj,
+      avatar_url: cliente.avatar_url,
       unidade_id: cliente.unidade_id,
       plano_id: cliente.plano_id,
       documentos: cliente.documentos || []
@@ -188,6 +191,13 @@ export default function AdminClienteCorpDetalhe() {
 
         <TabsContent value="dados" className="mt-6">
           <Card className="p-6 grid gap-4">
+            <ClientAvatarEditor
+              clientId={id || cliente.id || ""}
+              name={cliente.razao_social || cliente.responsavel_nome || "Cliente"}
+              value={cliente.avatar_url}
+              onChange={(avatar_url) => setCliente({ ...cliente, avatar_url })}
+              size={72}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Razão Social</Label>

@@ -329,6 +329,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       const descontoOcorrencia = valorOcorrencia != null && valorOcorrenciaBase != null && valorOcorrencia < valorOcorrenciaBase;
       const payload: any = {
         nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
+        cliente_corp_id: selected?.id || null,
         ambiente, tipo, data: dt,
         hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
         status, origem, observacoes: observacoes.trim() || null,

@@ -137,6 +137,7 @@ export type Database = {
       }
       clientes_corp: {
         Row: {
+          avatar_url: string | null
           cnpj: string | null
           created_at: string
           deleted_at: string | null
@@ -155,6 +156,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          avatar_url?: string | null
           cnpj?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          avatar_url?: string | null
           cnpj?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -219,6 +222,7 @@ export type Database = {
           admin_notes: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
           archived_at: string | null
+          cliente_corp_id: string | null
           created_at: string
           data_inicio: string | null
           dias_selecionados: Json
@@ -242,6 +246,7 @@ export type Database = {
           admin_notes?: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
           archived_at?: string | null
+          cliente_corp_id?: string | null
           created_at?: string
           data_inicio?: string | null
           dias_selecionados?: Json
@@ -265,6 +270,7 @@ export type Database = {
           admin_notes?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_tipo"]
           archived_at?: string | null
+          cliente_corp_id?: string | null
           created_at?: string
           data_inicio?: string | null
           dias_selecionados?: Json
@@ -284,7 +290,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contract_requests_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contratos_ativos: {
         Row: {
@@ -709,6 +723,7 @@ export type Database = {
           calculo_justificativa: string | null
           cancel_motivo: string | null
           cancelled_at: string | null
+          cliente_corp_id: string | null
           created_at: string
           data: string
           desconto_motivo: string | null
@@ -743,6 +758,7 @@ export type Database = {
           calculo_justificativa?: string | null
           cancel_motivo?: string | null
           cancelled_at?: string | null
+          cliente_corp_id?: string | null
           created_at?: string
           data: string
           desconto_motivo?: string | null
@@ -777,6 +793,7 @@ export type Database = {
           calculo_justificativa?: string | null
           cancel_motivo?: string | null
           cancelled_at?: string | null
+          cliente_corp_id?: string | null
           created_at?: string
           data?: string
           desconto_motivo?: string | null
@@ -807,6 +824,13 @@ export type Database = {
           valor_original?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_cliente_corp_id_fkey"
+            columns: ["cliente_corp_id"]
+            isOneToOne: false
+            referencedRelation: "clientes_corp"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_plano_id_fkey"
             columns: ["plano_id"]

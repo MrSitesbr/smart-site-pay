@@ -22,6 +22,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [nomeResp, setNomeResp] = useState("");
   const [emailResp, setEmailResp] = useState("");
   const [telResp, setTelResp] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [endereco, setEndereco] = useState("");
   const [cpfResp, setCpfResp] = useState("");
   const [planoId, setPlanoId] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       setNomeResp("");
       setEmailResp("");
       setTelResp("");
+      setCnpj("");
       setEndereco("");
       setCpfResp("");
       setPlanoId(null);
@@ -116,9 +118,11 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       responsavel_nome: nomeResp,
       responsavel_email: emailResp,
       responsavel_telefone: telResp,
+      cnpj: cnpj.trim() || null,
       endereco,
       responsavel_cpf: cpfResp,
-      plano_id: planoId
+      plano_id: planoId,
+      status_acesso: "aprovado"
     };
 
     const { data: result, error } = await supabase.from("clientes_corp").insert(payload).select().single();
@@ -183,6 +187,10 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
           <div className="grid gap-2">
             <Label>CPF do Responsável</Label>
             <Input value={cpfResp} onChange={(e) => setCpfResp(e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div className="grid gap-2">
+            <Label>CNPJ (Opcional)</Label>
+            <Input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" />
           </div>
           <div className="grid gap-2">
             <Label>Whatsapp do Responsável</Label>

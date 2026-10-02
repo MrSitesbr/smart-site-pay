@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import NovoClienteCorpDialog from "./NovoClienteCorpDialog";
 import { toast } from "@/hooks/use-toast";
 import { friendlyError } from "@/lib/appErrors";
+import EventAvatar from "./EventAvatar";
 
 export default function AdminClientesCorp() {
   const navigate = useNavigate();
@@ -171,7 +172,8 @@ export default function AdminClientesCorp() {
       <div className="overflow-hidden rounded-md border">
         {visibleClientes.map((c) => (
           <div key={c.id} className="grid gap-3 border-b p-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-            <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+            <div className="grid min-w-0 gap-2 sm:grid-cols-[44px_minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+              <EventAvatar name={c.razao_social || c.responsavel_nome || "Cliente"} photoUrl={c.avatar_url} size={40} />
               <div className="min-w-0">
                 <h3 className="truncate font-semibold">{c.razao_social}</h3>
                 <p className="text-xs text-muted-foreground">Criada em {c.created_at ? new Date(c.created_at).toLocaleDateString("pt-BR") : "—"}</p>

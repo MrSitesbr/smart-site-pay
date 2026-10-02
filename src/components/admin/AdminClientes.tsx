@@ -24,6 +24,8 @@ const AMBIENTE_LABEL: Record<string, string> = {
 const fmtBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
 type Cliente = {
+  clienteCorpId: string | null;
+  avatarUrl: string | null;
   email: string;
   nome: string;
   telefone: string;
@@ -68,7 +70,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
 
   useEffect(() => {
     let mounted = true;
-    supabase.from("clientes_corp").select("id, razao_social, responsavel_nome, responsavel_email, responsavel_telefone, created_at").then(({ data, error }) => {
+    supabase.from("clientes_corp").select("id, avatar_url, razao_social, responsavel_nome, responsavel_email, responsavel_telefone, created_at").then(({ data, error }) => {
       if (!mounted) return;
       if (error) {
         toast({ title: "Não foi possível carregar clientes", description: friendlyError(error), variant: "destructive" });
@@ -81,11 +83,12 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
 
   const clientes = useMemo(() => {
     const map = new Map<string, Cliente>();
+    const crmById = new Map(crmClientes.map((client) => [client.id, client]));
     const add = (email: string, patch: Partial<Cliente>) => {
       const key = (email || "").toLowerCase();
       if (!key) return;
       const cur = map.get(key) || {
-        email, nome: "", telefone: "", nicho: null,
+        clienteCorpId: null, avatarUrl: null, email, nome: "", telefone: "", nicho: null,
         total_solicitacoes: 0, total_pago: 0, total_pendente: 0,
         total_valor: 0,
         ambientes: new Set<string>(), ultima_atividade: "",
@@ -95,9 +98,12 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
     };
     contratos.filter((c) => !c.archived_at).forEach((c) => {
       const cur = map.get((c.email || "").toLowerCase());
+      const linkedClient = c.cliente_corp_id ? crmById.get(c.cliente_corp_id) : undefined;
       const paga = c.status === "paga" || c.status === "concluida";
       const pend = c.status === "pendente" || c.status === "aprovada";
       add(c.email, {
+        clienteCorpId: c.cliente_corp_id || null,
+        avatarUrl: linkedClient?.avatar_url || null,
         nome: c.nome, telefone: c.telefone, nicho: c.nicho,
         total_solicitacoes: (cur?.total_solicitacoes || 0) + 1,
         total_pago: (cur?.total_pago || 0) + (paga ? Number(c.preco) : 0),
@@ -110,7 +116,10 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
     });
     reservas.forEach((r) => {
       const cur = map.get((r.email || "").toLowerCase());
+      const linkedClient = r.cliente_corp_id ? crmById.get(r.cliente_corp_id) : undefined;
       add(r.email, {
+        clienteCorpId: r.cliente_corp_id || null,
+        avatarUrl: linkedClient?.avatar_url || null,
         nome: cur?.nome || r.nome,
         telefone: cur?.telefone || r.telefone,
         total_solicitacoes: (cur?.total_solicitacoes || 0) + 1,
@@ -143,6 +152,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
       responsavel_nome: cliente.nome,
       responsavel_email: cliente.email,
       responsavel_telefone: cliente.telefone || lead?.telefone || "",
+      status_acesso: "aprovado",
     };
     const query = supabase.from("clientes_corp").insert(payload);
     const { data: clienteCriado, error } = await query.select("id").single();
@@ -244,7 +254,7 @@ export default function AdminClientes({ contratos, reservas, onRefresh }: { cont
                 className={draggedLead === c.email ? "opacity-50" : ""}>
               <Card onClick={() => setSelectedLead(c)} className="group relative w-full min-w-0 cursor-pointer overflow-hidden border-l-4 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ borderLeftColor: color }}>
                 <div className="flex min-w-0 items-start gap-2.5">
-                    <EventAvatar name={c.nome || c.email} isWoba={isWoba} color={color} size={36} />
+                    <EventAvatar name={c.nome || c.email} photoUrl={c.avatarUrl} isWoba={isWoba} color={color} size={36} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="min-w-0 truncate font-heading text-sm font-black text-brand-blue-dark">{c.nome || c.email}</p>
@@ -328,7 +338,7 @@ function LeadDetailsDialog({ lead, contracts, onClose, onSave, onMove, onConvert
     <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
       <div className="h-2 bg-brand-orange" />
       <div className="p-6">
-        <DialogHeader><DialogTitle className="flex items-center gap-3 text-2xl text-brand-blue-dark"><EventAvatar name={lead.nome || lead.email} size={44} /><span>{lead.nome || lead.email}</span></DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-3 text-2xl text-brand-blue-dark"><EventAvatar name={lead.nome || lead.email} photoUrl={lead.avatarUrl} size={44} /><span>{lead.nome || lead.email}</span></DialogTitle></DialogHeader>
         <div className="mt-5 grid gap-6 md:grid-cols-[1fr_220px]">
           <div className="space-y-4">
             <div><p className="mb-2 text-xs font-black uppercase tracking-widest text-slate-400">Informações do lead</p><div className="grid gap-3 md:grid-cols-2"><FieldInput label="Nome / empresa" value={nome} onChange={setNome} /><FieldInput label="E-mail" value={email} onChange={setEmail} type="email" /><FieldInput label="Telefone" value={telefone} onChange={setTelefone} /></div></div>

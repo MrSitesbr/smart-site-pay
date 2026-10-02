@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, ImageOff, Plus, Pencil, Trash2 } from "lucide-react";
 import { getClientColor, readableTextOn } from "@/lib/clientColors";
+import EventAvatar from "./EventAvatar";
 
 type Sala = { id: string; nome: string; unidade_id: string | null; foto_url: string | null; unidadeNome: string; abertura: number; fechamento: number };
 
@@ -48,6 +49,26 @@ export default function AdminRoomDayGantt({
     const salaUnidadeId = salas.find((s) => s.id === r.sala_id)?.unidade_id;
     return (salaUnidadeId || r.unidade_id) === unidadeId;
   }), [reservas, key, salas, unidadeId]);
+
+  const [avatarsByClientId, setAvatarsByClientId] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const clientIds = [...new Set(doDia.map((reserva) => reserva.cliente_corp_id).filter((id): id is string => Boolean(id)))];
+    if (!clientIds.length) {
+      setAvatarsByClientId({});
+      return;
+    }
+
+    let active = true;
+    supabase.from("clientes_corp").select("id, avatar_url").in("id", clientIds).then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        setAvatarsByClientId({});
+        return;
+      }
+      setAvatarsByClientId(Object.fromEntries((data || []).flatMap((cliente) => cliente.avatar_url ? [[cliente.id, cliente.avatar_url]] : [])));
+    });
+    return () => { active = false; };
+  }, [doDia]);
 
   const colunas = useMemo(() => {
     let cols = salaId === "todas" ? salasVisiveis : salasVisiveis.filter((s) => s.id === salaId);
@@ -128,8 +149,13 @@ export default function AdminRoomDayGantt({
                         className="absolute left-1 right-1 z-10 overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] font-semibold shadow"
                         style={{ top: ((a - inicio) / 60) * ROW_H + 1, height: ((b - a) / 60) * ROW_H - 2, background: bg, color: readableTextOn(bg) }}
                         title={`${r.nome} · ${r.hora_inicio?.slice(0, 5)}–${r.hora_fim?.slice(0, 5)} · ${r.status}`}>
-                        <p className="truncate">{r.nome}</p>
-                        <p className="truncate opacity-80">{r.hora_inicio?.slice(0, 5)}–{r.hora_fim?.slice(0, 5)} · {r.status}</p>
+                        <p className="truncate pr-6">{r.nome}</p>
+                        <p className="truncate pr-6 opacity-80">{r.hora_inicio?.slice(0, 5)}–{r.hora_fim?.slice(0, 5)} · {r.status}</p>
+                        {r.cliente_corp_id && (
+                          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2">
+                            <EventAvatar name={r.nome} photoUrl={avatarsByClientId[r.cliente_corp_id]} size={20} className="ring-1 ring-white/60" />
+                          </span>
+                        )}
                       </button>
                     );
                   })}
