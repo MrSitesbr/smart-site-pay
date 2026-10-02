@@ -80,6 +80,25 @@ export default function AdminUnidadeFormPage() {
       return;
     }
 
+    const toMinutes = (value: string) => {
+      const [hours, minutes] = value.split(":").map(Number);
+      return hours * 60 + minutes;
+    };
+    const openingMinutes = toMinutes(form.horario_abertura || "08:00");
+    const closingMinutes = toMinutes(form.horario_fechamento || "21:00");
+    if (
+      !Number.isFinite(openingMinutes) ||
+      !Number.isFinite(closingMinutes) ||
+      openingMinutes < 8 * 60 ||
+      closingMinutes > 23 * 60 ||
+      openingMinutes >= closingMinutes ||
+      openingMinutes % 30 !== 0 ||
+      closingMinutes % 30 !== 0
+    ) {
+      toast.error("Configure horários entre 08:00 e 23:00, em intervalos de 30 minutos, com fechamento após a abertura.");
+      return;
+    }
+
     const payload: any = {
       nome: form.nome,
       endereco: form.endereco,
@@ -226,7 +245,7 @@ export default function AdminUnidadeFormPage() {
                 <Input
                   type="time"
                   min="08:00"
-                  max="20:30"
+                  max="22:30"
                   step="1800"
                   value={form.horario_abertura || "08:00"}
                   onChange={(e) => setForm({ ...form, horario_abertura: e.target.value })}
@@ -239,12 +258,12 @@ export default function AdminUnidadeFormPage() {
                 <Input
                   type="time"
                   min="08:30"
-                  max="21:00"
+                  max="23:00"
                   step="1800"
                   value={form.horario_fechamento || "21:00"}
                   onChange={(e) => setForm({ ...form, horario_fechamento: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 21h.</p>
+                <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 23h.</p>
               </div>
             </div>
 
