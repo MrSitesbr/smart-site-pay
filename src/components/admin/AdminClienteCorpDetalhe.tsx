@@ -125,19 +125,25 @@ export default function AdminClienteCorpDetalhe() {
 
       if (cliRes.error) throw cliRes.error;
       setCliente(cliRes.data);
-      setUnidades(uniRes.data || []);
+      const loadedUnits = uniRes.data || [];
+      setUnidades(loadedUnits);
       setPlanos(planRes.data || []);
 
       const [funcRes, visRes, reservaRes, contratoRes] = await Promise.all([
         supabase.from('funcionarios_cliente').select('*').eq('cliente_corp_id', id),
         supabase.from('visitantes').select('*, salas(nome)').eq('cliente_corp_id', id),
-        supabase.from('reservations').select('*, salas(nome), unidades(nome)').eq('cliente_corp_id', id).order('data', { ascending: false }).order('hora_inicio'),
+        supabase.from('reservations').select('*, salas(nome)').eq('cliente_corp_id', id).order('data', { ascending: false }).order('hora_inicio'),
         supabase.from('contract_requests').select('id, status').eq('cliente_corp_id', id)
       ]);
 
       setFuncionarios(funcRes.data || []);
       setVisitantes(visRes.data || []);
-      setReservas((reservaRes.data || []) as ClientReservation[]);
+      if (reservaRes.error) throw reservaRes.error;
+      const unitNames = new Map(loadedUnits.map((unit) => [unit.id, unit.nome]));
+      setReservas((reservaRes.data || []).map((reserva) => ({
+        ...reserva,
+        unidades: reserva.unidade_id ? { nome: unitNames.get(reserva.unidade_id) || null } : null,
+      })) as ClientReservation[]);
       const reservasAtivas = (reservaRes.data || []).filter((r: any) => r.status !== 'cancelada');
       const horas = reservasAtivas.reduce((total: number, r: any) => {
         const [startHour, startMinute] = String(r.hora_inicio || '00:00').slice(0, 5).split(':').map(Number);
