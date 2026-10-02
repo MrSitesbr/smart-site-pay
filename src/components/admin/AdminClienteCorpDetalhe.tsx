@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,51 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, User, Building2, CreditCard, Users, Edit2, Mail, Phone, Briefcase, FileText, KeyRound, Eye, EyeOff, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
 import ClientAvatarEditor from "./ClientAvatarEditor";
+import AdminReservaEditDialog from "./AdminReservaEditDialog";
+import type { Database } from "@/integrations/supabase/types";
 import { friendlyError } from "@/lib/appErrors";
 import { passwordSchema } from "@/lib/validation";
+
+type ClientReservation = Omit<Database["public"]["Tables"]["reservations"]["Row"], "status"> & {
+  status: string;
+  salas?: { nome: string | null } | null;
+  unidades?: { nome: string | null } | null;
+};
+
+function exportReservations(reservations: ClientReservation[], clientName: string) {
+  const escapeCell = (value: unknown) => {
+    const text = String(value ?? "");
+    const safeText = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+    return `"${safeText.replace(/"/g, '""')}"`;
+  };
+  const rows = [
+    ["Data", "Início", "Fim", "Status", "Ambiente", "Tipo", "Unidade", "Sala", "Valor"],
+    ...reservations.map((reservation) => [
+      reservation.data,
+      reservation.hora_inicio?.slice(0, 5),
+      reservation.hora_fim?.slice(0, 5),
+      reservation.status,
+      reservation.ambiente,
+      reservation.tipo,
+      reservation.unidades?.nome || reservation.unidade_id,
+      reservation.salas?.nome || reservation.sala_id,
+      reservation.valor,
+    ]),
+  ];
+  const csv = rows.map((row) => row.map(escapeCell).join(";")).join("\r\n");
+  const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `reservas-${clientName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
@@ -38,6 +75,11 @@ export default function AdminClienteCorpDetalhe() {
   const [planos, setPlanos] = useState<any[]>([]);
   const [funcionarios, setFuncionarios] = useState<any[]>([]);
   const [visitantes, setVisitantes] = useState<any[]>([]);
+  const [reservas, setReservas] = useState<ClientReservation[]>([]);
+  const [reservationStatus, setReservationStatus] = useState("todos");
+  const [reservationView, setReservationView] = useState<"upcoming" | "previous">("upcoming");
+  const [reservationPage, setReservationPage] = useState(1);
+  const [editingReservation, setEditingReservation] = useState<ClientReservation | null>(null);
   const [usoPlano, setUsoPlano] = useState({ horas: 0, reservas: 0, solicitacoes: 0 });
   const [editingFunc, setEditingFunc] = useState<any>(null);
   const [showNovoVisita, setShowNovoVisita] = useState(false);
@@ -45,6 +87,28 @@ export default function AdminClienteCorpDetalhe() {
   const [confirmAccessPassword, setConfirmAccessPassword] = useState("");
   const [showAccessPassword, setShowAccessPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const currentTime = `${String(today.getHours()).padStart(2, "0")}:${String(today.getMinutes()).padStart(2, "0")}`;
+  const filteredReservations = useMemo(() => reservas.filter((reserva) => reservationStatus === "todos" || reserva.status === reservationStatus), [reservas, reservationStatus]);
+  const upcomingReservations = filteredReservations
+    .filter((reserva) => reserva.data > todayKey || (reserva.data === todayKey && reserva.hora_fim?.slice(0, 5) >= currentTime))
+    .sort((a, b) => a.data.localeCompare(b.data) || a.hora_inicio.localeCompare(b.hora_inicio))
+    .slice(0, 30);
+  const previousReservations = filteredReservations
+    .filter((reserva) => reserva.data < todayKey || (reserva.data === todayKey && reserva.hora_fim?.slice(0, 5) < currentTime))
+    .sort((a, b) => b.data.localeCompare(a.data) || b.hora_inicio.localeCompare(a.hora_inicio));
+  const reservationPageCount = Math.max(1, Math.ceil(previousReservations.length / 15));
+  const currentReservationPage = Math.min(reservationPage, reservationPageCount);
+  const visibleReservations = reservationView === "upcoming"
+    ? upcomingReservations
+    : previousReservations.slice((currentReservationPage - 1) * 15, currentReservationPage * 15);
+  const exportableReservations = reservationView === "upcoming" ? upcomingReservations : previousReservations;
+
+  useEffect(() => {
+    setReservationPage((page) => Math.min(page, reservationPageCount));
+  }, [reservationPageCount]);
 
   useEffect(() => {
     fetchData();
@@ -67,12 +131,13 @@ export default function AdminClienteCorpDetalhe() {
       const [funcRes, visRes, reservaRes, contratoRes] = await Promise.all([
         supabase.from('funcionarios_cliente').select('*').eq('cliente_corp_id', id),
         supabase.from('visitantes').select('*, salas(nome)').eq('cliente_corp_id', id),
-        cliRes.data.responsavel_email ? supabase.from('reservations').select('hora_inicio, hora_fim, status').eq('email', cliRes.data.responsavel_email) : Promise.resolve({ data: [] } as any),
-        cliRes.data.responsavel_email ? supabase.from('contract_requests').select('id, status').eq('email', cliRes.data.responsavel_email) : Promise.resolve({ data: [] } as any)
+        supabase.from('reservations').select('*, salas(nome), unidades(nome)').eq('cliente_corp_id', id).order('data', { ascending: false }).order('hora_inicio'),
+        supabase.from('contract_requests').select('id, status').eq('cliente_corp_id', id)
       ]);
 
       setFuncionarios(funcRes.data || []);
       setVisitantes(visRes.data || []);
+      setReservas((reservaRes.data || []) as ClientReservation[]);
       const reservasAtivas = (reservaRes.data || []).filter((r: any) => r.status !== 'cancelada');
       const horas = reservasAtivas.reduce((total: number, r: any) => {
         const [startHour, startMinute] = String(r.hora_inicio || '00:00').slice(0, 5).split(':').map(Number);
@@ -182,9 +247,10 @@ export default function AdminClienteCorpDetalhe() {
       </div>
 
       <Tabs defaultValue="dados" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 lg:w-[760px]">
           <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
           <TabsTrigger value="contrato">Unidade & Plano</TabsTrigger>
+          <TabsTrigger value="reservas">Reservas ({reservas.length})</TabsTrigger>
           <TabsTrigger value="funcionarios">Colaboradores</TabsTrigger>
           <TabsTrigger value="visitantes">Visitantes</TabsTrigger>
         </TabsList>
@@ -306,6 +372,81 @@ export default function AdminClienteCorpDetalhe() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="reservas" className="mt-6">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap gap-2">
+                <Button variant={reservationView === "upcoming" ? "default" : "outline"} onClick={() => { setReservationView("upcoming"); setReservationPage(1); }}>
+                  Próximas 30
+                </Button>
+                <Button variant={reservationView === "previous" ? "default" : "outline"} onClick={() => { setReservationView("previous"); setReservationPage(1); }}>
+                  Anteriores ({previousReservations.length})
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Select value={reservationStatus} onValueChange={(value) => { setReservationStatus(value); setReservationPage(1); }}>
+                  <SelectTrigger className="w-40" aria-label="Filtrar reservas por status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os status</SelectItem>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="confirmada">Confirmada</SelectItem>
+                    <SelectItem value="realizada">Realizada</SelectItem>
+                    <SelectItem value="cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" onClick={() => exportReservations(exportableReservations, cliente.razao_social || "cliente")} disabled={!exportableReservations.length}>
+                  <Download className="mr-2 h-4 w-4" /> Exportar planilha
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-md border">
+              {visibleReservations.map((reserva) => (
+                <div key={reserva.id} className="grid gap-3 border-b p-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                  <div className="grid gap-1 sm:grid-cols-[150px_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                    <div>
+                      <p className="font-semibold">{new Date(`${reserva.data}T00:00:00`).toLocaleDateString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{reserva.hora_inicio?.slice(0, 5)}–{reserva.hora_fim?.slice(0, 5)}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm">{reserva.unidades?.nome || "Unidade não definida"} · {reserva.salas?.nome || "Sala não definida"}</p>
+                      <p className="text-xs capitalize text-muted-foreground">{reserva.ambiente} · {reserva.tipo}</p>
+                    </div>
+                    <span className={`w-fit rounded-full px-2 py-1 text-xs font-medium ${reserva.status === "cancelada" ? "bg-red-100 text-red-700" : reserva.status === "confirmada" ? "bg-blue-100 text-blue-700" : reserva.status === "realizada" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-800"}`}>
+                      {reserva.status}
+                    </span>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar reserva" aria-label={`Editar reserva de ${reserva.data}`} onClick={() => setEditingReservation(reserva)}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {visibleReservations.length === 0 && (
+                <p className="p-8 text-center text-sm text-muted-foreground">
+                  {reservas.length === 0
+                    ? "Não há reservas vinculadas por ID a esta empresa. Reservas antigas sem vínculo não são associadas automaticamente."
+                    : reservationView === "upcoming" ? "Nenhuma reserva futura para este filtro." : "Nenhuma reserva anterior para este filtro."}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <p>{reservationView === "upcoming" ? `${upcomingReservations.length} próximas reservas exibidas` : `${previousReservations.length} reservas anteriores`}</p>
+              {reservationView === "previous" && (
+                <div className="flex items-center gap-2">
+                  <span>Página {currentReservationPage} de {reservationPageCount}</span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Reservas anteriores" disabled={currentReservationPage <= 1} onClick={() => setReservationPage(currentReservationPage - 1)}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Mais reservas anteriores" disabled={currentReservationPage >= reservationPageCount} onClick={() => setReservationPage(currentReservationPage + 1)}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
         <TabsContent value="funcionarios" className="mt-6">
           <Card className="p-6 space-y-4">
             <div className="flex justify-between items-center">
@@ -387,6 +528,15 @@ export default function AdminClienteCorpDetalhe() {
         clienteCorpId={id}
         initialClienteCorpId={id}
         date={new Date()}
+      />
+      <AdminReservaEditDialog
+        open={!!editingReservation}
+        reserva={editingReservation}
+        onOpenChange={(open) => !open && setEditingReservation(null)}
+        onSaved={(updatedReservation) => {
+          setReservas((current) => current.map((reserva) => reserva.id === updatedReservation.id ? { ...reserva, ...updatedReservation } : reserva));
+          setEditingReservation(null);
+        }}
       />
     </div>
   );
