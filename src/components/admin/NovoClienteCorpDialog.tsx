@@ -14,7 +14,7 @@ type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   initialNome?: string;
-  onCreated?: (cliente: any) => void;
+  onCreated?: (cliente: { id: string }) => void;
 };
 
 export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome = "", onCreated }: Props) {
@@ -28,7 +28,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
   const [accessPassword, setAccessPassword] = useState("");
   const [confirmAccessPassword, setConfirmAccessPassword] = useState("");
   const [showAccessPassword, setShowAccessPassword] = useState(false);
-  const [planos, setPlanos] = useState<any[]>([]);
+  const [planos, setPlanos] = useState<Array<{ id: string; nome: string }>>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
 
     const { data: clientesExistentes, error: buscaErr } = await supabase
       .from("clientes_corp")
-      .select("id, razao_social, responsavel_email, responsavel_telefone");
+      .select("id, razao_social, responsavel_email, deleted_at");
 
     if (buscaErr) {
       toast({ title: "Erro ao verificar cliente corporativo", description: friendlyError(buscaErr), variant: "destructive" });
@@ -83,12 +83,33 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       return;
     }
 
-    const match = (clientesExistentes || []).find((cliente: any) => {
-      const sameName = cliente.razao_social?.trim().toLowerCase() === razaoSocial.trim().toLowerCase();
-      const sameEmail = Boolean(emailResp) && cliente.responsavel_email?.trim().toLowerCase() === emailResp.trim().toLowerCase();
-      const samePhone = Boolean(telResp) && cliente.responsavel_telefone?.trim().replace(/\D/g, "") === telResp.replace(/\D/g, "");
-      return sameName || sameEmail || samePhone;
+    const match = (clientesExistentes || []).find((cliente) => {
+      return Boolean(emailResp.trim()) && cliente.responsavel_email?.trim().toLowerCase() === emailResp.trim().toLowerCase();
     });
+
+    if (match) {
+      let clienteExistente = match;
+      if (match.deleted_at) {
+        const { data, error } = await supabase
+          .from("clientes_corp")
+          .update({ deleted_at: null })
+          .eq("id", match.id)
+          .select("id, razao_social, responsavel_email")
+          .single();
+        if (error) {
+          toast({ title: "Não foi possível restaurar o cliente", description: friendlyError(error), variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+        clienteExistente = data;
+      }
+
+      toast({ title: "Cliente já cadastrado", description: "Abrindo os dados do cliente existente." });
+      onCreated?.(clienteExistente);
+      onOpenChange(false);
+      setSaving(false);
+      return;
+    }
 
     const payload = {
       razao_social: razaoSocial,
@@ -100,26 +121,14 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
       plano_id: planoId
     };
 
-    let result: any = null;
-    if (match) {
-      const { data, error } = await supabase.from("clientes_corp").update(payload).eq("id", match.id).select().single();
-      result = data;
-      if (error) {
-        toast({ title: "Erro ao atualizar cliente corporativo", description: friendlyError(error), variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-    } else {
-      const { data, error } = await supabase.from("clientes_corp").insert(payload).select().single();
-      result = data;
-      if (error) {
-        toast({ title: "Erro ao criar cliente corporativo", description: friendlyError(error), variant: "destructive" });
-        setSaving(false);
-        return;
-      }
+    const { data: result, error } = await supabase.from("clientes_corp").insert(payload).select().single();
+    if (error) {
+      toast({ title: "Erro ao criar cliente corporativo", description: friendlyError(error), variant: "destructive" });
+      setSaving(false);
+      return;
     }
 
-    toast({ title: match ? "Cliente corporativo atualizado" : "Cliente corporativo criado" });
+    toast({ title: "Cliente corporativo criado" });
     if (accessPassword) {
       const { data: pwData, error: passwordError } = await supabase.functions.invoke("admin-set-client-password", {
         body: { cliente_id: result.id, password: accessPassword },
@@ -140,6 +149,8 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
           description: pwErr || "A atualização da senha não foi confirmada pelo sistema.",
           variant: "destructive",
         });
+        onCreated?.(result);
+        onOpenChange(false);
         setSaving(false);
         return;
       }
