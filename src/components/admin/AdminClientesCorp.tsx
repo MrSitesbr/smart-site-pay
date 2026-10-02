@@ -35,8 +35,16 @@ export default function AdminClientesCorp() {
       return matchesStatus && matchesSearch;
     })
     .sort((a, b) => {
-      if (sortBy === "created_desc") return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      if (sortBy === "created_asc") return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      const aCreatedAt = Date.parse(a.created_at || "");
+      const bCreatedAt = Date.parse(b.created_at || "");
+      const aHasDate = Number.isFinite(aCreatedAt);
+      const bHasDate = Number.isFinite(bCreatedAt);
+
+      if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+      if (aHasDate && bHasDate) {
+        const dateOrder = sortBy === "created_desc" ? bCreatedAt - aCreatedAt : aCreatedAt - bCreatedAt;
+        if (dateOrder !== 0) return dateOrder;
+      }
       return normalize(a.razao_social).localeCompare(normalize(b.razao_social), "pt-BR");
     });
   const pageCount = Math.max(1, Math.ceil(filteredClientes.length / pageSize));
@@ -154,8 +162,8 @@ export default function AdminClientesCorp() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="name">Nome da empresa (A–Z)</SelectItem>
-            <SelectItem value="created_desc">Criação (mais recentes)</SelectItem>
-            <SelectItem value="created_asc">Criação (mais antigas)</SelectItem>
+            <SelectItem value="created_desc">Criação (mais recentes primeiro)</SelectItem>
+            <SelectItem value="created_asc">Criação (mais antigas primeiro)</SelectItem>
           </SelectContent>
         </Select>
       </div>
