@@ -381,10 +381,15 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   return (
     <div className="min-h-screen bg-muted/30 p-4">
       {/* Header da página */}
-      <div className="mb-5 max-w-3xl">
-        <p className="mb-1 font-heading text-xs font-bold uppercase text-primary">Agendamento</p>
-        <h1 className="font-heading text-3xl font-black sm:text-4xl">Agenda de salas</h1>
-        <p className="mt-2 text-sm text-foreground/70">Escolha uma data e arraste pelos horários livres para reservar.</p>
+      <div className="mb-5 flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="mb-1 font-heading text-xs font-bold uppercase text-primary">Agendamento</p>
+          <h1 className="font-heading text-3xl font-black sm:text-4xl">Agenda de salas</h1>
+          <p className="mt-2 text-sm text-foreground/70">Escolha uma data e arraste pelos horários livres para reservar.</p>
+        </div>
+        <Button className="w-full sm:w-auto" onClick={abrirCriacaoManual} disabled={carregandoSalas || salasFiltradas.length === 0 || !cliente?.id}>
+          <Plus className="mr-2 h-4 w-4" /> Criar reserva
+        </Button>
       </div>
 
       {/* Controles de filtro e mês */}
@@ -472,9 +477,6 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
               <p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p>
             </div>
           </div>
-          <Button onClick={abrirCriacaoManual} disabled={carregandoSalas || salasFiltradas.length === 0}>
-            <Plus className="mr-2 h-4 w-4" /> Criar reserva
-          </Button>
         </div>
 
         {carregandoAgenda ? (
