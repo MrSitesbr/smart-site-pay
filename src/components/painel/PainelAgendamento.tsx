@@ -62,6 +62,11 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [modoSala, setModoSala] = useState<"especifica" | "qualquer">("especifica");
   const [salaDetalhes, setSalaDetalhes] = useState<SalaPublica | null>(null);
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
+  const [criacaoManualAberta, setCriacaoManualAberta] = useState(false);
+  const [dataManual, setDataManual] = useState(isoDate(new Date()));
+  const [salaManualId, setSalaManualId] = useState("");
+  const [inicioManual, setInicioManual] = useState("09:00");
+  const [fimManual, setFimManual] = useState("10:00");
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
 
@@ -251,6 +256,49 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const salaSelecionada = selecao ? salas.find((sala) => sala.id === selecao.salaId) : null;
   const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
+  function abrirCriacaoManual() {
+    setDataManual(isoDate(dia));
+    setSalaManualId(salaId === "todas" ? "" : salaId);
+    setInicioManual("09:00");
+    setFimManual("10:00");
+    setCriacaoManualAberta(true);
+  }
+
+  async function solicitarReservaManual() {
+    if (!cliente?.id) {
+      toast({ title: "Cadastro de cliente não vinculado", description: "Entre em contato com a equipe para vincular sua conta.", variant: "destructive" });
+      return;
+    }
+    if (!dataManual || inicioManual >= fimManual) {
+      toast({ title: "Revise data e horário", description: "O horário final deve ser posterior ao inicial.", variant: "destructive" });
+      return;
+    }
+    if (![inicioManual, fimManual].every((value) => ["00", "30"].includes(value.slice(3, 5)))) {
+      toast({ title: "Horário inválido", description: "Escolha horários em intervalos de 30 minutos.", variant: "destructive" });
+      return;
+    }
+    setSolicitando(true);
+    try {
+      const { error } = await supabase.rpc("request_authenticated_reservations", {
+        p_sala_id: salaManualId || null,
+        p_periodos: [{ data: dataManual, hora_inicio: inicioManual, hora_fim: fimManual }],
+      });
+      if (error) {
+        toast({ title: "Não foi possível solicitar a reserva", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Reserva solicitada", description: "A equipe analisará a disponibilidade e confirmará o pedido." });
+      setCriacaoManualAberta(false);
+      setMes(startOfMonth(new Date(`${dataManual}T12:00:00`)));
+      setDia(startOfDay(new Date(`${dataManual}T12:00:00`)));
+      await onRefresh();
+    } catch (error) {
+      toast({ title: "Não foi possível solicitar a reserva", description: error instanceof Error ? error.message : "Tente novamente.", variant: "destructive" });
+    } finally {
+      setSolicitando(false);
+    }
+  }
+
   function iniciarSelecao(id: string, index: number) {
     const periodoSelecionado = periodoNoSlot(id, index);
     if (periodoSelecionado) {
@@ -412,16 +460,21 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
 
       {/* Grade de horários do dia */}
       <section className="overflow-hidden rounded-lg border-2 border-border bg-card shadow-sm" aria-label="Agenda de horários do dia">
-        <div className="flex items-center gap-3 border-b-2 border-border bg-muted/50 px-4 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-primary">
-            <CalendarDays className="h-4 w-4" />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-border bg-muted/50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-primary">
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="font-heading text-base font-bold capitalize text-foreground">
+                {format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}
+              </h2>
+              <p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-heading text-base font-bold capitalize text-foreground">
-              {format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}
-            </h2>
-            <p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p>
-          </div>
+          <Button onClick={abrirCriacaoManual} disabled={carregandoSalas || salasFiltradas.length === 0}>
+            <Plus className="mr-2 h-4 w-4" /> Criar reserva
+          </Button>
         </div>
 
         {carregandoAgenda ? (
@@ -561,6 +614,48 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           </div>
         )}
       </section>
+
+      <Dialog open={criacaoManualAberta} onOpenChange={setCriacaoManualAberta}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl font-black">Nova solicitação de reserva</DialogTitle>
+            <DialogDescription>Escolha a data, a sala e o horário que pretende utilizar.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-sm font-semibold" htmlFor="manual-booking-room">Sala</label>
+              <Select value={salaManualId || "qualquer"} onValueChange={(value) => setSalaManualId(value === "qualquer" ? "" : value)}>
+                <SelectTrigger id="manual-booking-room"><SelectValue placeholder="Selecione uma sala" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="qualquer">Qualquer sala disponível</SelectItem>
+                  {salasFiltradas.map((sala) => <SelectItem key={sala.id} value={sala.id}>{sala.nome} · {sala.unidadeNome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {!salaManualId && <p className="text-xs text-muted-foreground">A equipe define a sala conforme a disponibilidade.</p>}
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <label className="text-sm font-semibold" htmlFor="manual-booking-date">Data</label>
+              <Input id="manual-booking-date" type="date" value={dataManual} min={isoDate(new Date())} onChange={(event) => setDataManual(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold" htmlFor="manual-booking-start">Início</label>
+              <Input id="manual-booking-start" type="time" step="1800" value={inicioManual} onChange={(event) => setInicioManual(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold" htmlFor="manual-booking-end">Término</label>
+              <Input id="manual-booking-end" type="time" step="1800" value={fimManual} onChange={(event) => setFimManual(event.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground sm:col-span-2">As solicitações ficam pendentes até a confirmação da equipe. O sistema valida expediente, feriados e conflitos ao enviar.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCriacaoManualAberta(false)} disabled={solicitando}>Cancelar</Button>
+            <Button onClick={() => void solicitarReservaManual()} disabled={solicitando || carregandoAgenda}>
+              {solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              Enviar solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmação */}
       <Dialog open={confirmacaoAberta} onOpenChange={(aberta) => { setConfirmacaoAberta(aberta); if (!aberta) atualizarSelecao(null); }}>

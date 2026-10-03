@@ -1,0 +1,100 @@
+{
+  "name": "ollama-chat-vscode",
+  "displayName": "Ollama Chat",
+  "description": "Chat local com Ollama no VS Code, com contexto do arquivo ou seleção ativa.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "private": true,
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ollamaChat.open",
+        "title": "Ollama Chat: Open Chat",
+        "category": "Ollama Chat"
+      },
+      {
+        "command": "ollamaChat.addSelection",
+        "title": "Ollama Chat: Add Selection to Chat",
+        "category": "Ollama Chat"
+      },
+      {
+        "command": "ollamaChat.addFile",
+        "title": "Ollama Chat: Add Active File to Chat",
+        "category": "Ollama Chat"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "ollamaChat.open",
+          "when": "true"
+        },
+        {
+          "command": "ollamaChat.addSelection",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ollamaChat.addFile",
+          "when": "resourceLangId"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Ollama Chat",
+      "properties": {
+        "ollamaChat.host": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "URL base da API local do Ollama."
+        },
+        "ollamaChat.model": {
+          "type": "string",
+          "default": "qwen2.5-coder",
+          "description": "Modelo usado pelo chat."
+        },
+        "ollamaChat.maxInputTokens": {
+          "type": "number",
+          "default": 12000,
+          "minimum": 256,
+          "description": "Limite aproximado de tokens enviados no prompt."
+        },
+        "ollamaChat.maxOutputTokens": {
+          "type": "number",
+          "default": 2048,
+          "minimum": 1,
+          "description": "Limite de tokens da resposta do modelo."
+        },
+        "ollamaChat.contextCharacters": {
+          "type": "number",
+          "default": 50000,
+          "minimum": 1000,
+          "description": "Limite de caracteres do arquivo anexado."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && vsce package --no-dependencies",
+    "test": "vitest run --config ../vitest.config.ts src/ollama.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.95.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5",
+    "@vscode/vsce": "^3.2.2"
+  }
+}

@@ -339,7 +339,7 @@ export default function Painel() {
                 const { data, error } = await supabase
                   .from("reservations")
                   .select("*")
-                  .eq("email", user?.email)
+                  .eq("cliente_corp_id", cliente?.id)
                   .order("data", { ascending: false });
                 if (!error) setReservas(data || []);
               }}

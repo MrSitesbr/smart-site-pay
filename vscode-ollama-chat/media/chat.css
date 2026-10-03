@@ -1,0 +1,32 @@
+:root {
+  color-scheme: light dark;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { display: flex; flex-direction: column; min-width: 320px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--vscode-panel-border); }
+h1 { font-size: 1.1rem; margin: 0 0 3px; }
+header p { color: var(--vscode-descriptionForeground); font-size: .78rem; margin: 0; }
+button, .attach-button { border: 0; border-radius: 4px; padding: 7px 11px; color: var(--vscode-button-foreground); background: var(--vscode-button-background); cursor: pointer; font: inherit; }
+button:hover, .attach-button:hover { background: var(--vscode-button-hoverBackground); }
+#messages { flex: 1; overflow-y: auto; padding: 16px; }
+.message { border: 1px solid var(--vscode-panel-border); border-radius: 6px; margin-bottom: 12px; padding: 10px 12px; background: var(--vscode-editorWidget-background); }
+.message.user { border-left: 3px solid var(--vscode-focusBorder); }
+.message.assistant { border-left: 3px solid var(--vscode-charts-green); }
+.message strong { display: block; font-size: .78rem; margin-bottom: 5px; }
+.message-body { white-space: pre-wrap; overflow-wrap: anywhere; font: var(--vscode-editor-font-family) var(--vscode-editor-font-size)/1.5 var(--vscode-editor-font-family); }
+.status { padding: 8px 16px; color: var(--vscode-errorForeground); border-top: 1px solid var(--vscode-panel-border); white-space: pre-wrap; }
+.status[hidden] { display: none; }
+#composer { border-top: 1px solid var(--vscode-panel-border); padding: 10px 16px 14px; }
+#prompt { width: 100%; resize: vertical; min-height: 68px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); padding: 8px; font: inherit; }
+.composer-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+#file { display: none; }
+.attach-button { color: var(--vscode-button-secondaryForeground, var(--vscode-foreground)); background: var(--vscode-button-secondaryBackground, transparent); border: 1px solid var(--vscode-panel-border); }
+.limits { flex: 1; color: var(--vscode-descriptionForeground); font-size: .72rem; }
+.context { min-height: 24px; display: flex; align-items: center; }
+.context-badge { color: var(--vscode-descriptionForeground); border: 1px solid var(--vscode-panel-border); border-radius: 10px; padding: 3px 8px; font-size: .75rem; }
+@media (max-width: 480px) { .limits { display: none; } .composer-actions { justify-content: space-between; } }
