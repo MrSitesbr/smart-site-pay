@@ -154,13 +154,15 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     }
 
     // Carregar reservas do usuário logado
-    const { data: reservasData, error: reservasError } = await supabase
-      .from("reservations")
-      .select("*")
-      .eq("email", user?.email)
-      .gte("data", isoDate(startOfMonth(mes)))
-      .lte("data", isoDate(endOfMonth(mes)))
-      .order("data", { ascending: true });
+    const { data: reservasData, error: reservasError } = cliente?.id
+      ? await supabase
+          .from("reservations")
+          .select("*")
+          .eq("cliente_corp_id", cliente.id)
+          .gte("data", isoDate(startOfMonth(mes)))
+          .lte("data", isoDate(endOfMonth(mes)))
+          .order("data", { ascending: true })
+      : { data: [], error: null };
 
     if (reservasError) {
       console.error("Erro ao carregar reservas:", reservasError);
@@ -169,7 +171,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     }
 
     setCarregandoAgenda(false);
-  }, [mes, salaId, user?.email]);
+  }, [mes, salaId, cliente?.id]);
 
   useEffect(() => { void carregarAgenda(); }, [carregarAgenda]);
 
@@ -285,10 +287,6 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       const { error } = await supabase.rpc("request_authenticated_reservations", {
         p_sala_id: modoSala === "qualquer" ? undefined : salaDosPeriodos.id,
         p_periodos: periodos.map(({ data, inicio, fim }) => ({ data, hora_inicio: inicio, hora_fim: fim })),
-        p_nome: cliente.responsavel_nome || cliente.razao_social || user.email,
-        p_email: cliente.responsavel_email || user.email,
-        p_whatsapp: cliente.responsavel_telefone || "",
-        p_tipo_negocio: user.user_metadata?.nicho || "Cliente Coworking 013",
       });
       if (error) {
         toast({ title: "Não foi possível solicitar", description: "Revise os períodos escolhidos e tente novamente.", variant: "destructive" });

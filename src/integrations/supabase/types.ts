@@ -1409,7 +1409,7 @@ export type Database = {
         Returns: string
       }
       get_public_room_availability: {
-        Args: { p_end_date: string; p_sala_id?: string; p_start_date: string }
+        Args: { p_end_date: string; p_sala_id?: string | null; p_start_date: string }
         Returns: {
           color_slot: number
           data: string
@@ -1434,19 +1434,10 @@ export type Database = {
         }
         Returns: string
       }
-      request_authenticated_reservations:
-        | { Args: { p_periodos: Json; p_sala_id: string }; Returns: string[] }
-        | {
-            Args: {
-              p_email: string
-              p_nome: string
-              p_periodos: Json
-              p_sala_id: string
-              p_tipo_negocio: string
-              p_whatsapp: string
-            }
-            Returns: string[]
-          }
+      request_authenticated_reservations: {
+        Args: { p_periodos: Json; p_sala_id?: string | null }
+        Returns: string[]
+      }
       save_admin_room: {
         Args: {
           p_capacidade: number

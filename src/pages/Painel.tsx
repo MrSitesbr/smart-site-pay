@@ -89,7 +89,9 @@ export default function Painel() {
       setCliente(clienteData);
       const [c, r, f, v, p] = await Promise.all([
         supabase.from("contract_requests").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }),
-        supabase.from("reservations").select("*").eq("email", session.user.email!).order("data", { ascending: false }),
+        clienteData
+          ? supabase.from("reservations").select("*").eq("cliente_corp_id", clienteData.id).order("data", { ascending: false })
+          : Promise.resolve({ data: [], error: null } as any),
         clienteData ? supabase.from("funcionarios_cliente").select("*").eq("cliente_corp_id", clienteData.id) : Promise.resolve({ data: [] } as any),
         clienteData ? supabase.from("visitantes").select("*, salas(nome)").eq("cliente_corp_id", clienteData.id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] } as any),
         clienteData?.plano_id ? supabase.from("planos").select("*").eq("id", clienteData.plano_id).maybeSingle() : Promise.resolve({ data: null } as any),
