@@ -110,20 +110,18 @@ export default function Contratar() {
   async function doSignupAndSubmit() {
     if (!notRobot) { toast({ title: "Confirme que você não é um robô", variant: "destructive" }); return null; }
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email, password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/painel`,
-          data: { nome, telefone, nicho },
-        },
+      // Conta criada no servidor já confirmada: nenhum e-mail de confirmação é enviado.
+      const { data, error } = await supabase.functions.invoke("client-signup", {
+        body: { kind: "contratar", email: email.trim().toLowerCase(), password, nome, telefone, nicho },
       });
-      if (error) throw error;
-      if (!data.session) {
-        const { data: s, error: e2 } = await supabase.auth.signInWithPassword({ email, password });
-        if (e2) throw e2;
-        return s.user?.id || null;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if (error) {
+        const body = await (error as any).context?.json?.().catch(() => null);
+        throw new Error(body?.error || "Não foi possível criar a conta. Tente novamente.");
       }
-      return data.user?.id || null;
+      const { data: s, error: e2 } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (e2) throw e2;
+      return s.user?.id || null;
     } catch (e: any) {
       toast({ title: "Erro no cadastro", description: e.message, variant: "destructive" });
       return null;

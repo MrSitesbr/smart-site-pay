@@ -65,7 +65,7 @@ export default function Auth() {
           return;
         }
         await supabase.auth.signOut();
-        toast({ title: "Cadastro em análise", description: "Seu e-mail foi confirmado. A equipe do Coworking 013 precisa liberar seu acesso antes do primeiro login." });
+        toast({ title: "Cadastro em análise", description: "A equipe do Coworking 013 precisa liberar seu acesso antes do primeiro login." });
         return;
       }
     }
@@ -86,25 +86,6 @@ export default function Auth() {
     }
 
     navigate(redirect || "/painel");
-  }
-
-  async function recuperarSenha() {
-    const emailLimpo = email.trim().toLowerCase();
-    if (!emailLimpo) {
-      toast({ title: "Informe seu e-mail", description: "Digite o e-mail cadastrado para receber o link.", variant: "destructive" });
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(emailLimpo, {
-      redirectTo: `${window.location.origin}/auth`,
-    });
-    if (error) {
-      toast({ title: "Não foi possível enviar", description: error.message, variant: "destructive" });
-      return;
-    }
-    toast({
-      title: "E-mail enviado",
-      description: "Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha.",
-    });
   }
 
   async function submit(e: React.FormEvent) {
@@ -190,29 +171,27 @@ export default function Auth() {
     if (!validarCadastro()) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email.trim().toLowerCase(),
-        password: form.senha,
-        options: {
-          emailRedirectTo: "https://coworking013.com.br/auth",
-          data: {
-            self_service_signup: true,
-            razao_social: form.razao_social.trim(),
-            responsavel_nome: form.responsavel_nome.trim(),
-            responsavel_telefone: form.responsavel_telefone.trim(),
-            responsavel_cpf: form.responsavel_cpf.trim(),
-            cnpj: form.cnpj.trim(),
-            endereco: form.endereco.trim(),
-          },
+      // Cadastro feito no servidor: a conta já nasce confirmada, sem e-mail de confirmação.
+      const { data, error } = await supabase.functions.invoke("client-signup", {
+        body: {
+          email: form.email.trim().toLowerCase(),
+          password: form.senha,
+          razao_social: form.razao_social.trim(),
+          responsavel_nome: form.responsavel_nome.trim(),
+          responsavel_telefone: form.responsavel_telefone.trim(),
+          responsavel_cpf: form.responsavel_cpf.trim(),
+          cnpj: form.cnpj.trim(),
+          endereco: form.endereco.trim(),
         },
       });
-      if (error) throw error;
-      if (data.session && data.user) {
-        await routeAfterLogin(data.user.id);
-      } else {
-        toast({ title: "Confirme seu e-mail", description: "Enviamos um link de confirmação. Após confirmá-lo, entre para concluir o cadastro, que ficará aguardando liberação da equipe." });
-        setMode("login");
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if (error) {
+        const body = await (error as any).context?.json?.().catch(() => null);
+        throw new Error(body?.error || "Não foi possível concluir o cadastro. Tente novamente.");
       }
+      toast({ title: "Cadastro enviado", description: "Seu acesso será liberado pela equipe do Coworking 013. Depois disso, entre com seu e-mail e senha." });
+      setEmail(form.email.trim().toLowerCase());
+      setMode("login");
     } catch (e: any) {
       toast({ title: "Não foi possível concluir o cadastro", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
@@ -299,16 +278,8 @@ export default function Auth() {
                 CRIAR CONTA
               </Button>
 
-              <button
-                type="button"
-                onClick={recuperarSenha}
-                className="w-full text-xs text-orange-400 hover:text-orange-300 underline underline-offset-4"
-              >
-                Esqueci minha senha
-              </button>
-
               <p className="text-xs text-center text-slate-500 pt-2">
-                Cadastros novos precisam confirmar o e-mail e aguardar a liberação da equipe.
+                Cadastros novos aguardam a liberação da equipe. Esqueceu a senha? Fale no WhatsApp (13) 98805-0358.
               </p>
             </form>
           </>
