@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
+import { finalizarReservasEncerradas } from "@/lib/checkin";
 import { toast } from "@/hooks/use-toast";
 import { LogOut, Loader2, RefreshCw, LayoutDashboard, Calendar, Users, Briefcase, DollarSign, BarChart3, Building2, FileText, BookOpen, Trash2, CalendarCheck, ClipboardList, Save, Settings, LogOut as LogoutIcon } from "lucide-react";
 import AdminCalendar from "@/components/admin/AdminCalendar";
@@ -32,6 +33,7 @@ import AdminDocsIA from "@/components/admin/AdminDocsIA";
 import AdminDocumentation from "@/components/admin/AdminDocumentation";
 import AdminSuporte from "@/components/admin/AdminSuporte";
 import AdminHeaderFooterSimple from "@/components/admin/AdminHeaderFooterSimple";
+import CancelarRecorrenciaDialog from "@/components/admin/CancelarRecorrenciaDialog";
 
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -78,6 +80,7 @@ export default function Admin() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [cancelandoSerie, setCancelandoSerie] = useState<Reserva | null>(null);
 
 
   useEffect(() => {
@@ -107,6 +110,8 @@ export default function Admin() {
   }, [navigate]);
 
   async function fetchReservas() {
+    // Checkout automático antes de listar: confirmadas encerradas viram "realizada".
+    await finalizarReservasEncerradas();
     const { data, error } = await supabase.from("reservations").select("*").order("data", { ascending: false }).order("hora_inicio");
     if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
     else setReservas(data as Reserva[]);
@@ -185,20 +190,20 @@ export default function Admin() {
   }
 
   async function deleteReserva(r: Reserva) {
-    const serieId = (r as any).serie_id;
-    let escopo: "uma" | "futuras" = "uma";
-
-    if (serieId) {
-      escopo = confirm(
-        `Esta reserva faz parte de uma recorrência.\n\nOK = cancelar esta e TODAS as futuras (histórico passado preservado).\nCancelar = cancelar somente esta data.`
-      ) ? "futuras" : "uma";
-    } else if (!confirm(`Cancelar a reserva de ${r.nome} em ${new Date(r.data+"T00:00").toLocaleDateString("pt-BR")} ${r.hora_inicio.slice(0,5)}? O registro fica no histórico como cancelado.`)) {
+    // Recorrência: diálogo para cancelar só esta data ou a série a partir de uma data.
+    if ((r as any).serie_id) {
+      setCancelandoSerie(r);
+      return;
+    }
+    if (r.status === "realizada") {
+      toast({ title: "Reserva já realizada", description: "Reservas realizadas são mantidas no histórico financeiro.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Cancelar a reserva de ${r.nome} em ${new Date(r.data+"T00:00").toLocaleDateString("pt-BR")} ${r.hora_inicio.slice(0,5)}? O registro fica no histórico como cancelado.`)) {
       return;
     }
 
-    const alvos: any[] = escopo === "futuras"
-      ? reservas.filter((x: any) => x.serie_id === serieId && x.data >= r.data)
-      : [r];
+    const alvos: any[] = [r];
 
     for (const alvo of alvos) {
       const gId = (alvo as any).google_event_id;
@@ -373,7 +378,7 @@ export default function Admin() {
             {activeTab === "documentacao" && <AdminDocumentation />}
             {activeTab === "suporte" && <AdminSuporte />}
             {activeTab === "docs_ia" && <AdminDocsIA />}
-            
+            <CancelarRecorrenciaDialog reserva={cancelandoSerie} onOpenChange={(open) => { if (!open) setCancelandoSerie(null); }} onDone={fetchReservas} />
           </main>
         </div>
       </div>

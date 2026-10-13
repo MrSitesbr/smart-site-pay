@@ -77,7 +77,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const [tipo, setTipo] = useState<string>("hora");
   const [horaInicio, setHoraInicio] = useState("09:00");
   const [horaFim, setHoraFim] = useState("10:00");
-  const [status, setStatus] = useState<string>("confirmada");
+  const [status, setStatus] = useState<string>("pendente");
   const [origem, setOrigem] = useState<string>("direto");
   const [observacoes, setObservacoes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -99,7 +99,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       setNome(""); setEmail(""); setTelefone(""); setSelected(null); setShowList(false);
       setAmbiente("estacao"); setTipo("hora");
       setHoraInicio("09:00"); setHoraFim("10:00");
-      setStatus("confirmada"); setOrigem("direto"); setObservacoes("");
+      setStatus("pendente"); setOrigem("direto"); setObservacoes("");
       setSelectedUnidade(""); setSelectedSala(""); setConflitos([]);
       setDataStr(date ? dateISO(date) : dateISO(new Date()));
       setRecorrente(false); setRecFreq("semanal"); setRecAte("");
@@ -242,16 +242,17 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
   const temConflitoSala = conflitos.some(c => c.tipo !== 'bloqueio');
   const bloqueiaSalvar = !recorrente && (temBloqueio || temConflitoSala);
 
-  async function syncClienteComCRM() {
+  /** Garante o cliente no CRM e devolve o id de clientes_corp para vincular a reserva. */
+  async function syncClienteComCRM(): Promise<string | null> {
     const nomeCliente = nome.trim();
     const emailCliente = email.trim();
     const telefoneCliente = telefone.trim();
-    if (!nomeCliente) return;
+    if (!nomeCliente) return null;
 
     const { data: clientesCorp, error: loadErr } = await supabase.from("clientes_corp").select("id, razao_social, responsavel_email, responsavel_telefone");
     if (loadErr) {
       console.error("Erro ao buscar clientes do CRM:", loadErr);
-      return;
+      return null;
     }
 
     const match = (clientesCorp || []).find((cliente: any) => {
@@ -271,7 +272,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
       const { error } = await (supabase.from("clientes_corp") as any).update(payload).eq("id", match.id);
       if (error) console.error("Erro ao atualizar cliente do CRM:", error);
-      return;
+      return match.id;
     }
 
     const payload: Record<string, any> = {
@@ -281,10 +282,12 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       responsavel_telefone: telefoneCliente || null,
     };
 
-    const { error } = await supabase.from("clientes_corp").insert(payload);
+    const { data: criado, error } = await supabase.from("clientes_corp").insert(payload as any).select("id").single();
     if (error) {
       console.error("Erro ao criar cliente do CRM:", error);
+      return null;
     }
+    return criado?.id ?? null;
   }
 
   async function save() {
@@ -296,6 +299,10 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       toast({ title: "Preencha nome, email e telefone", variant: "destructive" });
       return;
     }
+    if (!selectedUnidade || !selectedSala) {
+      toast({ title: "Escolha a unidade e a sala", description: "A reserva precisa de uma sala definida.", variant: "destructive" });
+      return;
+    }
     if (horaFim <= horaInicio) {
       toast({ title: "Horário de fim deve ser após o início", variant: "destructive" });
       return;
@@ -305,7 +312,8 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     const serieId = recorrente && datasPrevistas.length > 1
       ? (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()))
       : null;
-    await syncClienteComCRM();
+    const clienteSelecionadoId = selected?.id && crmClientes.some((c) => c.id === selected.id) ? selected.id : null;
+    const clienteCorpId = (await syncClienteComCRM()) || clienteSelecionadoId;
 
     const datas = datasPrevistas;
     const criadas: string[] = [];
@@ -329,12 +337,12 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       const descontoOcorrencia = valorOcorrencia != null && valorOcorrenciaBase != null && valorOcorrencia < valorOcorrenciaBase;
       const payload: any = {
         nome: nome.trim(), email: email.trim(), telefone: telefone.trim(),
-        cliente_corp_id: selected?.id || null,
+        cliente_corp_id: clienteCorpId,
         ambiente, tipo, data: dt,
         hora_inicio: horaInicio + ":00", hora_fim: horaFim + ":00",
         status, origem, observacoes: observacoes.trim() || null,
-        unidade_id: selectedUnidade || null,
-        sala_id: selectedSala || null,
+        unidade_id: selectedUnidade,
+        sala_id: selectedSala,
         valor: valorOcorrencia,
         valor_original: valorOcorrenciaBase,
         plano_id: calculoPlano?.plano?.id || null,
@@ -463,7 +471,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
         <div className="grid grid-cols-2 gap-2 pt-2 border-t mt-2">
           <div>
-            <Label className="text-xs">Unidade</Label>
+            <Label className="text-xs">Unidade *</Label>
             <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
               <SelectTrigger><SelectValue placeholder="Escolha a unidade" /></SelectTrigger>
               <SelectContent>
@@ -472,7 +480,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Sala</Label>
+            <Label className="text-xs">Sala *</Label>
             <Select 
               value={selectedSala} 
               onValueChange={setSelectedSala}
@@ -665,7 +673,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
 
         <DialogFooter className="mt-3">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-          <Button onClick={save} disabled={saving || bloqueiaSalvar}>
+          <Button onClick={save} disabled={saving || bloqueiaSalvar || !selectedUnidade || !selectedSala}>
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Criar reserva
           </Button>

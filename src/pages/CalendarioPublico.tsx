@@ -55,7 +55,6 @@ export default function CalendarioPublico() {
   const [periodos, setPeriodos] = useState<Periodo[]>([]);
   const [dadosEditados, setDadosEditados] = useState<DadosConsulta>({ nome: "", email: "", whatsapp: "", tipoNegocio: "" });
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
-  const [modoSala, setModoSala] = useState<"especifica" | "qualquer">("especifica");
   const [salaDetalhes, setSalaDetalhes] = useState<SalaPublica | null>(null);
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
@@ -174,7 +173,7 @@ export default function CalendarioPublico() {
   useEffect(() => {
     if (carregandoSalas || salas.length === 0) return;
     try {
-       const pendente = JSON.parse(sessionStorage.getItem(SELECAO_STORAGE_KEY) || "null") as { periodos?: Periodo[]; dados?: DadosConsulta; modoSala?: "especifica" | "qualquer" } | null;
+       const pendente = JSON.parse(sessionStorage.getItem(SELECAO_STORAGE_KEY) || "null") as { periodos?: Periodo[]; dados?: DadosConsulta } | null;
       const validos = (pendente?.periodos || []).filter((item) => salas.some((sala) => sala.id === item.salaId) && /^\d{4}-\d{2}-\d{2}$/.test(item.data) && /^\d{2}:\d{2}$/.test(item.inicio) && /^\d{2}:\d{2}$/.test(item.fim)).slice(0, MAX_PERIODOS);
       if (!validos.length) return;
       const data = new Date(`${validos[0].data}T12:00:00`);
@@ -182,7 +181,6 @@ export default function CalendarioPublico() {
       setPeriodos(validos);
       const dadosValidos = consultaSchema.safeParse(pendente?.dados);
       if (dadosValidos.success) setDadosEditados(dadosValidos.data);
-       if (pendente?.modoSala === "qualquer") setModoSala("qualquer");
       setConfirmacaoAberta(true);
       sessionStorage.removeItem(SELECAO_STORAGE_KEY);
     } catch { sessionStorage.removeItem(SELECAO_STORAGE_KEY); }
@@ -219,7 +217,7 @@ export default function CalendarioPublico() {
   async function solicitar() {
     if (!periodos.length || !salaDosPeriodos) return;
     if (!autenticado) {
-      sessionStorage.setItem(SELECAO_STORAGE_KEY, JSON.stringify({ periodos, dados: dadosEditados, modoSala }));
+      sessionStorage.setItem(SELECAO_STORAGE_KEY, JSON.stringify({ periodos, dados: dadosEditados }));
       navigate(`/auth?redirect=${encodeURIComponent("/agendamento")}`);
       return;
     }
@@ -231,11 +229,11 @@ export default function CalendarioPublico() {
     if (!dadosValidos.success) { toast({ title: "Revise seus dados", description: dadosValidos.error.issues[0]?.message, variant: "destructive" }); return; }
     setSolicitando(true);
     const { error } = await supabase.rpc("request_authenticated_reservations", {
-      p_sala_id: modoSala === "qualquer" ? null : salaDosPeriodos.id,
+      p_sala_id: salaDosPeriodos.id,
       p_periodos: periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim })),
     });
     if (error) toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
-     else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); setModoSala("especifica"); await carregarAgenda(); }
+     else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
     setSolicitando(false);
   }
 
@@ -245,7 +243,7 @@ export default function CalendarioPublico() {
     if (!validacao.success) { toast({ title: "Revise seus dados", description: validacao.error.issues[0]?.message, variant: "destructive" }); return; }
     const dados = validacao.data;
     const lista = periodos.map((item, index) => `${index + 1}. ${format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")} — ${item.inicio} às ${item.fim}`).join("\n");
-     const local = modoSala === "qualquer" ? "Unidade e sala: qualquer sala disponível (definição pelo administrador)" : `Unidade: ${salaDosPeriodos.unidadeNome}\nSala: ${salaDosPeriodos.nome}`;
+     const local = `Unidade: ${salaDosPeriodos.unidadeNome}\nSala: ${salaDosPeriodos.nome}`;
      const texto = `Olá! Quero consultar uma reserva no Coworking 013.\n\nNome: ${dados.nome}\nE-mail: ${dados.email}\nWhatsApp: ${dados.whatsapp}\nTipo de negócio: ${dados.tipoNegocio}\n${local}\n\nDatas e horários:\n${lista}`;
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
   }
@@ -286,7 +284,7 @@ export default function CalendarioPublico() {
             <div><Label htmlFor="confirmar-whatsapp">WhatsApp</Label><Input id="confirmar-whatsapp" type="tel" maxLength={30} value={dadosEditados.whatsapp} onChange={(e) => setDadosEditados((atual) => ({ ...atual, whatsapp: e.target.value }))} /></div>
             <div><Label htmlFor="confirmar-negocio">Tipo de negócio</Label><Input id="confirmar-negocio" maxLength={120} value={dadosEditados.tipoNegocio} onChange={(e) => setDadosEditados((atual) => ({ ...atual, tipoNegocio: e.target.value }))} /></div>
           </div>
-           {salaDosPeriodos && <div className="space-y-3 rounded-md border bg-muted/40 p-4"><div><Label htmlFor="modo-sala">Preferência de sala</Label><Select value={modoSala} onValueChange={(valor: "especifica" | "qualquer") => setModoSala(valor)}><SelectTrigger id="modo-sala" className="mt-1 bg-background"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="especifica">{salaDosPeriodos.nome} · {salaDosPeriodos.unidadeNome}</SelectItem><SelectItem value="qualquer">Qualquer sala disponível</SelectItem></SelectContent></Select>{modoSala === "qualquer" && <p className="mt-2 text-xs text-muted-foreground">A unidade e a sala serão escolhidas pelo administrador conforme a disponibilidade.</p>}</div><div className="space-y-2">{periodos.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"><div><p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p><p className="text-sm text-muted-foreground">{item.inicio} às {item.fim}</p></div><Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}><Trash2 className="h-4 w-4" /></Button></div>)}</div></div>}
+           {salaDosPeriodos && <div className="space-y-3 rounded-md border bg-muted/40 p-4"><div><p className="text-sm font-medium">Sala</p><p className="mt-1 rounded-md border bg-background px-3 py-2 text-sm">{salaDosPeriodos.nome} · {salaDosPeriodos.unidadeNome}</p></div><div className="space-y-2">{periodos.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"><div><p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p><p className="text-sm text-muted-foreground">{item.inicio} às {item.fim}</p></div><Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}><Trash2 className="h-4 w-4" /></Button></div>)}</div></div>}
           <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}><Plus className="mr-2 h-4 w-4" />Adicionar outra data ou horário</Button>
         </div>
         <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp} disabled={!periodos.length}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando || !periodos.length}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar períodos" : "Entrar ou cadastrar"}</Button></DialogFooter>

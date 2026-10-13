@@ -17,7 +17,7 @@ interface PainelAgendamentoProps {
 }
 
 type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number; fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null };
-type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
+type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number; propria?: boolean; status?: string | null };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
 type Ambiente = "estacao" | "sala_privativa" | "sala_reuniao";
@@ -41,12 +41,37 @@ const minutos = (valor: string) => { const [h, m] = valor.slice(0, 5).split(":")
 const STATUS_COLORS: Record<string, string> = {
   pendente: "bg-yellow-500",
   aprovada: "bg-blue-500",
+  confirmada: "bg-blue-600",
   paga: "bg-green-500",
+  realizada: "bg-emerald-700",
   concluida: "bg-emerald-700",
   cancelada: "bg-red-500",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pendente: "Pendente",
+  aprovada: "Aprovada",
+  confirmada: "Confirmada",
+  paga: "Pago",
+  realizada: "Realizada",
+  concluida: "Realizada",
+  cancelada: "Cancelada",
+};
+
+/** Rótulo dinâmico: pendente com horário já encerrado aparece como "sem check-in". */
+function rotuloStatus(status: string | null | undefined, data: string, horaFim: string) {
+  const encerrada = new Date(`${data}T${horaFim.slice(0, 5)}:00`) <= new Date();
+  if (status === "pendente" && encerrada) return "Sem check-in";
+  if (status === "confirmada" && encerrada) return "Realizada";
+  return STATUS_LABELS[status || ""] || "Reservado";
+}
+
 export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAgendamentoProps) {
+  // Cadastro vinculado ao login. Busca próprio para não depender do carregamento do painel
+  // (ex.: cadastros duplicados fazem o painel receber cliente nulo e travar o agendamento).
+  const [vinculo, setVinculo] = useState<{ id: string; status_acesso: string | null } | null>(null);
+  const [verificandoVinculo, setVerificandoVinculo] = useState(true);
+  const clienteId: string | null = cliente?.id || vinculo?.id || null;
   const [mes, setMes] = useState(startOfMonth(new Date()));
   const [dia, setDia] = useState(startOfDay(new Date()));
   const [salas, setSalas] = useState<SalaPublica[]>([]);
@@ -60,7 +85,6 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [solicitando, setSolicitando] = useState(false);
   const [selecao, setSelecao] = useState<Selecao | null>(null);
   const [periodos, setPeriodos] = useState<Periodo[]>([]);
-  const [modoSala, setModoSala] = useState<"especifica" | "qualquer">("especifica");
   const [salaDetalhes, setSalaDetalhes] = useState<SalaPublica | null>(null);
   const [confirmacaoAberta, setConfirmacaoAberta] = useState(false);
   const [criacaoManualAberta, setCriacaoManualAberta] = useState(false);
@@ -132,6 +156,42 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     return () => { ativo = false; };
   }, []);
 
+  useEffect(() => {
+    let ativo = true;
+    async function verificarVinculo() {
+      setVerificandoVinculo(true);
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id || user?.id;
+      if (!userId) { if (ativo) { setVinculo(null); setVerificandoVinculo(false); } return; }
+      const { data } = await supabase
+        .from("clientes_corp")
+        .select("id, status_acesso")
+        .eq("user_id", userId)
+        .is("deleted_at", null)
+        .order("status_acesso", { ascending: true })
+        .limit(5);
+      if (!ativo) return;
+      const lista = data || [];
+      setVinculo(lista.find((item) => item.status_acesso === "aprovado") || lista[0] || null);
+      setVerificandoVinculo(false);
+    }
+    void verificarVinculo();
+    return () => { ativo = false; };
+  }, [user?.id]);
+
+  const statusAcesso = vinculo?.status_acesso ?? cliente?.status_acesso ?? null;
+  /** Motivo, em linguagem do cliente, para não poder agendar agora (null = pode agendar). */
+  const motivoBloqueio = verificandoVinculo ? null
+    : !clienteId ? "Sua conta ainda não está vinculada a um cadastro de cliente. Fale com a equipe pelo WhatsApp (13) 98805-0358 para liberar o agendamento."
+    : statusAcesso && statusAcesso !== "aprovado" ? "Seu cadastro ainda aguarda liberação da equipe. Assim que for aprovado, você poderá agendar."
+    : null;
+
+  function avisarBloqueio() {
+    if (!motivoBloqueio) return false;
+    toast({ title: "Não é possível agendar ainda", description: motivoBloqueio, variant: "destructive" });
+    return true;
+  }
+
   const salasFiltradas = useMemo(() => {
     if (unidadeId === "todas") return salas;
     return salas.filter((sala) => sala.unidade_id === unidadeId);
@@ -160,11 +220,11 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     }
 
     // Carregar reservas do usuário logado
-    const { data: reservasData, error: reservasError } = cliente?.id
+    const { data: reservasData, error: reservasError } = clienteId
       ? await supabase
           .from("reservations")
           .select("*")
-          .eq("cliente_corp_id", cliente.id)
+          .eq("cliente_corp_id", clienteId)
           .gte("data", isoDate(startOfMonth(mes)))
           .lte("data", isoDate(endOfMonth(mes)))
           .order("data", { ascending: true })
@@ -177,7 +237,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     }
 
     setCarregandoAgenda(false);
-  }, [mes, salaId, cliente?.id]);
+  }, [mes, salaId, clienteId]);
 
   useEffect(() => { void carregarAgenda(); }, [carregarAgenda]);
 
@@ -266,8 +326,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   }
 
   async function solicitarReservaManual() {
-    if (!cliente?.id) {
-      toast({ title: "Cadastro de cliente não vinculado", description: "Entre em contato com a equipe para vincular sua conta.", variant: "destructive" });
+    if (avisarBloqueio()) return;
+    if (!salaManualId) {
+      toast({ title: "Escolha a unidade e a sala", description: "A sala é obrigatória para solicitar a reserva.", variant: "destructive" });
       return;
     }
     if (!dataManual || inicioManual >= fimManual) {
@@ -281,7 +342,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     setSolicitando(true);
     try {
       const { error } = await supabase.rpc("request_authenticated_reservations", {
-        p_sala_id: salaManualId || null,
+        p_sala_id: salaManualId,
         p_periodos: [{ data: dataManual, hora_inicio: inicioManual, hora_fim: fimManual }],
       });
       if (error) {
@@ -328,17 +389,21 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
 
   // Função para solicitar nova reserva
   async function solicitarNovaReserva() {
-    if (!periodos.length || !salaDosPeriodos || !cliente) return;
+    if (avisarBloqueio()) return;
+    if (!periodos.length || !salaDosPeriodos) {
+      toast({ title: "Escolha um horário", description: "Arraste pelos horários livres de uma sala para montar a solicitação.", variant: "destructive" });
+      return;
+    }
 
     setSolicitando(true);
 
     try {
       const { error } = await supabase.rpc("request_authenticated_reservations", {
-        p_sala_id: modoSala === "qualquer" ? undefined : salaDosPeriodos.id,
+        p_sala_id: salaDosPeriodos.id,
         p_periodos: periodos.map(({ data, inicio, fim }) => ({ data, hora_inicio: inicio, hora_fim: fim })),
       });
       if (error) {
-        toast({ title: "Não foi possível solicitar", description: "Revise os períodos escolhidos e tente novamente.", variant: "destructive" });
+        toast({ title: "Não foi possível solicitar", description: error.message || "Revise os períodos escolhidos e tente novamente.", variant: "destructive" });
         setSolicitando(false);
         return;
       }
@@ -350,7 +415,6 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       setConfirmacaoAberta(false);
       atualizarSelecao(null);
       setPeriodos([]);
-      setModoSala("especifica");
       await carregarAgenda();
       if (onRefresh) await onRefresh();
 
@@ -388,10 +452,21 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           <h1 className="font-heading text-3xl font-black sm:text-4xl">Agenda de salas</h1>
           <p className="mt-2 text-sm text-foreground/70">Escolha uma data e arraste pelos horários livres para reservar.</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={abrirCriacaoManual} disabled={carregandoSalas || salasFiltradas.length === 0 || !cliente?.id}>
+        <Button className="w-full sm:w-auto" onClick={() => {
+          if (avisarBloqueio()) return;
+          if (!salasFiltradas.length) { toast({ title: "Nenhuma sala disponível", description: "Troque o filtro de unidade para ver as salas.", variant: "destructive" }); return; }
+          abrirCriacaoManual();
+        }} disabled={carregandoSalas}>
           <Plus className="mr-2 h-4 w-4" /> Criar reserva
         </Button>
       </div>
+
+      {motivoBloqueio && (
+        <div role="alert" className="mb-4 flex max-w-5xl items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-foreground">
+          <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <p>{motivoBloqueio}</p>
+        </div>
+      )}
 
       {/* Controles de filtro e mês */}
       <section className="mb-4 rounded-lg border-2 border-border bg-card p-3 shadow-sm sm:p-4">
@@ -550,13 +625,11 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                     const fechado = foraDoExpediente(sala.id, index);
                     const indisponivel = Boolean(ocupacao || fechado);
 
-                    // Se tem reserva do usuário, mostrar com cor do status
-                    if (reservaUser) {
-                      const statusColor = STATUS_COLORS[reservaUser.status] || "bg-blue-500";
-                      const statusLabel = reservaUser.status === "pendente" ? "Pendente" :
-                                         reservaUser.status === "aprovada" ? "Aprovada" :
-                                         reservaUser.status === "paga" ? "Pago" :
-                                         reservaUser.status === "cancelada" ? "Cancelada" : "Reservado";
+                    // Reserva do próprio cliente: mostra como "Sua reserva" com a cor do status
+                    const minhaReserva = (reservaUser && reservaUser.status !== "cancelada") ? reservaUser : ocupacao?.propria ? ocupacao : null;
+                    if (minhaReserva) {
+                      const statusColor = STATUS_COLORS[minhaReserva.status || ""] || "bg-blue-500";
+                      const statusLabel = `Sua reserva · ${rotuloStatus(minhaReserva.status, minhaReserva.data, minhaReserva.hora_fim)}`;
                       return (
                         <div
                           key={sala.id}
@@ -626,15 +699,14 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <label className="text-sm font-semibold" htmlFor="manual-booking-room">Sala</label>
-              <Select value={salaManualId || "qualquer"} onValueChange={(value) => setSalaManualId(value === "qualquer" ? "" : value)}>
-                <SelectTrigger id="manual-booking-room"><SelectValue placeholder="Selecione uma sala" /></SelectTrigger>
+              <label className="text-sm font-semibold" htmlFor="manual-booking-room">Unidade e sala *</label>
+              <Select value={salaManualId || undefined} onValueChange={setSalaManualId}>
+                <SelectTrigger id="manual-booking-room"><SelectValue placeholder="Selecione a sala" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="qualquer">Qualquer sala disponível</SelectItem>
                   {salasFiltradas.map((sala) => <SelectItem key={sala.id} value={sala.id}>{sala.nome} · {sala.unidadeNome}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {!salaManualId && <p className="text-xs text-muted-foreground">A equipe define a sala conforme a disponibilidade.</p>}
+              {!salaManualId && <p className="text-xs text-muted-foreground">Escolha a sala para enviar a solicitação.</p>}
             </div>
             <div className="space-y-2 sm:col-span-2">
               <label className="text-sm font-semibold" htmlFor="manual-booking-date">Data</label>
@@ -671,19 +743,8 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
             {salaDosPeriodos && (
               <div className="space-y-3 rounded-md border bg-muted/40 p-4">
                 <div>
-                  <label className="text-sm font-medium">Preferência de sala</label>
-                  <Select value={modoSala} onValueChange={(valor: "especifica" | "qualquer") => setModoSala(valor)}>
-                    <SelectTrigger className="mt-1 bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="especifica">{salaDosPeriodos.nome} · {salaDosPeriodos.unidadeNome}</SelectItem>
-                      <SelectItem value="qualquer">Qualquer sala disponível</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {modoSala === "qualquer" && (
-                    <p className="mt-2 text-xs text-muted-foreground">A unidade e a sala serão escolhidas pelo administrador conforme a disponibilidade.</p>
-                  )}
+                  <p className="text-sm font-medium">Sala</p>
+                  <p className="mt-1 rounded-md border bg-background px-3 py-2 text-sm">{salaDosPeriodos.nome} · {salaDosPeriodos.unidadeNome}</p>
                 </div>
                 <div className="space-y-2">
                   {periodos.map((item) => (

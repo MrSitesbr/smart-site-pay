@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X, ImageOff, Plus, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ImageOff, Plus, Pencil, Trash2, UserCheck, Loader2 } from "lucide-react";
 import { getClientColor, readableTextOn } from "@/lib/clientColors";
 import EventAvatar from "./EventAvatar";
+import { toast } from "@/hooks/use-toast";
+import { alternarCheckin, statusExibido } from "@/lib/checkin";
 
 type Sala = { id: string; nome: string; unidade_id: string | null; foto_url: string | null; unidadeNome: string; abertura: number; fechamento: number };
 
@@ -13,7 +15,7 @@ const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${Str
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export default function AdminRoomDayGantt({
-  day, onChangeDay, onClose, reservas, unidadeId, salaId, onEditReserva, onDeleteReserva, onNovaReserva,
+  day, onChangeDay, onClose, reservas, unidadeId, salaId, onEditReserva, onDeleteReserva, onNovaReserva, onChanged,
 }: {
   day: Date;
   onChangeDay: (d: Date) => void;
@@ -24,9 +26,13 @@ export default function AdminRoomDayGantt({
   onEditReserva: (r: any) => void;
   onDeleteReserva?: (r: any) => Promise<void> | void;
   onNovaReserva: (d: Date) => void;
+  onChanged?: () => void;
 }) {
   const [salas, setSalas] = useState<Sala[]>([]);
   const [sel, setSel] = useState<any | null>(null);
+  const [planoNomeById, setPlanoNomeById] = useState<Record<string, string>>({});
+  const [checkinIds, setCheckinIds] = useState<Set<string>>(new Set());
+  const [savingCheckin, setSavingCheckin] = useState(false);
 
   useEffect(() => {
     supabase.from("salas").select("id, nome, unidade_id, foto_url, unidades(nome, horario_abertura, horario_fechamento)").order("nome").then(({ data }) => setSalas((data || []).map((s: any) => ({
@@ -35,6 +41,7 @@ export default function AdminRoomDayGantt({
       abertura: toMin(s.unidades?.horario_abertura || "08:00"),
       fechamento: toMin(s.unidades?.horario_fechamento || "21:00"),
     }))));
+    supabase.from("planos").select("id, nome").then(({ data }) => setPlanoNomeById(Object.fromEntries((data || []).map((p) => [p.id, p.nome]))));
   }, []);
 
   const salasVisiveis = useMemo(
@@ -69,6 +76,35 @@ export default function AdminRoomDayGantt({
     });
     return () => { active = false; };
   }, [doDia]);
+
+  // Check-ins registrados nas reservas do dia (confirmação feita pelo admin).
+  useEffect(() => {
+    const ids = doDia.map((r) => r.id).filter(Boolean);
+    if (!ids.length) { setCheckinIds(new Set()); return; }
+    let active = true;
+    supabase.from("checkins").select("reservation_id").in("reservation_id", ids).then(({ data }) => {
+      if (active) setCheckinIds(new Set((data || []).map((c) => c.reservation_id)));
+    });
+    return () => { active = false; };
+  }, [doDia]);
+
+  const planoDaReserva = (r: any) => (r.plano_id && planoNomeById[r.plano_id]) || "Avulso";
+  const horario = (r: any) => `${r.hora_inicio?.slice(0, 5)} - ${r.hora_fim?.slice(0, 5)}`;
+
+  async function toggleCheckin(r: any) {
+    const tinha = checkinIds.has(r.id);
+    setSavingCheckin(true);
+    const { error } = await alternarCheckin(r.id, tinha);
+    setSavingCheckin(false);
+    if (error) {
+      toast({ title: "Erro no check-in", description: error.message, variant: "destructive" });
+      return;
+    }
+    setCheckinIds((atual) => { const next = new Set(atual); if (tinha) next.delete(r.id); else next.add(r.id); return next; });
+    setSel({ ...r, status: tinha ? "pendente" : "confirmada" });
+    toast({ title: tinha ? "Check-in estornado" : "Check-in registrado", description: tinha ? "A reserva voltou para pendente." : "Reserva confirmada. O checkout é automático ao fim do horário." });
+    onChanged?.();
+  }
 
   const colunas = useMemo(() => {
     let cols = salaId === "todas" ? salasVisiveis : salasVisiveis.filter((s) => s.id === salaId);
@@ -148,9 +184,9 @@ export default function AdminRoomDayGantt({
                       <button key={r.id} type="button" onClick={() => setSel(r)}
                         className="absolute left-1 right-1 z-10 overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] font-semibold shadow"
                         style={{ top: ((a - inicio) / 60) * ROW_H + 1, height: ((b - a) / 60) * ROW_H - 2, background: bg, color: readableTextOn(bg) }}
-                        title={`${r.nome} · ${r.hora_inicio?.slice(0, 5)}–${r.hora_fim?.slice(0, 5)} · ${r.status}`}>
-                        <p className="truncate pr-6">{r.nome}</p>
-                        <p className="truncate pr-6 opacity-80">{r.hora_inicio?.slice(0, 5)}–{r.hora_fim?.slice(0, 5)} · {r.status}</p>
+                        title={`${r.nome} - Plano: ${planoDaReserva(r)}\n${horario(r)} - ${statusExibido(r)}`}>
+                        <p className="truncate pr-6">{r.nome} - Plano: {planoDaReserva(r)}</p>
+                        <p className="truncate pr-6 opacity-80">{horario(r)} - {statusExibido(r)}</p>
                         {r.cliente_corp_id && (
                           <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2">
                             <EventAvatar name={r.nome} photoUrl={avatarsByClientId[r.cliente_corp_id]} size={20} className="ring-1 ring-white/60" />
@@ -169,10 +205,17 @@ export default function AdminRoomDayGantt({
       {sel && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-sm">
           <div>
-            <p className="font-bold">{sel.nome}</p>
-            <p className="text-xs text-muted-foreground">{sel.email} · {sel.telefone} · {sel.hora_inicio?.slice(0, 5)}–{sel.hora_fim?.slice(0, 5)} · {sel.status}</p>
+            <p className="font-bold">{sel.nome} - Plano: {planoDaReserva(sel)}</p>
+            <p className="text-xs text-muted-foreground">{sel.email} · {sel.telefone} · {horario(sel)} - {statusExibido(sel)}{checkinIds.has(sel.id) ? " · check-in feito" : ""}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {sel.status !== "cancelada" && sel.status !== "realizada" && (
+              <Button size="sm" variant="outline" disabled={savingCheckin} onClick={() => void toggleCheckin(sel)}
+                className={checkinIds.has(sel.id) ? "text-green-700 border-green-300" : ""}>
+                {savingCheckin ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <UserCheck className="mr-1 h-4 w-4" />}
+                {checkinIds.has(sel.id) ? "Estornar check-in" : "Registrar check-in"}
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => { onEditReserva(sel); setSel(null); }}><Pencil className="mr-1 h-4 w-4" />Editar / trocar cliente</Button>
             {onDeleteReserva && <Button size="sm" variant="destructive" onClick={async () => { await onDeleteReserva(sel); setSel(null); }}><Trash2 className="mr-1 h-4 w-4" />Excluir</Button>}
             <Button size="icon" variant="ghost" onClick={() => setSel(null)} aria-label="Fechar detalhes"><X className="h-4 w-4" /></Button>

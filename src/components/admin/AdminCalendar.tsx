@@ -23,6 +23,7 @@ import { verificarConflitos } from "@/lib/disponibilidade";
 import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
 import { calculateReservationPrice } from "@/lib/reservationPricing";
 import { friendlyError } from "@/lib/appErrors";
+import { alternarCheckin } from "@/lib/checkin";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -110,17 +111,13 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
   async function toggleCheckin(reserva: any) {
     setSavingCheckin(true);
-    const next = checkin
-      ? (supabase.from as any)("checkins").delete().eq("reservation_id", reserva.id)
-      : (supabase.from as any)("checkins").insert({ reservation_id: reserva.id }).select().single();
-    const { data, error } = await next;
+    const { checkin: novo, error } = await alternarCheckin(reserva.id, Boolean(checkin));
     if (error) {
       toast({ title: "Erro no check-in", description: error.message, variant: "destructive" });
     } else {
-      setCheckin(checkin ? null : data);
-      await (supabase.from("reservations") as any).update({ status: checkin ? "confirmada" : "realizada" }).eq("id", reserva.id);
+      setCheckin(novo);
       onCreated?.();
-      toast({ title: checkin ? "Check-in estornado" : "Check-in registrado" });
+      toast({ title: checkin ? "Check-in estornado" : "Check-in registrado", description: checkin ? "A reserva voltou para pendente." : "Reserva confirmada. O checkout é automático ao fim do horário." });
     }
     setSavingCheckin(false);
   }
@@ -644,6 +641,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                 unidadeId={selectedUnidade}
                 salaId={selectedSala}
                 onDeleteReserva={onDeleteReserva}
+                onChanged={onCreated}
                 onNovaReserva={(d) => setNovaDay(d)}
                 onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
               />
@@ -922,7 +920,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                     <div className="text-[11px] text-muted-foreground pt-2 border-t">Criado em {new Date(fullView.obj.created_at).toLocaleString("pt-BR")}</div>
                   </div>
                   <div className="flex justify-end gap-2 mt-2">
-                    {fullView.kind === "reserva" && fullView.obj.ambiente === "estacao" && fullView.obj.status !== "cancelada" && (
+                    {fullView.kind === "reserva" && fullView.obj.status !== "cancelada" && (
                       <Button
                         variant="outline" size="sm"
                         className={checkin ? "text-green-700 border-green-300" : "text-brand-blue-dark border-brand-blue-dark/30"}

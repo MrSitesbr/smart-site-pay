@@ -38,12 +38,16 @@ export type Database = {
       checkins: {
         Row: {
           checked_in_at: string
+          checkout_at: string | null
+          checkout_auto: boolean
           created_at: string
           id: string
           reservation_id: string
         }
         Insert: {
           checked_in_at?: string
+          checkout_at?: string | null
+          checkout_auto?: boolean
           created_at?: string
           id?: string
           reservation_id: string
@@ -1408,6 +1412,15 @@ export type Database = {
         Args: { p_reservation_id: string; p_status: Database["public"]["Enums"]["reserva_status"] }
         Returns: string
       }
+      cancel_reservation_series: {
+        Args: { p_serie_id: string; p_from: string }
+        Returns: {
+          id: string
+          google_event_id: string | null
+          google_calendar_id: string | null
+        }[]
+      }
+      finalize_finished_reservations: { Args: never; Returns: number }
       get_public_room_availability: {
         Args: { p_end_date: string; p_sala_id?: string | null; p_start_date: string }
         Returns: {
@@ -1416,6 +1429,8 @@ export type Database = {
           hora_fim: string
           hora_inicio: string
           sala_id: string
+          propria: boolean
+          status: string | null
         }[]
       }
       has_role: {
