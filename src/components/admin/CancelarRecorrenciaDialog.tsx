@@ -32,10 +32,12 @@ export default function CancelarRecorrenciaDialog({ reserva, onOpenChange, onDon
           return;
         }
         if (reserva.google_event_id) await invokeGoogleSync({ action: "delete_event", eventId: reserva.google_event_id, calendarId: reserva.google_calendar_id });
-        const { error } = await supabase.from("reservations")
+        const { data: alteradas, error } = await supabase.from("reservations")
           .update({ status: "cancelada", cancelled_at: new Date().toISOString(), google_event_id: null })
-          .eq("id", reserva.id);
+          .eq("id", reserva.id)
+          .select("id");
         if (error) throw error;
+        if (!alteradas?.length) throw new Error("A reserva não foi alterada no banco. Atualize a página e tente novamente.");
         toast({ title: "Reserva cancelada", description: "O histórico financeiro foi preservado." });
       } else {
         const corte = reserva.data < hojeISO() ? hojeISO() : reserva.data;

@@ -119,6 +119,30 @@ export default function AdminRoomDayGantt({
   for (let m = inicio; m < fim; m += 60) horas.push(m);
 
   const reservasDaColuna = (id: string) => doDia.filter((r) => id === "__sem" ? (!r.sala_id || !salas.some((s) => s.id === r.sala_id)) : r.sala_id === id);
+
+  /** Reservas que se sobrepõem ficam lado a lado (em faixas), em vez de uma escondida atrás da outra. */
+  const layoutDaColuna = (id: string) => {
+    const lista = [...reservasDaColuna(id)].sort((x, y) => toMin(x.hora_inicio) - toMin(y.hora_inicio) || toMin(y.hora_fim) - toMin(x.hora_fim));
+    const resultado: { r: any; faixa: number; faixas: number }[] = [];
+    let grupo: { r: any; faixa: number }[] = [];
+    let fimDoGrupo = -1;
+    const fecharGrupo = () => {
+      const faixas = Math.max(1, ...grupo.map((item) => item.faixa + 1));
+      grupo.forEach((item) => resultado.push({ ...item, faixas }));
+      grupo = [];
+    };
+    for (const r of lista) {
+      const ini = toMin(r.hora_inicio), fimR = toMin(r.hora_fim);
+      if (grupo.length && ini >= fimDoGrupo) fecharGrupo();
+      const ocupadas = new Set(grupo.filter((item) => toMin(item.r.hora_fim) > ini).map((item) => item.faixa));
+      let faixa = 0;
+      while (ocupadas.has(faixa)) faixa += 1;
+      grupo.push({ r, faixa });
+      fimDoGrupo = Math.max(grupo.length > 1 ? fimDoGrupo : -1, fimR);
+    }
+    if (grupo.length) fecharGrupo();
+    return resultado;
+  };
   const shift = (n: number) => { const d = new Date(day); d.setDate(d.getDate() + n); onChangeDay(d); };
   const cols = `64px repeat(${colunas.length}, minmax(150px, 1fr))`;
 
@@ -175,15 +199,15 @@ export default function AdminRoomDayGantt({
                         style={{ height: ROW_H }} title={fechado ? "Fora do expediente" : "Clique para nova reserva"} />
                     );
                   })}
-                  {reservasDaColuna(s.id).map((r) => {
+                  {layoutDaColuna(s.id).map(({ r, faixa, faixas }) => {
                     const a = Math.max(toMin(r.hora_inicio), inicio);
                     const b = Math.min(toMin(r.hora_fim), fim);
                     if (b <= a) return null;
                     const bg = getClientColor({ name: r.nome, email: r.email });
                     return (
                       <button key={r.id} type="button" onClick={() => setSel(r)}
-                        className="absolute left-1 right-1 z-10 overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] font-semibold shadow"
-                        style={{ top: ((a - inicio) / 60) * ROW_H + 1, height: ((b - a) / 60) * ROW_H - 2, background: bg, color: readableTextOn(bg) }}
+                        className="absolute z-10 overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] font-semibold shadow ring-1 ring-white/70"
+                        style={{ top: ((a - inicio) / 60) * ROW_H + 1, height: ((b - a) / 60) * ROW_H - 2, left: `calc(${(faixa / faixas) * 100}% + 4px)`, width: `calc(${100 / faixas}% - 8px)`, background: bg, color: readableTextOn(bg) }}
                         title={`${r.nome} - Plano: ${planoDaReserva(r)}\n${horario(r)} - ${statusExibido(r)}`}>
                         <p className="truncate pr-6">{r.nome} - Plano: {planoDaReserva(r)}</p>
                         <p className="truncate pr-6 opacity-80">{horario(r)} - {statusExibido(r)}</p>

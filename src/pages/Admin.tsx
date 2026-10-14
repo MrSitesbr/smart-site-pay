@@ -211,11 +211,13 @@ export default function Admin() {
       if (gId) {
         await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
       }
-      const { error } = await (supabase.from("reservations") as any)
+      const { data: alteradas, error } = await (supabase.from("reservations") as any)
         .update({ status: "cancelada", cancelled_at: new Date().toISOString(), google_event_id: null })
-        .eq("id", alvo.id);
-      if (error) {
-        toast({ title: "Erro ao cancelar", description: error.message, variant: "destructive" });
+        .eq("id", alvo.id)
+        .select("id");
+      if (error || !alteradas?.length) {
+        // Sem linha alterada o banco não acusa erro: confere para não exibir sucesso falso.
+        toast({ title: "Erro ao cancelar", description: error?.message || "A reserva não foi alterada no banco. Atualize a página e tente novamente.", variant: "destructive" });
         fetchReservas();
         return;
       }
@@ -322,7 +324,7 @@ export default function Admin() {
           </header>
 
           <main className="p-8">
-            {activeTab === "dashboard" && <AdminDashboard reservas={reservas} contratos={contratos} />}
+            {activeTab === "dashboard" && <AdminDashboard reservas={reservas} contratos={contratos} onRefresh={fetchReservas} onNavigate={setActiveTab} />}
             {activeTab === "calendario" && (
               <AdminCalendar 
                 reservas={reservas} 

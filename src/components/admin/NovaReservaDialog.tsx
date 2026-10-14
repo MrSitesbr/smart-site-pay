@@ -355,6 +355,11 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
         serie_id: serieId,
       };
       const { data: ins, error } = await (supabase.from("reservations") as any).insert(payload).select("id").single();
+      // Horário ocupado (validado no banco): numa recorrência pula a data e segue com as próximas.
+      if (error?.code === "23P01" && datas.length > 1) {
+        puladas.push(dt.split("-").reverse().join("/"));
+        continue;
+      }
       if (error) {
         toast({ title: "Erro ao criar reserva", description: friendlyError(error, "Não foi possível criar a reserva."), variant: "destructive" });
         setSaving(false);
