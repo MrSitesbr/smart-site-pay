@@ -94,6 +94,8 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [fimManual, setFimManual] = useState("10:00");
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
+  // No celular o toque precisa rolar a grade; a seleção por arraste fica só para o mouse.
+  const tipoPonteiroRef = useRef<string>("mouse");
 
   const atualizarSelecao = (valor: Selecao | null) => { selecaoRef.current = valor; setSelecao(valor); };
 
@@ -381,6 +383,20 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     atualizarSelecao({ salaId: id, inicioIndex: index, fimIndex: index });
   }
 
+  /** Seleção de um único horário (toque ou teclado); a duração é ajustada na confirmação. */
+  function selecionarSlotUnico(id: string, index: number) {
+    const periodo = periodoNoSlot(id, index);
+    if (periodo) { removerPeriodo(periodo.id); return; }
+    iniciarSelecao(id, index);
+    if (!arrastandoRef.current) return;
+    arrastandoRef.current = false;
+    adicionarSelecao({ salaId: id, inicioIndex: index, fimIndex: index });
+  }
+
+  function alterarPeriodo(id: string, campo: "inicio" | "fim", valor: string) {
+    setPeriodos((lista) => lista.map((item) => item.id === id ? { ...item, [campo]: valor } : item));
+  }
+
   function ampliarSelecao(id: string, index: number) {
     const atual = selecaoRef.current;
     if (!arrastandoRef.current || !atual || atual.salaId !== id || !intervaloLivre(id, atual.inicioIndex, index)) return;
@@ -392,6 +408,10 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     if (avisarBloqueio()) return;
     if (!periodos.length || !salaDosPeriodos) {
       toast({ title: "Escolha um horário", description: "Arraste pelos horários livres de uma sala para montar a solicitação.", variant: "destructive" });
+      return;
+    }
+    if (periodos.some((item) => !item.inicio || !item.fim || item.inicio >= item.fim || ![item.inicio, item.fim].every((valor) => ["00", "30"].includes(valor.slice(3, 5))))) {
+      toast({ title: "Revise os horários", description: "O término deve ser depois do início, em intervalos de 30 minutos.", variant: "destructive" });
       return;
     }
 
@@ -649,20 +669,19 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                         tabIndex={indisponivel ? -1 : 0}
                           aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : periodoNoSlot(sala.id, index) ? `${sala.nome}, ${horarioMinutos(slot)}, selecionado; pressione Enter para remover` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`}
                         onPointerDown={(event) => {
+                          tipoPonteiroRef.current = event.pointerType;
+                          if (event.pointerType !== "mouse") return;
                           event.preventDefault();
                           iniciarSelecao(sala.id, index);
                         }}
                         onPointerEnter={() => ampliarSelecao(sala.id, index)}
+                        onClick={() => {
+                          if (tipoPonteiroRef.current !== "mouse" && !indisponivel) selecionarSlotUnico(sala.id, index);
+                        }}
                         onKeyDown={(event) => {
                           if (!indisponivel && (event.key === "Enter" || event.key === " ")) {
                             event.preventDefault();
-                            const periodo = periodoNoSlot(sala.id, index);
-                            if (periodo) removerPeriodo(periodo.id);
-                            else {
-                              iniciarSelecao(sala.id, index);
-                              arrastandoRef.current = false;
-                              adicionarSelecao({ salaId: sala.id, inicioIndex: index, fimIndex: index });
-                            }
+                            selecionarSlotUnico(sala.id, index);
                           }
                         }}
                         className={`relative min-h-9 border-l border-border transition-colors ${
@@ -748,10 +767,19 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                 </div>
                 <div className="space-y-2">
                   {periodos.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border bg-background p-3">
-                      <div>
+                    <div key={item.id} className="flex items-end justify-between gap-3 rounded-md border bg-background p-3">
+                      <div className="min-w-0 flex-1">
                         <p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p>
-                        <p className="text-sm text-muted-foreground">{item.inicio} às {item.fim}</p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <label className="space-y-1 text-xs font-medium text-muted-foreground">
+                            Início
+                            <Input type="time" step="1800" value={item.inicio} onChange={(event) => alterarPeriodo(item.id, "inicio", event.target.value)} />
+                          </label>
+                          <label className="space-y-1 text-xs font-medium text-muted-foreground">
+                            Término
+                            <Input type="time" step="1800" value={item.fim} onChange={(event) => alterarPeriodo(item.id, "fim", event.target.value)} />
+                          </label>
+                        </div>
                       </div>
                       <Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}>
                         <Trash2 className="h-4 w-4" />

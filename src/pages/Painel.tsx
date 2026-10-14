@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, LogOut, ExternalLink, Copy, Home, ArrowRight, Building2, FileText, LifeBuoy, Calculator, Plus, Pencil, Trash2, KeyRound, Eye, EyeOff } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import PainelSidebar from "@/components/painel/layout/PainelSidebar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +76,7 @@ export default function Painel() {
   const [confirmClientPassword, setConfirmClientPassword] = useState("");
   const [showClientPassword, setShowClientPassword] = useState(false);
   const [savingClientPassword, setSavingClientPassword] = useState(false);
+  const [aba, setAba] = useState("calendario");
 
   useEffect(() => {
     (async () => {
@@ -260,39 +263,32 @@ export default function Painel() {
   if (accessBlocked) return <div className="min-h-screen flex items-center justify-center p-4"><Card className="max-w-md p-8 text-center"><Building2 className="w-10 h-10 mx-auto mb-4 text-secondary" /><h1 className="font-heading font-black text-xl mb-2">Acesso aguardando liberação</h1><p className="text-muted-foreground mb-6">{accessBlocked}</p><Button onClick={logout}>Sair</Button></Card></div>;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-brand-blue-dark text-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-heading font-black text-2xl">Meu Painel</h1>
-            <p className="text-xs text-white/60">{user?.email}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => navigate("/")} className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white">
-              <Home className="w-4 h-4 mr-2" /> Site
-            </Button>
-            <Button size="sm" variant="outline" onClick={logout} className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white">
-              <LogOut className="w-4 h-4 mr-2" /> Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+                <PainelSidebar
+                  aba={aba}
+                  onAbaChange={setAba}
+                  contadores={{
+                    colaboradores: funcionarios.length,
+                    visitantes: visitantes.length,
+                    solicitacoes: contratos.length,
+                    canceladas: contratos.filter((c) => c.status === "cancelada").length + reservas.filter((r) => r.status === "cancelada").length,
+                  }}
+                />
 
-      <main className="container mx-auto px-4 py-6 max-w-[1600px]">
-        <Tabs defaultValue="calendario">
-          <TabsList className="mb-6 flex-wrap h-auto gap-1">
-            <TabsTrigger value="dados">Meus dados</TabsTrigger>
-            <TabsTrigger value="colaboradores">Colaboradores ({funcionarios.length})</TabsTrigger>
-            <TabsTrigger value="visitantes">Visitantes ({visitantes.length})</TabsTrigger>
-            <TabsTrigger value="plano">Meu plano</TabsTrigger>
-            <TabsTrigger value="documentos">Documentos</TabsTrigger>
-            <TabsTrigger value="suporte">Suporte</TabsTrigger>
-            <TabsTrigger value="calendario">Calendário</TabsTrigger>
-            <TabsTrigger value="lista">Minhas solicitações ({contratos.length})</TabsTrigger>
-            <TabsTrigger value="canceladas">
-              Canceladas ({contratos.filter((c) => c.status === "cancelada").length + reservas.filter((r) => r.status === "cancelada").length})
-            </TabsTrigger>
-          </TabsList>
+              <div className="flex-1 flex flex-col min-w-0">
+                <header className="border-b bg-brand-blue-dark text-white">
+                  <div className="px-4 lg:px-8 py-3 flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <h1 className="font-heading font-black text-2xl">Meu Painel</h1>
+                      <p className="text-xs text-white/60 truncate">{user?.email}</p>
+                    </div>
+                    <SidebarTrigger className="md:hidden text-white hover:bg-white/10 hover:text-white" />
+                  </div>
+                </header>
+
+                <main className="flex-1 w-full px-4 lg:px-8 py-6 max-w-[1600px]">
+                  <Tabs value={aba} onValueChange={setAba}>
 
           <TabsContent value="dados">
             <div className="grid gap-4 lg:grid-cols-3">
@@ -514,8 +510,10 @@ export default function Painel() {
             <DialogFooter><Button variant="outline" onClick={() => setShowPlanChange(false)}>Cancelar</Button><Button onClick={requestPlanChange} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar solicitação"}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
-      </main>
-    </div>
+          </main>
+        </div>
+      </div>
+      </SidebarProvider>
   );
 }
 

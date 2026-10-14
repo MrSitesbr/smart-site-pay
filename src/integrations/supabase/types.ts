@@ -723,6 +723,7 @@ export type Database = {
       }
       reservations: {
         Row: {
+          admin_notes: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
           calculo_justificativa: string | null
           cancel_motivo: string | null
@@ -758,6 +759,7 @@ export type Database = {
           valor_original: number | null
         }
         Insert: {
+          admin_notes?: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
           calculo_justificativa?: string | null
           cancel_motivo?: string | null
@@ -793,6 +795,7 @@ export type Database = {
           valor_original?: number | null
         }
         Update: {
+          admin_notes?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_tipo"]
           calculo_justificativa?: string | null
           cancel_motivo?: string | null

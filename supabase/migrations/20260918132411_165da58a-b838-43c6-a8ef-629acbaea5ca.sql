@@ -1,1 +1,0 @@
-COMMENT ON FUNCTION public.get_public_room_availability(date, date, uuid) IS 'Agenda publica anonimizada para calendario mensal e Gantt diario.';
