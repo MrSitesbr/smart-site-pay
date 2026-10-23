@@ -24,6 +24,8 @@ import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
 import { calculateReservationPrice } from "@/lib/reservationPricing";
 import { friendlyError } from "@/lib/appErrors";
 import { alternarCheckin } from "@/lib/checkin";
+import { carregarSolicitacoesPendentes, indexarPorReserva, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
+import SolicitacoesReservaPanel, { SolicitacaoReservaCard } from "./SolicitacoesReservaPanel";
 
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -76,6 +78,26 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [editSalas, setEditSalas] = useState<any[]>([]);
   const [editPlanos, setEditPlanos] = useState<any[]>([]);
   const [savingCheckin, setSavingCheckin] = useState(false);
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoReserva[]>([]);
+
+  async function carregarSolicitacoes() {
+    try {
+      setSolicitacoes(await carregarSolicitacoesPendentes());
+    } catch (error) {
+      console.error("Erro ao carregar solicitações de reserva:", error);
+    }
+  }
+
+  // Pedidos dos clientes são urgentes: recarrega junto com as reservas e a cada minuto.
+  useEffect(() => {
+    void carregarSolicitacoes();
+    const timer = window.setInterval(() => void carregarSolicitacoes(), 60_000);
+    return () => window.clearInterval(timer);
+  }, [reservas]);
+
+  const solicitacaoPorReserva = useMemo(() => indexarPorReserva(solicitacoes), [solicitacoes]);
+  const reservasPorId = useMemo(() => Object.fromEntries(reservas.map((r) => [r.id, r])), [reservas]);
+  const abrirReservaParaEditar = (reserva: any) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); };
 
   useEffect(() => {
     supabase.from('unidades').select('id, nome, horario_abertura, horario_fechamento').then(({ data }) => setUnidades(data || []));
@@ -366,6 +388,13 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
 
   return (
     <Card className="overflow-hidden">
+      <SolicitacoesReservaPanel
+        solicitacoes={solicitacoes}
+        reservasPorId={reservasPorId}
+        onAbrir={abrirReservaParaEditar}
+        onCancelarReserva={onDeleteReserva}
+        onConcluida={() => { void carregarSolicitacoes(); onCreated?.(); }}
+      />
       {/* Filtros */}
       <div className="p-4 border-b bg-muted/20 flex flex-wrap gap-3 items-center">
         <div className="flex bg-white p-1 rounded-lg border shadow-sm shrink-0">
@@ -620,6 +649,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                         <div key={idx} className="text-[10px] rounded pl-0.5 pr-1.5 py-0.5 truncate font-medium flex items-center gap-1" style={{ background: bg, color: fg }} title={`${e.obj.nome} — ${AMBIENTE_LABEL[e.obj.ambiente]} · ${e.obj.status}`}>
                           <EventAvatar name={e.obj.nome} isWoba={isWobaRow} photoUrl={e.obj.photo_url} color={bg} size={16} />
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot}`} />
+                          {e.kind === "reserva" && solicitacaoPorReserva[e.obj.id]?.status === "pendente" && (
+                            <span className="shrink-0 rounded bg-amber-400 px-1 text-[9px] font-bold text-black" title="Cliente pediu cancelamento ou alteração">!</span>
+                          )}
                           <span className="truncate">{label}</span>
                         </div>
                       );
@@ -643,7 +675,8 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                 onDeleteReserva={onDeleteReserva}
                 onChanged={onCreated}
                 onNovaReserva={(d) => setNovaDay(d)}
-                onEditReserva={(reserva) => { setFullView({ kind: "reserva", obj: reserva }); setEditingReserva({ ...reserva }); setIsEditingReserva(true); }}
+                onEditReserva={abrirReservaParaEditar}
+                solicitacoes={solicitacaoPorReserva}
               />
             </div>
           )}
@@ -784,6 +817,16 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
                   )}
                 </DialogTitle>
               </DialogHeader>
+
+              {fullView.kind === "reserva" && solicitacaoPorReserva[fullView.obj.id]?.status === "pendente" && (
+                <SolicitacaoReservaCard
+                  compacto
+                  solicitacao={solicitacaoPorReserva[fullView.obj.id]}
+                  reserva={fullView.obj}
+                  onCancelarReserva={onDeleteReserva ? async (reserva) => { await onDeleteReserva(reserva); setFullView(null); } : undefined}
+                  onConcluida={() => { void carregarSolicitacoes(); onCreated?.(); }}
+                />
+              )}
 
               {fullView.kind === "reserva" && isEditingReserva && editingReserva ? (
                 <div className="space-y-3 text-sm">

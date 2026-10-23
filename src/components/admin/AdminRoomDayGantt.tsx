@@ -6,6 +6,7 @@ import { getClientColor, readableTextOn } from "@/lib/clientColors";
 import EventAvatar from "./EventAvatar";
 import { toast } from "@/hooks/use-toast";
 import { alternarCheckin, statusExibido } from "@/lib/checkin";
+import { TIPO_SOLICITACAO_LABEL, descreverNovoHorario, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
 
 type Sala = { id: string; nome: string; unidade_id: string | null; foto_url: string | null; unidadeNome: string; abertura: number; fechamento: number };
 
@@ -15,8 +16,9 @@ const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${Str
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export default function AdminRoomDayGantt({
-  day, onChangeDay, onClose, reservas, unidadeId, salaId, onEditReserva, onDeleteReserva, onNovaReserva, onChanged,
+  day, onChangeDay, onClose, reservas, unidadeId, salaId, onEditReserva, onDeleteReserva, onNovaReserva, onChanged, solicitacoes = {},
 }: {
+  solicitacoes?: Record<string, SolicitacaoReserva>;
   day: Date;
   onChangeDay: (d: Date) => void;
   onClose: () => void;
@@ -204,13 +206,15 @@ export default function AdminRoomDayGantt({
                     const b = Math.min(toMin(r.hora_fim), fim);
                     if (b <= a) return null;
                     const bg = getClientColor({ name: r.nome, email: r.email });
+                    const pedido = solicitacoes[r.id]?.status === "pendente" ? solicitacoes[r.id] : null;
                     return (
                       <button key={r.id} type="button" onClick={() => setSel(r)}
-                        className="absolute z-10 overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] font-semibold shadow ring-1 ring-white/70"
+                        className={`absolute z-10 overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] font-semibold shadow ${pedido ? "ring-2 ring-amber-500" : "ring-1 ring-white/70"}`}
                         style={{ top: ((a - inicio) / 60) * ROW_H + 1, height: ((b - a) / 60) * ROW_H - 2, left: `calc(${(faixa / faixas) * 100}% + 4px)`, width: `calc(${100 / faixas}% - 8px)`, background: bg, color: readableTextOn(bg) }}
                         title={`${r.nome} - Plano: ${planoDaReserva(r)}\n${horario(r)} - ${statusExibido(r)}`}>
                         <p className="truncate pr-6">{r.nome} - Plano: {planoDaReserva(r)}</p>
                         <p className="truncate pr-6 opacity-80">{horario(r)} - {statusExibido(r)}</p>
+                        {pedido && <p className="mt-0.5 inline-block rounded bg-amber-400 px-1 text-[9px] font-bold text-black">Pedido de {TIPO_SOLICITACAO_LABEL[pedido.tipo].toLowerCase()}</p>}
                         {r.cliente_corp_id && (
                           <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2">
                             <EventAvatar name={r.nome} photoUrl={avatarsByClientId[r.cliente_corp_id]} size={20} className="ring-1 ring-white/60" />
@@ -231,6 +235,13 @@ export default function AdminRoomDayGantt({
           <div>
             <p className="font-bold">{sel.nome} - Plano: {planoDaReserva(sel)}</p>
             <p className="text-xs text-muted-foreground">{sel.email} · {sel.telefone} · {horario(sel)} - {statusExibido(sel)}{checkinIds.has(sel.id) ? " · check-in feito" : ""}</p>
+            {solicitacoes[sel.id]?.status === "pendente" && (
+              <p className="mt-1 text-xs font-semibold text-amber-700">
+                Cliente pediu {TIPO_SOLICITACAO_LABEL[solicitacoes[sel.id].tipo].toLowerCase()}
+                {descreverNovoHorario(solicitacoes[sel.id]) ? ` para ${descreverNovoHorario(solicitacoes[sel.id])}` : ""}
+                {solicitacoes[sel.id].mensagem ? `: "${solicitacoes[sel.id].mensagem}"` : ""}. Abra "Editar" para resolver.
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {sel.status !== "cancelada" && sel.status !== "realizada" && (

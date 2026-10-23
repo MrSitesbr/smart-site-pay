@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
+import { STATUS_SOLICITACAO_LABEL, carregarSolicitacoesDoCliente, indexarPorReserva, inicioDaReserva, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
+import ReservaSolicitacaoDialog from "./ReservaSolicitacaoDialog";
 
 interface PainelAgendamentoProps {
   cliente: any;
@@ -80,6 +82,8 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [salaId, setSalaId] = useState("todas");
   const [ocupacoes, setOcupacoes] = useState<Ocupacao[]>([]);
   const [reservasDoUsuario, setReservasDoUsuario] = useState<any[]>([]);
+  const [solicitacoes, setSolicitacoes] = useState<Record<string, SolicitacaoReserva>>({});
+  const [reservaAberta, setReservaAberta] = useState<any | null>(null);
   const [carregandoSalas, setCarregandoSalas] = useState(true);
   const [carregandoAgenda, setCarregandoAgenda] = useState(false);
   const [solicitando, setSolicitando] = useState(false);
@@ -238,10 +242,26 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       setReservasDoUsuario(reservasData || []);
     }
 
+    if (clienteId) {
+      try {
+        setSolicitacoes(indexarPorReserva(await carregarSolicitacoesDoCliente(clienteId)));
+      } catch (error) {
+        console.error("Erro ao carregar solicitações de reserva:", error);
+      }
+    }
+
     setCarregandoAgenda(false);
   }, [mes, salaId, clienteId]);
 
   useEffect(() => { void carregarAgenda(); }, [carregarAgenda]);
+
+  const proximasReservas = useMemo(() => {
+    const agora = new Date();
+    return reservasDoUsuario
+      .filter((reserva) => reserva.id && reserva.status !== "cancelada" && reserva.status !== "realizada" && inicioDaReserva(reserva) > agora)
+      .sort((a, b) => inicioDaReserva(a).getTime() - inicioDaReserva(b).getTime())
+      .slice(0, 9);
+  }, [reservasDoUsuario]);
 
   const dias = useMemo(() => eachDayOfInterval({ start: startOfMonth(mes), end: endOfMonth(mes) }), [mes]);
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
@@ -650,15 +670,22 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                     if (minhaReserva) {
                       const statusColor = STATUS_COLORS[minhaReserva.status || ""] || "bg-blue-500";
                       const statusLabel = `Sua reserva · ${rotuloStatus(minhaReserva.status, minhaReserva.data, minhaReserva.hora_fim)}`;
+                      const reservaClicavel = reservaUser?.id && reservaUser.status !== "cancelada" ? reservaUser : null;
+                      const pedidoPendente = reservaClicavel && solicitacoes[reservaClicavel.id]?.status === "pendente";
                       return (
-                        <div
+                        <button
                           key={sala.id}
-                          className={`relative min-h-9 border-l border-border ${statusColor} text-white text-[9px] font-bold cursor-not-allowed`}
+                          type="button"
+                          disabled={!reservaClicavel}
+                          onClick={() => reservaClicavel && setReservaAberta(reservaClicavel)}
+                          aria-label={`${statusLabel}. Abrir detalhes da reserva`}
+                          className={`relative min-h-9 border-l border-border ${statusColor} text-white text-[9px] font-bold ${reservaClicavel ? "cursor-pointer hover:brightness-110" : "cursor-not-allowed"}`}
                         >
                           <div className="flex h-full items-center justify-center px-1">
                             {statusLabel}
                           </div>
-                        </div>
+                          {pedidoPendente && <span className="absolute right-0.5 top-0.5 rounded bg-amber-400 px-1 text-[8px] text-black">Pedido</span>}
+                        </button>
                       );
                     }
 
@@ -709,6 +736,35 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           </div>
         )}
       </section>
+
+      {proximasReservas.length > 0 && (
+        <section className="rounded-lg border bg-card p-4">
+          <h3 className="mb-3 font-heading text-lg font-black">Suas próximas reservas</h3>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {proximasReservas.map((reserva) => {
+              const pedido = solicitacoes[reserva.id];
+              return (
+                <button key={reserva.id} type="button" onClick={() => setReservaAberta(reserva)}
+                  className="rounded-md border bg-background p-3 text-left transition-colors hover:border-primary">
+                  <p className="font-semibold">{format(new Date(`${reserva.data}T12:00:00`), "dd/MM/yyyy")} · {reserva.hora_inicio?.slice(0, 5)}–{reserva.hora_fim?.slice(0, 5)}</p>
+                  <p className="text-xs text-muted-foreground">{salas.find((sala) => sala.id === reserva.sala_id)?.nome || "Sala"} · {rotuloStatus(reserva.status, reserva.data, reserva.hora_fim)}</p>
+                  {pedido?.status === "pendente"
+                    ? <p className="mt-1 text-xs font-semibold text-amber-600">Pedido de {pedido.tipo === "cancelamento" ? "cancelamento" : "alteração"} · {STATUS_SOLICITACAO_LABEL.pendente}</p>
+                    : <p className="mt-1 text-xs font-semibold text-primary">Cancelar ou alterar</p>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <ReservaSolicitacaoDialog
+        reserva={reservaAberta}
+        salaNome={salas.find((sala) => sala.id === reservaAberta?.sala_id)?.nome}
+        solicitacao={reservaAberta ? solicitacoes[reservaAberta.id] : null}
+        onOpenChange={(aberto) => { if (!aberto) setReservaAberta(null); }}
+        onEnviada={() => void carregarAgenda()}
+      />
 
       <Dialog open={criacaoManualAberta} onOpenChange={setCriacaoManualAberta}>
         <DialogContent>
