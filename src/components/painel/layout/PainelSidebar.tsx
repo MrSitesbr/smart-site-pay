@@ -18,6 +18,7 @@ import {
   Contact,
   CreditCard,
   FileText,
+  LayoutDashboard,
   LifeBuoy,
   LogOut,
   PanelLeftClose,
@@ -50,6 +51,7 @@ export default function PainelSidebar({ aba, onAbaChange, contadores }: {
   }
 
   const menuItems: NavItem[] = [
+    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
     { id: "dados", title: "Meus dados", icon: UserCog },
     { id: "calendario", title: "Calendário", icon: CalendarDays },
     { id: "colaboradores", title: "Colaboradores", icon: Users, badge: contadores.colaboradores },

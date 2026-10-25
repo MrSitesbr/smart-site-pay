@@ -24,6 +24,7 @@ import ClientAvatarEditor from "@/components/admin/ClientAvatarEditor";
 import EventAvatar from "@/components/admin/EventAvatar";
 import { passwordSchema } from "@/lib/validation";
 import { PlanoAvisosBanner, PlanoAvisosSino } from "@/components/painel/PlanoAvisos";
+import PainelDashboard from "@/components/painel/PainelDashboard";
 import { fmtNumeroCadastro, getResumoPlano, type ResumoPlano } from "@/lib/planosApi";
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -311,6 +312,17 @@ export default function Painel() {
                 <main className="flex-1 w-full px-4 lg:px-8 py-6 max-w-[1600px]">
                   <PlanoAvisosBanner avisos={resumoPlano?.avisos || []} />
                   <Tabs value={aba} onValueChange={setAba}>
+
+          <TabsContent value="dashboard">
+            <PainelDashboard
+              cliente={cliente}
+              resumo={resumoPlano}
+              carregandoResumo={carregandoResumo}
+              reservas={reservas}
+              contadores={{ colaboradores: funcionarios.length, visitantes: visitantes.length, solicitacoes: contratos.length }}
+              onAbrir={setAba}
+            />
+          </TabsContent>
 
           <TabsContent value="dados">
             <div className="grid gap-4 lg:grid-cols-3">

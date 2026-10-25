@@ -63,8 +63,9 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
   }
 
   const menuItems: NavItem[] = [
-    { 
-      title: "Calendário", 
+    { title: "Dashboard", id: "dashboard", icon: LayoutDashboard },
+    {
+      title: "Calendário",
       icon: Calendar,
       items: [
         { title: "Calendário Geral", id: "calendario" },
