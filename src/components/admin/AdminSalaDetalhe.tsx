@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Edit, Info, Users, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { adminAba, useVoltar } from "@/hooks/useVoltar";
 
 export default function AdminSalaDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const voltar = useVoltar(adminAba("unidades"));
   const [sala, setSala] = useState<any>(null);
   const [unidade, setUnidade] = useState<any>(null);
   const [planos, setPlanos] = useState<any[]>([]);
@@ -28,7 +30,7 @@ export default function AdminSalaDetalhe() {
     
     if (sErr) {
       toast.error("Erro ao carregar sala");
-      navigate("/admin");
+      navigate(adminAba("unidades"), { replace: true });
       return;
     }
 
@@ -48,7 +50,7 @@ export default function AdminSalaDetalhe() {
   return (
     <div className="p-8 space-y-8 bg-[#f8fafc] min-h-screen">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="hover:bg-brand-blue-dark/5">
+        <Button variant="ghost" onClick={voltar} className="hover:bg-brand-blue-dark/5">
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
         </Button>
       </div>

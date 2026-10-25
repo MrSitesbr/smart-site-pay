@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +81,19 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [contratos, setContratos] = useState<Contrato[]>([]);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  // A aba fica no endereço (?aba=...) para que "Voltar" de uma unidade, sala, plano ou cliente
+  // retorne à mesma tela em vez do Dashboard.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("aba") || "dashboard";
+  const setActiveTab = useCallback((aba: string) => {
+    if (aba === activeTab) return;
+    setSearchParams((atual) => {
+      const proximo = new URLSearchParams(atual);
+      if (aba === "dashboard") proximo.delete("aba");
+      else proximo.set("aba", aba);
+      return proximo;
+    });
+  }, [activeTab, setSearchParams]);
   const [cancelandoSerie, setCancelandoSerie] = useState<Reserva | null>(null);
 
 

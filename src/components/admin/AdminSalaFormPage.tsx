@@ -11,6 +11,7 @@ import { ArrowLeft, CheckCircle2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mensagemBancoSala, SALA_CATEGORIAS, SALA_MODALIDADES, tipoAmbienteDasCategorias } from "@/lib/salaOptions";
 import { numberOrNull, roomSchema } from "@/lib/validation";
+import { adminAba, useVoltar } from "@/hooks/useVoltar";
 
 const statusOptions = [
   { value: "disponivel", label: "Disponível" },
@@ -41,6 +42,7 @@ const defaultForm = {
 export default function AdminSalaFormPage() {
   const { id, unidadeId } = useParams<{ id: string; unidadeId: string }>();
   const navigate = useNavigate();
+  const voltar = useVoltar(adminAba("unidades"));
   const location = useLocation();
   const isNew = location.pathname.includes("/salas/novo");
   const isEditing = Boolean(id && location.pathname.includes("/editar"));
@@ -76,7 +78,7 @@ export default function AdminSalaFormPage() {
 
         if (salaRes.error) {
           toast.error("Erro ao carregar sala para edição");
-          navigate("/admin");
+          navigate(adminAba("unidades"), { replace: true });
           return;
         }
 
@@ -156,7 +158,9 @@ export default function AdminSalaFormPage() {
       return;
     }
     toast.success(isEditing ? "Sala atualizada com sucesso!" : "Sala criada com sucesso!");
-    navigate(`/admin/unidades/sala/${data}`);
+    // Edição volta para onde estava; sala nova abre o detalhe no lugar do formulário.
+    if (isEditing) voltar();
+    else navigate(`/admin/unidades/sala/${data}`, { replace: true });
   }
 
   if (loading) {
@@ -175,7 +179,7 @@ export default function AdminSalaFormPage() {
       <div className="max-w-5xl mx-auto px-4 py-10">
         <div className="bg-white shadow-xl rounded-2xl border border-slate-200/80 p-8">
           <div className="flex items-center gap-2 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="icon" onClick={voltar}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <h1 className="text-2xl font-semibold text-slate-900">{isEditing ? "Editar Sala" : "Nova Sala"}</h1>
@@ -327,7 +331,7 @@ export default function AdminSalaFormPage() {
           </div>
 
           <div className="mt-8 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => navigate(-1)}>Cancelar</Button>
+            <Button variant="outline" onClick={voltar}>Cancelar</Button>
             <Button onClick={saveSala} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
               <CheckCircle2 className="w-4 h-4 mr-2" /> Salvar sala
             </Button>

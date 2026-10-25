@@ -8,6 +8,7 @@ import { ImageUpload } from "./ImageUpload";
 import { MediaPickerModal } from "./MediaPickerModal";
 import { ArrowLeft, ImageIcon, Save, Building2, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { adminAba, useVoltar } from "@/hooks/useVoltar";
 
 const defaultForm = {
   nome: "",
@@ -24,6 +25,7 @@ const defaultForm = {
 export default function AdminUnidadeFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const voltar = useVoltar(adminAba("unidades"));
   const location = useLocation();
   const isNew = location.pathname.endsWith("/novo");
   const isEditing = Boolean(id && !isNew);
@@ -51,7 +53,7 @@ export default function AdminUnidadeFormPage() {
 
       if (error) {
         toast.error("Erro ao carregar unidade para edição");
-        navigate("/admin");
+        navigate(adminAba("unidades"), { replace: true });
         return;
       }
 
@@ -121,7 +123,9 @@ export default function AdminUnidadeFormPage() {
     }
 
     toast.success(isEditing ? "Unidade atualizada com sucesso!" : "Unidade criada com sucesso!");
-    navigate(`/admin/unidades/${data.id}`);
+    // Edição volta para onde estava; unidade nova abre o detalhe no lugar do formulário.
+    if (isEditing) voltar();
+    else navigate(`/admin/unidades/${data.id}`, { replace: true });
   }
 
   const addInfraService = () => {
@@ -166,7 +170,7 @@ export default function AdminUnidadeFormPage() {
     <div className="p-8 bg-[#f8fafc] min-h-screen">
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="flex items-center justify-between gap-4">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="hover:bg-brand-blue-dark/5">
+          <Button variant="ghost" onClick={voltar} className="hover:bg-brand-blue-dark/5">
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
           </Button>
           <div className="flex items-center gap-2 text-brand-blue-dark">
@@ -186,7 +190,7 @@ export default function AdminUnidadeFormPage() {
               </h1>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate(-1)}>Cancelar</Button>
+              <Button variant="outline" onClick={voltar}>Cancelar</Button>
               <Button onClick={saveUnidade} className="bg-brand-blue-dark text-white hover:bg-brand-blue-dark/90">
                 <Save className="w-4 h-4 mr-2" /> Salvar
               </Button>
@@ -332,7 +336,7 @@ export default function AdminUnidadeFormPage() {
           </div>
 
           <div className="mt-8 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => navigate(-1)}>Cancelar</Button>
+            <Button variant="outline" onClick={voltar}>Cancelar</Button>
             <Button onClick={saveUnidade} className="bg-brand-orange hover:bg-brand-orange/90 text-white">
               <CheckCircle2 className="w-4 h-4 mr-2" /> Salvar unidade
             </Button>

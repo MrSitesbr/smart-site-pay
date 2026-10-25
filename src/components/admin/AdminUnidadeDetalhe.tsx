@@ -37,10 +37,12 @@ import {
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { calculateCompatibility, WaitingListEntry } from "@/lib/compatibility";
+import { adminAba, useVoltar } from "@/hooks/useVoltar";
 
 export default function AdminUnidadeDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const voltar = useVoltar(adminAba("unidades"));
   const [unidade, setUnidade] = useState<any>(null);
   const [salas, setSalas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,7 @@ export default function AdminUnidadeDetalhe() {
 
     if (uRes.error) {
       toast.error("Erro ao carregar unidade");
-      navigate("/admin");
+      navigate(adminAba("unidades"), { replace: true });
     } else {
       setUnidade(uRes.data);
       setSalas(sRes.data || []);
@@ -141,7 +143,7 @@ export default function AdminUnidadeDetalhe() {
     if (error) toast.error(error.message);
     else {
       toast.success("Unidade excluída com sucesso");
-      navigate("/admin");
+      navigate(adminAba("unidades"), { replace: true });
     }
   }
 
@@ -212,7 +214,7 @@ export default function AdminUnidadeDetalhe() {
   return (
     <div className="p-8 space-y-8 bg-[#f8fafc] min-h-screen">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="hover:bg-brand-blue-dark/5">
+        <Button variant="ghost" onClick={voltar} className="hover:bg-brand-blue-dark/5">
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
         </Button>
       </div>

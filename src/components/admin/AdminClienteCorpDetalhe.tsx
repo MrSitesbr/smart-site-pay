@@ -19,6 +19,7 @@ import { fmtNumeroCadastro } from "@/lib/planosApi";
 import type { Database } from "@/integrations/supabase/types";
 import { friendlyError } from "@/lib/appErrors";
 import { passwordSchema } from "@/lib/validation";
+import { adminAba, useVoltar } from "@/hooks/useVoltar";
 
 type ClientReservation = Omit<Database["public"]["Tables"]["reservations"]["Row"], "status"> & {
   status: string;
@@ -58,6 +59,7 @@ function exportReservations(reservations: ClientReservation[], clientName: strin
 export default function AdminClienteCorpDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const voltar = useVoltar(adminAba("clientes_corp"));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cliente, setCliente] = useState<any>({
@@ -155,7 +157,7 @@ export default function AdminClienteCorpDetalhe() {
       setUsoPlano({ horas, reservas: reservasAtivas.length, solicitacoes: (contratoRes.data || []).length });
     } catch (error: any) {
       toast.error(friendlyError(error, "Não foi possível carregar os dados do cliente."));
-      navigate("/admin");
+      navigate(adminAba("clientes_corp"), { replace: true });
     } finally {
       setLoading(false);
     }
@@ -249,7 +251,7 @@ export default function AdminClienteCorpDetalhe() {
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4 mr-2" /> Voltar</Button>
+        <Button variant="ghost" onClick={voltar}><ArrowLeft className="w-4 h-4 mr-2" /> Voltar</Button>
         <div className="min-w-0">
           <h2 className="text-3xl font-heading font-black text-brand-blue-dark uppercase">{cliente.razao_social}</h2>
           {cliente.numero_cadastro && <p className="text-sm font-semibold text-muted-foreground">Cadastro {fmtNumeroCadastro(cliente.numero_cadastro)}</p>}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,18 @@ export default function Painel() {
   const [confirmClientPassword, setConfirmClientPassword] = useState("");
   const [showClientPassword, setShowClientPassword] = useState(false);
   const [savingClientPassword, setSavingClientPassword] = useState(false);
-  const [aba, setAba] = useState("calendario");
+  // A aba fica no endereço (?aba=...): o botão voltar do navegador retorna à tela anterior do painel.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const aba = searchParams.get("aba") || "calendario";
+  const setAba = useCallback((proxima: string) => {
+    if (proxima === aba) return;
+    setSearchParams((atual) => {
+      const params = new URLSearchParams(atual);
+      if (proxima === "calendario") params.delete("aba");
+      else params.set("aba", proxima);
+      return params;
+    });
+  }, [aba, setSearchParams]);
   const [resumoPlano, setResumoPlano] = useState<ResumoPlano | null>(null);
   const [carregandoResumo, setCarregandoResumo] = useState(false);
 

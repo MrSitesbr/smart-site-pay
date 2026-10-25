@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Building2, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { friendlyError } from "@/lib/appErrors";
 import { fmtBRL } from "@/lib/planosApi";
+import { adminAba, useVoltar } from "@/hooks/useVoltar";
 
 const REGRAS = [
   { id: "semanal", label: "Cota semanal (Harmonia)" },
@@ -45,6 +46,7 @@ const numOrNull = (v: unknown) => (v === "" || v === null || v === undefined ? n
 export default function AdminPlanoDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const voltar = useVoltar(adminAba("planos_horas"));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [unidades, setUnidades] = useState<any[]>([]);
@@ -126,7 +128,7 @@ export default function AdminPlanoDetalhe() {
     }
     setSaving(false);
     toast.success("Plano salvo com sucesso!");
-    navigate("/admin");
+    voltar();
   }
 
   const toggleUnidade = (uid: string) => setSelectedUnidades((prev) => (prev.includes(uid) ? prev.filter((i) => i !== uid) : [...prev, uid]));
@@ -139,7 +141,7 @@ export default function AdminPlanoDetalhe() {
     <div className="min-h-screen bg-[#f0f0f1] p-4 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
-          <Button variant="ghost" onClick={() => navigate("/admin")} className="hover:bg-brand-blue-dark/5">
+          <Button variant="ghost" onClick={voltar} className="hover:bg-brand-blue-dark/5">
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
           </Button>
           <Button onClick={handleSave} disabled={saving} className="bg-brand-orange text-white">
