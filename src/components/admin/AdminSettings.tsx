@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, Mail, Lock, Save, Calendar, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, Mail, Lock, Save, Calendar, RefreshCw, DatabaseBackup, Download } from "lucide-react";
+import { fetchAllRows, rowsToCsv, downloadCsv, backupFilename } from "@/lib/backupExport";
+import { friendlyError } from "@/lib/appErrors";
 import { Switch } from "@/components/ui/switch";
 import { loadWobaCfg, wobaDefaults, WOBA_LS_KEY } from "@/lib/wobaEvents";
 import type { WobaCfg } from "@/lib/wobaEvents";
@@ -18,6 +20,24 @@ export default function AdminSettings() {
   const [mistralKey, setMistralKey] = useState("");
   const [autoApprove, setAutoApprove] = useState(false);
   const [wobaCfg, setWobaCfg] = useState<WobaCfg>({ ...wobaDefaults });
+  const [backupLoading, setBackupLoading] = useState<"reservations" | "clientes_corp" | null>(null);
+
+  const exportBackup = async (table: "reservations" | "clientes_corp", prefix: string, label: string) => {
+    setBackupLoading(table);
+    try {
+      const rows = await fetchAllRows(table);
+      if (rows.length === 0) {
+        toast({ title: `Nenhum registro de ${label} encontrado` });
+        return;
+      }
+      downloadCsv(backupFilename(prefix), rowsToCsv(rows));
+      toast({ title: "Backup gerado", description: `${rows.length} registro(s) de ${label} exportado(s).` });
+    } catch (error) {
+      toast({ title: `Erro ao gerar backup de ${label}`, description: friendlyError(error), variant: "destructive" });
+    } finally {
+      setBackupLoading(null);
+    }
+  };
 
   useEffect(() => {
     loadSettings();
@@ -156,6 +176,22 @@ export default function AdminSettings() {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-none shadow-sm md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-brand-blue-dark"><DatabaseBackup className="w-5 h-5" /> Backup de dados</CardTitle>
+            <CardDescription>Baixe uma planilha (CSV, abre no Excel) com todos os registros e colunas, para guardar antes de atualizações no sistema.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 sm:flex-row">
+            <Button variant="outline" onClick={() => exportBackup("reservations", "reservas", "reservas")} disabled={backupLoading !== null}>
+              {backupLoading === "reservations" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              Backup das reservas
+            </Button>
+            <Button variant="outline" onClick={() => exportBackup("clientes_corp", "clientes", "clientes")} disabled={backupLoading !== null}>
+              {backupLoading === "clientes_corp" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              Backup dos clientes
+            </Button>
+          </CardContent>
+        </Card>
         <Card className="border-none shadow-sm md:col-span-2"><CardHeader><CardTitle className="text-brand-blue-dark">Cadastros de clientes</CardTitle><CardDescription>Defina se novos cadastros entram no painel imediatamente.</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between rounded-lg border p-4"><Label htmlFor="auto-approve">Liberar novos cadastros automaticamente</Label><Switch id="auto-approve" checked={autoApprove} onCheckedChange={updateAutoApprove} /></div></CardContent></Card>
         <Card className="border-none shadow-sm">
           <CardHeader>
