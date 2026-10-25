@@ -10,6 +10,7 @@ import NovoClienteCorpDialog from "./NovoClienteCorpDialog";
 import { toast } from "@/hooks/use-toast";
 import { friendlyError } from "@/lib/appErrors";
 import EventAvatar from "./EventAvatar";
+import { fmtNumeroCadastro } from "@/lib/planosApi";
 
 export default function AdminClientesCorp() {
   const navigate = useNavigate();
@@ -32,7 +33,9 @@ export default function AdminClientesCorp() {
   const filteredClientes = clientes
     .filter((cliente) => {
       const matchesStatus = filter === "todos" || cliente.status_acesso === "pendente";
-      const matchesSearch = !query || normalize(cliente.razao_social).includes(query) || normalize(cliente.responsavel_nome).includes(query);
+      const numeroBuscado = query.replace(/^n[º°o.]?\s*/, "").replace(/^0+/, "");
+      const matchesNumero = /^\d+$/.test(numeroBuscado) && String(cliente.numero_cadastro ?? "") === numeroBuscado;
+      const matchesSearch = !query || matchesNumero || normalize(cliente.razao_social).includes(query) || normalize(cliente.responsavel_nome).includes(query);
       return matchesStatus && matchesSearch;
     })
     .sort((a, b) => {
@@ -152,8 +155,8 @@ export default function AdminClientesCorp() {
           <Input
             value={search}
             onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-            placeholder="Buscar empresa ou responsável"
-            aria-label="Buscar por nome da empresa ou do responsável"
+            placeholder="Buscar empresa, responsável ou nº de cadastro"
+            aria-label="Buscar por nome da empresa, do responsável ou número de cadastro"
             className="h-9 pl-9"
           />
         </div>
@@ -176,7 +179,7 @@ export default function AdminClientesCorp() {
               <EventAvatar name={c.razao_social || c.responsavel_nome || "Cliente"} photoUrl={c.avatar_url} size={40} />
               <div className="min-w-0">
                 <h3 className="truncate font-semibold">{c.razao_social}</h3>
-                <p className="text-xs text-muted-foreground">Criada em {c.created_at ? new Date(c.created_at).toLocaleDateString("pt-BR") : "—"}</p>
+                <p className="text-xs text-muted-foreground">{c.numero_cadastro ? `${fmtNumeroCadastro(c.numero_cadastro)} · ` : ""}Criada em {c.created_at ? new Date(c.created_at).toLocaleDateString("pt-BR") : "—"}</p>
               </div>
               <div className="min-w-0 text-sm">
                 <p className="truncate">{c.responsavel_nome || "Sem responsável"}</p>

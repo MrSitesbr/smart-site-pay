@@ -7,7 +7,8 @@ import { Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import { verificarConflitos } from "@/lib/disponibilidade";
-import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
+import { horasDaReserva } from "@/lib/planoUso";
+import { precificarEdicao } from "@/lib/precoReserva";
 import { calculateReservationPrice } from "@/lib/reservationPricing";
 import { friendlyError } from "@/lib/appErrors";
 import { toast } from "@/hooks/use-toast";
@@ -98,35 +99,9 @@ export default function AdminReservaEditDialog({ open, reserva, onOpenChange, on
 
     setSaving(true);
     try {
-      const hours = horasDaReserva(editing);
+      // Valor só é recalculado quando muda data, horário, sala ou tipo; a edição nunca é bloqueada pelo plano.
       const room = salas.find((item) => item.id === editing.sala_id);
-      let pricing = calculateReservationPrice({
-        tipo: editing.tipo === "diaria" ? "diaria" : "hora",
-        horas: hours,
-        saldo: 0,
-        precoHora: room?.preco_hora_avulsa == null ? null : Number(room.preco_hora_avulsa),
-        precoDiaria: room?.preco_diaria == null ? null : Number(room.preco_diaria),
-      });
-      let justification = "Reserva avulsa conforme o preço configurado para a sala.";
-
-      if (editing.plano_id) {
-        const plan = planos.find((item) => item.id === editing.plano_id);
-        const { data: link } = await supabase.from("sala_planos").select("plano_id")
-          .eq("sala_id", editing.sala_id).eq("plano_id", editing.plano_id).maybeSingle();
-        if (!plan || !link) {
-          toast({ title: "Plano indisponível", description: "O plano selecionado não está vinculado a esta sala.", variant: "destructive" });
-          return;
-        }
-        const usage = await calcularUsoPlano([editing.email], plan, editing.id);
-        pricing = calculateReservationPrice({
-          tipo: editing.tipo === "diaria" ? "diaria" : "hora",
-          horas: hours,
-          saldo: usage.saldo,
-          precoHora: room?.preco_hora_avulsa == null ? null : Number(room.preco_hora_avulsa),
-          precoDiaria: room?.preco_diaria == null ? null : Number(room.preco_diaria),
-        });
-        justification = `${pricing.cobertas}h cobertas pelo plano ${plan.nome}${pricing.excedentes ? `; ${pricing.excedentes}h excedentes` : ""}.`;
-      }
+      const precos = statusOnly ? {} : await precificarEdicao(editing, reserva, room);
 
       const payload = {
         nome: editing.nome,
@@ -143,12 +118,7 @@ export default function AdminReservaEditDialog({ open, reserva, onOpenChange, on
         unidade_id: editing.unidade_id || null,
         sala_id: editing.sala_id || null,
         plano_id: editing.plano_id || null,
-        valor: pricing.valor,
-        valor_original: pricing.valor,
-        horas_reservadas: pricing.horas,
-        horas_cobertas_plano: pricing.cobertas,
-        horas_excedentes: pricing.excedentes,
-        calculo_justificativa: justification,
+        ...precos,
       };
 
       const updateResult = statusOnly

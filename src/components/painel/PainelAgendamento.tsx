@@ -11,6 +11,8 @@ import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 import { STATUS_SOLICITACAO_LABEL, carregarSolicitacoesDoCliente, indexarPorReserva, inicioDaReserva, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
 import ReservaSolicitacaoDialog from "./ReservaSolicitacaoDialog";
+import CoberturaPlanoReserva, { type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
+import type { Modalidade } from "@/lib/planosApi";
 
 interface PainelAgendamentoProps {
   cliente: any;
@@ -96,6 +98,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [salaManualId, setSalaManualId] = useState("");
   const [inicioManual, setInicioManual] = useState("09:00");
   const [fimManual, setFimManual] = useState("10:00");
+  const [modalidade, setModalidade] = useState<Modalidade | null>(null);
+  const [estadoCobertura, setEstadoCobertura] = useState<EstadoCobertura | null>(null);
+  const faltaEscolherPagamento = !!estadoCobertura && (estadoCobertura.carregando || (estadoCobertura.precisaEscolha && !modalidade));
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
   // No celular o toque precisa rolar a grade; a seleção por arraste fica só para o mouse.
@@ -361,11 +366,16 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       toast({ title: "Horário inválido", description: "Escolha horários em intervalos de 30 minutos.", variant: "destructive" });
       return;
     }
+    if (faltaEscolherPagamento) {
+      toast({ title: "Escolha como pagar", description: "O saldo do plano não cobre todo o horário. Escolha hora adicional ou avulso.", variant: "destructive" });
+      return;
+    }
     setSolicitando(true);
     try {
-      const { error } = await supabase.rpc("request_authenticated_reservations", {
+      const { error } = await (supabase.rpc as any)("request_authenticated_reservations", {
         p_sala_id: salaManualId,
         p_periodos: [{ data: dataManual, hora_inicio: inicioManual, hora_fim: fimManual }],
+        p_modalidade: modalidade,
       });
       if (error) {
         toast({ title: "Não foi possível solicitar a reserva", description: error.message, variant: "destructive" });
@@ -373,6 +383,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       }
       toast({ title: "Reserva solicitada", description: "A equipe analisará a disponibilidade e confirmará o pedido." });
       setCriacaoManualAberta(false);
+      setModalidade(null);
       setMes(startOfMonth(new Date(`${dataManual}T12:00:00`)));
       setDia(startOfDay(new Date(`${dataManual}T12:00:00`)));
       await onRefresh();
@@ -435,12 +446,18 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       return;
     }
 
+    if (faltaEscolherPagamento) {
+      toast({ title: "Escolha como pagar", description: "O saldo do plano não cobre todos os horários. Escolha hora adicional ou avulso.", variant: "destructive" });
+      return;
+    }
+
     setSolicitando(true);
 
     try {
-      const { error } = await supabase.rpc("request_authenticated_reservations", {
+      const { error } = await (supabase.rpc as any)("request_authenticated_reservations", {
         p_sala_id: salaDosPeriodos.id,
         p_periodos: periodos.map(({ data, inicio, fim }) => ({ data, hora_inicio: inicio, hora_fim: fim })),
+        p_modalidade: modalidade,
       });
       if (error) {
         toast({ title: "Não foi possível solicitar", description: error.message || "Revise os períodos escolhidos e tente novamente.", variant: "destructive" });
@@ -455,6 +472,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       setConfirmacaoAberta(false);
       atualizarSelecao(null);
       setPeriodos([]);
+      setModalidade(null);
       await carregarAgenda();
       if (onRefresh) await onRefresh();
 
@@ -795,11 +813,23 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
               <label className="text-sm font-semibold" htmlFor="manual-booking-end">Término</label>
               <Input id="manual-booking-end" type="time" step="1800" value={fimManual} onChange={(event) => setFimManual(event.target.value)} />
             </div>
+            {criacaoManualAberta && salaManualId && (
+              <div className="sm:col-span-2">
+                <CoberturaPlanoReserva
+                  clienteId={clienteId}
+                  salaId={salaManualId}
+                  periodos={[{ data: dataManual, hora_inicio: inicioManual, hora_fim: fimManual }]}
+                  modalidade={modalidade}
+                  onModalidadeChange={setModalidade}
+                  onEstadoChange={setEstadoCobertura}
+                />
+              </div>
+            )}
             <p className="text-xs text-muted-foreground sm:col-span-2">As solicitações ficam pendentes até a confirmação da equipe. O sistema valida expediente, feriados e conflitos ao enviar.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCriacaoManualAberta(false)} disabled={solicitando}>Cancelar</Button>
-            <Button onClick={() => void solicitarReservaManual()} disabled={solicitando || carregandoAgenda}>
+            <Button onClick={() => void solicitarReservaManual()} disabled={solicitando || carregandoAgenda || faltaEscolherPagamento}>
               {solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               Enviar solicitação
             </Button>
@@ -845,12 +875,22 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                 </div>
               </div>
             )}
+            {confirmacaoAberta && salaDosPeriodos && (
+              <CoberturaPlanoReserva
+                clienteId={clienteId}
+                salaId={salaDosPeriodos.id}
+                periodos={periodos.map(({ data, inicio, fim }) => ({ data, hora_inicio: inicio, hora_fim: fim }))}
+                modalidade={modalidade}
+                onModalidadeChange={setModalidade}
+                onEstadoChange={setEstadoCobertura}
+              />
+            )}
             <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}>
               <Plus className="mr-2 h-4 w-4" />Adicionar outra data ou horário
             </Button>
           </div>
           <DialogFooter className="gap-2 sm:space-x-0">
-            <Button onClick={() => void solicitarNovaReserva()} disabled={solicitando || !periodos.length}>
+            <Button onClick={() => void solicitarNovaReserva()} disabled={solicitando || !periodos.length || faltaEscolherPagamento}>
               {solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               Solicitar reserva
             </Button>

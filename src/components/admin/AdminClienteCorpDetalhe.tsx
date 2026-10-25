@@ -14,6 +14,8 @@ import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import { DocumentUpload } from "./DocumentUpload";
 import ClientAvatarEditor from "./ClientAvatarEditor";
 import AdminReservaEditDialog from "./AdminReservaEditDialog";
+import AdminContratoCliente from "./AdminContratoCliente";
+import { fmtNumeroCadastro } from "@/lib/planosApi";
 import type { Database } from "@/integrations/supabase/types";
 import { friendlyError } from "@/lib/appErrors";
 import { passwordSchema } from "@/lib/validation";
@@ -171,7 +173,6 @@ export default function AdminClienteCorpDetalhe() {
       cnpj: cliente.cnpj,
       avatar_url: cliente.avatar_url,
       unidade_id: cliente.unidade_id,
-      plano_id: cliente.plano_id,
       documentos: cliente.documentos || []
     }).eq('id', id);
 
@@ -249,7 +250,10 @@ export default function AdminClienteCorpDetalhe() {
     <div className="p-8 space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4 mr-2" /> Voltar</Button>
-        <h2 className="text-3xl font-heading font-black text-brand-blue-dark uppercase">{cliente.razao_social}</h2>
+        <div className="min-w-0">
+          <h2 className="text-3xl font-heading font-black text-brand-blue-dark uppercase">{cliente.razao_social}</h2>
+          {cliente.numero_cadastro && <p className="text-sm font-semibold text-muted-foreground">Cadastro {fmtNumeroCadastro(cliente.numero_cadastro)}</p>}
+        </div>
       </div>
 
       <Tabs defaultValue="dados" className="w-full">
@@ -339,8 +343,8 @@ export default function AdminClienteCorpDetalhe() {
 
         <TabsContent value="contrato" className="mt-6">
           <Card className="p-6 space-y-4">
-            <p className="text-sm text-muted-foreground italic">Selecione a unidade e plano principal contratado por este cliente.</p>
-            <div className="grid grid-cols-2 gap-4">
+            <p className="text-sm text-muted-foreground italic">Selecione a unidade principal deste cliente. O plano é gerenciado no quadro "Plano contratado" abaixo.</p>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Unidade</Label>
                 <Select 
@@ -353,20 +357,8 @@ export default function AdminClienteCorpDetalhe() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Plano</Label>
-                <Select 
-                  value={cliente.plano_id || ""} 
-                  onValueChange={val => setCliente({...cliente, plano_id: val})}
-                >
-                  <SelectTrigger><SelectValue placeholder="Selecione o Plano" /></SelectTrigger>
-                  <SelectContent>
-                    {planos.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-            <Button onClick={save} disabled={saving}>Salvar Vinculação</Button>
+            <Button onClick={save} disabled={saving}>Salvar unidade</Button>
             <div className="border-t pt-4">
               <h3 className="font-heading font-bold mb-3">Uso do plano</h3>
               <div className="grid gap-3 sm:grid-cols-3">
@@ -376,6 +368,7 @@ export default function AdminClienteCorpDetalhe() {
               </div>
             </div>
           </Card>
+          {id && <div className="mt-4"><AdminContratoCliente clienteId={id} /></div>}
         </TabsContent>
 
         <TabsContent value="reservas" className="mt-6">

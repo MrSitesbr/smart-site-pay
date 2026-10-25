@@ -14,6 +14,8 @@ import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
+import CoberturaPlanoReserva, { type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
+import type { Modalidade } from "@/lib/planosApi";
 
 type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number; fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null };
 type UnidadePublica = { id: string; nome: string; horario_abertura: string; horario_fechamento: string };
@@ -51,6 +53,10 @@ export default function CalendarioPublico() {
   const [solicitando, setSolicitando] = useState(false);
   const [autenticado, setAutenticado] = useState(false);
   const [statusAcesso, setStatusAcesso] = useState<string | null>(null);
+  const [clienteId, setClienteId] = useState<string | null>(null);
+  const [modalidade, setModalidade] = useState<Modalidade | null>(null);
+  const [estadoCobertura, setEstadoCobertura] = useState<EstadoCobertura | null>(null);
+  const faltaEscolherPagamento = !!estadoCobertura && (estadoCobertura.carregando || (estadoCobertura.precisaEscolha && !modalidade));
   const [selecao, setSelecao] = useState<Selecao | null>(null);
   const [periodos, setPeriodos] = useState<Periodo[]>([]);
   const [dadosEditados, setDadosEditados] = useState<DadosConsulta>({ nome: "", email: "", whatsapp: "", tipoNegocio: "" });
@@ -98,11 +104,12 @@ export default function CalendarioPublico() {
 
   async function carregarDadosDoCliente(user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> | null }) {
     const { data: cliente } = await (supabase.from("clientes_corp") as any)
-      .select("status_acesso, responsavel_nome, responsavel_telefone")
+      .select("id, status_acesso, responsavel_nome, responsavel_telefone")
       .eq("user_id", user.id)
       .is("deleted_at", null)
       .maybeSingle();
     setStatusAcesso(cliente?.status_acesso ?? null);
+    setClienteId(cliente?.status_acesso === "aprovado" ? cliente.id : null);
     setDadosEditados((atual) => ({
       nome: atual.nome || cliente?.responsavel_nome || String(user.user_metadata?.responsavel_nome || ""),
       email: atual.email || user.email || "",
@@ -247,13 +254,15 @@ export default function CalendarioPublico() {
     }
     const dadosValidos = consultaSchema.safeParse(dadosEditados);
     if (!dadosValidos.success) { toast({ title: "Revise seus dados", description: dadosValidos.error.issues[0]?.message, variant: "destructive" }); return; }
+    if (faltaEscolherPagamento) { toast({ title: "Escolha como pagar", description: "O saldo do plano não cobre todos os horários. Escolha hora adicional ou avulso.", variant: "destructive" }); return; }
     setSolicitando(true);
-    const { error } = await supabase.rpc("request_authenticated_reservations", {
+    const { error } = await (supabase.rpc as any)("request_authenticated_reservations", {
       p_sala_id: salaDosPeriodos.id,
       p_periodos: periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim })),
+      p_modalidade: modalidade,
     });
     if (error) toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
-     else { toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
+     else { setModalidade(null); toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
     setSolicitando(false);
   }
 
@@ -305,9 +314,19 @@ export default function CalendarioPublico() {
             <div><Label htmlFor="confirmar-negocio">Tipo de negócio</Label><Input id="confirmar-negocio" maxLength={120} value={dadosEditados.tipoNegocio} onChange={(e) => setDadosEditados((atual) => ({ ...atual, tipoNegocio: e.target.value }))} /></div>
           </div>
            {salaDosPeriodos && <div className="space-y-3 rounded-md border bg-muted/40 p-4"><div><p className="text-sm font-medium">Sala</p><p className="mt-1 rounded-md border bg-background px-3 py-2 text-sm">{salaDosPeriodos.nome} · {salaDosPeriodos.unidadeNome}</p></div><div className="space-y-2">{periodos.map((item) => <div key={item.id} className="flex items-end justify-between gap-3 rounded-md border bg-background p-3"><div className="min-w-0 flex-1"><p className="font-semibold">{format(new Date(`${item.data}T12:00:00`), "dd/MM/yyyy")}</p><div className="mt-2 grid grid-cols-2 gap-2"><label className="space-y-1 text-xs font-medium text-muted-foreground">Início<Input type="time" step="1800" value={item.inicio} onChange={(event) => alterarPeriodo(item.id, "inicio", event.target.value)} /></label><label className="space-y-1 text-xs font-medium text-muted-foreground">Término<Input type="time" step="1800" value={item.fim} onChange={(event) => alterarPeriodo(item.id, "fim", event.target.value)} /></label></div></div><Button variant="ghost" size="icon" aria-label="Remover período" onClick={() => removerPeriodo(item.id)}><Trash2 className="h-4 w-4" /></Button></div>)}</div></div>}
+          {confirmacaoAberta && autenticado && clienteId && salaDosPeriodos && (
+            <CoberturaPlanoReserva
+              clienteId={clienteId}
+              salaId={salaDosPeriodos.id}
+              periodos={periodos.map((item) => ({ data: item.data, hora_inicio: item.inicio, hora_fim: item.fim }))}
+              modalidade={modalidade}
+              onModalidadeChange={setModalidade}
+              onEstadoChange={setEstadoCobertura}
+            />
+          )}
           <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}><Plus className="mr-2 h-4 w-4" />Adicionar outra data ou horário</Button>
         </div>
-        <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp} disabled={!periodos.length}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando || !periodos.length}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar períodos" : "Entrar ou cadastrar"}</Button></DialogFooter>
+        <DialogFooter className="gap-2 sm:space-x-0"><Button variant="outline" onClick={abrirWhatsApp} disabled={!periodos.length}><MessageCircle className="mr-2 h-4 w-4" />Enviar por WhatsApp</Button><Button onClick={() => void solicitar()} disabled={solicitando || !periodos.length || (autenticado && faltaEscolherPagamento)}>{solicitando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : autenticado ? <Send className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}{autenticado ? "Solicitar períodos" : "Entrar ou cadastrar"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
      <Dialog open={Boolean(salaDetalhes)} onOpenChange={(aberta) => { if (!aberta) setSalaDetalhes(null); }}>

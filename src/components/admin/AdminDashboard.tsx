@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { reservaEncerrada, statusExibido } from "@/lib/checkin";
+import { AdminPlanosAlertas } from "./AdminUsoPlanos";
 
 type SalaInfo = { nome: string; minutosAbertos: number };
 type ClientePendente = { id: string; nome: string; created_at: string };
@@ -109,6 +110,7 @@ export default function AdminDashboard({ reservas, onRefresh, onNavigate }: {
 
   return (
     <div className="space-y-6">
+      <AdminPlanosAlertas onAbrir={() => onNavigate?.("uso_planos")} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           {atualizadoEm ? `Atualizado às ${format(atualizadoEm, "HH:mm")} · atualiza sozinho a cada minuto` : "Carregando dados…"}

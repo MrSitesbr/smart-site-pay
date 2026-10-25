@@ -20,7 +20,8 @@ import { CalendarGanttView } from "./CalendarGanttView";
 import NovoVisitanteDialog from "./NovoVisitanteDialog";
 import NovoEventoDialog from "./NovoEventoDialog";
 import { verificarConflitos } from "@/lib/disponibilidade";
-import { calcularUsoPlano, horasDaReserva } from "@/lib/planoUso";
+import { horasDaReserva } from "@/lib/planoUso";
+import { precificarEdicao } from "@/lib/precoReserva";
 import { calculateReservationPrice } from "@/lib/reservationPricing";
 import { friendlyError } from "@/lib/appErrors";
 import { alternarCheckin } from "@/lib/checkin";
@@ -317,21 +318,9 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       }
     }
 
-    const horas = horasDaReserva(editingReserva);
+    // Valor só é recalculado quando muda data, horário, sala ou tipo; a edição nunca é bloqueada pelo plano.
     const sala = editSalas.find((item) => item.id === editingReserva.sala_id);
-    let pricing = calculateReservationPrice({ tipo: editingReserva.tipo === "diaria" ? "diaria" : "hora", horas, saldo: 0, precoHora: sala?.preco_hora_avulsa == null ? null : Number(sala.preco_hora_avulsa), precoDiaria: sala?.preco_diaria == null ? null : Number(sala.preco_diaria) });
-    let justificativa = "Reserva avulsa conforme o preço configurado para a sala.";
-    if (editingReserva.plano_id) {
-      const plano = editPlanos.find((item) => item.id === editingReserva.plano_id);
-      const { data: vinculo } = await supabase.from("sala_planos").select("plano_id").eq("sala_id", editingReserva.sala_id).eq("plano_id", editingReserva.plano_id).maybeSingle();
-      if (!plano || !vinculo) {
-        toast({ title: "Plano indisponível", description: "O plano selecionado não está vinculado a esta sala.", variant: "destructive" });
-        return;
-      }
-      const uso = await calcularUsoPlano([editingReserva.email], plano, editingReserva.id);
-      pricing = calculateReservationPrice({ tipo: editingReserva.tipo === "diaria" ? "diaria" : "hora", horas, saldo: uso.saldo, precoHora: sala?.preco_hora_avulsa == null ? null : Number(sala.preco_hora_avulsa), precoDiaria: sala?.preco_diaria == null ? null : Number(sala.preco_diaria) });
-      justificativa = `${pricing.cobertas}h cobertas pelo plano ${plano.nome}${pricing.excedentes ? `; ${pricing.excedentes}h excedentes` : ""}.`;
-    }
+    const precos = statusOnly ? {} : await precificarEdicao(editingReserva, originalReservation, sala);
 
     const payload = {
       nome: editingReserva.nome,
@@ -348,12 +337,7 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       unidade_id: editingReserva.unidade_id || null,
       sala_id: editingReserva.sala_id || null,
       plano_id: editingReserva.plano_id || null,
-      valor: pricing.valor,
-      valor_original: pricing.valor,
-      horas_reservadas: pricing.horas,
-      horas_cobertas_plano: pricing.cobertas,
-      horas_excedentes: pricing.excedentes,
-      calculo_justificativa: justificativa,
+      ...precos,
     };
 
     const updateResult = statusOnly

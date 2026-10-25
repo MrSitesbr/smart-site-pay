@@ -27,12 +27,16 @@ export default function AdminPlanosHoras() {
   }, []);
 
   async function fetchPlanos() {
-    const { data } = await (supabase.from('planos') as any).select('*').is('deleted_at', null).order('quantidade_horas');
+    const { data } = await (supabase.from('planos') as any).select('*').is('deleted_at', null).order('ordem').order('nome');
     setPlanos(data || []);
   }
 
   // Filtragem (embora a tabela 'planos' não tenha unidade_id, adicionamos o filtro UI para consistência se no futuro tiver)
   const filteredPlanos = planos;
+  const resumoRegra = (p: any) => p.regra_uso === "semanal" ? `${p.horas_semana ?? 0}h por semana${p.bloco_unico ? " (bloco único)" : ""}`
+    : p.regra_uso === "pacote" ? `${p.quantidade_horas ?? 0}h em ${p.duracao_meses ?? "-"} meses`
+    : p.regra_uso === "mensal_reuniao" ? `${p.horas_reuniao_mes ?? 0}h de reunião/mês`
+    : p.regra_uso === "sem_horas" ? "Sem horas de sala" : p.regra_uso === "avulso" ? "Por hora" : `${p.quantidade_horas ?? 0}h`;
 
 
   async function arquivarPlano(id: string) {
@@ -87,13 +91,13 @@ export default function AdminPlanosHoras() {
             
             <h3 className="font-heading font-bold text-xl text-brand-blue-dark">{p.nome}</h3>
             <div className="my-4">
-              <p className="text-4xl font-black text-brand-blue-dark">{p.quantidade_horas}h</p>
-              <p className="text-sm text-muted-foreground">Pacote de Horas</p>
+              <p className="text-xl font-black text-brand-blue-dark">{resumoRegra(p)}</p>
+              <p className="text-sm text-muted-foreground">{p.subtitulo || "Plano"}{p.exibir_site === false ? " · oculto no site" : ""}</p>
             </div>
             
             <div className="bg-brand-orange/5 w-full py-3 rounded-xl mb-4">
-              <p className="text-brand-orange font-bold text-2xl">R$ {p.preco}</p>
-              {p.validade_dias && <p className="text-[10px] text-brand-orange uppercase font-bold tracking-wider">Validade: {p.validade_dias} dias</p>}
+              <p className="text-brand-orange font-bold text-2xl">{Number(p.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+              <p className="text-[10px] text-brand-orange uppercase font-bold tracking-wider">{p.cobranca === "unico" ? "Pagamento único" : p.cobranca === "hora" ? "Por hora" : "Por mês"}{p.duracao_meses ? ` · contrato de ${p.duracao_meses} meses` : ""}</p>
             </div>
 
             <Button variant="outline" className="w-full border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white" onClick={() => navigate(`/admin/planos/${p.id}`)}>

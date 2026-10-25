@@ -23,6 +23,8 @@ import PainelAgendamento from "@/components/painel/PainelAgendamento";
 import ClientAvatarEditor from "@/components/admin/ClientAvatarEditor";
 import EventAvatar from "@/components/admin/EventAvatar";
 import { passwordSchema } from "@/lib/validation";
+import { PlanoAvisosBanner, PlanoAvisosSino } from "@/components/painel/PlanoAvisos";
+import { fmtNumeroCadastro, getResumoPlano, type ResumoPlano } from "@/lib/planosApi";
 
 const AMBIENTE_LABEL: Record<string, string> = {
   estacao: "Espaço de Trabalho",
@@ -77,6 +79,22 @@ export default function Painel() {
   const [showClientPassword, setShowClientPassword] = useState(false);
   const [savingClientPassword, setSavingClientPassword] = useState(false);
   const [aba, setAba] = useState("calendario");
+  const [resumoPlano, setResumoPlano] = useState<ResumoPlano | null>(null);
+  const [carregandoResumo, setCarregandoResumo] = useState(false);
+
+  async function carregarResumoPlano(clienteId?: string | null) {
+    if (!clienteId) return;
+    setCarregandoResumo(true);
+    try {
+      setResumoPlano(await getResumoPlano(clienteId));
+    } catch {
+      setResumoPlano(null);
+    } finally {
+      setCarregandoResumo(false);
+    }
+  }
+
+  useEffect(() => { carregarResumoPlano(cliente?.id); }, [cliente?.id]);
 
   useEffect(() => {
     (async () => {
@@ -281,18 +299,22 @@ export default function Painel() {
                   <div className="px-4 lg:px-8 py-3 flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <h1 className="font-heading font-black text-2xl">Meu Painel</h1>
-                      <p className="text-xs text-white/60 truncate">{user?.email}</p>
+                      <p className="text-xs text-white/60 truncate">{cliente?.numero_cadastro ? `Cadastro ${fmtNumeroCadastro(cliente.numero_cadastro)} · ` : ""}{user?.email}</p>
                     </div>
-                    <SidebarTrigger className="md:hidden text-white hover:bg-white/10 hover:text-white" />
+                    <div className="flex items-center gap-1">
+                      <PlanoAvisosSino avisos={resumoPlano?.avisos || []} />
+                      <SidebarTrigger className="md:hidden text-white hover:bg-white/10 hover:text-white" />
+                    </div>
                   </div>
                 </header>
 
                 <main className="flex-1 w-full px-4 lg:px-8 py-6 max-w-[1600px]">
+                  <PlanoAvisosBanner avisos={resumoPlano?.avisos || []} />
                   <Tabs value={aba} onValueChange={setAba}>
 
           <TabsContent value="dados">
             <div className="grid gap-4 lg:grid-cols-3">
-              <Card className="p-5 lg:col-span-2"><div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-start gap-3"><EventAvatar name={cliente?.razao_social || cliente?.responsavel_nome || "Cliente"} photoUrl={cliente?.avatar_url} size={56} /><div><h2 className="font-heading font-black text-xl mb-3">{cliente?.razao_social || "Empresa vinculada"}</h2><div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Endereço:</span> {cliente?.endereco || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></div></div><Button size="sm" variant="outline" onClick={() => setEditingCliente({ ...cliente })}><Pencil className="w-4 h-4 mr-2" /> Editar informações</Button></div></Card>
+              <Card className="p-5 lg:col-span-2"><div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-start gap-3"><EventAvatar name={cliente?.razao_social || cliente?.responsavel_nome || "Cliente"} photoUrl={cliente?.avatar_url} size={56} /><div><h2 className="font-heading font-black text-xl mb-1">{cliente?.razao_social || "Empresa vinculada"}</h2>{cliente?.numero_cadastro && <p className="mb-3 text-sm font-semibold text-secondary">Cadastro {fmtNumeroCadastro(cliente.numero_cadastro)}</p>}<div className="grid gap-2 text-sm"><p><span className="text-muted-foreground">Responsável:</span> {cliente?.responsavel_nome || "-"}</p><p><span className="text-muted-foreground">E-mail:</span> {cliente?.responsavel_email || user?.email}</p><p><span className="text-muted-foreground">WhatsApp:</span> {cliente?.responsavel_telefone || "-"}</p><p><span className="text-muted-foreground">Endereço:</span> {cliente?.endereco || "-"}</p><p><span className="text-muted-foreground">Unidade:</span> {cliente?.unidades?.nome || "-"}</p><p><span className="text-muted-foreground">Plano:</span> {cliente?.planos?.nome || "-"} · <span className="text-muted-foreground">Sala:</span> {cliente?.salas?.nome || "-"}</p></div></div></div><Button size="sm" variant="outline" onClick={() => setEditingCliente({ ...cliente })}><Pencil className="w-4 h-4 mr-2" /> Editar informações</Button></div></Card>
             </div>
             <Card className="mt-4 max-w-2xl p-5 space-y-4">
               <div>
@@ -320,7 +342,7 @@ export default function Painel() {
 
           <TabsContent value="visitantes"><Card className="p-5"><div className="flex items-center justify-between gap-4 mb-4"><h2 className="font-heading font-black text-xl">Visitantes</h2><Button size="sm" onClick={() => setShowNovoVisitante(true)}><Plus className="w-4 h-4 mr-2" /> Adicionar</Button></div>{visitantes.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{visitantes.map(v => <div key={v.id} className="border rounded-lg p-4"><div className="flex items-start justify-between gap-2"><div><p className="font-medium">{v.nome}</p><p className="text-xs text-muted-foreground">{v.salas?.nome || "Sem sala"}{v.data_hora_prevista ? ` · ${new Date(v.data_hora_prevista).toLocaleString("pt-BR")}` : ""}</p></div><div className="flex gap-1"><Button variant="ghost" size="icon" onClick={() => setEditingVisitante({ ...v })} aria-label="Editar visitante"><Pencil className="w-4 h-4" /></Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteVisitante(v.id)} aria-label="Excluir visitante"><Trash2 className="w-4 h-4" /></Button></div></div></div>)}</div> : <p className="text-sm text-muted-foreground">Nenhum visitante registrado.</p>}</Card></TabsContent>
 
-          <TabsContent value="plano"><Card className="p-5 max-w-2xl"><div className="flex items-center justify-between gap-4 mb-4"><div className="flex items-center gap-2"><Calculator className="w-5 h-5 text-secondary" /><h2 className="font-heading font-black text-xl">Meu plano e calculadora de horas</h2></div><Button size="sm" onClick={() => setShowPlanChange(true)}>Solicitar troca de plano</Button></div><p className="text-sm text-muted-foreground mb-4">{plano?.nome || cliente?.planos?.nome || "Plano não informado"}</p><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-lg bg-muted p-4"><p className="text-xs text-muted-foreground">Horas contratadas</p><p className="text-3xl font-black">{plano?.quantidade_horas ?? "-"}h</p></div><div className="rounded-lg bg-muted p-4"><p className="text-xs text-muted-foreground">Valor do plano</p><p className="text-3xl font-black">{plano?.preco ? fmtBRL(Number(plano.preco)) : "-"}</p></div></div><div className="mt-5 border-t pt-4"><label className="text-sm font-medium">Quantidade de horas para simular</label><input type="number" min="1" max={plano?.quantidade_horas || 999} value={horasCalculadas} onChange={e => setHorasCalculadas(Math.max(1, Number(e.target.value) || 1))} className="mt-2 w-full rounded-md border bg-background px-3 py-2" /><p className="mt-2 text-sm text-muted-foreground">Estimativa proporcional: {plano?.preco && plano?.quantidade_horas ? fmtBRL(Number(plano.preco) / Number(plano.quantidade_horas) * horasCalculadas) : "cadastre um plano para calcular"}.</p></div></Card></TabsContent>
+          <TabsContent value="plano"><MeuPlano cliente={cliente} resumo={resumoPlano} carregandoResumo={carregandoResumo && !resumoPlano} /></TabsContent>
 
           <TabsContent value="documentos"><Card className="p-5"><div className="flex items-center gap-2 mb-4"><FileText className="w-5 h-5 text-secondary" /><h2 className="font-heading font-black text-xl">Documentos da empresa</h2></div>{cliente?.documentos?.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cliente.documentos.map((url: string, index: number) => <a key={url + index} href={url} target="_blank" rel="noreferrer" className="border rounded-lg overflow-hidden hover:border-secondary"><img src={url} alt={`Documento ${index + 1}`} className="aspect-[3/4] w-full object-cover" /></a>)}</div> : <p className="text-sm text-muted-foreground">Nenhum documento disponibilizado pela equipe.</p>}</Card></TabsContent>
 
@@ -338,6 +360,7 @@ export default function Painel() {
                   .eq("cliente_corp_id", cliente?.id)
                   .order("data", { ascending: false });
                 if (!error) setReservas(data || []);
+                carregarResumoPlano(cliente?.id);
               }}
             />
           </TabsContent>

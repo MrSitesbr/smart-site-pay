@@ -5,32 +5,43 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Send } from "lucide-react";
+import { Check, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
-import { calcularUsoPlano, fmtHoras, type PlanoUso } from "@/lib/planoUso";
+import { fmtHoras, horasDaReserva } from "@/lib/planoUso";
+import { fmtBRL, fmtData, type ResumoPlano } from "@/lib/planosApi";
+import UsoPlanoBarras from "@/components/planos/UsoPlanoBarras";
 
-export default function MeuPlano({ cliente, emails }: { cliente: any; emails: string[] }) {
-  const [uso, setUso] = useState<PlanoUso | null>(null);
-  const [loading, setLoading] = useState(true);
+const COBRANCA_LABEL: Record<string, string> = { plano: "Plano", estacao: "Estação incluída", adicional: "Hora adicional", avulso: "Avulso" };
+
+export default function MeuPlano({ cliente, resumo, carregandoResumo }: { cliente: any; resumo: ResumoPlano | null; carregandoResumo?: boolean }) {
   const [planos, setPlanos] = useState<any[]>([]);
+  const [planoAtual, setPlanoAtual] = useState<any>(null);
+  const [reservas, setReservas] = useState<any[]>([]);
   const [solicitacoes, setSolicitacoes] = useState<any[]>([]);
   const [planoDesejado, setPlanoDesejado] = useState<string>("");
   const [mensagem, setMensagem] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [cliente?.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { carregar(); }, [cliente?.id, resumo?.plano_id, resumo?.janela_inicio]);
 
   async function carregar() {
+    if (!cliente?.id) { setLoading(false); return; }
     setLoading(true);
-    const [{ data: planosData }, solic] = await Promise.all([
-      supabase.from("planos").select("*").is("deleted_at", null).order("nome"),
-      cliente?.id
-        ? supabase.from("plano_solicitacoes").select("*, planos(nome)").eq("cliente_corp_id", cliente.id).order("created_at", { ascending: false })
+    const [planosRes, solicRes, reservasRes] = await Promise.all([
+      supabase.from("planos").select("*").is("deleted_at", null).order("ordem" as any).order("nome"),
+      supabase.from("plano_solicitacoes").select("*, planos(nome)").eq("cliente_corp_id", cliente.id).order("created_at", { ascending: false }),
+      resumo?.janela_inicio && resumo?.janela_fim
+        ? supabase.from("reservations").select("*, salas(nome)").eq("cliente_corp_id", cliente.id).neq("status", "cancelada")
+            .gte("data", resumo.janela_inicio).lte("data", resumo.janela_fim).order("data", { ascending: false })
         : Promise.resolve({ data: [] } as any),
     ]);
-    setPlanos(planosData || []);
-    setSolicitacoes(solic.data || []);
-    setUso(await calcularUsoPlano(emails, cliente?.planos || null));
+    const lista = (planosRes.data || []) as any[];
+    setPlanos(lista.filter((p) => p.exibir_site !== false));
+    setPlanoAtual(lista.find((p) => p.id === resumo?.plano_id) || null);
+    setSolicitacoes(solicRes.data || []);
+    setReservas(reservasRes.data || []);
     setLoading(false);
   }
 
@@ -41,68 +52,88 @@ export default function MeuPlano({ cliente, emails }: { cliente: any; emails: st
     const { error } = await (supabase.from("plano_solicitacoes") as any).insert([{
       cliente_corp_id: cliente.id,
       plano_id: planoDesejado || null,
-      mensagem: mensagem || null,
+      mensagem: mensagem.trim() || null,
       status: "pendente",
     }]);
     setEnviando(false);
-    if (error) return toast.error("Erro ao enviar: " + error.message);
+    if (error) return toast.error("Não foi possível enviar a solicitação. Tente novamente.");
     toast.success("Solicitação enviada para a equipe");
     setMensagem(""); setPlanoDesejado("");
     carregar();
   }
 
-  if (loading) return <Card className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></Card>;
+  if (loading || carregandoResumo) return <Card className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></Card>;
+
+  const semPlano = !resumo || resumo.status === "sem_plano";
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <Card className="p-6 lg:col-span-2 space-y-4">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Plano ativo</p>
-          <h3 className="font-heading font-black text-2xl">{cliente?.planos?.nome || "Nenhum plano vinculado"}</h3>
-          <p className="text-sm text-muted-foreground">Período de apuração: {uso?.periodoLabel}</p>
+      <Card className="p-5 sm:p-6 lg:col-span-2 space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Plano contratado</p>
+            <h3 className="font-heading font-black text-2xl">{semPlano ? "Nenhum plano ativo" : resumo?.plano_nome}</h3>
+            {planoAtual?.subtitulo && <p className="text-sm text-muted-foreground">{planoAtual.subtitulo}</p>}
+          </div>
+          {!semPlano && planoAtual?.preco != null && (
+            <div className="text-right">
+              <p className="font-heading font-black text-xl">{fmtBRL(Number(planoAtual.preco))}</p>
+              <p className="text-xs text-muted-foreground">{planoAtual.cobranca === "unico" ? "pagamento único" : planoAtual.cobranca === "hora" ? "por hora" : "por mês"}</p>
+            </div>
+          )}
         </div>
 
-        {uso && !uso.ilimitado && uso.horasContratadas > 0 ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-3 text-center">
-              <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">Contratadas</p><p className="font-heading font-black text-xl">{fmtHoras(uso.horasContratadas)}</p></div>
-              <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">Utilizadas</p><p className="font-heading font-black text-xl">{fmtHoras(uso.horasUsadas)}</p></div>
-              <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">Saldo</p><p className="font-heading font-black text-xl">{fmtHoras(uso.saldo)}</p></div>
-            </div>
-            <div className="h-3 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-secondary transition-all" style={{ width: `${uso.percentual}%` }} />
-            </div>
-          </>
+        {semPlano ? (
+          <p className="text-sm text-muted-foreground">Sem plano ativo, suas reservas são cobradas como avulso ({fmtBRL(Number(resumo?.preco_avulso || 60))}/h). Solicite um plano ao lado.</p>
         ) : (
-          <p className="text-sm text-muted-foreground">{uso?.ilimitado ? "Seu plano não tem limite de horas." : "Seu plano não tem horas incluídas configuradas."}</p>
+          <UsoPlanoBarras resumo={resumo!} />
         )}
 
-        <div>
-          <h4 className="font-bold text-sm mb-2">Reservas do período ({uso?.reservas.length || 0})</h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {(uso?.reservas || []).map((r: any) => (
-              <div key={r.id} className="flex items-center justify-between border-b pb-2 text-sm">
-                <span>{new Date(r.data + "T00:00").toLocaleDateString("pt-BR")} · {r.hora_inicio?.slice(0, 5)}–{r.hora_fim?.slice(0, 5)}</span>
-                <span className="text-muted-foreground text-xs">{r.salas?.nome || r.unidades?.nome || ""}</span>
-              </div>
-            ))}
-            {!uso?.reservas.length && <p className="text-sm text-muted-foreground">Nenhuma reserva no período.</p>}
+        {!semPlano && (
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            <p><span className="text-muted-foreground">Início:</span> {fmtData(resumo?.data_inicio)}</p>
+            <p><span className="text-muted-foreground">Vencimento:</span> {resumo?.data_fim ? fmtData(resumo.data_fim) : "Sem prazo definido"}</p>
+            {resumo?.permite_adicional && <p className="sm:col-span-2"><span className="text-muted-foreground">Hora adicional:</span> {fmtBRL(Number(resumo.preco_adicional))}/h, cobrada à parte</p>}
           </div>
-        </div>
+        )}
+
+        {planoAtual?.beneficios?.length > 0 && (
+          <ul className="grid gap-1.5 text-sm">
+            {planoAtual.beneficios.map((b: string) => <li key={b} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{b}</li>)}
+          </ul>
+        )}
+
+        {resumo?.janela_inicio && (
+          <div>
+            <h4 className="font-bold text-sm mb-2">Reservas do período ({reservas.length})</h4>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {reservas.map((r: any) => (
+                <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 text-sm">
+                  <span>{fmtData(r.data)} · {r.hora_inicio?.slice(0, 5)}–{r.hora_fim?.slice(0, 5)} · {fmtHoras(horasDaReserva(r))}</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {r.salas?.nome}
+                    {r.tipo_cobranca && <Badge variant="outline">{COBRANCA_LABEL[r.tipo_cobranca] || r.tipo_cobranca}</Badge>}
+                  </span>
+                </div>
+              ))}
+              {!reservas.length && <p className="text-sm text-muted-foreground">Nenhuma reserva no período.</p>}
+            </div>
+          </div>
+        )}
       </Card>
 
-      <Card className="p-6 space-y-4">
+      <Card className="p-5 sm:p-6 space-y-4">
         <h4 className="font-heading font-bold">Solicitar outro plano</h4>
         <div className="space-y-2">
-          <Label>Plano desejado</Label>
-          <select className="w-full h-10 rounded-md border bg-background px-3 text-sm" value={planoDesejado} onChange={(e) => setPlanoDesejado(e.target.value)}>
+          <Label htmlFor="plano-desejado">Plano desejado</Label>
+          <select id="plano-desejado" className="w-full h-10 rounded-md border bg-background px-3 text-sm" value={planoDesejado} onChange={(e) => setPlanoDesejado(e.target.value)}>
             <option value="">Selecione…</option>
-            {planos.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            {planos.map((p) => <option key={p.id} value={p.id}>{p.nome}{p.preco != null ? ` — ${fmtBRL(Number(p.preco))}` : ""}</option>)}
           </select>
         </div>
         <div className="space-y-2">
-          <Label>Mensagem (opcional)</Label>
-          <Textarea rows={4} value={mensagem} onChange={(e) => setMensagem(e.target.value)} placeholder="Conte para a equipe o que você precisa" />
+          <Label htmlFor="plano-mensagem">Mensagem (opcional)</Label>
+          <Textarea id="plano-mensagem" rows={4} value={mensagem} onChange={(e) => setMensagem(e.target.value)} placeholder="Conte para a equipe o que você precisa" />
         </div>
         <Button onClick={solicitar} disabled={enviando} className="w-full">
           {enviando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />} Enviar solicitação

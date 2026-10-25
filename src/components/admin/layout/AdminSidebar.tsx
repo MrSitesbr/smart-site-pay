@@ -92,6 +92,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: ClipboardList,
       items: [
         { title: "Planos", id: "planos_horas" },
+        { title: "Uso dos planos", id: "uso_planos" },
         { title: "Locação Fixa", id: "locacao_fixa" },
       ]
     },
@@ -108,6 +109,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: DollarSign,
       items: [
         { title: "Financeiro Geral", id: "financeiro" },
+        { title: "Mensalidades e cobranças", id: "cobrancas" },
         { title: "Repasses Woba", id: "woba" },
         { title: "Pendências", id: "pendencias" },
       ]

@@ -80,21 +80,23 @@ export const UnitsWidget: React.FC<{ content: any; styles: any }> = ({ content, 
   );
 };
 
+const COBRANCA_SUFIXO: Record<string, string> = { mensal: "/mês", unico: " pagamento único", hora: "/hora" };
+
 export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, styles }) => {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(false);
 
   useEffect(() => {
     const fetchPlans = async () => {
-      let query = (supabase as any).from('planos').select('*');
-      
+      // Grade alimentada pelo cadastro de planos do admin (valores, benefícios, ordem e exibição no site).
+      let query = (supabase as any).from('planos').select('*').is('deleted_at', null).eq('exibir_site', true);
       if (content.type && content.type !== 'all') {
-        query = query.eq('tipo', content.type);
+        query = query.or(`tipo.eq.${content.type},categoria.eq.${content.type}`);
       }
-      
-      const { data, error } = await query.limit(content.limit || 6);
-      
-      if (!error && data) setPlans(data);
+      const { data, error } = await query.order('ordem').order('nome').limit(content.limit || 6);
+      if (error) setErro(true);
+      else setPlans(data || []);
       setLoading(false);
     };
     fetchPlans();
@@ -103,39 +105,39 @@ export const PlansWidget: React.FC<{ content: any; styles: any }> = ({ content, 
   if (loading) return <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
     {[1, 2, 3].map(i => <div key={i} className="h-80 bg-muted rounded-3xl"></div>)}
   </div>;
+  if (erro || !plans.length) return null;
+
+  const beneficios = (plan: any): string[] => plan.beneficios?.length
+    ? plan.beneficios
+    : (plan.descricao ? String(plan.descricao).split(',').map((item: string) => item.trim()).filter(Boolean) : []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pt-8">
       {plans.map((plan) => (
-        <div key={plan.id} className="bg-background rounded-lg p-8 shadow-lg border border-border hover:border-brand-orange transition-all relative overflow-hidden flex flex-col min-h-[360px]">
+        <div key={plan.id} className="bg-background rounded-lg p-6 sm:p-8 shadow-lg border border-border hover:border-brand-orange transition-all relative overflow-hidden flex flex-col min-h-[360px]">
           <div className="mb-6">
-            <h3 className="text-xl font-black text-brand-blue-dark mb-2 uppercase tracking-tighter leading-tight min-h-[3rem] flex items-center">{plan.nome}</h3>
+            <h3 className="text-xl font-black text-brand-blue-dark mb-1 uppercase tracking-tighter leading-tight">{plan.nome}</h3>
+            {plan.subtitulo && <p className="text-sm text-muted-foreground mb-3">{plan.subtitulo}</p>}
             <div className="flex items-baseline gap-1">
-              <span className="text-brand-orange font-black text-3xl">
-                Sob consulta
-              </span>
+              {Number(plan.preco) > 0 ? (
+                <>
+                  <span className="text-brand-orange font-black text-3xl">{Number(plan.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}</span>
+                  <span className="text-sm text-muted-foreground">{COBRANCA_SUFIXO[plan.cobranca] || ''}</span>
+                </>
+              ) : (
+                <span className="text-brand-orange font-black text-3xl">Sob consulta</span>
+              )}
             </div>
           </div>
-          <div className="flex-1 space-y-3 mb-8">
-             <div className="text-muted-foreground text-sm font-medium leading-relaxed">
-               {plan.descricao?.split(',').map((item: string, i: number) => (
-                 <div key={i} className="flex items-start gap-2 mb-1">
-                   <Check className="w-3 h-3 text-brand-orange mt-1 shrink-0" />
-                   <span>{item.trim()}</span>
-                 </div>
-               )) || plan.descricao}
-             </div>
-             {plan.quantidade_horas > 0 && (
-               <>
-                 <div className="h-[1px] bg-brand-gray/20 w-full my-4"></div>
-                 <div className="flex items-center gap-2 text-brand-blue-dark font-bold text-xs">
-                    <Clock className="w-3 h-3 text-brand-orange" />
-                    {plan.quantidade_horas} Horas Inclusas
-                 </div>
-               </>
-             )}
+          <div className="flex-1 space-y-2 mb-8 text-muted-foreground text-sm font-medium leading-relaxed">
+            {beneficios(plan).map((item, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <Check className="w-3 h-3 text-brand-orange mt-1 shrink-0" />
+                <span>{item}</span>
+              </div>
+            ))}
           </div>
-          <Button className="w-full py-6 bg-brand-blue-dark text-primary-foreground font-black rounded-md hover:bg-brand-orange transition-colors uppercase text-xs mt-auto" onClick={() => window.open('https://wa.me/5513988050358?text=Olá%2C%20quero%20saber%20mais%20sobre%20o%20plano%20de%20Endereço%20Virtual', '_blank')}>
+          <Button className="w-full py-6 bg-brand-blue-dark text-primary-foreground font-black rounded-md hover:bg-brand-orange transition-colors uppercase text-xs mt-auto" onClick={() => window.open(`https://wa.me/5513988050358?text=${encodeURIComponent(`Olá, quero saber mais sobre o plano ${plan.nome}`)}`, '_blank', 'noopener,noreferrer')}>
             Consultar
           </Button>
         </div>

@@ -37,6 +37,8 @@ import CancelarRecorrenciaDialog from "@/components/admin/CancelarRecorrenciaDia
 
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import AdminUsoPlanos from "@/components/admin/AdminUsoPlanos";
+import AdminCobrancas from "@/components/admin/AdminCobrancas";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
 
 
@@ -276,6 +278,8 @@ export default function Admin() {
       locacao_fixa: "Locação Fixa",
       clientes: "Leads de contratação",
       planos_horas: "Planos",
+      uso_planos: "Uso dos planos",
+      cobrancas: "Mensalidades e cobranças",
       financeiro: "Financeiro",
       erp: "ERP Ocupação",
       woba: "Repasses Woba",
@@ -364,6 +368,8 @@ export default function Admin() {
             {activeTab === "locacao_fixa" && <AdminLocacaoFixa contratos={contratos} />}
             {activeTab === "clientes" && <AdminClientes reservas={reservas} contratos={contratos} onRefresh={() => { fetchReservas(); fetchContratos(); }} />}
             {activeTab === "planos_horas" && <AdminPlanosHoras />}
+            {activeTab === "uso_planos" && <AdminUsoPlanos />}
+            {activeTab === "cobrancas" && <AdminCobrancas />}
             {activeTab === "financeiro" && <AdminFinanceiro contratos={contratos} reservas={reservas} />}
             {activeTab === "erp" && <AdminERP reservas={reservas} contratos={contratos} />}
             {activeTab === "woba" && <AdminWobaRepasses reservas={reservas} contratos={contratos} />}

@@ -141,6 +141,7 @@ export type Database = {
       }
       clientes_corp: {
         Row: {
+          numero_cadastro: number
           avatar_url: string | null
           cnpj: string | null
           created_at: string
@@ -160,6 +161,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          numero_cadastro?: number
           avatar_url?: string | null
           cnpj?: string | null
           created_at?: string
@@ -179,6 +181,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          numero_cadastro?: number
           avatar_url?: string | null
           cnpj?: string | null
           created_at?: string
@@ -635,6 +638,20 @@ export type Database = {
       }
       planos: {
         Row: {
+          slug: string | null
+          categoria: string | null
+          regra_uso: string | null
+          cobranca: string | null
+          horas_semana: number | null
+          bloco_unico: boolean
+          horas_reuniao_mes: number | null
+          estacao_livre: boolean
+          duracao_meses: number | null
+          preco_hora_adicional: number | null
+          beneficios: string[]
+          subtitulo: string | null
+          exibir_site: boolean
+          ordem: number
           created_at: string
           deleted_at: string | null
           descricao: string | null
@@ -649,6 +666,20 @@ export type Database = {
           validade_dias: number | null
         }
         Insert: {
+          slug?: string | null
+          categoria?: string | null
+          regra_uso?: string | null
+          cobranca?: string | null
+          horas_semana?: number | null
+          bloco_unico?: boolean
+          horas_reuniao_mes?: number | null
+          estacao_livre?: boolean
+          duracao_meses?: number | null
+          preco_hora_adicional?: number | null
+          beneficios?: string[]
+          subtitulo?: string | null
+          exibir_site?: boolean
+          ordem?: number
           created_at?: string
           deleted_at?: string | null
           descricao?: string | null
@@ -663,6 +694,20 @@ export type Database = {
           validade_dias?: number | null
         }
         Update: {
+          slug?: string | null
+          categoria?: string | null
+          regra_uso?: string | null
+          cobranca?: string | null
+          horas_semana?: number | null
+          bloco_unico?: boolean
+          horas_reuniao_mes?: number | null
+          estacao_livre?: boolean
+          duracao_meses?: number | null
+          preco_hora_adicional?: number | null
+          beneficios?: string[]
+          subtitulo?: string | null
+          exibir_site?: boolean
+          ordem?: number
           created_at?: string
           deleted_at?: string | null
           descricao?: string | null
@@ -723,6 +768,7 @@ export type Database = {
       }
       reservations: {
         Row: {
+          tipo_cobranca?: string | null
           admin_notes: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
           calculo_justificativa: string | null
@@ -759,6 +805,7 @@ export type Database = {
           valor_original: number | null
         }
         Insert: {
+          tipo_cobranca?: string | null
           admin_notes?: string | null
           ambiente: Database["public"]["Enums"]["ambiente_tipo"]
           calculo_justificativa?: string | null
@@ -795,6 +842,7 @@ export type Database = {
           valor_original?: number | null
         }
         Update: {
+          tipo_cobranca?: string | null
           admin_notes?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_tipo"]
           calculo_justificativa?: string | null
