@@ -20,6 +20,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { friendlyError } from "@/lib/appErrors";
 import { passwordSchema } from "@/lib/validation";
 import { adminAba, useVoltar } from "@/hooks/useVoltar";
+import { Textarea } from "@/components/ui/textarea";
 
 type ClientReservation = Omit<Database["public"]["Tables"]["reservations"]["Row"], "status"> & {
   status: string;
@@ -171,6 +172,8 @@ export default function AdminClienteCorpDetalhe() {
       responsavel_email: cliente.responsavel_email,
       responsavel_telefone: cliente.responsavel_telefone,
       endereco: cliente.endereco,
+      area_atuacao: cliente.area_atuacao?.trim() || null,
+      descricao_atividades: cliente.descricao_atividades?.trim() || null,
       responsavel_cpf: cliente.responsavel_cpf,
       cnpj: cliente.cnpj,
       avatar_url: cliente.avatar_url,
@@ -306,6 +309,14 @@ export default function AdminClienteCorpDetalhe() {
               <div className="space-y-2 col-span-2 lg:col-span-4">
                 <Label>Endereço</Label>
                 <Input value={cliente.endereco || ''} onChange={e => setCliente({...cliente, endereco: e.target.value})} placeholder="Rua, número, bairro, cidade e CEP" />
+              </div>
+              <div className="space-y-2 col-span-2 lg:col-span-4">
+                <Label htmlFor="cliente-area-atuacao">Área de atuação</Label>
+                <Input id="cliente-area-atuacao" maxLength={120} value={cliente.area_atuacao || ''} onChange={e => setCliente({...cliente, area_atuacao: e.target.value})} placeholder="Ex.: Nutrição, Psicologia, Advocacia, Arquitetura" />
+              </div>
+              <div className="space-y-2 col-span-2 lg:col-span-4">
+                <Label htmlFor="cliente-atividades">Descrição das atividades</Label>
+                <Textarea id="cliente-atividades" rows={3} maxLength={2000} value={cliente.descricao_atividades || ''} onChange={e => setCliente({...cliente, descricao_atividades: e.target.value})} placeholder="O que o cliente faz no espaço (atendimentos, reuniões, equipamentos que usa, público atendido...)" />
               </div>
             </div>
             

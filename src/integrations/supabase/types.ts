@@ -141,6 +141,8 @@ export type Database = {
       }
       clientes_corp: {
         Row: {
+          area_atuacao: string | null
+          descricao_atividades: string | null
           numero_cadastro: number
           avatar_url: string | null
           cnpj: string | null
@@ -161,6 +163,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          area_atuacao?: string | null
+          descricao_atividades?: string | null
           numero_cadastro?: number
           avatar_url?: string | null
           cnpj?: string | null
@@ -181,6 +185,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          area_atuacao?: string | null
+          descricao_atividades?: string | null
           numero_cadastro?: number
           avatar_url?: string | null
           cnpj?: string | null
