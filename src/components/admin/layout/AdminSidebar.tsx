@@ -141,8 +141,8 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-brand-blue-dark/10 bg-[#2c3338] text-[#eee]">
-      <SidebarContent className="bg-[#2c3338]">
+    <Sidebar collapsible="icon" className="border-r border-black/40 bg-[#16191d] text-[#eee] [&_[data-sidebar=sidebar]]:bg-[#16191d]">
+      <SidebarContent className="admin-sidebar-scroll bg-[#16191d]">
         <div className="flex items-center justify-between py-4 px-3 group-data-[collapsible=icon]:justify-center">
           <div className="flex min-w-0 items-center gap-3 group-data-[collapsible=icon]:hidden">
             <img src="/assets/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
@@ -211,12 +211,12 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="bg-[#2c3338] border-t border-white/10 p-4 space-y-2">
+      <SidebarFooter className="gap-0 bg-[#16191d] border-t border-white/10 px-2 py-1.5">
         <button
           onClick={() => navigate("/")}
           aria-label="Ver Site"
           title="Ver Site"
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-[#eee] hover:bg-white/10 transition-colors rounded-md text-sm font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          className="w-full flex items-center gap-3 px-3 py-1.5 text-[#eee] hover:bg-white/10 transition-colors rounded-md text-sm font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
           <ExternalLink className="w-4 h-4" />
           <span className="group-data-[collapsible=icon]:hidden">Ver Site</span>
@@ -225,7 +225,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
           onClick={logout}
           aria-label="Sair"
           title="Sair"
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          className="w-full flex items-center gap-3 px-3 py-1.5 text-red-400 hover:bg-red-500/10 transition-colors rounded-md text-sm font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
           <LogOut className="w-4 h-4" />
           <span className="group-data-[collapsible=icon]:hidden">Sair</span>
