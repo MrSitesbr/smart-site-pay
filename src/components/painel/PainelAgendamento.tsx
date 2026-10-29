@@ -117,7 +117,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       // Carregar salas disponíveis
       const { data: salasData, error: salasError } = await supabase
         .from("salas")
-        .select("id, nome, unidade_id, status, foto_url, galeria, descricao, tipo, capacidade, unidades(nome, horario_abertura, horario_fechamento)")
+        .select("id, nome, unidade_id, status, foto_url, descricao, tipo, capacidade, unidades(nome, horario_abertura, horario_fechamento)")
         .in("status", ["disponivel", "ativa"])
         .order("nome");
 
@@ -152,7 +152,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           unidadeNome: unidade?.nome || "Unidade",
           abertura: minutos(unidade?.horario_abertura || "08:00"),
           fechamento: minutos(unidade?.horario_fechamento || "21:00"),
-          fotoUrl: sala.foto_url || sala.galeria?.[0] || null,
+          fotoUrl: sala.foto_url || null,
           descricao: sala.descricao,
           tipo: sala.tipo,
           capacidade: sala.capacidade

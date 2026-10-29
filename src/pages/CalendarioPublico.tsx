@@ -72,7 +72,7 @@ export default function CalendarioPublico() {
   useEffect(() => {
     let ativo = true;
     Promise.all([
-      supabase.from("salas").select("id, nome, unidade_id, status, foto_url, galeria, descricao, tipo, capacidade").in("status", ["disponivel", "ativa"]).order("nome"),
+      supabase.from("salas").select("id, nome, unidade_id, status, foto_url, descricao, tipo, capacidade").in("status", ["disponivel", "ativa"]).order("nome"),
       supabase.from("unidades").select("id, nome, horario_abertura, horario_fechamento").ilike("status", "ativ%").order("nome"),
       supabase.auth.getSession(),
     ]).then(([salasResponse, unidadesResponse, sessaoResponse]) => {
@@ -83,7 +83,7 @@ export default function CalendarioPublico() {
       setUnidades(listaUnidades);
       setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && dadosUnidades.has(sala.unidade_id))).map((sala) => {
         const unidade = dadosUnidades.get(String(sala.unidade_id));
-         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "21:00"), fotoUrl: sala.foto_url || sala.galeria?.[0] || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade };
+         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "21:00"), fotoUrl: sala.foto_url || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade };
       }));
       setAutenticado(Boolean(sessaoResponse.data.session));
       if (sessaoResponse.data.session) void carregarDadosDoCliente(sessaoResponse.data.session.user);

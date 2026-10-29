@@ -21,6 +21,34 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Se o app não abrir (navegador antigo, falha ao baixar o código ou erro antes do React),
+      // mostra um aviso com "Recarregar" em vez de tela branca e registra o problema para a equipe.
+      (function () {
+        var erros = [];
+        window.addEventListener("error", function (e) { if (erros.length < 3) erros.push(String(e.message || (e.target && e.target.src) || "erro")); }, true);
+        function avisar(texto, origem) {
+          if (window.__appIniciado) return;
+          var root = document.getElementById("root");
+          if (root && !root.hasChildNodes()) {
+            root.innerHTML = '<div style="font-family:sans-serif;max-width:340px;margin:20vh auto;padding:16px;text-align:center;color:#111">'
+              + '<h1 style="font-size:20px;margin:0 0 12px">' + texto + '</h1>'
+              + '<p style="font-size:14px;color:#555;margin:0 0 16px">Toque em Recarregar. Se continuar, atualize o navegador do celular ou abra pelo Google Chrome.</p>'
+              + '<button onclick="location.reload()" style="padding:10px 18px;border:0;border-radius:6px;background:#1e3a5f;color:#fff;font-size:15px">Recarregar</button></div>';
+          }
+          try {
+            fetch("%VITE_SUPABASE_URL%/rest/v1/client_error_logs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", apikey: "%VITE_SUPABASE_PUBLISHABLE_KEY%", Authorization: "Bearer %VITE_SUPABASE_PUBLISHABLE_KEY%", Prefer: "return=minimal" },
+              body: JSON.stringify({ origem: origem, mensagem: (erros.join(" | ") || "O app não iniciou").slice(0, 2000), url: location.href.slice(0, 1000), user_agent: navigator.userAgent.slice(0, 500) })
+            });
+          } catch (e) {}
+        }
+        setTimeout(function () { avisar("A página está demorando para abrir", "inicio-lento"); }, 25000);
+        window.__avisarFalhaInicial = avisar;
+      })();
+    </script>
+    <script nomodule>window.__avisarFalhaInicial && window.__avisarFalhaInicial("Seu navegador está desatualizado", "navegador-antigo");</script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
