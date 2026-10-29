@@ -19,6 +19,7 @@ export default function AdminSettings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [mistralKey, setMistralKey] = useState("");
   const [autoApprove, setAutoApprove] = useState(false);
+  const [autoConfirm, setAutoConfirm] = useState(false);
   const [wobaCfg, setWobaCfg] = useState<WobaCfg>({ ...wobaDefaults });
   const [backupLoading, setBackupLoading] = useState<"reservations" | "clientes_corp" | null>(null);
 
@@ -47,6 +48,8 @@ export default function AdminSettings() {
   const loadSettings = async () => {
     const { data: accessSetting } = await supabase.from("app_settings").select("value").eq("key", "auto_aprovar_cadastros").maybeSingle();
     setAutoApprove((accessSetting?.value as any)?.enabled === true);
+    const { data: reservaSetting } = await supabase.from("app_settings").select("value").eq("key", "auto_confirmar_reservas").maybeSingle();
+    setAutoConfirm((reservaSetting?.value as any)?.enabled === true);
     const { data } = await supabase
       .from('site_sections')
       .select('content')
@@ -61,9 +64,16 @@ export default function AdminSettings() {
 
   const updateAutoApprove = async (enabled: boolean) => {
     setAutoApprove(enabled);
-    const { error } = await (supabase.from("app_settings") as any).upsert({ key: "auto_aprovar_cadastros", value: { enabled }, updated_at: new Date().toISOString() });
+    const { error } = await (supabase.from("app_settings") as any).upsert({ key: "auto_aprovar_cadastros", value: { enabled }, updated_at: new Date().toISOString() }, { onConflict: "key" });
     if (error) { setAutoApprove(!enabled); toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); }
     else toast({ title: enabled ? "Liberação automática ativada" : "Liberação automática desativada" });
+  };
+
+  const updateAutoConfirm = async (enabled: boolean) => {
+    setAutoConfirm(enabled);
+    const { error } = await (supabase.from("app_settings") as any).upsert({ key: "auto_confirmar_reservas", value: { enabled }, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    if (error) { setAutoConfirm(!enabled); toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); }
+    else toast({ title: enabled ? "Confirmação automática de reservas ativada" : "Confirmação automática de reservas desativada" });
   };
 
   const handleUpdateMistral = async (e: React.FormEvent) => {
@@ -192,7 +202,28 @@ export default function AdminSettings() {
             </Button>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm md:col-span-2"><CardHeader><CardTitle className="text-brand-blue-dark">Cadastros de clientes</CardTitle><CardDescription>Defina se novos cadastros entram no painel imediatamente.</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between rounded-lg border p-4"><Label htmlFor="auto-approve">Liberar novos cadastros automaticamente</Label><Switch id="auto-approve" checked={autoApprove} onCheckedChange={updateAutoApprove} /></div></CardContent></Card>
+        <Card className="border-none shadow-sm md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-brand-blue-dark">Cadastros e reservas de clientes</CardTitle>
+            <CardDescription>Defina o que entra direto, sem precisar de aprovação da equipe.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+              <div>
+                <Label htmlFor="auto-approve">Liberar novos cadastros automaticamente</Label>
+                <p className="mt-1 text-xs text-muted-foreground">O cliente acessa o painel logo após se cadastrar.</p>
+              </div>
+              <Switch id="auto-approve" checked={autoApprove} onCheckedChange={updateAutoApprove} />
+            </div>
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+              <div>
+                <Label htmlFor="auto-confirm">Confirmar reservas dos clientes automaticamente</Label>
+                <p className="mt-1 text-xs text-muted-foreground">Reservas feitas pelo cliente já ficam confirmadas, sem precisar de aprovação. Horários ocupados continuam bloqueados.</p>
+              </div>
+              <Switch id="auto-confirm" checked={autoConfirm} onCheckedChange={updateAutoConfirm} />
+            </div>
+          </CardContent>
+        </Card>
         <Card className="border-none shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-brand-blue-dark">
