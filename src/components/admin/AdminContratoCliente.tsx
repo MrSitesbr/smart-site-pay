@@ -8,14 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, CalendarClock, CheckCircle2, History, Loader2, RefreshCw, Repeat, XCircle } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, History, Loader2, Plus, RefreshCw, Repeat, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/appErrors";
 import { fmtHoras, horasDaReserva } from "@/lib/planoUso";
 import {
   encerrarContrato, fmtBRL, fmtData, getResumoPlano, renovarContrato, salvarContrato, STATUS_PLANO_LABEL, type ResumoPlano,
 } from "@/lib/planosApi";
-import UsoPlanoBarras, { STATUS_BADGE } from "@/components/planos/UsoPlanoBarras";
+import { STATUS_BADGE } from "@/components/planos/UsoPlanoBarras";
+import PlanosCards from "@/components/planos/PlanosCards";
 
 const ACAO_LABEL: Record<string, string> = {
   importado_para_revisao: "Importado para revisão",
@@ -242,10 +243,12 @@ export default function AdminContratoCliente({ clienteId, onChanged }: { cliente
   const [erro, setErro] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogModo | null>(null);
   const [acao, setAcao] = useState<string | null>(null);
+  const [versao, setVersao] = useState(0);
 
   async function carregar() {
     setLoading(true);
     setErro(null);
+    setVersao((v) => v + 1);
     try {
       const [r, c, e] = await Promise.all([
         getResumoPlano(clienteId),
@@ -339,9 +342,19 @@ export default function AdminContratoCliente({ clienteId, onChanged }: { cliente
             Contrato importado: segue a regra anterior e não vence nem bloqueia até a revisão. Confirme o plano e a data de início.
           </p>
         )}
-        {resumo && resumo.status !== "sem_plano" && <UsoPlanoBarras resumo={resumo} compacto />}
         {aberto?.observacoes && <p className="text-xs text-muted-foreground">{aberto.observacoes}</p>}
       </Card>
+
+      <PlanosCards
+        clienteId={clienteId}
+        resumo={resumo}
+        versao={versao}
+        acaoVigentes={
+          <Button size="sm" className="h-8 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setDialog(aberto ? "trocar" : "contratar")}>
+            <Plus className="mr-1 h-4 w-4" />{aberto ? "Trocar plano" : "Contratar plano"}
+          </Button>
+        }
+      />
 
       <Card className="p-5 sm:p-6">
         <h4 className="mb-3 flex items-center gap-2 font-heading font-bold"><History className="h-4 w-4" /> Histórico do plano</h4>

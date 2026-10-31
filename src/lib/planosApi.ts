@@ -137,3 +137,33 @@ export function nivelUso(resumo: Pick<Cobertura, "status" | "cota" | "saldo" | "
   if ((resumo.cota > 0 && resumo.saldo <= resumo.cota * 0.25) || (resumo.dias_restantes != null && resumo.dias_restantes <= 15)) return "amarelo";
   return "verde";
 }
+
+export type ExtratoItem = {
+  id: string; data: string; hora_inicio: string; hora_fim: string; sala: string | null; status: string;
+  tipo_cobranca: string | null; horas_plano: number; horas_extras: number; valor: string | null;
+};
+
+/** Contrato do cliente em formato de card (vigente ou histórico), com extrato de uso. */
+export type PlanoCard = {
+  id: string;
+  status: "ativo" | "a_revisar" | "vencido" | "encerrado";
+  vigente: boolean;
+  plano_id: string;
+  plano_nome: string;
+  categoria: string | null;
+  regra: string | null;
+  cobranca: string | null;
+  valor: number | null;
+  preco_hora_adicional: number | null;
+  data_inicio: string | null;
+  data_fim: string | null;
+  encerrado_em: string | null;
+  motivo_encerramento: string | null;
+  horas_periodo: number | null;
+  horas_usadas: number;
+  horas_extras: number;
+  extrato: ExtratoItem[];
+};
+
+export const getPlanoCards = (clienteId: string) =>
+  call<PlanoCard[]>("cliente_plano_cards", { p_cliente_corp_id: clienteId });

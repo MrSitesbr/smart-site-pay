@@ -7,11 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
-import { fmtHoras, horasDaReserva } from "@/lib/planoUso";
 import { fmtBRL, fmtData, type ResumoPlano } from "@/lib/planosApi";
-import UsoPlanoBarras from "@/components/planos/UsoPlanoBarras";
-
-const COBRANCA_LABEL: Record<string, string> = { plano: "Plano", estacao: "Estação incluída", adicional: "Hora adicional", avulso: "Avulso" };
+import PlanosCards from "@/components/planos/PlanosCards";
 
 export default function MeuPlano({ cliente, resumo, carregandoResumo }: { cliente: any; resumo: ResumoPlano | null; carregandoResumo?: boolean }) {
   const [planos, setPlanos] = useState<any[]>([]);
@@ -67,6 +64,8 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
   const semPlano = !resumo || resumo.status === "sem_plano";
 
   return (
+    <div className="space-y-4">
+    {cliente?.id && <PlanosCards clienteId={cliente.id} resumo={resumo} />}
     <div className="grid gap-4 lg:grid-cols-3">
       <Card className="p-5 sm:p-6 lg:col-span-2 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -83,10 +82,8 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
           )}
         </div>
 
-        {semPlano ? (
+        {semPlano && (
           <p className="text-sm text-muted-foreground">Sem plano ativo, suas reservas são cobradas como avulso ({fmtBRL(Number(resumo?.preco_avulso || 60))}/h). Solicite um plano ao lado.</p>
-        ) : (
-          <UsoPlanoBarras resumo={resumo!} />
         )}
 
         {!semPlano && (
@@ -103,23 +100,6 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
           </ul>
         )}
 
-        {resumo?.janela_inicio && (
-          <div>
-            <h4 className="font-bold text-sm mb-2">Reservas do período ({reservas.length})</h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {reservas.map((r: any) => (
-                <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 text-sm">
-                  <span>{fmtData(r.data)} · {r.hora_inicio?.slice(0, 5)}–{r.hora_fim?.slice(0, 5)} · {fmtHoras(horasDaReserva(r))}</span>
-                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {r.salas?.nome}
-                    {r.tipo_cobranca && <Badge variant="outline">{COBRANCA_LABEL[r.tipo_cobranca] || r.tipo_cobranca}</Badge>}
-                  </span>
-                </div>
-              ))}
-              {!reservas.length && <p className="text-sm text-muted-foreground">Nenhuma reserva no período.</p>}
-            </div>
-          </div>
-        )}
       </Card>
 
       <Card className="p-5 sm:p-6 space-y-4">
@@ -151,6 +131,7 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
           </div>
         )}
       </Card>
+    </div>
     </div>
   );
 }
