@@ -187,3 +187,43 @@
 .admin-sidebar-scroll::-webkit-scrollbar-track { background: #16191d; }
 .admin-sidebar-scroll::-webkit-scrollbar-thumb { background: #3a4048; border-radius: 9999px; }
 .admin-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #4b525c; }
+
+/* Densidade compacta do admin e do painel do cliente: menos margem, mais conteúdo visível.
+   Aplicada só onde existe a classe .ui-compacta (o site público e o editor de páginas não mudam). */
+.ui-compacta .p-8 { padding: 1.25rem; }
+.ui-compacta .p-6 { padding: 1rem; }
+.ui-compacta .p-5 { padding: 0.875rem; }
+.ui-compacta .px-6 { padding-left: 1rem; padding-right: 1rem; }
+.ui-compacta .py-6 { padding-top: 1rem; padding-bottom: 1rem; }
+.ui-compacta .py-8 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.ui-compacta .py-10 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.ui-compacta .pt-0 { padding-top: 0; }
+.ui-compacta .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem; }
+.ui-compacta .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.ui-compacta .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.875rem; }
+.ui-compacta .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+.ui-compacta .gap-8 { gap: 1.25rem; }
+.ui-compacta .gap-6 { gap: 1rem; }
+.ui-compacta .gap-5 { gap: 0.875rem; }
+.ui-compacta .mb-8 { margin-bottom: 1.25rem; }
+.ui-compacta .mb-6 { margin-bottom: 1rem; }
+.ui-compacta .mt-8 { margin-top: 1.25rem; }
+.ui-compacta .mt-6 { margin-top: 1rem; }
+.ui-compacta .text-4xl { font-size: 1.875rem; line-height: 2.25rem; }
+.ui-compacta .text-3xl { font-size: 1.5rem; line-height: 2rem; }
+.ui-compacta .text-2xl { font-size: 1.3rem; line-height: 1.75rem; }
+@media (min-width: 640px) {
+  .ui-compacta .sm\:p-6 { padding: 1rem; }
+  .ui-compacta .sm\:p-8 { padding: 1.25rem; }
+}
+@media (min-width: 768px) {
+  .ui-compacta .md\:p-6 { padding: 1rem; }
+  .ui-compacta .md\:p-8 { padding: 1.25rem; }
+  .ui-compacta .md\:gap-6 { gap: 1rem; }
+}
+@media (min-width: 1024px) {
+  .ui-compacta .lg\:p-6 { padding: 1rem; }
+  .ui-compacta .lg\:p-8 { padding: 1.25rem; }
+  .ui-compacta .lg\:px-8 { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .ui-compacta .lg\:gap-6 { gap: 1rem; }
+}

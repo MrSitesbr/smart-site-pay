@@ -320,7 +320,7 @@ export default function Painel() {
                   </div>
                 </header>
 
-                <main className="flex-1 w-full px-4 lg:px-8 py-6 max-w-[1600px]">
+                <main className="flex-1 w-full px-3 sm:px-4 lg:px-6 py-4 max-w-[1600px]">
                   <PlanoAvisosBanner avisos={resumoPlano?.avisos || []} />
                   <Tabs value={aba} onValueChange={setAba}>
 

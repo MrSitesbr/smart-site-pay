@@ -71,17 +71,17 @@ const App = () => (
           <Route path="/reservar/calendario" element={<CalendarioPublico />} />
           <Route path="/agendamento" element={<CalendarioPublico />} />
           <Route path="/contratar" element={<Contratar />} />
-          <Route path="/painel" element={<Painel />} />
+          <Route path="/painel" element={<div className="ui-compacta"><Painel /></div>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin/*" element={<Admin />} />
-          <Route path="/admin/unidades/novo" element={<AdminUnidadeFormPage />} />
-          <Route path="/admin/unidades/:id/editar" element={<AdminUnidadeFormPage />} />
-          <Route path="/admin/unidades/:id" element={<AdminUnidadeDetalhe />} />
-          <Route path="/admin/unidades/:unidadeId/salas/novo" element={<AdminSalaFormPage />} />
-          <Route path="/admin/unidades/salas/:id/editar" element={<AdminSalaFormPage />} />
-          <Route path="/admin/unidades/sala/:id" element={<AdminSalaDetalhe />} />
-          <Route path="/admin/planos/:id" element={<AdminPlanoDetalhe />} />
-          <Route path="/admin/clientes-corp/:id" element={<AdminClienteCorpDetalhe />} />
+          <Route path="/admin/unidades/novo" element={<div className="ui-compacta"><AdminUnidadeFormPage /></div>} />
+          <Route path="/admin/unidades/:id/editar" element={<div className="ui-compacta"><AdminUnidadeFormPage /></div>} />
+          <Route path="/admin/unidades/:id" element={<div className="ui-compacta"><AdminUnidadeDetalhe /></div>} />
+          <Route path="/admin/unidades/:unidadeId/salas/novo" element={<div className="ui-compacta"><AdminSalaFormPage /></div>} />
+          <Route path="/admin/unidades/salas/:id/editar" element={<div className="ui-compacta"><AdminSalaFormPage /></div>} />
+          <Route path="/admin/unidades/sala/:id" element={<div className="ui-compacta"><AdminSalaDetalhe /></div>} />
+          <Route path="/admin/planos/:id" element={<div className="ui-compacta"><AdminPlanoDetalhe /></div>} />
+          <Route path="/admin/clientes-corp/:id" element={<div className="ui-compacta"><AdminClienteCorpDetalhe /></div>} />
           <Route path="/auth-admin" element={<AuthAdmin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

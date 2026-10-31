@@ -345,7 +345,7 @@ export default function Admin() {
             </div>
           </header>
 
-          <main className="p-8">
+          <main className={["paginas", "paginas_fixos"].includes(activeTab) ? "p-8" : "ui-compacta p-4 md:p-6"}>
             {activeTab === "dashboard" && <AdminDashboard reservas={reservas} contratos={contratos} onRefresh={fetchReservas} onNavigate={setActiveTab} />}
             {activeTab === "calendario" && (
               <AdminCalendar 
