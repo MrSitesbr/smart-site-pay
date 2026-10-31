@@ -16,7 +16,7 @@ import {
   encerrarContrato, fmtBRL, fmtData, getResumoPlano, renovarContrato, salvarContrato, STATUS_PLANO_LABEL, type ResumoPlano,
 } from "@/lib/planosApi";
 import { STATUS_BADGE } from "@/components/planos/UsoPlanoBarras";
-import PlanosCards from "@/components/planos/PlanosCards";
+import PlanosCards, { AdicionarCreditosDialog } from "@/components/planos/PlanosCards";
 
 const ACAO_LABEL: Record<string, string> = {
   importado_para_revisao: "Importado para revisão",
@@ -244,17 +244,22 @@ export default function AdminContratoCliente({ clienteId, onChanged }: { cliente
   const [dialog, setDialog] = useState<DialogModo | null>(null);
   const [acao, setAcao] = useState<string | null>(null);
   const [versao, setVersao] = useState(0);
+  const [solicitacoes, setSolicitacoes] = useState<any[]>([]);
+  const [creditosAberto, setCreditosAberto] = useState<{ horas?: number | null; titulo?: string; solicitacaoId?: string | null } | null>(null);
+  const [solicitacaoPlano, setSolicitacaoPlano] = useState<string | null>(null);
 
   async function carregar() {
     setLoading(true);
     setErro(null);
     setVersao((v) => v + 1);
     try {
-      const [r, c, e] = await Promise.all([
+      const [r, c, e, sol] = await Promise.all([
         getResumoPlano(clienteId),
         (supabase.from("cliente_planos" as any) as any).select("*, planos(nome)").eq("cliente_corp_id", clienteId).order("created_at", { ascending: false }),
         (supabase.from("cliente_plano_eventos" as any) as any).select("*").eq("cliente_corp_id", clienteId).order("created_at", { ascending: false }).limit(50),
+        (supabase.from("plano_solicitacoes" as any) as any).select("*, planos(nome)").eq("cliente_corp_id", clienteId).eq("status", "pendente").order("created_at", { ascending: false }),
       ]);
+      setSolicitacoes(sol.data || []);
       setResumo(r);
       setContratos(c.data || []);
       setEventos(e.data || []);
@@ -349,12 +354,47 @@ export default function AdminContratoCliente({ clienteId, onChanged }: { cliente
         clienteId={clienteId}
         resumo={resumo}
         versao={versao}
+        admin
+        onAlterado={carregar}
         acaoVigentes={
-          <Button size="sm" className="h-8 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setDialog(aberto ? "trocar" : "contratar")}>
-            <Plus className="mr-1 h-4 w-4" />{aberto ? "Trocar plano" : "Contratar plano"}
-          </Button>
+          <>
+            <Button size="sm" className="h-8 bg-blue-600 text-white hover:bg-blue-700" onClick={() => setCreditosAberto({})}>
+              <Plus className="mr-1 h-4 w-4" />Adicionar créditos
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 bg-white" onClick={() => setDialog(aberto ? "trocar" : "contratar")}>
+              <Repeat className="mr-1 h-4 w-4" />{aberto ? "Trocar plano" : "Contratar plano"}
+            </Button>
+          </>
         }
       />
+
+      {solicitacoes.length > 0 && (
+        <Card className="space-y-3 border-amber-200 bg-amber-50/60 p-5">
+          <h4 className="font-heading font-bold text-amber-900">Pedidos do cliente ({solicitacoes.length})</h4>
+          {solicitacoes.map((s) => (
+            <div key={s.id} className="flex flex-col gap-2 rounded-lg border bg-white p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="font-semibold">{s.tipo === "creditos" ? `Comprar créditos${s.horas ? ` · ${fmtHoras(Number(s.horas))}` : ""}` : `Trocar para ${s.planos?.nome || "outro plano"}`}</p>
+                {s.mensagem && <p className="text-xs text-muted-foreground">"{s.mensagem}"</p>}
+                <p className="text-[11px] text-muted-foreground">{new Date(s.created_at).toLocaleString("pt-BR")}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => {
+                  if (s.tipo === "creditos") setCreditosAberto({ horas: s.horas, titulo: s.horas ? `Pacote extra ${fmtHoras(Number(s.horas))}` : "Pacote extra", solicitacaoId: s.id });
+                  else { setSolicitacaoPlano(s.id); setDialog(aberto ? "trocar" : "contratar"); }
+                }}>Atender</Button>
+                <Button size="sm" variant="outline" onClick={() => executar("recusar", async () => {
+                  const { error } = await (supabase.from("plano_solicitacoes" as any) as any).update({ status: "recusada", updated_at: new Date().toISOString() }).eq("id", s.id);
+                  if (error) throw error;
+                }, "Pedido recusado")}>Recusar</Button>
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      <AdicionarCreditosDialog open={!!creditosAberto} onOpenChange={(o) => !o && setCreditosAberto(null)} clienteId={clienteId}
+        inicial={creditosAberto || undefined} onSaved={() => { carregar(); onChanged?.(); }} />
 
       <Card className="p-5 sm:p-6">
         <h4 className="mb-3 flex items-center gap-2 font-heading font-bold"><History className="h-4 w-4" /> Histórico do plano</h4>
@@ -378,7 +418,13 @@ export default function AdminContratoCliente({ clienteId, onChanged }: { cliente
 
       {dialog && (
         <ContratoDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} modo={dialog} clienteId={clienteId} resumo={resumo}
-          onSaved={() => { carregar(); onChanged?.(); }} />
+          onSaved={async () => {
+            if (solicitacaoPlano) {
+              await (supabase.from("plano_solicitacoes" as any) as any).update({ status: "aprovada", updated_at: new Date().toISOString() }).eq("id", solicitacaoPlano);
+              setSolicitacaoPlano(null);
+            }
+            carregar(); onChanged?.();
+          }} />
       )}
     </div>
   );

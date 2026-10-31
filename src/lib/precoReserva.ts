@@ -38,7 +38,7 @@ export async function precificarEdicao(reserva: Record<string, any>, original: R
   try {
     const cov = await getCobertura(reserva.cliente_corp_id, String(reserva.data).slice(0, 10), horas, reserva.sala_id,
       String(reserva.hora_inicio).slice(0, 5), reserva.id);
-    if (cov.status === "sem_plano") return avulso();
+    if (cov.status === "sem_plano" && Number(cov.cobertas_credito || 0) <= 0) return avulso();
     const cobertas = Number(cov.cobertas || 0);
     const excedentes = Number(cov.excedentes || 0);
     const adicional = excedentes > 0 && cov.permite_adicional && reserva.tipo_cobranca === "adicional";

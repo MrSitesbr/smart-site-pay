@@ -238,7 +238,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
     const itens = estadoCobertura?.itens || [];
     setCalculandoPlano(!!estadoCobertura?.carregando);
     const primeiro = itens[0];
-    if (!primeiro || primeiro.status === "sem_plano") { setCalculoPlano(null); return; }
+    if (!primeiro || (primeiro.status === "sem_plano" && Number(primeiro.cobertas_credito || 0) <= 0)) { setCalculoPlano(null); return; }
     const { valor } = valorDaCobertura(primeiro, modalidade);
     setCalculoPlano({
       plano: { id: primeiro.plano_id, nome: primeiro.plano_nome },
@@ -353,7 +353,7 @@ export default function NovaReservaDialog({ open, onOpenChange, date, reservas, 
       if (clienteCorpId) {
         try { cov = await getCobertura(clienteCorpId, dt, horas, selectedSala, horaInicio); } catch { cov = null; }
       }
-      const comPlano = !!cov && cov.status !== "sem_plano";
+      const comPlano = !!cov && (cov.status !== "sem_plano" || Number(cov.cobertas_credito || 0) > 0);
       const calc = comPlano ? valorDaCobertura(cov!, modalidade) : null;
       const ocorrencia = comPlano ? { cobertas: Number(cov!.cobertas), excedentes: Number(cov!.excedentes), valor: calc!.valor } : null;
       const tipoCobranca = calc?.tipoCobranca ?? (clienteCorpId ? "avulso" : null);

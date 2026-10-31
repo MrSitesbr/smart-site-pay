@@ -68,7 +68,7 @@ export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, mod
   if (!itens.length) return null;
 
   const plano = itens[0];
-  const semPlano = !resumo.temPlano;
+  const semPlano = !resumo.temPlano && resumo.cobertasCredito <= 0;
   const vencido = itens.some((i) => i.status === "vencido");
 
   return (
@@ -83,9 +83,9 @@ export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, mod
           ) : vencido ? (
             <p><strong>Plano vencido:</strong> as horas são cobradas como avulso ({fmtBRL(resumo.valorAvulso)}).</p>
           ) : resumo.excedentes > 0 ? (
-            <p><strong>{plano.plano_nome}:</strong> cobre {fmtHoras(resumo.cobertas)}. Faltam {fmtHoras(resumo.excedentes)} de saldo.</p>
+            <p><strong>{plano.plano_nome}:</strong> cobre {fmtHoras(resumo.cobertas)}{resumo.cobertasCredito > 0 ? ` + ${fmtHoras(resumo.cobertasCredito)} dos créditos extras` : ""}. Faltam {fmtHoras(resumo.excedentes)} de saldo.</p>
           ) : (
-            <p><strong>Coberto pelo plano {plano.plano_nome}</strong> ({fmtHoras(resumo.cobertas)}).</p>
+            <p><strong>Coberto pelo seu banco de horas</strong> ({resumo.cobertas > 0 ? `${fmtHoras(resumo.cobertas)} do plano` : ""}{resumo.cobertas > 0 && resumo.cobertasCredito > 0 ? " + " : ""}{resumo.cobertasCredito > 0 ? `${fmtHoras(resumo.cobertasCredito)} dos créditos extras` : ""}).</p>
           )}
           {itens.length > 1 && (
             <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">

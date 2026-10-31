@@ -17,6 +17,8 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
   const [solicitacoes, setSolicitacoes] = useState<any[]>([]);
   const [planoDesejado, setPlanoDesejado] = useState<string>("");
   const [mensagem, setMensagem] = useState("");
+  const [tipoPedido, setTipoPedido] = useState<"creditos" | "plano">("creditos");
+  const [horasDesejadas, setHorasDesejadas] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -44,18 +46,22 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
 
   async function solicitar() {
     if (!cliente?.id) return;
-    if (!planoDesejado && !mensagem.trim()) return toast.error("Escolha um plano ou escreva uma mensagem");
+    const horas = Number(horasDesejadas.replace(",", "."));
+    if (tipoPedido === "creditos" && !(horas > 0)) return toast.error("Informe quantas horas deseja comprar");
+    if (tipoPedido === "plano" && !planoDesejado && !mensagem.trim()) return toast.error("Escolha um plano ou escreva uma mensagem");
     setEnviando(true);
     const { error } = await (supabase.from("plano_solicitacoes") as any).insert([{
       cliente_corp_id: cliente.id,
-      plano_id: planoDesejado || null,
+      tipo: tipoPedido,
+      horas: tipoPedido === "creditos" ? horas : null,
+      plano_id: tipoPedido === "plano" ? planoDesejado || null : null,
       mensagem: mensagem.trim() || null,
       status: "pendente",
     }]);
     setEnviando(false);
     if (error) return toast.error("Não foi possível enviar a solicitação. Tente novamente.");
-    toast.success("Solicitação enviada para a equipe");
-    setMensagem(""); setPlanoDesejado("");
+    toast.success("Pedido enviado para a equipe");
+    setMensagem(""); setPlanoDesejado(""); setHorasDesejadas("");
     carregar();
   }
 
@@ -65,7 +71,17 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
 
   return (
     <div className="space-y-4">
-    {cliente?.id && <PlanosCards clienteId={cliente.id} resumo={resumo} />}
+    {cliente?.id && (
+      <PlanosCards
+        clienteId={cliente.id}
+        resumo={resumo}
+        acaoVigentes={
+          <Button size="sm" className="h-8 bg-blue-600 text-white hover:bg-blue-700" onClick={() => document.getElementById("pedido-creditos")?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+            Comprar créditos / trocar plano
+          </Button>
+        }
+      />
+    )}
     <div className="grid gap-4 lg:grid-cols-3">
       <Card className="p-5 sm:p-6 lg:col-span-2 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -102,15 +118,31 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
 
       </Card>
 
-      <Card className="p-5 sm:p-6 space-y-4">
-        <h4 className="font-heading font-bold">Solicitar outro plano</h4>
-        <div className="space-y-2">
-          <Label htmlFor="plano-desejado">Plano desejado</Label>
-          <select id="plano-desejado" className="w-full h-10 rounded-md border bg-background px-3 text-sm" value={planoDesejado} onChange={(e) => setPlanoDesejado(e.target.value)}>
-            <option value="">Selecione…</option>
-            {planos.map((p) => <option key={p.id} value={p.id}>{p.nome}{p.preco != null ? ` — ${fmtBRL(Number(p.preco))}` : ""}</option>)}
-          </select>
+      <Card id="pedido-creditos" className="p-5 sm:p-6 space-y-4">
+        <h4 className="font-heading font-bold">Comprar créditos ou trocar de plano</h4>
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de pedido">
+          {(["creditos", "plano"] as const).map((t) => (
+            <button key={t} type="button" role="radio" aria-checked={tipoPedido === t} onClick={() => setTipoPedido(t)}
+              className={`rounded-md border px-3 py-2 text-sm font-medium transition ${tipoPedido === t ? "border-blue-600 bg-blue-50 text-blue-800" : "bg-background hover:bg-muted"}`}>
+              {t === "creditos" ? "Mais horas" : "Trocar plano"}
+            </button>
+          ))}
         </div>
+        {tipoPedido === "creditos" ? (
+          <div className="space-y-2">
+            <Label htmlFor="horas-desejadas">Quantas horas deseja comprar?</Label>
+            <input id="horas-desejadas" inputMode="decimal" className="w-full h-10 rounded-md border bg-background px-3 text-sm" value={horasDesejadas} onChange={(e) => setHorasDesejadas(e.target.value)} placeholder="Ex.: 10" />
+            <p className="text-xs text-muted-foreground">A equipe confirma o valor e libera os créditos no seu banco de horas.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="plano-desejado">Plano desejado</Label>
+            <select id="plano-desejado" className="w-full h-10 rounded-md border bg-background px-3 text-sm" value={planoDesejado} onChange={(e) => setPlanoDesejado(e.target.value)}>
+              <option value="">Selecione…</option>
+              {planos.map((p) => <option key={p.id} value={p.id}>{p.nome}{p.preco != null ? ` — ${fmtBRL(Number(p.preco))}` : ""}</option>)}
+            </select>
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="plano-mensagem">Mensagem (opcional)</Label>
           <Textarea id="plano-mensagem" rows={4} value={mensagem} onChange={(e) => setMensagem(e.target.value)} placeholder="Conte para a equipe o que você precisa" />
@@ -124,7 +156,7 @@ export default function MeuPlano({ cliente, resumo, carregandoResumo }: { client
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Minhas solicitações</p>
             {solicitacoes.map((s) => (
               <div key={s.id} className="text-sm flex items-center justify-between gap-2">
-                <span className="truncate">{s.planos?.nome || "Sem plano indicado"}</span>
+                <span className="truncate">{s.tipo === "creditos" ? `Mais horas${s.horas ? ` · ${s.horas}h` : ""}` : s.planos?.nome || "Troca de plano"}</span>
                 <Badge variant={s.status === "aprovada" ? "default" : s.status === "recusada" ? "destructive" : "secondary"}>{s.status}</Badge>
               </div>
             ))}

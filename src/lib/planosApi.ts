@@ -28,6 +28,9 @@ export type Cobertura = {
   permite_adicional: boolean;
   preco_adicional: number | null;
   preco_avulso: number;
+  /** Saldo de créditos extras válidos na data e quanto deles cobre este horário. */
+  creditos_disponiveis?: number;
+  cobertas_credito?: number;
   motivo: string | null;
   data?: string;
   hora_inicio?: string;
@@ -85,12 +88,13 @@ export const encerrarContrato = (contratoId: string, motivo?: string) =>
 /** Totais de uma simulação: horas cobertas e excedentes, e se o cliente precisa escolher como pagar. */
 export function resumirSimulacao(itens: Cobertura[]) {
   const cobertas = itens.reduce((acc, item) => acc + Number(item.cobertas || 0), 0);
+  const cobertasCredito = itens.reduce((acc, item) => acc + Number(item.cobertas_credito || 0), 0);
   const excedentes = itens.reduce((acc, item) => acc + Number(item.excedentes || 0), 0);
   const permiteAdicional = itens.some((item) => item.excedentes > 0 && item.permite_adicional);
   const precoAdicional = Number(itens.find((item) => item.preco_adicional)?.preco_adicional || 30);
   const precoAvulso = Number(itens[0]?.preco_avulso || 60);
   return {
-    cobertas, excedentes, permiteAdicional, precoAdicional, precoAvulso,
+    cobertas, cobertasCredito, excedentes, permiteAdicional, precoAdicional, precoAvulso,
     temPlano: itens.some((item) => item.status === "ativo" || item.status === "a_revisar"),
     valorAdicional: excedentes * precoAdicional,
     valorAvulso: excedentes * precoAvulso,
@@ -140,30 +144,43 @@ export function nivelUso(resumo: Pick<Cobertura, "status" | "cota" | "saldo" | "
 
 export type ExtratoItem = {
   id: string; data: string; hora_inicio: string; hora_fim: string; sala: string | null; status: string;
-  tipo_cobranca: string | null; horas_plano: number; horas_extras: number; valor: string | null;
+  horas: number; tipo_cobranca?: string | null; valor?: string | null;
 };
 
-/** Contrato do cliente em formato de card (vigente ou histórico), com extrato de uso. */
+/** Card do banco de horas: período do plano, horas excedentes ou crédito extra (compra/bônus). */
 export type PlanoCard = {
   id: string;
-  status: "ativo" | "a_revisar" | "vencido" | "encerrado";
-  vigente: boolean;
-  plano_id: string;
+  contrato_id: string | null;
+  credito_id?: string;
+  tipo: "plano" | "excedente" | "sem_horas" | "credito" | "bonus";
+  titulo: string;
   plano_nome: string;
   categoria: string | null;
   regra: string | null;
+  contrato_status: string | null;
   cobranca: string | null;
   valor: number | null;
   preco_hora_adicional: number | null;
-  data_inicio: string | null;
-  data_fim: string | null;
-  encerrado_em: string | null;
-  motivo_encerramento: string | null;
-  horas_periodo: number | null;
+  periodo_inicio: string | null;
+  periodo_fim: string | null;
+  contrato_fim: string | null;
+  horas_total: number;
   horas_usadas: number;
-  horas_extras: number;
+  status: "vigente" | "futuro" | "esgotado" | "encerrado";
+  vigente: boolean;
+  cancelado?: boolean;
   extrato: ExtratoItem[];
 };
 
 export const getPlanoCards = (clienteId: string) =>
   call<PlanoCard[]>("cliente_plano_cards", { p_cliente_corp_id: clienteId });
+
+export const adicionarCreditos = (args: {
+  clienteId: string; titulo: string; horas: number; tipo: "compra" | "bonus"; valor?: number | null; validadeDias?: number | null;
+  observacoes?: string | null; solicitacaoId?: string | null;
+}) => call<string>("admin_adicionar_creditos", {
+  p_cliente_corp_id: args.clienteId, p_titulo: args.titulo, p_horas: args.horas, p_tipo: args.tipo, p_valor: args.valor ?? null,
+  p_validade_dias: args.validadeDias ?? null, p_observacoes: args.observacoes || null, p_solicitacao_id: args.solicitacaoId || null,
+});
+
+export const cancelarCredito = (creditoId: string) => call<void>("admin_cancelar_credito", { p_credito_id: creditoId });
