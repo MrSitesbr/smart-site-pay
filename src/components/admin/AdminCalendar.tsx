@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +23,7 @@ import NovoEventoDialog from "./NovoEventoDialog";
 import { verificarConflitos } from "@/lib/disponibilidade";
 import { horasDaReserva } from "@/lib/planoUso";
 import { precificarEdicao } from "@/lib/precoReserva";
+import { pedirMotivoCancelamento } from "@/components/MotivoCancelamentoDialog";
 import { calculateReservationPrice } from "@/lib/reservationPricing";
 import { friendlyError } from "@/lib/appErrors";
 import { alternarCheckin } from "@/lib/checkin";
@@ -61,6 +63,23 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
   const [status, setStatus] = useState<string>("todos");
   const [selectedDay, setSelectedDay] = useState<Date | undefined>();
   const [fullView, setFullView] = useState<{ kind: "reserva" | "contrato" | "visita"; obj: any } | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Link vindo do extrato de créditos: abre o mês da reserva e o detalhe dela.
+  useEffect(() => {
+    const reservaId = searchParams.get("reserva");
+    const data = searchParams.get("data");
+    if (!reservaId && !data) return;
+    if (data) setMonth(new Date(`${data}T12:00:00`));
+    const limpar = () => setSearchParams((atual) => { const p = new URLSearchParams(atual); p.delete("reserva"); p.delete("data"); return p; }, { replace: true });
+    if (!reservaId) { limpar(); return; }
+    const encontrada = reservas.find((r) => r.id === reservaId);
+    if (encontrada) { setFullView({ kind: "reserva", obj: encontrada }); limpar(); return; }
+    supabase.from("reservations").select("*").eq("id", reservaId).maybeSingle().then(({ data: unica }) => {
+      if (unica) setFullView({ kind: "reserva", obj: unica });
+      limpar();
+    });
+  }, [reservas, searchParams, setSearchParams]);
   const [isEditingReserva, setIsEditingReserva] = useState(false);
   const [editingReserva, setEditingReserva] = useState<any | null>(null);
   const [novaDay, setNovaDay] = useState<Date | null>(null);
@@ -340,12 +359,19 @@ export default function AdminCalendar({ reservas, contratos, onDeleteReserva, on
       ...precos,
     };
 
+    // Cancelar exige motivo (fica no histórico do cliente e no extrato dos créditos).
+    let motivo: string | null = null;
+    if (editingReserva.status === "cancelada" && originalReservation.status !== "cancelada") {
+      motivo = await pedirMotivoCancelamento(`Cancelar a reserva de ${editingReserva.nome}.`);
+      if (!motivo) return;
+    }
     const updateResult = statusOnly
-      ? await supabase.rpc("admin_update_reservation_status", {
+      ? await (supabase.rpc as any)("admin_update_reservation_status", {
           p_reservation_id: editingReserva.id,
           p_status: editingReserva.status,
+          p_motivo: motivo,
         })
-      : await supabase.from("reservations").update(payload).eq("id", editingReserva.id);
+      : await supabase.from("reservations").update(motivo ? { ...payload, cancel_motivo: motivo } : payload).eq("id", editingReserva.id);
     const error = updateResult.error;
 
     if (error) {

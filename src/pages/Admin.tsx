@@ -37,6 +37,7 @@ import CancelarRecorrenciaDialog from "@/components/admin/CancelarRecorrenciaDia
 
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { pedirMotivoCancelamento } from "@/components/MotivoCancelamentoDialog";
 import AdminUsoPlanos from "@/components/admin/AdminUsoPlanos";
 import AdminCobrancas from "@/components/admin/AdminCobrancas";
 import { linkCobrancaWhatsApp, linkWhatsAppWeb, calcularValorReserva, descricaoReserva, descricaoContrato, fmtBRL as fmtBRLCob } from "@/lib/cobranca";
@@ -213,9 +214,14 @@ export default function Admin() {
       toast({ title: "Reserva já realizada", description: "Reservas realizadas são mantidas no histórico financeiro.", variant: "destructive" });
       return;
     }
-    if (!confirm(`Cancelar a reserva de ${r.nome} em ${new Date(r.data+"T00:00").toLocaleDateString("pt-BR")} ${r.hora_inicio.slice(0,5)}? O registro fica no histórico como cancelado.`)) {
-      return;
-    }
+    // Motivo obrigatório; se o cliente pediu o cancelamento, já vem preenchido com o motivo dele.
+    const { data: pedido } = await (supabase.from("reservation_change_requests" as any) as any)
+      .select("mensagem").eq("reservation_id", r.id).eq("tipo", "cancelamento").eq("status", "pendente").maybeSingle();
+    const motivo = await pedirMotivoCancelamento(
+      `Cancelar a reserva de ${r.nome} em ${new Date(r.data+"T00:00").toLocaleDateString("pt-BR")} ${r.hora_inicio.slice(0,5)}. O registro fica no histórico como cancelado.`,
+      pedido?.mensagem || "",
+    );
+    if (!motivo) return;
 
     const alvos: any[] = [r];
 
@@ -226,7 +232,7 @@ export default function Admin() {
         await invokeGoogleSync({ action: "delete_event", eventId: gId, calendarId: cid });
       }
       const { data: alteradas, error } = await (supabase.from("reservations") as any)
-        .update({ status: "cancelada", cancelled_at: new Date().toISOString(), google_event_id: null })
+        .update({ status: "cancelada", cancelled_at: new Date().toISOString(), cancel_motivo: motivo, google_event_id: null })
         .eq("id", alvo.id)
         .select("id");
       if (error || !alteradas?.length) {

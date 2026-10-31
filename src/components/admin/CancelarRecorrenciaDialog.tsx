@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGoogleSync } from "@/lib/googleSync";
 import { toast } from "@/hooks/use-toast";
+import { pedirMotivoCancelamento } from "@/components/MotivoCancelamentoDialog";
 
 type Escopo = "uma" | "futuras";
 const hojeISO = () => format(new Date(), "yyyy-MM-dd");
@@ -24,6 +25,8 @@ export default function CancelarRecorrenciaDialog({ reserva, onOpenChange, onDon
 
   async function cancelar(escopo: Escopo) {
     if (!reserva) return;
+    const motivo = await pedirMotivoCancelamento(escopo === "uma" ? "Cancelar só esta data da recorrência." : "Cancelar a recorrência a partir desta data.");
+    if (!motivo) return;
     setSalvando(escopo);
     try {
       if (escopo === "uma") {
@@ -33,7 +36,7 @@ export default function CancelarRecorrenciaDialog({ reserva, onOpenChange, onDon
         }
         if (reserva.google_event_id) await invokeGoogleSync({ action: "delete_event", eventId: reserva.google_event_id, calendarId: reserva.google_calendar_id });
         const { data: alteradas, error } = await supabase.from("reservations")
-          .update({ status: "cancelada", cancelled_at: new Date().toISOString(), google_event_id: null })
+          .update({ status: "cancelada", cancelled_at: new Date().toISOString(), cancel_motivo: motivo, google_event_id: null })
           .eq("id", reserva.id)
           .select("id");
         if (error) throw error;
@@ -41,7 +44,7 @@ export default function CancelarRecorrenciaDialog({ reserva, onOpenChange, onDon
         toast({ title: "Reserva cancelada", description: "O histórico financeiro foi preservado." });
       } else {
         const corte = reserva.data < hojeISO() ? hojeISO() : reserva.data;
-        const { data, error } = await supabase.rpc("cancel_reservation_series", { p_serie_id: reserva.serie_id, p_from: corte });
+        const { data, error } = await (supabase.rpc as any)("cancel_reservation_series", { p_serie_id: reserva.serie_id, p_from: corte, p_motivo: motivo });
         if (error) throw error;
         const canceladas = data || [];
         for (const item of canceladas) {

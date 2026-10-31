@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,8 +87,15 @@ function CardHoras({ card, onAbrir }: { card: PlanoCard; onAbrir: () => void }) 
   );
 }
 
+const CANCELADO_POR: Record<string, string> = { cliente: "pelo cliente", admin: "pela equipe", sistema: "pelo sistema" };
+
 function Extrato({ card, admin, onClose, onCancelado }: { card: PlanoCard | null; admin: boolean; onClose: () => void; onCancelado: () => void }) {
+  const navigate = useNavigate();
   const [cancelando, setCancelando] = useState(false);
+  const abrirReserva = (id: string, data: string) => {
+    onClose();
+    navigate(`${admin ? "/admin" : "/painel"}?aba=calendario&data=${String(data).slice(0, 10)}&reserva=${encodeURIComponent(id)}`);
+  };
   const total = Number(card?.horas_total || 0);
   const excedente = card?.tipo === "excedente";
   let saldo = total;
@@ -132,12 +140,24 @@ function Extrato({ card, admin, onClose, onCancelado }: { card: PlanoCard | null
                   </thead>
                   <tbody className="divide-y">
                     {card.extrato.length ? card.extrato.map((item) => {
-                      saldo -= Number(item.horas || 0);
+                      if (!item.estornado) saldo -= Number(item.horas || 0);
+                      const cancelada = item.status === "cancelada";
                       return (
-                        <tr key={`${item.id}-${item.horas}`}>
-                          <td className="p-2 font-medium">{fmtData(item.data)} {item.hora_inicio}–{item.hora_fim}</td>
+                        <tr key={`${item.id}-${item.horas}`} className={item.estornado ? "bg-emerald-50/60" : cancelada ? "bg-red-50/60" : ""}>
+                          <td className="p-2 font-medium">
+                            <button type="button" onClick={() => abrirReserva(item.id, item.data)} className="text-left text-blue-700 underline-offset-2 hover:underline" title="Ver a reserva no calendário">
+                              {fmtData(item.data)} {item.hora_inicio}–{item.hora_fim}
+                            </button>
+                            {cancelada && (
+                              <p className="mt-0.5 text-[10px] font-normal text-muted-foreground">
+                                Cancelada {CANCELADO_POR[item.cancelado_por || ""] || ""}{item.motivo ? `: "${item.motivo}"` : ""}
+                              </p>
+                            )}
+                          </td>
                           <td className="p-2 text-muted-foreground">{item.sala || "—"}</td>
-                          <td className="p-2 text-center font-bold text-red-600">-{fmtHoras(Number(item.horas))}</td>
+                          <td className={`p-2 text-center font-bold ${item.estornado ? "text-emerald-700" : "text-red-600"}`}>
+                            {item.estornado ? `+${fmtHoras(Number(item.horas))} devolvidas` : `-${fmtHoras(Number(item.horas))}${cancelada ? " (cancelada < 24h)" : ""}`}
+                          </td>
                           <td className="p-2 text-right">{excedente ? COBRANCA_EXTRA[item.tipo_cobranca || ""] || item.tipo_cobranca : <span className="font-semibold">{fmtHoras(Math.max(0, saldo))}</span>}</td>
                         </tr>
                       );

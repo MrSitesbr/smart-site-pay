@@ -54,6 +54,10 @@ export default function ReservaSolicitacaoDialog({
       return;
     }
     const mudouHorario = modo === "alteracao" && (novaData !== reserva.data || novoInicio !== reserva.hora_inicio?.slice(0, 5) || novoFim !== reserva.hora_fim?.slice(0, 5));
+    if (modo === "cancelamento" && (mensagem.trim().length < 2 || mensagem.trim().length > 180)) {
+      toast({ title: "Informe o motivo", description: "O motivo do cancelamento deve ter de 2 a 180 caracteres.", variant: "destructive" });
+      return;
+    }
     if (modo === "alteracao" && !mudouHorario && !mensagem.trim()) {
       toast({ title: "Descreva a alteração", description: "Informe o novo horário ou explique o que precisa mudar.", variant: "destructive" });
       return;
@@ -121,9 +125,14 @@ export default function ReservaSolicitacaoDialog({
               </div>
             )}
             <div className="space-y-1">
-              <Label htmlFor="mensagem-solicitacao">{modo === "cancelamento" ? "Motivo (opcional)" : "O que precisa mudar?"}</Label>
-              <Textarea id="mensagem-solicitacao" rows={3} maxLength={1000} value={mensagem} onChange={(e) => setMensagem(e.target.value)}
+              <Label htmlFor="mensagem-solicitacao">{modo === "cancelamento" ? "Motivo do cancelamento *" : "O que precisa mudar?"}</Label>
+              <Textarea id="mensagem-solicitacao" rows={3} maxLength={modo === "cancelamento" ? 180 : 1000} value={mensagem} onChange={(e) => setMensagem(e.target.value)}
                 placeholder={modo === "cancelamento" ? "Conte o motivo do cancelamento" : "Ex.: trocar para a sala ao lado, mudar o horário…"} />
+              {modo === "cancelamento" && (
+                <p className="text-xs text-muted-foreground">
+                  {mensagem.trim().length}/180 · Com 24h ou mais de antecedência as horas voltam para o seu banco de horas; com menos de 24h elas ficam consumidas.
+                </p>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">O pedido será analisado pela equipe. A reserva continua valendo até a confirmação.</p>
           </div>

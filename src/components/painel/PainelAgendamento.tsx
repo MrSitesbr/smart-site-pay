@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { addMonths, eachDayOfInterval, endOfMonth, format, getDay, isBefore, isSameDay, startOfDay, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarDays, ChevronLeft, ChevronRight, CircleHelp, ImageOff, Loader2, LockKeyhole, Plus, Send, Trash2, Users } from "lucide-react";
@@ -84,8 +85,28 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [salaId, setSalaId] = useState("todas");
   const [ocupacoes, setOcupacoes] = useState<Ocupacao[]>([]);
   const [reservasDoUsuario, setReservasDoUsuario] = useState<any[]>([]);
+  const [linkParams, setLinkParams] = useSearchParams();
   const [solicitacoes, setSolicitacoes] = useState<Record<string, SolicitacaoReserva>>({});
   const [reservaAberta, setReservaAberta] = useState<any | null>(null);
+
+  // Link vindo do extrato de créditos: abre o dia da reserva e o detalhe dela.
+  useEffect(() => {
+    const reservaId = linkParams.get("reserva");
+    const data = linkParams.get("data");
+    if (!reservaId && !data) return;
+    if (data) {
+      setMes(startOfMonth(new Date(`${data}T12:00:00`)));
+      setDia(startOfDay(new Date(`${data}T12:00:00`)));
+    }
+    const limpar = () => setLinkParams((atual) => { const p = new URLSearchParams(atual); p.delete("reserva"); p.delete("data"); return p; }, { replace: true });
+    if (!reservaId) { limpar(); return; }
+    const encontrada = reservasDoUsuario.find((r: any) => r.id === reservaId);
+    if (encontrada) { setReservaAberta(encontrada); limpar(); return; }
+    supabase.from("reservations").select("*").eq("id", reservaId).maybeSingle().then(({ data: unica }) => {
+      if (unica) setReservaAberta(unica);
+      limpar();
+    });
+  }, [linkParams, reservasDoUsuario, setLinkParams]);
   const [carregandoSalas, setCarregandoSalas] = useState(true);
   const [carregandoAgenda, setCarregandoAgenda] = useState(false);
   const [solicitando, setSolicitando] = useState(false);

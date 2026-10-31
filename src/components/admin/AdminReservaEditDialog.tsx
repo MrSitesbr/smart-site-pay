@@ -9,6 +9,7 @@ import { invokeGoogleSync } from "@/lib/googleSync";
 import { verificarConflitos } from "@/lib/disponibilidade";
 import { horasDaReserva } from "@/lib/planoUso";
 import { precificarEdicao } from "@/lib/precoReserva";
+import { pedirMotivoCancelamento } from "@/components/MotivoCancelamentoDialog";
 import { calculateReservationPrice } from "@/lib/reservationPricing";
 import { friendlyError } from "@/lib/appErrors";
 import { toast } from "@/hooks/use-toast";
@@ -121,12 +122,19 @@ export default function AdminReservaEditDialog({ open, reserva, onOpenChange, on
         ...precos,
       };
 
+      // Cancelar exige motivo (fica no histórico do cliente e no extrato dos créditos).
+      let motivo: string | null = null;
+      if (editing.status === "cancelada" && reserva?.status !== "cancelada") {
+        motivo = await pedirMotivoCancelamento(`Cancelar a reserva de ${editing.nome}.`);
+        if (!motivo) { setSaving(false); return; }
+      }
       const updateResult = statusOnly
-        ? await supabase.rpc("admin_update_reservation_status", {
+        ? await (supabase.rpc as any)("admin_update_reservation_status", {
             p_reservation_id: editing.id,
             p_status: editing.status,
+            p_motivo: motivo,
           })
-        : await supabase.from("reservations").update(payload).eq("id", editing.id);
+        : await supabase.from("reservations").update(motivo ? { ...payload, cancel_motivo: motivo } : payload).eq("id", editing.id);
       if (updateResult.error) throw updateResult.error;
 
       const updated = { ...reserva, ...(statusOnly ? { status: editing.status } : payload) };

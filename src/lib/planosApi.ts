@@ -145,6 +145,8 @@ export function nivelUso(resumo: Pick<Cobertura, "status" | "cota" | "saldo" | "
 export type ExtratoItem = {
   id: string; data: string; hora_inicio: string; hora_fim: string; sala: string | null; status: string;
   horas: number; tipo_cobranca?: string | null; valor?: string | null;
+  /** Cancelamento: motivo, quem cancelou e se as horas voltaram ao saldo. */
+  motivo?: string | null; cancelado_por?: string | null; estornado?: boolean;
 };
 
 /** Card do banco de horas: período do plano, horas excedentes ou crédito extra (compra/bônus). */
