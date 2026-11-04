@@ -6,8 +6,8 @@ import DOMPurify from "dompurify";
 
 const DEFAULTS = {
   title: 'Localização que aproxima você de mais oportunidades',
-  description: 'Estamos localizados na Av. Presidente Kennedy, 5214 — fácil acesso e ótima visibilidade para o seu negócio na Vila Tupi.',
-  location_tag: 'Praia Grande - SP',
+  description: 'Unidades no Boqueirão, em Praia Grande, e no Centro de São Vicente — fácil acesso e ótima visibilidade para o seu negócio.',
+  location_tag: 'Praia Grande e São Vicente - SP',
   features: [
     { icon: "Navigation", title: "Fácil acesso e mobilidade" },
     { icon: "Building2", title: "Região estratégica" },
