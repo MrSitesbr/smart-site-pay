@@ -8,11 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Edit, Info, Users, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminAba, useVoltar } from "@/hooks/useVoltar";
+import { RecursosChips, useRecursos } from "@/components/agenda/RecursosChips";
 
 export default function AdminSalaDetalhe() {
   const { id } = useParams();
   const navigate = useNavigate();
   const voltar = useVoltar(adminAba("unidades"));
+  const catalogoRecursos = useRecursos();
   const [sala, setSala] = useState<any>(null);
   const [unidade, setUnidade] = useState<any>(null);
   const [planos, setPlanos] = useState<any[]>([]);
@@ -103,9 +105,9 @@ export default function AdminSalaDetalhe() {
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Metragem</p>
                     <p className="text-brand-blue-dark font-black">{sala.metadata?.metragem || '0'} m²</p>
                   </div>
-                  <div className="flex gap-2">
-                    {sala.metadata?.tem_janela && <Badge variant="outline" className="text-[10px] border-brand-orange/20 text-brand-orange">Com Janela</Badge>}
-                    {sala.metadata?.tem_lavatorio && <Badge variant="outline" className="text-[10px] border-brand-blue-dark/20 text-brand-blue-dark">Com Lavatório</Badge>}
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Recursos</p>
+                    <RecursosChips ids={sala.recursos} catalogo={catalogoRecursos} />
                   </div>
                 </div>
               </div>

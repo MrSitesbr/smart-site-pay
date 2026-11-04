@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { mensagemBancoSala, SALA_CATEGORIAS, SALA_MODALIDADES, tipoAmbienteDasCategorias } from "@/lib/salaOptions";
 import { numberOrNull, roomSchema } from "@/lib/validation";
 import { adminAba, useVoltar } from "@/hooks/useVoltar";
+import RecursosSalaEditor from "./RecursosSalaEditor";
+import { carregarRecursos, type Recurso } from "@/lib/recursos";
 
 const statusOptions = [
   { value: "disponivel", label: "Disponível" },
@@ -34,6 +36,7 @@ const defaultForm = {
     tem_lavatorio: false,
   },
   planos_permitidos: [] as string[],
+  recursos: null as string[] | null,
   preco_locacao_mensal: "",
   preco_periodo_locacao_avulsa: "",
   preco_diaria: "",
@@ -51,6 +54,8 @@ export default function AdminSalaFormPage() {
   const [loading, setLoading] = useState(isEditing || Boolean(id));
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
 
+  const [catalogo, setCatalogo] = useState<Recurso[]>([]);
+
   useEffect(() => {
     const loadPlanos = async () => {
       const { data, error } = await supabase.from("planos").select("*").is("deleted_at", null).order("nome");
@@ -58,6 +63,11 @@ export default function AdminSalaFormPage() {
     };
 
     loadPlanos();
+    carregarRecursos().then((lista) => {
+      setCatalogo(lista);
+      // Sala nova já vem com os recursos padrão marcados (ar-condicionado, Wi-Fi, mesa, cadeira).
+      setForm((atual: any) => (atual.recursos == null ? { ...atual, recursos: lista.filter((r) => r.padrao && r.ativo).map((r) => r.id) } : atual));
+    });
 
     if (!isEditing && !isNew) {
       setForm(defaultForm);
@@ -99,6 +109,7 @@ export default function AdminSalaFormPage() {
             tem_lavatorio: false,
           },
           planos_permitidos: (planosRes.data || []).map((p: any) => p.plano_id),
+          recursos: sala.recursos || [],
           preco_locacao_mensal: sala.preco_locacao_mensal?.toString() || "",
           preco_periodo_locacao_avulsa: sala.preco_periodo_locacao_avulsa?.toString() || "",
           preco_diaria: sala.preco_diaria?.toString() || "",
@@ -152,6 +163,7 @@ export default function AdminSalaFormPage() {
       p_preco_hora: values.precoHora || 0,
       p_preco_diaria: values.precoDiaria || 0,
       p_planos: form.planos_permitidos || [],
+      p_recursos: form.recursos ?? null,
     });
     if (error) {
       toast.error(mensagemBancoSala(error.message));
@@ -315,6 +327,22 @@ export default function AdminSalaFormPage() {
                       </label>
                     );
                   })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Recursos da sala</label>
+                <p className="text-xs text-muted-foreground">Aparecem para o cliente e servem de filtro na reserva.</p>
+                <RecursosSalaEditor
+                  catalogo={catalogo}
+                  selecionados={form.recursos || []}
+                  onChange={(ids) => setForm({ ...form, recursos: ids })}
+                  onCatalogoChange={setCatalogo}
+                />
+                <div className="flex items-center gap-2 pt-1">
+                  <label htmlFor="sala-metragem" className="text-sm text-slate-700">Metragem (m²)</label>
+                  <Input id="sala-metragem" type="number" min={0} className="h-9 w-28" value={form.metadata?.metragem || ""}
+                    onChange={(e) => setForm({ ...form, metadata: { ...(form.metadata || {}), metragem: Number(e.target.value) || 0 } })} />
                 </div>
               </div>
 

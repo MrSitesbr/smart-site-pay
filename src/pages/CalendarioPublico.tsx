@@ -16,8 +16,11 @@ import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
 import CoberturaPlanoReserva, { type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
 import type { Modalidade } from "@/lib/planosApi";
+import FiltroSalas, { filtrarSalas, useFiltroSalas } from "@/components/agenda/FiltroSalas";
+import { RecursosChips, RecursosIcones, useRecursos } from "@/components/agenda/RecursosChips";
+import { algumaUnidadeAberta, carregarHorarios, horarioDoDia, type MapaHorarios } from "@/lib/horarios";
 
-type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number; fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null };
+type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number; fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null; recursos: string[]; metragem: number | null; abreGeral: string; fechaGeral: string; fechadoNoDia?: boolean };
 type UnidadePublica = { id: string; nome: string; horario_abertura: string; horario_fechamento: string };
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
@@ -44,6 +47,9 @@ export default function CalendarioPublico() {
   const [mes, setMes] = useState(startOfMonth(new Date()));
   const [dia, setDia] = useState(startOfDay(new Date()));
   const [salas, setSalas] = useState<SalaPublica[]>([]);
+  const [horarios, setHorarios] = useState<MapaHorarios | null>(null);
+  const catalogoRecursos = useRecursos();
+  const [filtroSalas, setFiltroSalas] = useFiltroSalas();
   const [unidades, setUnidades] = useState<UnidadePublica[]>([]);
   const [unidadeId, setUnidadeId] = useState("todas");
   const [salaId, setSalaId] = useState("todas");
@@ -72,7 +78,7 @@ export default function CalendarioPublico() {
   useEffect(() => {
     let ativo = true;
     Promise.all([
-      supabase.from("salas").select("id, nome, unidade_id, status, foto_url, descricao, tipo, capacidade").in("status", ["disponivel", "ativa"]).order("nome"),
+      supabase.from("salas").select("id, nome, unidade_id, status, foto_url, descricao, tipo, capacidade, recursos, metadata").in("status", ["disponivel", "ativa"]).order("nome"),
       supabase.from("unidades").select("id, nome, horario_abertura, horario_fechamento").ilike("status", "ativ%").order("nome"),
       supabase.auth.getSession(),
     ]).then(([salasResponse, unidadesResponse, sessaoResponse]) => {
@@ -83,8 +89,9 @@ export default function CalendarioPublico() {
       setUnidades(listaUnidades);
       setSalas((salasResponse.data || []).filter((sala) => Boolean(sala.unidade_id && dadosUnidades.has(sala.unidade_id))).map((sala) => {
         const unidade = dadosUnidades.get(String(sala.unidade_id));
-         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "21:00"), fotoUrl: sala.foto_url || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade };
+         return { id: sala.id, nome: sala.nome, unidade_id: sala.unidade_id, unidadeNome: unidade?.nome || "Unidade", abertura: minutos(unidade?.horario_abertura || "08:00"), fechamento: minutos(unidade?.horario_fechamento || "21:00"), fotoUrl: sala.foto_url || null, descricao: sala.descricao, tipo: sala.tipo, capacidade: sala.capacidade, recursos: (sala as any).recursos || [], metragem: Number((sala as any).metadata?.metragem) || null, abreGeral: String(unidade?.horario_abertura || "08:00").slice(0, 5), fechaGeral: String(unidade?.horario_fechamento || "21:00").slice(0, 5) };
       }));
+      void carregarHorarios().then((mapa) => { if (ativo) setHorarios(mapa); });
       setAutenticado(Boolean(sessaoResponse.data.session));
       if (sessaoResponse.data.session) void carregarDadosDoCliente(sessaoResponse.data.session.user);
       else exigirLogin();
@@ -118,7 +125,16 @@ export default function CalendarioPublico() {
     }));
   }
 
-  const salasFiltradas = useMemo(() => salas.filter((sala) => unidadeId === "todas" || sala.unidade_id === unidadeId), [salas, unidadeId]);
+  // Horário de cada sala no dia selecionado (por dia da semana da unidade).
+  const salasDoDia = useMemo(() => salas.map((sala) => {
+    const h = horarioDoDia(horarios, sala.unidade_id, new Date(`${isoDate(dia)}T12:00:00`), { abre: sala.abreGeral, fecha: sala.fechaGeral });
+    return { ...sala, abertura: minutos(h.abre), fechamento: minutos(h.fecha), fechadoNoDia: h.fechado };
+  }), [salas, horarios, dia]);
+  const salasFiltradas = useMemo(() => salasDoDia.filter((sala) => unidadeId === "todas" || sala.unidade_id === unidadeId), [salasDoDia, unidadeId]);
+  const idsUnidades = Array.from(new Set(salasFiltradas.map((sala) => sala.unidade_id).filter(Boolean))) as string[];
+  const diaFechado = (data: Date) => (horarios && idsUnidades.length
+    ? !algumaUnidadeAberta(horarios, idsUnidades, new Date(`${isoDate(data)}T12:00:00`))
+    : !isBookableDay(new Date(`${isoDate(data)}T12:00:00`)));
   useEffect(() => { if (salaId !== "todas" && !salasFiltradas.some((sala) => sala.id === salaId)) setSalaId("todas"); }, [salaId, salasFiltradas]);
 
   const carregarAgenda = useCallback(async () => {
@@ -132,8 +148,8 @@ export default function CalendarioPublico() {
 
   const dias = useMemo(() => eachDayOfInterval({ start: startOfMonth(mes), end: endOfMonth(mes) }), [mes]);
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
-  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(dia)}T12:00:00`));
-  const salasGantt = salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId);
+  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || diaFechado(dia);
+  const salasGantt = filtrarSalas(salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId), filtroSalas);
   const slotsVisiveis = useMemo(() => {
     if (!salasGantt.length) return SLOTS;
     const abertura = Math.min(...salasGantt.map((sala) => sala.abertura));
@@ -141,9 +157,9 @@ export default function CalendarioPublico() {
     return SLOTS.filter((slot) => slot >= abertura && slot < fechamento);
   }, [salasGantt]);
   const foraDoExpediente = (id: string, index: number) => {
-    const sala = salas.find((item) => item.id === id);
+    const sala = salasDoDia.find((item) => item.id === id);
     const slot = slotsVisiveis[index];
-    return !sala || slot < sala.abertura || slot + 30 > sala.fechamento;
+    return !sala || !!sala.fechadoNoDia || slot < sala.abertura || slot + 30 > sala.fechamento;
   };
   const ocupacaoNoSlot = (id: string, index: number) => {
     const inicio = slotsVisiveis[index], fim = inicio + 30;
@@ -195,10 +211,10 @@ export default function CalendarioPublico() {
     } catch { sessionStorage.removeItem(SELECAO_STORAGE_KEY); }
   }, [carregandoSalas, salas]);
 
-  const salaSelecionada = selecao ? salas.find((sala) => sala.id === selecao.salaId) : null;
+  const salaSelecionada = selecao ? salasDoDia.find((sala) => sala.id === selecao.salaId) : null;
   const inicioSelecionado = selecao ? horarioMinutos(slotsVisiveis[Math.min(selecao.inicioIndex, selecao.fimIndex)]) : "";
   const fimSelecionado = selecao ? horarioMinutos(slotsVisiveis[Math.max(selecao.inicioIndex, selecao.fimIndex)] + 30) : "";
-  const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
+  const salaDosPeriodos = periodos.length ? salasDoDia.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function iniciarSelecao(id: string, index: number) {
     const selecionado = periodoNoSlot(id, index);
@@ -295,11 +311,11 @@ export default function CalendarioPublico() {
           <div><label className="mb-2 block text-sm font-semibold">Sala</label><Select value={salaId} onValueChange={setSalaId} disabled={carregandoSalas}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todas">Todas as salas</SelectItem>{salasFiltradas.map((sala) => <SelectItem key={sala.id} value={sala.id}>{sala.nome} · {sala.unidadeNome}</SelectItem>)}</SelectContent></Select></div>
           <div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => setMes((atual) => subMonths(atual, 1))} aria-label="Mês anterior"><ChevronLeft className="h-4 w-4" /></Button><p className="min-w-40 text-center font-heading font-bold capitalize">{format(mes, "MMMM 'de' yyyy", { locale: ptBR })}</p><Button variant="outline" size="icon" onClick={() => setMes((atual) => addMonths(atual, 1))} aria-label="Próximo mês"><ChevronRight className="h-4 w-4" /></Button></div>
         </div>
-        <div className="grid grid-cols-7 gap-1">{DIAS_SEMANA.map((nome) => <div key={nome} className="py-1 text-center text-[11px] font-bold text-foreground/70 sm:text-xs">{nome}</div>)}{Array.from({ length: getDay(startOfMonth(mes)) }).map((_, index) => <div key={`empty-${index}`} />)}{dias.map((data) => { const selecionado = isSameDay(data, dia); const bloqueado = isBefore(data, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(data)}T12:00:00`)); const qtd = ocupacoes.filter((item) => item.data === isoDate(data) && salasFiltradas.some((sala) => sala.id === item.sala_id)).length; return <Button key={isoDate(data)} variant={selecionado ? "default" : "outline"} className="h-11 flex-col gap-0 border-border p-0.5 sm:h-12" onClick={() => { setDia(data); atualizarSelecao(null); }} disabled={bloqueado}><span className="text-sm font-bold">{format(data, "d")}</span><span className="text-[9px] font-semibold sm:text-[10px]">{bloqueado ? "Fechado" : qtd ? `${qtd} ocupado${qtd > 1 ? "s" : ""}` : "Livre"}</span></Button>; })}</div>
+        <div className="grid grid-cols-7 gap-1">{DIAS_SEMANA.map((nome) => <div key={nome} className="py-1 text-center text-[11px] font-bold text-foreground/70 sm:text-xs">{nome}</div>)}{Array.from({ length: getDay(startOfMonth(mes)) }).map((_, index) => <div key={`empty-${index}`} />)}{dias.map((data) => { const selecionado = isSameDay(data, dia); const bloqueado = isBefore(data, startOfDay(new Date())) || diaFechado(data); const qtd = ocupacoes.filter((item) => item.data === isoDate(data) && salasFiltradas.some((sala) => sala.id === item.sala_id)).length; return <Button key={isoDate(data)} variant={selecionado ? "default" : "outline"} className="h-11 flex-col gap-0 border-border p-0.5 sm:h-12" onClick={() => { setDia(data); atualizarSelecao(null); }} disabled={bloqueado}><span className="text-sm font-bold">{format(data, "d")}</span><span className="text-[9px] font-semibold sm:text-[10px]">{bloqueado ? "Fechado" : qtd ? `${qtd} ocupado${qtd > 1 ? "s" : ""}` : "Livre"}</span></Button>; })}</div>
       </section>
       <section className="overflow-hidden rounded-lg border-2 border-border bg-card shadow-sm" aria-label="Agenda de horários do dia">
-        <div className="flex items-center gap-3 border-b-2 border-border bg-muted/50 px-4 py-3"><div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-primary"><CalendarDays className="h-4 w-4" /></div><div><h2 className="font-heading text-base font-bold capitalize text-foreground">{format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}</h2><p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar; clique em um horário selecionado para removê-lo</p></div></div>
-         {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="max-h-[620px] overflow-auto select-none"><div className="min-w-[680px]"><div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex items-center px-2 py-2 text-xs font-bold text-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l-2 border-border px-2 py-2"><div className="flex items-center gap-2"><div className="h-9 w-11 shrink-0 overflow-hidden rounded border border-border bg-background">{sala.fotoUrl ? <img src={sala.fotoUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-muted-foreground"><ImageOff className="h-4 w-4" /></div>}</div><div className="min-w-0 flex-1 text-left"><p className="truncate text-xs font-bold text-foreground sm:text-sm">{sala.nome}</p><p className="truncate text-[10px] font-medium text-foreground/70">{sala.unidadeNome}</p></div><Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Mais informações sobre ${sala.nome}`} title="Mais informações" onClick={() => setSalaDetalhes(sala)}><CircleHelp className="h-4 w-4" /></Button></div><p className="mt-1 text-center text-[10px] font-medium text-foreground/70">{horarioMinutos(sala.abertura)}–{horarioMinutos(sala.fechamento)}</p></div>)}</div>{slotsVisiveis.map((slot, index) => <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex min-h-9 items-center border-r border-border px-2 text-[11px] font-bold text-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); const fechado = foraDoExpediente(sala.id, index); const indisponivel = Boolean(ocupacao || fechado); return <div key={sala.id} role="button" tabIndex={indisponivel ? -1 : 0} aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : periodoNoSlot(sala.id, index) ? `${sala.nome}, ${horarioMinutos(slot)}, selecionado; clique para remover` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { tipoPonteiroRef.current = event.pointerType; if (event.pointerType !== "mouse") return; event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onClick={() => { if (tipoPonteiroRef.current !== "mouse" && !indisponivel) selecionarSlotUnico(sala.id, index); }} onKeyDown={(event) => { if (!indisponivel && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selecionarSlotUnico(sala.id, index); } }} className={`relative min-h-9 border-l border-border transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : fechado ? "cursor-not-allowed bg-muted text-muted-foreground" : selecionado ? "cursor-grabbing bg-primary/20 ring-2 ring-inset ring-primary" : "cursor-crosshair hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-1 text-[10px] font-bold"><LockKeyhole className="mr-1 h-3 w-3" />Indisponível</div> : fechado ? <div className="flex h-full items-center justify-center text-[9px] font-semibold uppercase">Fechado</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
+        <div className="flex items-center gap-3 border-b-2 border-border bg-muted/50 px-4 py-3"><div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-primary"><CalendarDays className="h-4 w-4" /></div><div><h2 className="font-heading text-base font-bold capitalize text-foreground">{format(dia, "EEEE, d 'de' MMMM", { locale: ptBR })}</h2><p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar; clique em um horário selecionado para removê-lo</p></div><div className="ml-auto"><FiltroSalas salas={salasFiltradas} catalogo={catalogoRecursos} valor={filtroSalas} onChange={setFiltroSalas} /></div></div>
+         {carregandoAgenda ? <div className="flex min-h-56 items-center justify-center text-muted-foreground"><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Consultando agenda...</div> : diaBloqueado ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Não há atendimento nesta data.</div> : salasGantt.length === 0 ? <div className="m-4 rounded-md border-2 border-dashed p-8 text-center text-sm text-muted-foreground">Nenhuma sala encontrada neste filtro.</div> : <div className="max-h-[620px] overflow-auto select-none"><div className="min-w-[680px]"><div className="sticky top-0 z-20 grid border-b-2 border-border bg-muted" style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex items-center px-2 py-2 text-xs font-bold text-foreground">Hora</div>{salasGantt.map((sala) => <div key={sala.id} className="border-l-2 border-border px-2 py-2"><div className="flex items-center gap-2"><div className="h-9 w-11 shrink-0 overflow-hidden rounded border border-border bg-background">{sala.fotoUrl ? <img src={sala.fotoUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-muted-foreground"><ImageOff className="h-4 w-4" /></div>}</div><div className="min-w-0 flex-1 text-left"><p className="truncate text-xs font-bold text-foreground sm:text-sm">{sala.nome}</p><p className="truncate text-[10px] font-medium text-foreground/70">{sala.unidadeNome}</p></div><Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Mais informações sobre ${sala.nome}`} title="Mais informações" onClick={() => setSalaDetalhes(sala)}><CircleHelp className="h-4 w-4" /></Button></div><p className="mt-1 text-center text-[10px] font-medium text-foreground/70">{sala.fechadoNoDia ? "Fechado neste dia" : `${horarioMinutos(sala.abertura)}–${horarioMinutos(sala.fechamento)}`}</p><div className="mt-0.5 flex justify-center"><RecursosIcones ids={sala.recursos} catalogo={catalogoRecursos} /></div></div>)}</div>{slotsVisiveis.map((slot, index) => <div key={slot} className={`grid border-b border-border ${index % 2 ? "bg-muted/30" : "bg-background"}`} style={{ gridTemplateColumns: `64px repeat(${salasGantt.length}, minmax(150px, 1fr))` }}><div className="flex min-h-9 items-center border-r border-border px-2 text-[11px] font-bold text-foreground">{horarioMinutos(slot)}</div>{salasGantt.map((sala) => { const ocupacao = ocupacaoNoSlot(sala.id, index); const selecionado = slotSelecionado(sala.id, index); const fechado = foraDoExpediente(sala.id, index); const indisponivel = Boolean(ocupacao || fechado); return <div key={sala.id} role="button" tabIndex={indisponivel ? -1 : 0} aria-label={indisponivel ? `${sala.nome}, ${horarioMinutos(slot)}, indisponível` : periodoNoSlot(sala.id, index) ? `${sala.nome}, ${horarioMinutos(slot)}, selecionado; clique para remover` : `${sala.nome}, ${horarioMinutos(slot)}, disponível`} onPointerDown={(event) => { tipoPonteiroRef.current = event.pointerType; if (event.pointerType !== "mouse") return; event.preventDefault(); iniciarSelecao(sala.id, index); }} onPointerEnter={() => ampliarSelecao(sala.id, index)} onClick={() => { if (tipoPonteiroRef.current !== "mouse" && !indisponivel) selecionarSlotUnico(sala.id, index); }} onKeyDown={(event) => { if (!indisponivel && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); selecionarSlotUnico(sala.id, index); } }} className={`relative min-h-9 border-l border-border transition-colors ${ocupacao ? `${CORES[ocupacao.color_slot % CORES.length]} cursor-not-allowed text-primary-foreground` : fechado ? "cursor-not-allowed bg-muted text-muted-foreground" : selecionado ? "cursor-grabbing bg-primary/20 ring-2 ring-inset ring-primary" : "cursor-crosshair hover:bg-primary/10"}`}>{ocupacao ? <div className="flex h-full items-center justify-center px-1 text-[10px] font-bold"><LockKeyhole className="mr-1 h-3 w-3" />Indisponível</div> : fechado ? <div className="flex h-full items-center justify-center text-[9px] font-semibold uppercase">Fechado</div> : selecionado ? <span className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" /> : null}</div>; })}</div>)}</div></div>}
       </section>
     </main>
     <Footer />
@@ -331,7 +347,7 @@ export default function CalendarioPublico() {
     </Dialog>
      <Dialog open={Boolean(salaDetalhes)} onOpenChange={(aberta) => { if (!aberta) setSalaDetalhes(null); }}>
        <DialogContent className="max-w-lg">
-         {salaDetalhes && <><DialogHeader><DialogTitle className="font-heading text-2xl font-black">{salaDetalhes.nome}</DialogTitle><DialogDescription>{salaDetalhes.unidadeNome}</DialogDescription></DialogHeader><div className="space-y-4">{salaDetalhes.fotoUrl ? <img src={salaDetalhes.fotoUrl} alt={salaDetalhes.nome} className="aspect-video w-full rounded-md border border-border object-cover" /> : <div className="flex aspect-video w-full items-center justify-center rounded-md border border-dashed border-border bg-muted text-muted-foreground"><ImageOff className="mr-2 h-5 w-5" />Sem foto cadastrada</div>}<div className="flex flex-wrap gap-2 text-sm"><span className="rounded-md border bg-muted px-3 py-1.5">{salaDetalhes.tipo}</span>{salaDetalhes.capacidade && <span className="inline-flex items-center rounded-md border bg-muted px-3 py-1.5"><Users className="mr-1.5 h-4 w-4" />Até {salaDetalhes.capacidade} pessoas</span>}<span className="rounded-md border bg-muted px-3 py-1.5">{horarioMinutos(salaDetalhes.abertura)}–{horarioMinutos(salaDetalhes.fechamento)}</span></div><p className="text-sm leading-relaxed text-foreground/80">{salaDetalhes.descricao || "Nenhuma descrição cadastrada para esta sala."}</p></div></>}
+         {salaDetalhes && <><DialogHeader><DialogTitle className="font-heading text-2xl font-black">{salaDetalhes.nome}</DialogTitle><DialogDescription>{salaDetalhes.unidadeNome}</DialogDescription></DialogHeader><div className="space-y-4">{salaDetalhes.fotoUrl ? <img src={salaDetalhes.fotoUrl} alt={salaDetalhes.nome} className="aspect-video w-full rounded-md border border-border object-cover" /> : <div className="flex aspect-video w-full items-center justify-center rounded-md border border-dashed border-border bg-muted text-muted-foreground"><ImageOff className="mr-2 h-5 w-5" />Sem foto cadastrada</div>}<div className="flex flex-wrap gap-2 text-sm"><span className="rounded-md border bg-muted px-3 py-1.5">{salaDetalhes.tipo}</span>{salaDetalhes.capacidade && <span className="inline-flex items-center rounded-md border bg-muted px-3 py-1.5"><Users className="mr-1.5 h-4 w-4" />Até {salaDetalhes.capacidade} pessoas</span>}<span className="rounded-md border bg-muted px-3 py-1.5">{salaDetalhes.fechadoNoDia ? "Fechada neste dia" : `${horarioMinutos(salaDetalhes.abertura)}–${horarioMinutos(salaDetalhes.fechamento)}`}</span>{salaDetalhes.metragem ? <span className="rounded-md border bg-muted px-3 py-1.5">{salaDetalhes.metragem} m²</span> : null}</div><RecursosChips ids={salaDetalhes.recursos} catalogo={catalogoRecursos} /><p className="text-sm leading-relaxed text-foreground/80">{salaDetalhes.descricao || "Nenhuma descrição cadastrada para esta sala."}</p></div></>}
        </DialogContent>
      </Dialog>
 

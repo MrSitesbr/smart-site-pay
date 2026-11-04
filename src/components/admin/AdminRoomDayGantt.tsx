@@ -7,8 +7,9 @@ import EventAvatar from "./EventAvatar";
 import { toast } from "@/hooks/use-toast";
 import { alternarCheckin, statusExibido } from "@/lib/checkin";
 import { TIPO_SOLICITACAO_LABEL, descreverNovoHorario, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
+import { carregarHorarios, horarioDoDia, type MapaHorarios } from "@/lib/horarios";
 
-type Sala = { id: string; nome: string; unidade_id: string | null; foto_url: string | null; unidadeNome: string; abertura: number; fechamento: number };
+type Sala = { id: string; nome: string; unidade_id: string | null; foto_url: string | null; unidadeNome: string; abertura: number; fechamento: number; abreGeral?: string; fechaGeral?: string; fechadoNoDia?: boolean };
 
 const ROW_H = 44; // px por hora
 const toMin = (t?: string | null) => { if (!t) return 0; const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); };
@@ -31,6 +32,7 @@ export default function AdminRoomDayGantt({
   onChanged?: () => void;
 }) {
   const [salas, setSalas] = useState<Sala[]>([]);
+  const [horarios, setHorarios] = useState<MapaHorarios | null>(null);
   const [sel, setSel] = useState<any | null>(null);
   const [planoNomeById, setPlanoNomeById] = useState<Record<string, string>>({});
   const [checkinIds, setCheckinIds] = useState<Set<string>>(new Set());
@@ -42,12 +44,21 @@ export default function AdminRoomDayGantt({
       unidadeNome: s.unidades?.nome || "",
       abertura: toMin(s.unidades?.horario_abertura || "08:00"),
       fechamento: toMin(s.unidades?.horario_fechamento || "21:00"),
+      abreGeral: String(s.unidades?.horario_abertura || "08:00").slice(0, 5),
+      fechaGeral: String(s.unidades?.horario_fechamento || "21:00").slice(0, 5),
     }))));
+    void carregarHorarios().then(setHorarios);
     supabase.from("planos").select("id, nome").then(({ data }) => setPlanoNomeById(Object.fromEntries((data || []).map((p) => [p.id, p.nome]))));
   }, []);
 
+  // Horário de cada sala no dia mostrado (por dia da semana da unidade).
+  const salasDoDia = useMemo(() => salas.map((s) => {
+    const h = horarioDoDia(horarios, s.unidade_id, day, { abre: s.abreGeral, fecha: s.fechaGeral });
+    return { ...s, abertura: toMin(h.abre), fechamento: toMin(h.fecha), fechadoNoDia: h.fechado };
+  }), [salas, horarios, day]);
+
   const salasVisiveis = useMemo(
-    () => unidadeId === "todas" ? salas : salas.filter((s) => s.unidade_id === unidadeId),
+    () => unidadeId === "todas" ? salasDoDia : salasDoDia.filter((s) => s.unidade_id === unidadeId),
     [salas, unidadeId],
   );
 
@@ -111,7 +122,7 @@ export default function AdminRoomDayGantt({
   const colunas = useMemo(() => {
     let cols = salaId === "todas" ? salasVisiveis : salasVisiveis.filter((s) => s.id === salaId);
     const semSala = doDia.filter((r) => !r.sala_id || !salas.some((s) => s.id === r.sala_id));
-    if (salaId === "todas" && semSala.length) cols = [...cols, { id: "__sem", nome: "Sem sala definida", unidade_id: null, foto_url: null, unidadeNome: "", abertura: 480, fechamento: 1200 }];
+    if (salaId === "todas" && semSala.length) cols = [...cols, { id: "__sem", nome: "Sem sala definida", unidade_id: null, foto_url: null, unidadeNome: "", abertura: 480, fechamento: 1200, fechadoNoDia: false }];
     return cols;
   }, [salas, salasVisiveis, salaId, doDia]);
 
@@ -180,7 +191,7 @@ export default function AdminRoomDayGantt({
                       <p className="truncate text-[10px] text-muted-foreground">{s.unidadeNome}</p>
                     </div>
                   </div>
-                  {s.id !== "__sem" && <p className="mt-1 text-center text-[10px] text-muted-foreground">{fmt(s.abertura)}–{fmt(s.fechamento)}</p>}
+                  {s.id !== "__sem" && <p className="mt-1 text-center text-[10px] text-muted-foreground">{s.fechadoNoDia ? "Fechado neste dia" : `${fmt(s.abertura)}–${fmt(s.fechamento)}`}</p>}
                 </div>
               ))}
             </div>
@@ -194,7 +205,7 @@ export default function AdminRoomDayGantt({
               {colunas.map((s) => (
                 <div key={s.id} className="relative border-l" style={{ height: horas.length * ROW_H }}>
                   {horas.map((h, i) => {
-                    const fechado = s.id !== "__sem" && (h < s.abertura || h + 60 > s.fechamento);
+                    const fechado = s.id !== "__sem" && (!!s.fechadoNoDia || h < s.abertura || h + 60 > s.fechamento);
                     return (
                       <div key={h} onClick={() => !fechado && onNovaReserva(day)}
                         className={`border-b ${fechado ? "bg-muted" : `cursor-pointer hover:bg-primary/10 ${i % 2 ? "bg-muted/30" : ""}`}`}

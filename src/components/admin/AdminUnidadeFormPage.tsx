@@ -9,6 +9,14 @@ import { MediaPickerModal } from "./MediaPickerModal";
 import { ArrowLeft, ImageIcon, Save, Building2, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { adminAba, useVoltar } from "@/hooks/useVoltar";
+import { Switch } from "@/components/ui/switch";
+import { DIAS_SEMANA } from "@/lib/horarios";
+
+type DiaHorario = { dia: number; abre: string; fecha: string; fechado: boolean };
+const semanaPadrao = (abre = "08:00", fecha = "21:00"): DiaHorario[] =>
+  DIAS_SEMANA.map(({ dia }) => ({ dia, abre, fecha, fechado: dia === 7 }));
+const minutosDe = (valor: string) => { const [h, m] = valor.split(":").map(Number); return h * 60 + m; };
+const nomeDia = (dia: number) => DIAS_SEMANA.find((x) => x.dia === dia)?.nome || "";
 
 const defaultForm = {
   nome: "",
@@ -32,10 +40,18 @@ export default function AdminUnidadeFormPage() {
   const [form, setForm] = useState<any>(defaultForm);
   const [loading, setLoading] = useState(isEditing);
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [semana, setSemana] = useState<DiaHorario[]>(semanaPadrao());
+  const alterarDia = (dia: number, campo: keyof DiaHorario, valor: string | boolean) =>
+    setSemana((atual) => atual.map((d) => (d.dia === dia ? { ...d, [campo]: valor } : d)));
+  const copiarSegunda = () => setSemana((atual) => {
+    const segunda = atual.find((d) => d.dia === 1)!;
+    return atual.map((d) => (d.dia === 7 ? d : { ...d, abre: segunda.abre, fecha: segunda.fecha, fechado: segunda.fechado }));
+  });
 
   useEffect(() => {
     if (!isEditing) {
       setForm(defaultForm);
+      setSemana(semanaPadrao());
       setLoading(false);
       return;
     }
@@ -68,6 +84,13 @@ export default function AdminUnidadeFormPage() {
         horario_fechamento: data.horario_fechamento?.slice(0, 5) || "21:00",
         servicos_infra: data.servicos_infra || [],
       });
+      const { data: horarios } = await (supabase.from("unidade_horarios" as any) as any)
+        .select("dia_semana, abre, fecha, fechado").eq("unidade_id", id);
+      const base = semanaPadrao(data.horario_abertura?.slice(0, 5) || "08:00", data.horario_fechamento?.slice(0, 5) || "21:00");
+      setSemana(base.map((d) => {
+        const h = (horarios || []).find((x: any) => x.dia_semana === d.dia);
+        return h ? { dia: d.dia, abre: String(h.abre).slice(0, 5), fecha: String(h.fecha).slice(0, 5), fechado: !!h.fechado } : d;
+      }));
       setLoading(false);
     })();
 
@@ -82,24 +105,20 @@ export default function AdminUnidadeFormPage() {
       return;
     }
 
-    const toMinutes = (value: string) => {
-      const [hours, minutes] = value.split(":").map(Number);
-      return hours * 60 + minutes;
-    };
-    const openingMinutes = toMinutes(form.horario_abertura || "08:00");
-    const closingMinutes = toMinutes(form.horario_fechamento || "21:00");
-    if (
-      !Number.isFinite(openingMinutes) ||
-      !Number.isFinite(closingMinutes) ||
-      openingMinutes < 8 * 60 ||
-      closingMinutes > 23 * 60 ||
-      openingMinutes >= closingMinutes ||
-      openingMinutes % 30 !== 0 ||
-      closingMinutes % 30 !== 0
-    ) {
-      toast.error("Configure horários entre 08:00 e 23:00, em intervalos de 30 minutos, com fechamento após a abertura.");
+    // Cada dia precisa de um horário válido: 08:00 a 23:00, de 30 em 30 minutos.
+    const invalido = semana.find((d) => {
+      const a = minutosDe(d.abre || "");
+      const f = minutosDe(d.fecha || "");
+      return !Number.isFinite(a) || !Number.isFinite(f) || a < 8 * 60 || f > 23 * 60 || a >= f || a % 30 !== 0 || f % 30 !== 0;
+    });
+    if (invalido) {
+      toast.error(`${nomeDia(invalido.dia)}: use horários entre 08:00 e 23:00, de 30 em 30 minutos, com fechamento após a abertura.`);
       return;
     }
+    // Horário geral (usado por telas antigas) = menor abertura e maior fechamento dos dias abertos.
+    const abertos = semana.filter((d) => !d.fechado);
+    const geralAbre = abertos.length ? abertos.reduce((m, d) => (d.abre < m ? d.abre : m), "23:00") : "08:00";
+    const geralFecha = abertos.length ? abertos.reduce((m, d) => (d.fecha > m ? d.fecha : m), "08:00") : "21:00";
 
     const payload: any = {
       nome: form.nome,
@@ -108,8 +127,8 @@ export default function AdminUnidadeFormPage() {
       foto_url: form.galeria?.[0] || form.foto_url || "",
       galeria: form.galeria || [],
       status: form.status || "ativa",
-      horario_abertura: form.horario_abertura || "08:00",
-      horario_fechamento: form.horario_fechamento || "21:00",
+      horario_abertura: geralAbre,
+      horario_fechamento: geralFecha,
       servicos_infra: form.servicos_infra || [],
     };
 
@@ -119,6 +138,15 @@ export default function AdminUnidadeFormPage() {
 
     if (error) {
       toast.error(error.message);
+      return;
+    }
+
+    const { error: horarioError } = await (supabase.from("unidade_horarios" as any) as any).upsert(
+      semana.map((d) => ({ unidade_id: data.id, dia_semana: d.dia, abre: d.abre, fecha: d.fecha, fechado: d.fechado })),
+      { onConflict: "unidade_id,dia_semana" },
+    );
+    if (horarioError) {
+      toast.error("A unidade foi salva, mas não foi possível salvar os horários da semana: " + horarioError.message);
       return;
     }
 
@@ -241,34 +269,27 @@ export default function AdminUnidadeFormPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 rounded-lg border bg-muted/30 p-4 md:grid-cols-2">
-              <div className="space-y-2">
+            <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Clock className="h-4 w-4 text-primary" /> Abertura da agenda
+                  <Clock className="h-4 w-4 text-primary" /> Horário de atendimento por dia
                 </label>
-                <Input
-                  type="time"
-                  min="08:00"
-                  max="22:30"
-                  step="1800"
-                  value={form.horario_abertura || "08:00"}
-                  onChange={(e) => setForm({ ...form, horario_abertura: e.target.value })}
-                />
+                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={copiarSegunda}>Copiar segunda para seg–sáb</Button>
               </div>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Clock className="h-4 w-4 text-primary" /> Fechamento da agenda
-                </label>
-                <Input
-                  type="time"
-                  min="08:30"
-                  max="23:00"
-                  step="1800"
-                  value={form.horario_fechamento || "21:00"}
-                  onChange={(e) => setForm({ ...form, horario_fechamento: e.target.value })}
-                />
-                <p className="text-xs text-muted-foreground">O último horário disponível pode terminar às 23h.</p>
+              <div className="divide-y rounded-md border bg-background">
+                {semana.map((d) => (
+                  <div key={d.dia} className="grid grid-cols-[80px_auto_1fr_1fr] items-center gap-2 px-3 py-2 sm:grid-cols-[110px_110px_1fr_1fr]">
+                    <span className="text-sm font-medium">{nomeDia(d.dia)}</span>
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Switch checked={!d.fechado} onCheckedChange={(aberto) => alterarDia(d.dia, "fechado", !aberto)} aria-label={`Unidade aberta na ${nomeDia(d.dia)}`} />
+                      <span className="hidden sm:inline">{d.fechado ? "Fechado" : "Aberto"}</span>
+                    </label>
+                    <Input type="time" min="08:00" max="22:30" step="1800" value={d.abre} disabled={d.fechado} onChange={(e) => alterarDia(d.dia, "abre", e.target.value)} aria-label={`${nomeDia(d.dia)}: abre às`} className="h-9" />
+                    <Input type="time" min="08:30" max="23:00" step="1800" value={d.fecha} disabled={d.fechado} onChange={(e) => alterarDia(d.dia, "fecha", e.target.value)} aria-label={`${nomeDia(d.dia)}: fecha às`} className="h-9" />
+                  </div>
+                ))}
               </div>
+              <p className="text-xs text-muted-foreground">De 30 em 30 minutos, entre 08:00 e 23:00. Feriados nacionais continuam bloqueados.</p>
             </div>
 
             <div className="space-y-2">

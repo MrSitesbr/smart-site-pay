@@ -947,6 +947,7 @@ export type Database = {
       }
       salas: {
         Row: {
+          recursos: string[]
           capacidade: number | null
           categoria: string | null
           categorias: string[]
@@ -970,6 +971,7 @@ export type Database = {
           unidade_id: string | null
         }
         Insert: {
+          recursos?: string[]
           capacidade?: number | null
           categoria?: string | null
           categorias?: string[]
@@ -993,6 +995,7 @@ export type Database = {
           unidade_id?: string | null
         }
         Update: {
+          recursos?: string[]
           capacidade?: number | null
           categoria?: string | null
           categorias?: string[]

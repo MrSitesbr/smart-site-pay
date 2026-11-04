@@ -13,6 +13,9 @@ import { toast } from "@/hooks/use-toast";
 import { STATUS_SOLICITACAO_LABEL, carregarSolicitacoesDoCliente, indexarPorReserva, inicioDaReserva, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
 import ReservaSolicitacaoDialog from "./ReservaSolicitacaoDialog";
 import CoberturaPlanoReserva, { type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
+import FiltroSalas, { filtrarSalas, useFiltroSalas } from "@/components/agenda/FiltroSalas";
+import { RecursosChips, RecursosIcones, useRecursos } from "@/components/agenda/RecursosChips";
+import { algumaUnidadeAberta, carregarHorarios, horarioDoDia, type MapaHorarios } from "@/lib/horarios";
 import type { Modalidade } from "@/lib/planosApi";
 
 interface PainelAgendamentoProps {
@@ -21,7 +24,15 @@ interface PainelAgendamentoProps {
   onRefresh: () => Promise<void>;
 }
 
-type SalaPublica = { id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number; fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null };
+type SalaPublica = {
+  id: string; nome: string; unidade_id: string | null; unidadeNome: string; abertura: number; fechamento: number;
+  fotoUrl: string | null; descricao: string | null; tipo: string; capacidade: number | null;
+  recursos: string[]; metragem: number | null;
+  /** Horário geral da unidade (reserva quando o dia não tem cadastro). */
+  abreGeral: string; fechaGeral: string;
+  /** Unidade fechada no dia selecionado (domingo, feriado ou fechada pelo admin). */
+  fechadoNoDia?: boolean;
+};
 type Ocupacao = { sala_id: string; data: string; hora_inicio: string; hora_fim: string; color_slot: number; propria?: boolean; status?: string | null };
 type Selecao = { salaId: string; inicioIndex: number; fimIndex: number };
 type Periodo = { id: string; salaId: string; data: string; inicio: string; fim: string };
@@ -80,6 +91,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [mes, setMes] = useState(startOfMonth(new Date()));
   const [dia, setDia] = useState(startOfDay(new Date()));
   const [salas, setSalas] = useState<SalaPublica[]>([]);
+  const [horarios, setHorarios] = useState<MapaHorarios | null>(null);
+  const catalogoRecursos = useRecursos();
+  const [filtroSalas, setFiltroSalas] = useFiltroSalas();
   const [unidades, setUnidades] = useState<any[]>([]);
   const [unidadeId, setUnidadeId] = useState("todas");
   const [salaId, setSalaId] = useState("todas");
@@ -138,7 +152,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       // Carregar salas disponíveis
       const { data: salasData, error: salasError } = await supabase
         .from("salas")
-        .select("id, nome, unidade_id, status, foto_url, descricao, tipo, capacidade, unidades(nome, horario_abertura, horario_fechamento)")
+        .select("id, nome, unidade_id, status, foto_url, descricao, tipo, capacidade, recursos, metadata, unidades(nome, horario_abertura, horario_fechamento)")
         .in("status", ["disponivel", "ativa"])
         .order("nome");
 
@@ -176,11 +190,16 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           fotoUrl: sala.foto_url || null,
           descricao: sala.descricao,
           tipo: sala.tipo,
-          capacidade: sala.capacidade
+          capacidade: sala.capacidade,
+          recursos: sala.recursos || [],
+          metragem: Number(sala.metadata?.metragem) || null,
+          abreGeral: String(unidade?.horario_abertura || "08:00").slice(0, 5),
+          fechaGeral: String(unidade?.horario_fechamento || "21:00").slice(0, 5),
         };
       }).filter((sala: any) => sala.unidade_id);
 
       setSalas(salasProcessadas);
+      setHorarios(await carregarHorarios());
       setCarregandoSalas(false);
     }
 
@@ -224,10 +243,16 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     return true;
   }
 
+  // Horário de cada sala no dia selecionado (por dia da semana da unidade).
+  const salasDoDia = useMemo(() => salas.map((sala) => {
+    const h = horarioDoDia(horarios, sala.unidade_id, new Date(`${isoDate(dia)}T12:00:00`), { abre: sala.abreGeral, fecha: sala.fechaGeral });
+    return { ...sala, abertura: minutos(h.abre), fechamento: minutos(h.fecha), fechadoNoDia: h.fechado };
+  }), [salas, horarios, dia]);
+
   const salasFiltradas = useMemo(() => {
-    if (unidadeId === "todas") return salas;
-    return salas.filter((sala) => sala.unidade_id === unidadeId);
-  }, [salas, unidadeId]);
+    if (unidadeId === "todas") return salasDoDia;
+    return salasDoDia.filter((sala) => sala.unidade_id === unidadeId);
+  }, [salasDoDia, unidadeId]);
 
   useEffect(() => {
     if (salaId !== "todas" && !salasFiltradas.some((sala) => sala.id === salaId)) setSalaId("todas");
@@ -291,8 +316,12 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
 
   const dias = useMemo(() => eachDayOfInterval({ start: startOfMonth(mes), end: endOfMonth(mes) }), [mes]);
   const ocupacoesDoDia = ocupacoes.filter((item) => item.data === isoDate(dia));
-  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(dia)}T12:00:00`));
-  const salasGantt = salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId);
+  const idsUnidades = Array.from(new Set(salasFiltradas.map((sala) => sala.unidade_id).filter(Boolean))) as string[];
+  const diaFechado = (data: Date) => (horarios && idsUnidades.length
+    ? !algumaUnidadeAberta(horarios, idsUnidades, new Date(`${isoDate(data)}T12:00:00`))
+    : !isBookableDay(new Date(`${isoDate(data)}T12:00:00`)));
+  const diaBloqueado = isBefore(dia, startOfDay(new Date())) || diaFechado(dia);
+  const salasGantt = filtrarSalas(salaId === "todas" ? salasFiltradas : salasFiltradas.filter((sala) => sala.id === salaId), filtroSalas);
   const slotsVisiveis = useMemo(() => {
     if (!salasGantt.length) return SLOTS;
     const abertura = Math.min(...salasGantt.map((sala) => sala.abertura));
@@ -301,9 +330,9 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   }, [salasGantt]);
 
   const foraDoExpediente = (id: string, index: number) => {
-    const sala = salas.find((item) => item.id === id);
+    const sala = salasDoDia.find((item) => item.id === id);
     const slot = slotsVisiveis[index];
-    return !sala || slot < sala.abertura || slot + 60 > sala.fechamento;
+    return !sala || !!sala.fechadoNoDia || slot < sala.abertura || slot + 60 > sala.fechamento;
   };
 
   const ocupacaoNoSlot = (id: string, index: number) => {
@@ -362,8 +391,8 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     };
   }, [adicionarSelecao]);
 
-  const salaSelecionada = selecao ? salas.find((sala) => sala.id === selecao.salaId) : null;
-  const salaDosPeriodos = periodos.length ? salas.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
+  const salaSelecionada = selecao ? salasDoDia.find((sala) => sala.id === selecao.salaId) : null;
+  const salaDosPeriodos = periodos.length ? salasDoDia.find((sala) => sala.id === periodos[0].salaId) : salaSelecionada;
 
   function abrirCriacaoManual() {
     setDataManual(isoDate(dia));
@@ -595,7 +624,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
           ))}
           {dias.map((data) => {
             const selecionado = isSameDay(data, dia);
-            const bloqueado = isBefore(data, startOfDay(new Date())) || !isBookableDay(new Date(`${isoDate(data)}T12:00:00`));
+            const bloqueado = isBefore(data, startOfDay(new Date())) || diaFechado(data);
             const key = isoDate(data);
             const info = reservasPorDia.get(key);
             const qtd = info ? info.length : 0;
@@ -632,6 +661,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
               <p className="text-xs font-medium text-foreground/70">Clique e arraste para selecionar um período</p>
             </div>
           </div>
+          <FiltroSalas salas={salasFiltradas} catalogo={catalogoRecursos} valor={filtroSalas} onChange={setFiltroSalas} />
         </div>
 
         {carregandoAgenda ? (
@@ -682,9 +712,10 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                         <CircleHelp className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="mt-1 text-center text-[10px] font-medium text-foreground/70">
-                      {horarioMinutos(sala.abertura)}–{horarioMinutos(sala.fechamento)}
-                    </p>
+                    <div className="mt-1 flex items-center justify-center gap-2 text-[10px] font-medium text-foreground/70">
+                      <span>{sala.fechadoNoDia ? "Fechado neste dia" : `${horarioMinutos(sala.abertura)}–${horarioMinutos(sala.fechamento)}`}</span>
+                      <RecursosIcones ids={sala.recursos} catalogo={catalogoRecursos} />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -948,9 +979,11 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                     </span>
                   )}
                   <span className="rounded-md border bg-muted px-3 py-1.5">
-                    {horarioMinutos(salaDetalhes.abertura)}–{horarioMinutos(salaDetalhes.fechamento)}
+                    {salaDetalhes.fechadoNoDia ? "Fechada neste dia" : `${horarioMinutos(salaDetalhes.abertura)}–${horarioMinutos(salaDetalhes.fechamento)}`}
                   </span>
+                  {salaDetalhes.metragem ? <span className="rounded-md border bg-muted px-3 py-1.5">{salaDetalhes.metragem} m²</span> : null}
                 </div>
+                <RecursosChips ids={salaDetalhes.recursos} catalogo={catalogoRecursos} />
                 <p className="text-sm leading-relaxed text-foreground/80">
                   {salaDetalhes.descricao || "Nenhuma descrição cadastrada para esta sala."}
                 </p>

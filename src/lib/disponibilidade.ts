@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getBookingBlockReason, isBookableDay } from "./holidays";
+import { horarioDoDia, type HorarioDia } from "./horarios";
 
 export type ConflitoReserva = {
   tipo: 'reserva' | 'visita' | 'bloqueio';
@@ -24,20 +24,27 @@ export async function verificarConflitos(
   // Capacidade da sala (estações compartilhadas aceitam várias reservas simultâneas)
   const { data: salaInfo } = await supabase
     .from('salas')
-    .select('capacidade, tipo, categorias, unidades(horario_abertura, horario_fechamento)')
+    .select('capacidade, tipo, categorias, unidade_id, unidades(horario_abertura, horario_fechamento)')
     .eq('id', salaId)
     .maybeSingle();
   const isCompartilhada = (salaInfo?.categorias || []).includes("compartilhado") || /comp|estac|estaç|coworking/i.test(String(salaInfo?.tipo || ''));
   const capacidade = isCompartilhada ? Math.max(1, Number(salaInfo?.capacidade) || 1) : 1;
   const unidade = Array.isArray(salaInfo?.unidades) ? salaInfo.unidades[0] : salaInfo?.unidades;
-  const abertura = String(unidade?.horario_abertura || "08:00").slice(0, 5);
-  const fechamento = String(unidade?.horario_fechamento || "21:00").slice(0, 5);
+  // Horário da unidade neste dia da semana (domingo/feriado ou dia fechado pelo admin bloqueiam).
+  const unidadeId = (salaInfo as any)?.unidade_id as string | undefined;
+  const { data: horariosUnidade } = unidadeId
+    ? await (supabase.from("unidade_horarios" as any) as any).select("unidade_id, dia_semana, abre, fecha, fechado").eq("unidade_id", unidadeId)
+    : { data: [] };
+  const mapa = new Map<string, HorarioDia[]>(unidadeId ? [[unidadeId, ((horariosUnidade || []) as HorarioDia[]).map((h) => ({ ...h, abre: String(h.abre).slice(0, 5), fecha: String(h.fecha).slice(0, 5) }))]] : []);
+  const dia = horarioDoDia(mapa, unidadeId, new Date(data + "T12:00:00"), { abre: unidade?.horario_abertura, fecha: unidade?.horario_fechamento });
+  const abertura = dia.abre;
+  const fechamento = dia.fecha;
 
-  // 0. Verificar feriados reais e domingos. Sábados são permitidos.
-  if (!isBookableDay(dateObj)) {
+  // 0. Dia fechado: feriado nacional ou dia sem atendimento na unidade.
+  if (dia.fechado) {
     conflitos.push({
       tipo: 'bloqueio',
-      nome: getBookingBlockReason(dateObj) || "Data indisponível",
+      nome: dia.motivo || "Unidade fechada neste dia",
       hora_inicio: "00:00",
       hora_fim: "23:59"
     });
