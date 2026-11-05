@@ -25,6 +25,20 @@ const horaValida = (v: unknown) => {
 const brData = (iso: string) => iso.split("-").reverse().join("/");
 const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const horasEntre = (ini: string, fim: string) => { const [a, b] = ini.split(":").map(Number); const [c, d] = fim.split(":").map(Number); return (c * 60 + d - a * 60 - b) / 60; };
+/** Confere se o link é https e aponta para uma imagem que realmente existe. */
+async function imagemValida(url: string): Promise<string | null> {
+  if (!/^https:\/\/[^\s"'<>]+$/i.test(url)) return null;
+  for (const metodo of ["HEAD", "GET"]) {
+    try {
+      const r = await fetch(url, { method: metodo, redirect: "follow", signal: AbortSignal.timeout(8000) });
+      const tipo = r.headers.get("content-type") || "";
+      await r.body?.cancel();
+      if (r.ok && tipo.startsWith("image/")) return url;
+    } catch { /* tenta o próximo método */ }
+  }
+  return null;
+}
+
 const erroDb = (e: { message?: string } | null) => { if (e) throw new ErroAcao(e.message || "Não foi possível concluir a operação."); };
 
 async function acharSala(db: SupabaseClient, sala: unknown) {
@@ -435,28 +449,39 @@ export const ACOES_ADMIN: Acao[] = [
   },
   {
     nome: "criar_artigo", escrita: true,
-    descricao: 'criar_artigo {"titulo":"texto","resumo":"texto","conteudo_html":"<p>...</p>"} — cria um RASCUNHO no blog.',
+    descricao: 'criar_artigo {"titulo":"texto","resumo":"1-2 frases","conteudo_html":"<h2>..</h2><p>...</p>","imagem_url":"https://images.unsplash.com/photo-...?auto=format&fit=crop&w=1200&q=80","seo_title":"até 60 caracteres","seo_description":"até 155 caracteres","palavras_chave":"a, b, c"} — cria um RASCUNHO no blog. Imagem de destaque, resumo e SEO são obrigatórios; se o admin não enviar imagem, sugira uma foto real do Unsplash.',
     async preparar(_ctx, p) {
       const titulo = txt(p.titulo, 160);
       const conteudo = sanitizarHtml(txt(p.conteudo_html, 30000));
       if (titulo.length < 5 || conteudo.length < 50) throw new ErroAcao("Preciso de um título e de um conteúdo maior para o artigo.");
+      const resumo = txt(p.resumo, 300);
+      if (resumo.length < 20) throw new ErroAcao("Falta o resumo (1 a 2 frases) do artigo.");
+      const imagem = await imagemValida(txt(p.imagem_url, 600));
+      if (!imagem) throw new ErroAcao("A imagem de destaque é obrigatória e precisa ser um link https de uma imagem que exista. Sugira outra foto do Unsplash ou peça uma ao admin.");
+      const seo = { title: txt(p.seo_title, 70) || titulo.slice(0, 70), description: txt(p.seo_description, 160) || resumo.slice(0, 160), keywords: txt(p.palavras_chave, 300) };
       const slug = titulo.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
-      return { params: { titulo, resumo: txt(p.resumo, 300), conteudo, slug }, resumo: `Criar o rascunho "${titulo}" no blog (endereço /blog/${slug}). Ele não fica público até ser publicado.` };
+      return { params: { titulo, resumo, conteudo, slug, imagem, seo }, resumo: `Criar o rascunho "${titulo}" no blog, com imagem de destaque e SEO (endereço /blog/${slug}). Ele não fica público até ser publicado.` };
     },
     async executar({ db, nomeUsuario }, p) {
       const { data: existe } = await db.from("site_articles").select("id").eq("slug", p.slug).maybeSingle();
       const slug = existe ? `${p.slug}-${Date.now().toString(36)}` : p.slug;
-      const { error } = await db.from("site_articles").insert({ title: p.titulo, excerpt: p.resumo || null, content: p.conteudo, slug, status: "Rascunho", author: nomeUsuario || "Coworking 013" } as any);
+      const { data, error } = await db.from("site_articles").insert({
+        title: p.titulo, excerpt: p.resumo, content: p.conteudo, slug, status: "Rascunho", image_url: p.imagem,
+        seo_metadata: p.seo || {}, author: nomeUsuario || "Coworking 013",
+      } as any).select("id").single();
       erroDb(error);
-      return `Rascunho criado: /blog/${slug}. Revise em Marketing / Site → Artigos.`;
+      return `Rascunho criado (id=${(data as any)?.id}): /blog/${slug}. Para publicar, use publicar_artigo ou abra em Marketing / Site → Artigos.`;
     },
   },
   {
     nome: "publicar_artigo", escrita: true,
     descricao: 'publicar_artigo {"artigo_id":"id"} — publica um artigo do blog.',
     async preparar({ db }, p) {
-      const { data: a } = await db.from("site_articles").select("id, title, status").eq("id", txt(p.artigo_id, 80)).maybeSingle();
+      const { data: a } = await db.from("site_articles").select("id, title, status, image_url, excerpt").eq("id", txt(p.artigo_id, 80)).maybeSingle();
       if (!a) throw new ErroAcao("Artigo não encontrado. Use listar_artigos.");
+      if ((a as any).status === "Publicado") throw new ErroAcao("Esse artigo já está publicado.");
+      if (!(a as any).image_url) throw new ErroAcao("O artigo está sem imagem de destaque. Adicione a imagem antes de publicar.");
+      if (!(a as any).excerpt) throw new ErroAcao("O artigo está sem resumo. Adicione antes de publicar.");
       return { params: { artigo_id: (a as any).id }, resumo: `Publicar o artigo "${(a as any).title}" no site.` };
     },
     async executar({ db }, p) {

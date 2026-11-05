@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertTriangle, Ban, CheckCircle2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { fmtBRL, fmtData, resumirSimulacao, simularPlano, type Cobertura, type Modalidade, type Periodo } from "@/lib/planosApi";
@@ -10,8 +11,13 @@ export type EstadoCobertura = {
   itens: Cobertura[];
   /** O saldo não cobre tudo e o cliente tem Harmonia: precisa escolher Adicional ou Avulso. */
   precisaEscolha: boolean;
+  /** Opção do admin ligada e o saldo (plano + créditos) não cobre tudo: o envio fica bloqueado. */
+  bloqueado: boolean;
   erro: string | null;
 };
+
+/** Mensagem curta para avisos (toast) quando a reserva está bloqueada por falta de saldo. */
+export const MENSAGEM_SEM_SALDO = "Você não tem saldo de horas suficiente para esta reserva. Fale com a equipe para contratar um plano ou comprar créditos.";
 
 type Props = {
   clienteId: string | null | undefined;
@@ -20,11 +26,19 @@ type Props = {
   modalidade: Modalidade | null;
   onModalidadeChange: (m: Modalidade | null) => void;
   onEstadoChange?: (estado: EstadoCobertura) => void;
+  /** Painel do cliente: respeita a opção "bloquear reservas sem saldo" do admin. */
+  aplicarBloqueio?: boolean;
 };
 
 /** Mostra quanto o plano cobre nos períodos escolhidos e pede a forma de pagamento quando falta saldo. */
-export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, modalidade, onModalidadeChange, onEstadoChange }: Props) {
+export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, modalidade, onModalidadeChange, onEstadoChange, aplicarBloqueio = false }: Props) {
   const [itens, setItens] = useState<Cobertura[]>([]);
+  const [opcaoBloqueio, setOpcaoBloqueio] = useState(false);
+
+  useEffect(() => {
+    if (!aplicarBloqueio) return;
+    (supabase.rpc as any)("reservas_bloqueio_sem_saldo").then(({ data }: { data: boolean | null }) => setOpcaoBloqueio(data === true));
+  }, [aplicarBloqueio]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const chave = JSON.stringify([clienteId, salaId, periodos]);
@@ -52,13 +66,14 @@ export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, mod
   }, [clienteId, salaId, validos]);
 
   const resumo = resumirSimulacao(itens);
-  const precisaEscolha = resumo.excedentes > 0 && resumo.permiteAdicional;
+  const bloqueado = aplicarBloqueio && opcaoBloqueio && resumo.excedentes > 0;
+  const precisaEscolha = resumo.excedentes > 0 && resumo.permiteAdicional && !bloqueado;
 
   useEffect(() => {
     if (!precisaEscolha && modalidade === "adicional") onModalidadeChange(null);
-    onEstadoChange?.({ carregando, itens, precisaEscolha, erro });
+    onEstadoChange?.({ carregando, itens, precisaEscolha, bloqueado, erro });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [carregando, precisaEscolha, erro, itens]);
+  }, [carregando, precisaEscolha, bloqueado, erro, itens]);
 
   if (!clienteId || !validos.length) return null;
   if (carregando && !itens.length) {
@@ -70,9 +85,53 @@ export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, mod
   const plano = itens[0];
   const semPlano = !resumo.temPlano && resumo.cobertasCredito <= 0;
   const vencido = itens.some((i) => i.status === "vencido");
+  const temCota = resumo.temPlano && Number(plano.cota) > 0 && !plano.estacao;
+  const creditos = Number(plano.creditos_disponiveis || 0);
+  const saldoAntes = Math.max(Number(plano.saldo || 0), 0);
+  const saldoDepois = Math.max(saldoAntes - resumo.cobertas, 0);
+  const creditosDepois = Math.max(creditos - resumo.cobertasCredito, 0);
+  const pct = temCota ? Math.min(100, Math.round((Number(plano.usado || 0) / Number(plano.cota)) * 100)) : 0;
+
+  const painelSaldo = (
+    <div className="space-y-2 rounded-md bg-muted/50 p-3 text-sm">
+      <p className="font-semibold">Seu saldo de horas</p>
+      {temCota ? (
+        <>
+          <div className="flex flex-wrap justify-between gap-x-3 text-xs sm:text-sm">
+            <span>{plano.plano_nome}: usou <strong>{fmtHoras(Number(plano.usado || 0))}</strong> de {fmtHoras(Number(plano.cota))}</span>
+            <span>restam <strong>{fmtHoras(saldoAntes)}</strong></span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-background" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Uso do plano">
+            <div className={`h-full ${pct >= 100 ? "bg-destructive" : pct >= 75 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${pct}%` }} />
+          </div>
+        </>
+      ) : (
+        <p className="text-xs sm:text-sm">{plano.estacao && resumo.temPlano ? `${plano.plano_nome}: estação incluída no plano.` : vencido ? "Seu plano está vencido." : "Você não tem plano ativo."}</p>
+      )}
+      <p className="text-xs sm:text-sm">Créditos extras: <strong>{fmtHoras(creditos)}</strong></p>
+      {!bloqueado && (resumo.cobertas > 0 || resumo.cobertasCredito > 0) && (
+        <p className="text-xs text-muted-foreground">
+          Depois desta reserva: {temCota ? `restam ${fmtHoras(saldoDepois)} do plano` : ""}{temCota && creditos > 0 ? " e " : ""}{creditos > 0 || !temCota ? `${fmtHoras(creditosDepois)} de créditos` : ""}.
+        </p>
+      )}
+    </div>
+  );
+
+  if (bloqueado) {
+    return (
+      <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 sm:p-4">
+        <div className="flex items-start gap-2 text-sm">
+          <Ban className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <p><strong>Reserva não disponível:</strong> faltam {fmtHoras(resumo.excedentes)} de saldo para estes horários. {MENSAGEM_SEM_SALDO.split(". ")[1]}</p>
+        </div>
+        {painelSaldo}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 rounded-md border p-3 sm:p-4">
+      {painelSaldo}
       <div className="flex items-start gap-2">
         {resumo.excedentes > 0
           ? <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />

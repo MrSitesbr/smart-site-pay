@@ -14,7 +14,7 @@ import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { consultaSchema, type DadosConsulta } from "@/lib/consultaValidation";
-import CoberturaPlanoReserva, { type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
+import CoberturaPlanoReserva, { MENSAGEM_SEM_SALDO, type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
 import type { Modalidade } from "@/lib/planosApi";
 import FiltroSalas, { filtrarSalas, useFiltroSalas } from "@/components/agenda/FiltroSalas";
 import { RecursosChips, RecursosIcones, useRecursos } from "@/components/agenda/RecursosChips";
@@ -62,7 +62,7 @@ export default function CalendarioPublico() {
   const [clienteId, setClienteId] = useState<string | null>(null);
   const [modalidade, setModalidade] = useState<Modalidade | null>(null);
   const [estadoCobertura, setEstadoCobertura] = useState<EstadoCobertura | null>(null);
-  const faltaEscolherPagamento = !!estadoCobertura && (estadoCobertura.carregando || (estadoCobertura.precisaEscolha && !modalidade));
+  const faltaEscolherPagamento = !!estadoCobertura && (estadoCobertura.carregando || estadoCobertura.bloqueado || (estadoCobertura.precisaEscolha && !modalidade));
   const [selecao, setSelecao] = useState<Selecao | null>(null);
   const [periodos, setPeriodos] = useState<Periodo[]>([]);
   const [dadosEditados, setDadosEditados] = useState<DadosConsulta>({ nome: "", email: "", whatsapp: "", tipoNegocio: "" });
@@ -270,7 +270,7 @@ export default function CalendarioPublico() {
     }
     const dadosValidos = consultaSchema.safeParse(dadosEditados);
     if (!dadosValidos.success) { toast({ title: "Revise seus dados", description: dadosValidos.error.issues[0]?.message, variant: "destructive" }); return; }
-    if (faltaEscolherPagamento) { toast({ title: "Escolha como pagar", description: "O saldo do plano não cobre todos os horários. Escolha hora adicional ou avulso.", variant: "destructive" }); return; }
+    if (faltaEscolherPagamento) { toast(estadoCobertura?.bloqueado ? { title: "Saldo insuficiente", description: MENSAGEM_SEM_SALDO, variant: "destructive" } : { title: "Escolha como pagar", description: "O saldo do plano não cobre todos os horários. Escolha hora adicional ou avulso.", variant: "destructive" }); return; }
     setSolicitando(true);
     const { error } = await (supabase.rpc as any)("request_authenticated_reservations", {
       p_sala_id: salaDosPeriodos.id,
@@ -338,6 +338,7 @@ export default function CalendarioPublico() {
               modalidade={modalidade}
               onModalidadeChange={setModalidade}
               onEstadoChange={setEstadoCobertura}
+                aplicarBloqueio
             />
           )}
           <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}><Plus className="mr-2 h-4 w-4" />Adicionar outra data ou horário</Button>

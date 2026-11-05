@@ -83,10 +83,22 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (publicar?: boolean) => {
     if (!artigo.title) {
       toast.error("O título é obrigatório");
       return;
+    }
+    const status = publicar === undefined ? artigo.status : publicar ? "Publicado" : "Rascunho";
+    if (status === "Publicado") {
+      const faltando = [
+        !artigo.image_url?.trim() && "imagem de destaque",
+        !artigo.excerpt?.trim() && "resumo",
+        (!artigo.content || artigo.content.replace(/<[^>]*>/g, "").trim().length < 50) && "conteúdo",
+      ].filter(Boolean);
+      if (faltando.length) {
+        toast.error(`Para publicar, preencha: ${faltando.join(", ")}.`);
+        return;
+      }
     }
 
     setLoading(true);
@@ -100,6 +112,8 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
 
       const dataToSave = { 
         ...artigo, 
+        status,
+        ...(status === "Publicado" && artigo.status !== "Publicado" ? { published_at: new Date().toISOString() } : {}),
         slug,
         seo_metadata: seo_metadata || {} 
       };
@@ -110,7 +124,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           .update(dataToSave)
           .eq('id', artigoId);
         if (error) throw error;
-        toast.success("Artigo atualizado!");
+        toast.success(status === "Publicado" ? (artigo.status === "Publicado" ? "Artigo atualizado!" : "Artigo publicado no blog!") : "Rascunho salvo!");
         if (onSave) onSave(); // Notifica o pai para atualizar a lista
         // Recarrega os dados do banco para garantir que o estado local está sincronizado
         await fetchArtigo();
@@ -121,7 +135,8 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
           .select()
           .single();
         if (error) throw error;
-        toast.success("Artigo criado!");
+        toast.success(status === "Publicado" ? "Artigo publicado no blog!" : "Rascunho salvo!");
+        if (data) setArtigo(data as any);
         if (onSave) onSave();
         // Se for um novo artigo, poderíamos redirecionar ou apenas atualizar o estado local se tivermos o ID
         if (data?.id) {
@@ -221,13 +236,24 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
             {generatingIA ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
             GERAR C/ IA
           </Button>
+          {artigo.status !== "Publicado" && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => handleSave(false)} 
+              disabled={loading}
+              className="bg-transparent border-white/40 text-white hover:bg-white/10 font-bold"
+            >
+              SALVAR RASCUNHO
+            </Button>
+          )}
           <Button 
-            onClick={handleSave} 
+            onClick={() => handleSave(true)} 
             disabled={loading}
             className="bg-brand-orange hover:bg-brand-orange/90 text-white font-bold px-6"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            PUBLICAR ARTIGO
+            {artigo.status === "Publicado" ? "ATUALIZAR ARTIGO" : "PUBLICAR ARTIGO"}
           </Button>
         </div>
       </header>

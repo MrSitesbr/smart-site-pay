@@ -12,7 +12,7 @@ import { isBookableDay } from "@/lib/holidays";
 import { toast } from "@/hooks/use-toast";
 import { STATUS_SOLICITACAO_LABEL, carregarSolicitacoesDoCliente, indexarPorReserva, inicioDaReserva, type SolicitacaoReserva } from "@/lib/reservaSolicitacoes";
 import ReservaSolicitacaoDialog from "./ReservaSolicitacaoDialog";
-import CoberturaPlanoReserva, { type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
+import CoberturaPlanoReserva, { MENSAGEM_SEM_SALDO, type EstadoCobertura } from "@/components/planos/CoberturaPlanoReserva";
 import FiltroSalas, { filtrarSalas, useFiltroSalas } from "@/components/agenda/FiltroSalas";
 import { RecursosChips, RecursosIcones, useRecursos } from "@/components/agenda/RecursosChips";
 import { algumaUnidadeAberta, carregarHorarios, horarioDoDia, type MapaHorarios } from "@/lib/horarios";
@@ -135,7 +135,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
   const [fimManual, setFimManual] = useState("10:00");
   const [modalidade, setModalidade] = useState<Modalidade | null>(null);
   const [estadoCobertura, setEstadoCobertura] = useState<EstadoCobertura | null>(null);
-  const faltaEscolherPagamento = !!estadoCobertura && (estadoCobertura.carregando || (estadoCobertura.precisaEscolha && !modalidade));
+  const faltaEscolherPagamento = !!estadoCobertura && (estadoCobertura.carregando || estadoCobertura.bloqueado || (estadoCobertura.precisaEscolha && !modalidade));
   const arrastandoRef = useRef(false);
   const selecaoRef = useRef<Selecao | null>(null);
   // No celular o toque precisa rolar a grade; a seleção por arraste fica só para o mouse.
@@ -417,7 +417,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       return;
     }
     if (faltaEscolherPagamento) {
-      toast({ title: "Escolha como pagar", description: "O saldo do plano não cobre todo o horário. Escolha hora adicional ou avulso.", variant: "destructive" });
+      toast(estadoCobertura?.bloqueado ? { title: "Saldo insuficiente", description: MENSAGEM_SEM_SALDO, variant: "destructive" } : { title: "Escolha como pagar", description: "O saldo do plano não cobre todo o horário. Escolha hora adicional ou avulso.", variant: "destructive" });
       return;
     }
     setSolicitando(true);
@@ -497,7 +497,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     }
 
     if (faltaEscolherPagamento) {
-      toast({ title: "Escolha como pagar", description: "O saldo do plano não cobre todos os horários. Escolha hora adicional ou avulso.", variant: "destructive" });
+      toast(estadoCobertura?.bloqueado ? { title: "Saldo insuficiente", description: MENSAGEM_SEM_SALDO, variant: "destructive" } : { title: "Escolha como pagar", description: "O saldo do plano não cobre todos os horários. Escolha hora adicional ou avulso.", variant: "destructive" });
       return;
     }
 
@@ -874,6 +874,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                   modalidade={modalidade}
                   onModalidadeChange={setModalidade}
                   onEstadoChange={setEstadoCobertura}
+                aplicarBloqueio
                 />
               </div>
             )}
@@ -935,6 +936,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
                 modalidade={modalidade}
                 onModalidadeChange={setModalidade}
                 onEstadoChange={setEstadoCobertura}
+                aplicarBloqueio
               />
             )}
             <Button variant="outline" className="w-full" onClick={() => { setConfirmacaoAberta(false); atualizarSelecao(null); }} disabled={periodos.length >= MAX_PERIODOS}>
