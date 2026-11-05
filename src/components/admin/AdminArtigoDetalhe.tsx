@@ -14,6 +14,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { MediaPickerModal } from "./MediaPickerModal";
 import { ArtigoIAModal, type ArtigoIAConfig } from "./ArtigoIAModal";
+import { gerarArtigoIA, type ArtigoGerado } from "@/lib/chatbot";
 
 // Configuração básica do editor
 const modules = {
@@ -135,55 +136,16 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
     }
   };
 
-  const generateWithMistral = async (iaConfig: ArtigoIAConfig) => {
+  const generateWithIA = async (iaConfig: ArtigoIAConfig) => {
     setGeneratingIA(true);
     try {
-      const { data: settingsData } = await supabase
-        .from('site_sections')
-        .select('content')
-        .eq('section_key', 'global_settings')
-        .single();
-      
-      const apiKey = (settingsData?.content as any)?.mistral_api_key;
-      
-      if (!apiKey) {
-        toast.error("Configure a chave da Mistral AI nas Configurações Gerais primeiro.");
+      const tamanhos = { pequeno: "curto (cerca de 500 palavras)", medio: "médio (cerca de 1000 palavras)", grande: "longo (cerca de 1800 palavras)" };
+      const data = await gerarArtigoIA(iaConfig.prompt, iaConfig.keywords, tamanhos[iaConfig.tamanho] || "médio");
+      if (data.erro || !data.conteudo) {
+        toast.error(data.erro || "Erro ao gerar conteúdo com IA.");
         return;
       }
-
-      const promptSystem = `Você é um redator especialista em SEO e Coworking. 
-      Escreva um artigo completo otimizado para a palavra-chave foco.
-      Tamanho solicitado: ${iaConfig.tamanho}. 
-      Use formatação HTML básica (h2, p, strong, ul, li).
-      IMPORTANTE: Para separar os parágrafos, você DEVE usar a tag <p> para cada parágrafo. Nunca use apenas quebras de linha simples; garanta que cada bloco de texto esteja envolvido em <p>...</p> para manter o espaçamento correto no editor.
-      IMAGENS: Você deve sugerir UMA imagem principal de banco de imagens gratuito (Unsplash) que combine com o tema e a insira no campo sugestao_imagem_url. Além disso, se o artigo for longo, sugira imagens adicionais no corpo do texto usando a tag HTML <img src="https://images.unsplash.com/photo-XXXX" alt="descrição" />.
-      Retorne no formato JSON: { 
-        "titulo": "...", 
-        "conteudo": "...", 
-        "seo_title": "...", 
-        "seo_description": "...", 
-        "keywords": "...",
-        "sugestao_imagem_url": "https://images.unsplash.com/photo-XXX?auto=format&fit=crop&w=800&q=80" 
-      }`;
-
-      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "mistral-medium",
-          messages: [
-            { role: "system", content: promptSystem },
-            { role: "user", content: `Escreva sobre: ${iaConfig.prompt}. Palavras-chave: ${iaConfig.keywords || 'automático'}` }
-          ],
-          response_format: { type: "json_object" }
-        })
-      });
-
-      const data = await response.json();
-      const aiResponse = JSON.parse(data.choices[0].message.content);
+      const aiResponse = data as ArtigoGerado;
       
       if (aiResponse) {
         let aiContent = aiResponse.conteudo;
@@ -435,7 +397,7 @@ export default function AdminArtigoDetalhe({ artigoId, onBack, onSave }: AdminAr
         <ArtigoIAModal 
           isOpen={iaModalOpen}
           onClose={() => setIaModalOpen(false)}
-          onGenerate={generateWithMistral}
+          onGenerate={generateWithIA}
           loading={generatingIA}
         />
       )}

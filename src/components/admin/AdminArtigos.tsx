@@ -71,7 +71,7 @@ export default function AdminArtigos() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-3xl font-black text-brand-blue-dark">Blog & Artigos</h2>
-          <p className="text-muted-foreground font-medium">Gerencie o conteúdo do blog, SEO e artigos gerados com IA Mistral.</p>
+          <p className="text-muted-foreground font-medium">Gerencie o conteúdo do blog, SEO e artigos gerados com IA.</p>
         </div>
         <Button 
           onClick={() => setIsCreating(true)} 

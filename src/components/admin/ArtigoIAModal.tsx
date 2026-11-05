@@ -56,7 +56,7 @@ export function ArtigoIAModal({ isOpen, onClose, onGenerate, loading }: ArtigoIA
             </div>
             <div>
               <h3 className="text-xl font-black text-brand-blue-dark leading-none mb-1">Gerar c/ IA</h3>
-              <p className="text-xs text-muted-foreground font-medium">Otimizado por Mistral AI</p>
+              <p className="text-xs text-muted-foreground font-medium">Usa a IA configurada em Chatbot / Assistentes</p>
             </div>
           </div>
           <Button 

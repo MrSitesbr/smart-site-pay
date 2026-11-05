@@ -35,3 +35,12 @@ export const statusChatbot = () => chamar({ agente: "admin", status: true }) as 
 export function abrirChat(pergunta?: string) {
   window.dispatchEvent(new CustomEvent("abrir-chat", { detail: { pergunta } }));
 }
+
+/** Testa a chave da IA cadastrada (só admin). */
+export const testarConexaoIA = () => chamar({ agente: "admin", testar_conexao: true }) as Promise<RespostaChat & { ok?: boolean; mensagem?: string }>;
+
+export type ArtigoGerado = { titulo: string; conteudo: string; seo_title: string; seo_description: string; keywords: string; sugestao_imagem_url: string };
+
+/** Gera um artigo do blog com a IA do servidor (só admin). */
+export const gerarArtigoIA = (tema: string, palavras_chave: string, tamanho: string) =>
+  chamar({ agente: "admin", gerar_artigo: { tema, palavras_chave, tamanho } }) as Promise<RespostaChat & Partial<ArtigoGerado>>;

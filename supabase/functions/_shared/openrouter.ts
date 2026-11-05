@@ -3,8 +3,8 @@
 
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MODELO = "openrouter/free"; // somente o modelo gratuito; nunca troca para pago
-const TEMPO_LIMITE_MS = 30_000;
-const TENTATIVAS = 3;
+const TEMPO_LIMITE_PADRAO = 30_000;
+const TENTATIVAS_PADRAO = 3;
 
 export type MensagemIA = { role: "system" | "user" | "assistant"; content: string };
 
@@ -17,8 +17,13 @@ export class ErroIA extends Error {
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Envia a conversa e devolve o texto da resposta. Repete só falhas transitórias ou resposta vazia. */
-export async function responderIA(mensagens: MensagemIA[], opcoes: { maxTokens?: number; temperatura?: number } = {}) {
-  const chave = Deno.env.get("OPENROUTER_API_KEY");
+export async function responderIA(
+  mensagens: MensagemIA[],
+  opcoes: { maxTokens?: number; temperatura?: number; chave?: string | null; tempoLimiteMs?: number; tentativas?: number; json?: boolean } = {},
+) {
+  const chave = opcoes.chave || Deno.env.get("OPENROUTER_API_KEY");
+  const TENTATIVAS = opcoes.tentativas ?? TENTATIVAS_PADRAO;
+  const TEMPO_LIMITE_MS = opcoes.tempoLimiteMs ?? TEMPO_LIMITE_PADRAO;
   if (!chave) throw new ErroIA("sem_chave", "OPENROUTER_API_KEY não configurada");
 
   let ultimoErro: ErroIA = new ErroIA("indisponivel", "sem resposta");
@@ -35,6 +40,7 @@ export async function responderIA(mensagens: MensagemIA[], opcoes: { maxTokens?:
           messages: mensagens,
           max_tokens: opcoes.maxTokens ?? 700,
           temperature: opcoes.temperatura ?? 0.3,
+          ...(opcoes.json ? { response_format: { type: "json_object" } } : {}),
         }),
       });
 

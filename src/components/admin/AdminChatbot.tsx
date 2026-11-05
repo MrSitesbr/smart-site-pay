@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, Loader2, Save, Trash2, Upload, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, KeyRound, Loader2, PlugZap, Save, Trash2, Upload, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { friendlyError } from "@/lib/appErrors";
-import { statusChatbot, type AgenteChat } from "@/lib/chatbot";
+import { testarConexaoIA, type AgenteChat } from "@/lib/chatbot";
 import ChatWidget from "@/components/chat/ChatWidget";
 
 type Config = { agente: AgenteChat; ativo: boolean; nome: string; avatar_url: string | null; mensagem_inicial: string; diretrizes: string };
@@ -49,7 +49,10 @@ function reduzirImagem(arquivo: File): Promise<string> {
 export default function AdminChatbot() {
   const [configs, setConfigs] = useState<Record<string, Config>>({});
   const [contatos, setContatos] = useState<Contatos>({ whatsapp: "", telefone: "", email: "", horario_atendimento: "" });
-  const [chave, setChave] = useState<boolean | null>(null);
+  const [chave, setChave] = useState<{ configurada: boolean; final: string | null } | null>(null);
+  const [novaChave, setNovaChave] = useState("");
+  const [teste, setTeste] = useState<{ ok: boolean; mensagem: string } | null>(null);
+  const [testando, setTestando] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState<string | null>(null);
   const [testeAgente, setTesteAgente] = useState<AgenteChat>("visitante");
@@ -63,8 +66,8 @@ export default function AdminChatbot() {
       setConfigs(Object.fromEntries(((cfg.data || []) as Config[]).map((c) => [c.agente, c])));
       if (ct.data) setContatos({ whatsapp: ct.data.whatsapp || "", telefone: ct.data.telefone || "", email: ct.data.email || "", horario_atendimento: ct.data.horario_atendimento || "" });
       setCarregando(false);
-      const st = await statusChatbot();
-      setChave(st.erro ? null : !!st.chave_configurada);
+      const { data: st } = await (supabase.rpc as any)("admin_status_chave_ia");
+      setChave(st ? { configurada: !!st.configurada, final: st.final ?? null } : null);
     })();
   }, []);
 
@@ -82,6 +85,27 @@ export default function AdminChatbot() {
     setSalvando(null);
     if (error) return toast.error(friendlyError(error, "Não foi possível salvar."));
     toast.success("Assistente salvo. Atualize a página do site para ver as mudanças.");
+  }
+
+  async function salvarChave(remover = false) {
+    const valor = remover ? "" : novaChave.trim();
+    if (!remover && valor.length < 20) return toast.error("Cole a chave completa da OpenRouter.");
+    setSalvando("chave");
+    const { data, error } = await (supabase.rpc as any)("admin_salvar_chave_ia", { p_chave: valor });
+    setSalvando(null);
+    if (error) return toast.error(friendlyError(error, "Não foi possível salvar a chave."));
+    setChave({ configurada: !!data?.configurada, final: data?.final ?? null });
+    setNovaChave("");
+    setTeste(null);
+    toast.success(remover ? "Chave removida" : "Chave salva. Clique em Testar conexão.");
+  }
+
+  async function testar() {
+    setTestando(true);
+    setTeste(null);
+    const r = await testarConexaoIA();
+    setTestando(false);
+    setTeste({ ok: r.ok === true, mensagem: r.mensagem || r.erro || "Não foi possível testar agora." });
   }
 
   async function salvarContatos() {
@@ -104,13 +128,40 @@ export default function AdminChatbot() {
         <p className="text-sm text-muted-foreground">Três assistentes com nome, foto e diretrizes próprios. As informações do site são lidas automaticamente e acompanham suas edições.</p>
       </div>
 
-      <Card className={`flex items-start gap-3 p-4 ${chave ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
-        {chave ? <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" /> : <XCircle className="mt-0.5 h-5 w-5 text-amber-600" />}
-        <div className="text-sm">
-          <p className="font-semibold">{chave ? "Conexão com a IA configurada" : chave === false ? "Conexão com a IA ainda não configurada" : "Não foi possível verificar a conexão com a IA"}</p>
-          <p className="text-muted-foreground">
-            {chave ? "Os assistentes ativos já podem responder." : "A chave do serviço de IA precisa ser cadastrada no servidor pela equipe técnica. Enquanto isso, os assistentes mostram uma mensagem de indisponibilidade."}
-          </p>
+      <Card className="space-y-4 p-5">
+        <div className="flex items-start gap-3">
+          <KeyRound className="mt-0.5 h-5 w-5 text-brand-orange" />
+          <div>
+            <h3 className="font-heading font-bold text-brand-blue-dark">Chave da IA (OpenRouter)</h3>
+            <p className="text-sm text-muted-foreground">Usada pelos três assistentes e pela geração de artigos do blog. Fica guardada só no servidor; depois de salva, não aparece mais aqui.</p>
+          </div>
+        </div>
+        <div className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${chave?.configurada ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+          {chave?.configurada ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <XCircle className="h-4 w-4 text-amber-600" />}
+          <span>{chave?.configurada ? `Chave cadastrada (termina em …${chave.final})` : chave ? "Nenhuma chave cadastrada" : "Não foi possível verificar a chave"}</span>
+        </div>
+        <form className="flex flex-col gap-2 sm:flex-row" onSubmit={(e) => { e.preventDefault(); void salvarChave(); }}>
+          <Input type="password" autoComplete="off" value={novaChave} onChange={(e) => setNovaChave(e.target.value)} maxLength={300}
+            placeholder={chave?.configurada ? "Cole uma nova chave para substituir" : "Cole aqui a chave (sk-or-...)"} aria-label="Chave da OpenRouter" className="flex-1" />
+          <Button type="submit" disabled={salvando === "chave" || !novaChave.trim()}>
+            {salvando === "chave" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Salvar chave
+          </Button>
+        </form>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={testar} disabled={testando || !chave?.configurada}>
+            {testando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlugZap className="mr-2 h-4 w-4" />}Testar conexão
+          </Button>
+          {chave?.configurada && (
+            <Button variant="ghost" className="text-destructive" disabled={salvando === "chave"}
+              onClick={() => { if (window.confirm("Remover a chave? Os assistentes e a geração de artigos param de funcionar.")) void salvarChave(true); }}>
+              <Trash2 className="mr-2 h-4 w-4" />Remover chave
+            </Button>
+          )}
+          {teste && (
+            <span className={`inline-flex items-center gap-1 text-sm ${teste.ok ? "text-emerald-700" : "text-destructive"}`} role="status">
+              {teste.ok ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}{teste.mensagem}
+            </span>
+          )}
         </div>
       </Card>
 

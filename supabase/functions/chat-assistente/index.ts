@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import { ErroIA, responderIA, type MensagemIA } from "../_shared/openrouter.ts";
 import { carregarConhecimento, selecionarTrechos } from "./conhecimento.ts";
 import { ACOES_ADMIN, ACOES_CLIENTE, ErroAcao, type Acao, type Contexto } from "./acoes.ts";
+import { montarArtigo, promptArtigo } from "./artigo.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -90,10 +91,53 @@ Deno.serve(async (req) => {
       cliente = cli && (cli as any).status_acesso === "aprovado" ? cli : null;
     }
 
+    // Chave cadastrada pelo admin (tabela só do servidor); a variável de ambiente é reserva.
+    const { data: segredo } = await servico.from("ia_segredos").select("openrouter_key").eq("id", 1).maybeSingle();
+    const chaveIA: string | null = segredo?.openrouter_key || Deno.env.get("OPENROUTER_API_KEY") || null;
+
     // Admin consulta o estado da configuração (sem revelar a chave).
     if (corpo.status === true) {
       if (!eAdmin) return json({ erro: "Acesso negado." }, 403);
-      return json({ chave_configurada: Boolean(Deno.env.get("OPENROUTER_API_KEY")) });
+      return json({ chave_configurada: Boolean(chaveIA) });
+    }
+
+    // Admin testa a conexão com a IA.
+    if (corpo.testar_conexao === true) {
+      if (!eAdmin) return json({ erro: "Acesso negado." }, 403);
+      if (!chaveIA) return json({ ok: false, mensagem: "Nenhuma chave cadastrada." });
+      try {
+        await responderIA([{ role: "system", content: "Responda apenas: OK" }, { role: "user", content: "teste" }], { chave: chaveIA, maxTokens: 20, tentativas: 2 });
+        return json({ ok: true, mensagem: "Conexão funcionando." });
+      } catch (e) {
+        const codigo = e instanceof ErroIA ? e.codigo : "indisponivel";
+        const mensagem = codigo === "chave_recusada" ? "A chave foi recusada. Confira se foi copiada inteira e se está ativa."
+          : codigo === "limite" ? "A chave funciona, mas o limite de uso gratuito foi atingido agora. Tente mais tarde."
+          : "O serviço de IA não respondeu agora. Tente de novo em instantes.";
+        return json({ ok: false, mensagem });
+      }
+    }
+
+    // Admin gera artigo do blog com IA.
+    if (corpo.gerar_artigo && typeof corpo.gerar_artigo === "object") {
+      if (!eAdmin) return json({ erro: "Acesso negado." }, 403);
+      if (!chaveIA) return json({ erro: "Cadastre a chave da IA em Configurações > Chatbot / Assistentes." }, 400);
+      const g = corpo.gerar_artigo as Record<string, unknown>;
+      const tema = String(g.tema || "").trim().slice(0, 1500);
+      if (tema.length < 3) return json({ erro: "Descreva o tema do artigo." }, 400);
+      const palavras = String(g.palavras_chave || "").trim().slice(0, 300);
+      const tamanho = String(g.tamanho || "médio").slice(0, 40);
+      try {
+        const texto = await responderIA([
+          { role: "system", content: promptArtigo(tamanho) },
+          { role: "user", content: `Escreva sobre: ${tema}. Palavras-chave: ${palavras || "automático"}` },
+        ], { chave: chaveIA, maxTokens: 4000, temperatura: 0.6, tempoLimiteMs: 90_000, tentativas: 2, json: true });
+        const artigo = montarArtigo(texto);
+        if (!artigo) return json({ erro: "A IA não devolveu um artigo válido. Tente de novo." }, 502);
+        return json(artigo);
+      } catch (e) {
+        const codigo = e instanceof ErroIA ? e.codigo : "indisponivel";
+        return json({ erro: codigo === "chave_recusada" ? "A chave da IA foi recusada. Confira em Configurações > Chatbot / Assistentes." : "A IA não respondeu agora. Tente de novo em instantes." }, 503);
+      }
     }
 
     // Modo teste: só o admin pode conversar como "visitante"/"cliente" sem ser um (sem ações de cliente).
@@ -169,7 +213,7 @@ ${conhecimento}`;
 
     const conversa: MensagemIA[] = [{ role: "system", content: sistema }, ...historico];
     for (let rodada = 0; rodada < MAX_RODADAS; rodada++) {
-      const texto = await responderIA(conversa, { maxTokens: pedido === "admin" ? 900 : 600 });
+      const texto = await responderIA(conversa, { chave: chaveIA, maxTokens: pedido === "admin" ? 900 : 600 });
       const pedidoAcao = acoes.length ? extrairAcao(texto) : null;
       if (!pedidoAcao) return json({ resposta: semAcao(texto).slice(0, 4000) || FALHA });
 
