@@ -66,7 +66,6 @@ export async function carregarConhecimento(admin: SupabaseClient): Promise<Trech
     trechos.push({
       titulo: `Sala ${s.nome}`,
       texto: `Sala ${s.nome} (${nomeUnidade.get(s.unidade_id) || "unidade"}). Tipo: ${s.tipo || "-"}. Capacidade: ${s.capacidade || "-"} pessoa(s).`
-        + (s.metadata?.metragem ? ` Metragem: ${s.metadata.metragem} m².` : "")
         + (rec ? ` Recursos: ${rec}.` : "")
         + (s.preco_hora_avulsa ? ` Hora avulsa: ${reais(s.preco_hora_avulsa)}.` : "")
         + (s.preco_diaria ? ` Diária: ${reais(s.preco_diaria)}.` : "")
