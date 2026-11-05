@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { abrirChat } from "@/lib/chatbot";
 
 type Mode = "login" | "signup";
 
@@ -277,6 +278,7 @@ export default function Auth() {
               >
                 CRIAR CONTA
               </Button>
+              <AjudaAcesso />
 
               <p className="text-xs text-center text-slate-500 pt-2">
                 Cadastros novos aguardam a liberação da equipe. Esqueceu a senha? Fale no WhatsApp (13) 98805-0358.
@@ -354,9 +356,22 @@ export default function Auth() {
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "CRIAR CONTA"}
               </Button>
             </div>
+            <AjudaAcesso />
           </form>
         )}
       </Card>
     </div>
+  );
+}
+
+/** Abre o assistente para ajudar com login ou cadastro (sem presumir o problema nem pedir senha). */
+function AjudaAcesso() {
+  return (
+    <p className="text-center text-xs text-white/60">
+      Problemas para entrar ou se cadastrar?{" "}
+      <button type="button" onClick={() => (document.body.dataset.chat === "on" ? abrirChat("Preciso de ajuda com o acesso ao site.") : window.location.assign("/contato"))} className="font-semibold text-orange-400 underline-offset-2 hover:underline">
+        Ajuda
+      </button>
+    </p>
   );
 }

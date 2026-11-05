@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import MotivoCancelamentoHost from "@/components/MotivoCancelamentoDialog";
+import ChatGlobal from "@/components/chat/ChatGlobal";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useParams } from "react-router-dom";
@@ -49,6 +50,7 @@ const App = () => (
       <MotivoCancelamentoHost />
       <BrowserRouter>
         <ScrollToTop />
+        <ChatGlobal />
         <Routes>
           {/* Main Dynamic Pages */}
           <Route path="/" element={<DynamicPage />} />

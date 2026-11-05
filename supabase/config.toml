@@ -5,3 +5,6 @@ verify_jwt = false
 
 [auth.email]
 enable_confirmations = false
+
+[functions.chat-assistente]
+verify_jwt = false

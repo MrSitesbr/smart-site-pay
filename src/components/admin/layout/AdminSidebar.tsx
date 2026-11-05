@@ -133,6 +133,7 @@ export default function AdminSidebar({ activeTab, onTabChange }: { activeTab: st
       icon: Settings,
       items: [
         { title: "Configurações Gerais", id: "configuracoes" },
+        { title: "Chatbot / Assistentes", id: "chatbot" },
         { title: "Manual do Painel", id: "documentacao" },
         { title: "Suporte", id: "suporte" },
         { title: "Roteiro Construtor Dev", id: "docs_ia" },

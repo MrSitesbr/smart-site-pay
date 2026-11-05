@@ -26,6 +26,7 @@ import AdminClientesCorp from "@/components/admin/AdminClientesCorp";
 import AdminLocacaoFixa from "@/components/admin/AdminLocacaoFixa";
 import AdminPlanosHoras from "@/components/admin/AdminPlanosHoras";
 import AdminSettings from "@/components/admin/AdminSettings";
+import AdminChatbot from "@/components/admin/AdminChatbot";
 import AdminSEO from "@/components/admin/AdminSEO";
 import AdminMenus from "@/components/admin/AdminMenus";
 import AdminMidias from "@/components/admin/AdminMidias";
@@ -298,6 +299,7 @@ export default function Admin() {
       planos_horas: "Planos",
       uso_planos: "Uso dos planos",
       cobrancas: "Mensalidades e cobranças",
+      chatbot: "Chatbot / Assistentes",
       financeiro: "Financeiro",
       erp: "ERP Ocupação",
       woba: "Repasses Woba",
@@ -401,6 +403,7 @@ export default function Admin() {
             {activeTab === "seo" && <AdminSEO />}
             {activeTab === "midias" && <AdminMidias />}
             {activeTab === "configuracoes" && <AdminSettings />}
+            {activeTab === "chatbot" && <AdminChatbot />}
             {activeTab === "documentacao" && <AdminDocumentation />}
             {activeTab === "suporte" && <AdminSuporte />}
             {activeTab === "docs_ia" && <AdminDocsIA />}

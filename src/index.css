@@ -227,3 +227,6 @@
   .ui-compacta .lg\:px-8 { padding-left: 1.25rem; padding-right: 1.25rem; }
   .ui-compacta .lg\:gap-6 { gap: 1rem; }
 }
+
+/* Com o assistente virtual ativo, o botão do WhatsApp fica acima do botão do chat. */
+body[data-chat="on"] .whatsapp-flutuante { bottom: 5.5rem; }
