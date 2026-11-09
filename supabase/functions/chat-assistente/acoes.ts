@@ -121,8 +121,8 @@ export const ACOES_CLIENTE: Acao[] = [
       if (ini >= fim) throw new ErroAcao("O horário final deve ser depois do inicial.");
       const modalidade = ["adicional", "avulso"].includes(txt(p.modalidade)) ? txt(p.modalidade) : null;
       const preco = await precificar(db, clienteId!, sala, data, ini, fim, modalidade);
-      if (preco.exc > 0 && preco.permiteAdicional && !modalidade) {
-        throw new ErroAcao(`O saldo do plano não cobre tudo: faltam ${preco.exc}h. Pergunte se prefere hora adicional ou avulso e chame a ação de novo com "modalidade".`);
+      if (preco.exc > 0) {
+        throw new ErroAcao(`Reserva bloqueada: o cliente não tem saldo de créditos suficiente (faltam ${preco.exc}h). Explique que é preciso ter saldo de créditos (plano ou créditos extras) para reservar e que ele deve falar com a equipe para contratar um plano ou comprar créditos. Não ofereça hora adicional nem avulso.`);
       }
       return {
         params: { sala_id: sala.id, data, inicio: ini, fim, modalidade },

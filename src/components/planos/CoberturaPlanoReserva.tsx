@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Ban, CheckCircle2, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { fmtBRL, fmtData, resumirSimulacao, simularPlano, type Cobertura, type Modalidade, type Periodo } from "@/lib/planosApi";
@@ -11,13 +10,13 @@ export type EstadoCobertura = {
   itens: Cobertura[];
   /** O saldo não cobre tudo e o cliente tem Harmonia: precisa escolher Adicional ou Avulso. */
   precisaEscolha: boolean;
-  /** Opção do admin ligada e o saldo (plano + créditos) não cobre tudo: o envio fica bloqueado. */
+  /** O saldo (plano + créditos extras) não cobre tudo: o envio fica bloqueado. */
   bloqueado: boolean;
   erro: string | null;
 };
 
 /** Mensagem curta para avisos (toast) quando a reserva está bloqueada por falta de saldo. */
-export const MENSAGEM_SEM_SALDO = "Você não tem saldo de horas suficiente para esta reserva. Fale com a equipe para contratar um plano ou comprar créditos.";
+export const MENSAGEM_SEM_SALDO = "Você precisa ter saldo de créditos (plano ou créditos extras) para fazer reservas. Fale com a equipe para contratar um plano ou comprar créditos.";
 
 type Props = {
   clienteId: string | null | undefined;
@@ -26,19 +25,13 @@ type Props = {
   modalidade: Modalidade | null;
   onModalidadeChange: (m: Modalidade | null) => void;
   onEstadoChange?: (estado: EstadoCobertura) => void;
-  /** Painel do cliente: respeita a opção "bloquear reservas sem saldo" do admin. */
+  /** Telas do cliente: sem saldo de plano ou créditos extras, a reserva fica bloqueada. */
   aplicarBloqueio?: boolean;
 };
 
 /** Mostra quanto o plano cobre nos períodos escolhidos e pede a forma de pagamento quando falta saldo. */
 export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, modalidade, onModalidadeChange, onEstadoChange, aplicarBloqueio = false }: Props) {
   const [itens, setItens] = useState<Cobertura[]>([]);
-  const [opcaoBloqueio, setOpcaoBloqueio] = useState(false);
-
-  useEffect(() => {
-    if (!aplicarBloqueio) return;
-    (supabase.rpc as any)("reservas_bloqueio_sem_saldo").then(({ data }: { data: boolean | null }) => setOpcaoBloqueio(data === true));
-  }, [aplicarBloqueio]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const chave = JSON.stringify([clienteId, salaId, periodos]);
@@ -66,7 +59,7 @@ export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, mod
   }, [clienteId, salaId, validos]);
 
   const resumo = resumirSimulacao(itens);
-  const bloqueado = aplicarBloqueio && opcaoBloqueio && resumo.excedentes > 0;
+  const bloqueado = aplicarBloqueio && resumo.excedentes > 0;
   const precisaEscolha = resumo.excedentes > 0 && resumo.permiteAdicional && !bloqueado;
 
   useEffect(() => {
@@ -122,7 +115,7 @@ export default function CoberturaPlanoReserva({ clienteId, salaId, periodos, mod
       <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 sm:p-4">
         <div className="flex items-start gap-2 text-sm">
           <Ban className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-          <p><strong>Reserva não disponível:</strong> faltam {fmtHoras(resumo.excedentes)} de saldo para estes horários. {MENSAGEM_SEM_SALDO.split(". ")[1]}</p>
+          <p><strong>Reserva bloqueada por falta de saldo:</strong> faltam {fmtHoras(resumo.excedentes)} de créditos para estes horários. {MENSAGEM_SEM_SALDO}</p>
         </div>
         {painelSaldo}
       </div>

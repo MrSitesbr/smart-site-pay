@@ -19,7 +19,6 @@ export default function AdminSettings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [autoApprove, setAutoApprove] = useState(false);
   const [autoConfirm, setAutoConfirm] = useState(false);
-  const [bloquearSemSaldo, setBloquearSemSaldo] = useState(false);
   const [wobaCfg, setWobaCfg] = useState<WobaCfg>({ ...wobaDefaults });
   const [backupLoading, setBackupLoading] = useState<"reservations" | "clientes_corp" | null>(null);
 
@@ -50,8 +49,6 @@ export default function AdminSettings() {
     setAutoApprove((accessSetting?.value as any)?.enabled === true);
     const { data: reservaSetting } = await supabase.from("app_settings").select("value").eq("key", "auto_confirmar_reservas").maybeSingle();
     setAutoConfirm((reservaSetting?.value as any)?.enabled === true);
-    const { data: saldoSetting } = await supabase.from("app_settings").select("value").eq("key", "bloquear_sem_saldo").maybeSingle();
-    setBloquearSemSaldo((saldoSetting?.value as any)?.enabled === true);
   };
 
   const updateAutoApprove = async (enabled: boolean) => {
@@ -61,12 +58,6 @@ export default function AdminSettings() {
     else toast({ title: enabled ? "Liberação automática ativada" : "Liberação automática desativada" });
   };
 
-  const updateBloquearSemSaldo = async (enabled: boolean) => {
-    setBloquearSemSaldo(enabled);
-    const { error } = await (supabase.from("app_settings") as any).upsert({ key: "bloquear_sem_saldo", value: { enabled }, updated_at: new Date().toISOString() }, { onConflict: "key" });
-    if (error) { setBloquearSemSaldo(!enabled); toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); }
-    else toast({ title: enabled ? "Reservas sem saldo bloqueadas" : "Reservas sem saldo liberadas" });
-  };
 
   const updateAutoConfirm = async (enabled: boolean) => {
     setAutoConfirm(enabled);
@@ -184,12 +175,9 @@ export default function AdminSettings() {
               </div>
               <Switch id="auto-confirm" checked={autoConfirm} onCheckedChange={updateAutoConfirm} />
             </div>
-            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
-              <div>
-                <Label htmlFor="bloquear-sem-saldo">Bloquear reservas de clientes sem saldo</Label>
-                <p className="mt-1 text-xs text-muted-foreground">Clientes sem plano ativo e sem créditos (ou com o saldo esgotado) não conseguem reservar nem pedir alteração de horário. Na tela aparece quanto já usaram e quanto falta. Reservas feitas pela equipe não são afetadas.</p>
-              </div>
-              <Switch id="bloquear-sem-saldo" checked={bloquearSemSaldo} onCheckedChange={updateBloquearSemSaldo} />
+            <div className="rounded-lg border p-4">
+              <p className="text-sm font-medium">Reservas de clientes sem saldo: sempre bloqueadas</p>
+              <p className="mt-1 text-xs text-muted-foreground">Clientes sem saldo de créditos (plano ou créditos extras) não conseguem reservar, solicitar reserva nem pedir alteração de horário. Na tela aparece o aviso de que precisam de saldo. Reservas feitas pela equipe não são afetadas.</p>
             </div>
           </CardContent>
         </Card>
