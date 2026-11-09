@@ -353,7 +353,7 @@ export default function PlanosCards({ clienteId, resumo, acaoVigentes, admin = f
             {vigentes.length ? vigentes.map((c) => <CardHoras key={c.id} card={c} onAbrir={() => setAberto(c)} />) : (
               <div className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted-foreground">
                 <CalendarClock className="h-6 w-6" />
-                Sem créditos disponíveis agora. Novas reservas: adicional ou avulso.
+                Sem créditos disponíveis agora. O cliente só consegue reservar com plano ativo ou créditos extras.
               </div>
             )}
           </div>

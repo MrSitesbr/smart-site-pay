@@ -16,7 +16,7 @@ import CoberturaPlanoReserva, { MENSAGEM_SEM_SALDO, type EstadoCobertura } from 
 import FiltroSalas, { filtrarSalas, useFiltroSalas } from "@/components/agenda/FiltroSalas";
 import { RecursosChips, RecursosIcones, useRecursos } from "@/components/agenda/RecursosChips";
 import { algumaUnidadeAberta, carregarHorarios, horarioDoDia, type MapaHorarios } from "@/lib/horarios";
-import type { Modalidade } from "@/lib/planosApi";
+import { getPlanoCards, getResumoPlano, type Modalidade } from "@/lib/planosApi";
 
 interface PainelAgendamentoProps {
   cliente: any;
@@ -230,16 +230,35 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
     return () => { ativo = false; };
   }, [user?.id]);
 
+  // Sem plano ativo e sem créditos extras (vigentes ou futuros): o cliente não pode reservar.
+  const [semSaldo, setSemSaldo] = useState(false);
+  useEffect(() => {
+    if (!clienteId) { setSemSaldo(false); return; }
+    let ativo = true;
+    Promise.all([getResumoPlano(clienteId), getPlanoCards(clienteId)])
+      .then(([resumo, cards]) => {
+        if (!ativo) return;
+        const temPlano = !!resumo?.plano_nome && ["ativo", "a_revisar", "nao_iniciado"].includes(resumo.status);
+        const creditos = (cards || [])
+          .filter((c) => (c.tipo === "credito" || c.tipo === "bonus") && (c.status === "vigente" || c.status === "futuro") && !c.cancelado)
+          .reduce((acc, c) => acc + Math.max(0, Number(c.horas_total) - Number(c.horas_usadas)), 0);
+        setSemSaldo(!temPlano && creditos <= 0);
+      })
+      .catch(() => { if (ativo) setSemSaldo(false); });
+    return () => { ativo = false; };
+  }, [clienteId, reservasDoUsuario.length]);
+
   const statusAcesso = vinculo?.status_acesso ?? cliente?.status_acesso ?? null;
   /** Motivo, em linguagem do cliente, para não poder agendar agora (null = pode agendar). */
   const motivoBloqueio = verificandoVinculo ? null
     : !clienteId ? "Sua conta ainda não está vinculada a um cadastro de cliente. Fale com a equipe pelo WhatsApp (13) 98805-0358 para liberar o agendamento."
     : statusAcesso && statusAcesso !== "aprovado" ? "Seu cadastro ainda aguarda liberação da equipe. Assim que for aprovado, você poderá agendar."
+    : semSaldo ? `Você não tem saldo de créditos para reservar. ${MENSAGEM_SEM_SALDO}`
     : null;
 
   function avisarBloqueio() {
     if (!motivoBloqueio) return false;
-    toast({ title: "Não é possível agendar ainda", description: motivoBloqueio, variant: "destructive" });
+    toast({ title: semSaldo ? "Saldo de créditos necessário" : "Não é possível agendar ainda", description: motivoBloqueio, variant: "destructive" });
     return true;
   }
 
