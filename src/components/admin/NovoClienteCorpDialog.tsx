@@ -96,7 +96,7 @@ export default function NovoClienteCorpDialog({ open, onOpenChange, initialNome 
           .from("clientes_corp")
           .update({ deleted_at: null })
           .eq("id", match.id)
-          .select("id, razao_social, responsavel_email")
+          .select("id, razao_social, responsavel_email, deleted_at")
           .single();
         if (error) {
           toast({ title: "Não foi possível restaurar o cliente", description: friendlyError(error), variant: "destructive" });

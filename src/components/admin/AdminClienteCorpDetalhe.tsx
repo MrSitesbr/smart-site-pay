@@ -546,7 +546,7 @@ export default function AdminClienteCorpDetalhe() {
         reserva={editingReservation}
         onOpenChange={(open) => !open && setEditingReservation(null)}
         onSaved={(updatedReservation) => {
-          setReservas((current) => current.map((reserva) => reserva.id === updatedReservation.id ? { ...reserva, ...updatedReservation } : reserva));
+          setReservas((current) => current.map((reserva) => reserva.id === updatedReservation.id ? ({ ...reserva, ...updatedReservation } as ClientReservation) : reserva));
           setEditingReservation(null);
         }}
       />
