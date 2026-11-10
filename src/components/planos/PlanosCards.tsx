@@ -206,7 +206,7 @@ export function AdicionarCreditosDialog({ open, onOpenChange, clienteId, inicial
 
   async function salvar() {
     const h = Number(horas.replace(",", "."));
-    if (!titulo.trim()) return toast.error("Informe o título do pacote.");
+    if (titulo.trim().length < 2) return toast.error("O título do pacote precisa ter pelo menos 2 caracteres (ex.: Pacote 1h).");
     if (!(h > 0)) return toast.error("Informe a quantidade de horas.");
     setSalvando(true);
     try {
