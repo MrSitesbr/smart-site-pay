@@ -84,6 +84,23 @@ export async function enviarSolicitacao(params: {
   if (error) throw error;
 }
 
+/** Cliente muda data/horário da própria reserva na hora (o servidor confere expediente, sala livre e saldo). */
+export async function alterarReservaCliente(params: { reservaId: string; novaData: string; novoInicio: string; novoFim: string }) {
+  const { error } = await (supabase.rpc as any)("cliente_alterar_reserva", {
+    p_reservation_id: params.reservaId,
+    p_nova_data: params.novaData,
+    p_novo_inicio: params.novoInicio,
+    p_novo_fim: params.novoFim,
+  });
+  if (error) throw error;
+}
+
+/** Cliente cancela a própria reserva na hora (com 24h ou mais as horas voltam ao saldo). */
+export async function cancelarReservaCliente(reservaId: string, motivo: string) {
+  const { error } = await (supabase.rpc as any)("cliente_cancelar_reserva", { p_reservation_id: reservaId, p_motivo: motivo });
+  if (error) throw error;
+}
+
 export async function concluirSolicitacao(id: string, status: "resolvida" | "recusada", resposta?: string) {
   const { data, error } = await tabela()
     .update({ status, admin_resposta: resposta || null, resolved_at: new Date().toISOString() })

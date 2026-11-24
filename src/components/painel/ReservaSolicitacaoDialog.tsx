@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CalendarClock, Loader2, Send, XCircle } from "lucide-react";
+import { CalendarClock, Check, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "@/hooks/use-toast";
 import { friendlyError } from "@/lib/appErrors";
 import {
-  STATUS_SOLICITACAO_LABEL, TIPO_SOLICITACAO_LABEL, descreverNovoHorario, enviarSolicitacao, podeSolicitarMudanca,
+  STATUS_SOLICITACAO_LABEL, TIPO_SOLICITACAO_LABEL, alterarReservaCliente, cancelarReservaCliente, descreverNovoHorario, podeSolicitarMudanca,
   type SolicitacaoReserva,
 } from "@/lib/reservaSolicitacoes";
 
@@ -43,40 +43,45 @@ export default function ReservaSolicitacaoDialog({
 
   if (!reserva) return null;
 
+  // Pedidos antigos ainda em análise continuam visíveis, mas não impedem o cliente de mudar sozinho.
   const pendente = solicitacao?.status === "pendente";
   const permitido = podeSolicitarMudanca(reserva);
   const dataBR = new Date(`${reserva.data}T12:00:00`).toLocaleDateString("pt-BR");
 
   async function enviar() {
     if (!modo) return;
-    if (modo === "alteracao" && novoInicio && novoFim && novoFim <= novoInicio) {
-      toast({ title: "Revise o horário", description: "O término deve ser depois do início.", variant: "destructive" });
-      return;
+    if (modo === "alteracao") {
+      if (!novaData || !novoInicio || !novoFim) {
+        toast({ title: "Revise o horário", description: "Informe a nova data, o início e o término.", variant: "destructive" });
+        return;
+      }
+      if (novoFim <= novoInicio) {
+        toast({ title: "Revise o horário", description: "O término deve ser depois do início.", variant: "destructive" });
+        return;
+      }
+      if (novaData === reserva.data && novoInicio === reserva.hora_inicio?.slice(0, 5) && novoFim === reserva.hora_fim?.slice(0, 5)) {
+        toast({ title: "Nada mudou", description: "Escolha uma data ou horário diferente do atual.", variant: "destructive" });
+        return;
+      }
     }
-    const mudouHorario = modo === "alteracao" && (novaData !== reserva.data || novoInicio !== reserva.hora_inicio?.slice(0, 5) || novoFim !== reserva.hora_fim?.slice(0, 5));
     if (modo === "cancelamento" && (mensagem.trim().length < 2 || mensagem.trim().length > 180)) {
       toast({ title: "Informe o motivo", description: "O motivo do cancelamento deve ter de 2 a 180 caracteres.", variant: "destructive" });
       return;
     }
-    if (modo === "alteracao" && !mudouHorario && !mensagem.trim()) {
-      toast({ title: "Descreva a alteração", description: "Informe o novo horário ou explique o que precisa mudar.", variant: "destructive" });
-      return;
-    }
     setEnviando(true);
     try {
-      await enviarSolicitacao({
-        reservaId: reserva.id,
-        tipo: modo,
-        mensagem,
-        novaData: mudouHorario ? novaData : null,
-        novoInicio: mudouHorario ? novoInicio : null,
-        novoFim: mudouHorario ? novoFim : null,
-      });
-      toast({ title: "Solicitação enviada", description: "A equipe do Coworking 013 vai analisar e responder o quanto antes." });
+      if (modo === "alteracao") {
+        await alterarReservaCliente({ reservaId: reserva.id, novaData, novoInicio, novoFim });
+        const novaDataBR = new Date(`${novaData}T12:00:00`).toLocaleDateString("pt-BR");
+        toast({ title: "Reserva alterada", description: `Agora é em ${novaDataBR}, das ${novoInicio} às ${novoFim}.` });
+      } else {
+        await cancelarReservaCliente(reserva.id, mensagem.trim());
+        toast({ title: "Reserva cancelada", description: "O horário foi liberado na agenda." });
+      }
       onEnviada();
       onOpenChange(false);
     } catch (error) {
-      toast({ title: "Não foi possível enviar", description: friendlyError(error), variant: "destructive" });
+      toast({ title: modo === "alteracao" ? "Não foi possível alterar" : "Não foi possível cancelar", description: friendlyError(error), variant: "destructive" });
     } finally {
       setEnviando(false);
     }
@@ -102,18 +107,16 @@ export default function ReservaSolicitacaoDialog({
           </div>
         )}
 
-        {pendente ? (
-          <p className="text-sm text-muted-foreground">Seu pedido está em análise. Você será atendido pela equipe antes do horário da reserva.</p>
-        ) : !permitido ? (
+        {!permitido ? (
           <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
             {["cancelada", "realizada"].includes(reserva.status)
               ? "Esta reserva não pode mais ser alterada."
-              : "Cancelamentos e alterações só podem ser solicitados com pelo menos 2 horas de antecedência. Para mudanças de última hora, fale com a recepção."}
+              : "Alterações e cancelamentos só podem ser feitos com pelo menos 2 horas de antecedência. Para mudanças de última hora, fale com a recepção."}
           </p>
         ) : !modo ? (
           <div className="grid gap-2 sm:grid-cols-2">
-            <Button variant="outline" onClick={() => setModo("alteracao")}><CalendarClock className="mr-2 h-4 w-4" />Solicitar alteração</Button>
-            <Button variant="outline" className="text-destructive" onClick={() => setModo("cancelamento")}><XCircle className="mr-2 h-4 w-4" />Solicitar cancelamento</Button>
+            <Button variant="outline" onClick={() => setModo("alteracao")}><CalendarClock className="mr-2 h-4 w-4" />Alterar data ou horário</Button>
+            <Button variant="outline" className="text-destructive" onClick={() => setModo("cancelamento")}><XCircle className="mr-2 h-4 w-4" />Cancelar reserva</Button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -124,27 +127,27 @@ export default function ReservaSolicitacaoDialog({
                 <div className="space-y-1"><Label htmlFor="novo-fim">Término</Label><Input id="novo-fim" type="time" step="1800" value={novoFim} onChange={(e) => setNovoFim(e.target.value)} /></div>
               </div>
             )}
-            <div className="space-y-1">
-              <Label htmlFor="mensagem-solicitacao">{modo === "cancelamento" ? "Motivo do cancelamento *" : "O que precisa mudar?"}</Label>
-              <Textarea id="mensagem-solicitacao" rows={3} maxLength={modo === "cancelamento" ? 180 : 1000} value={mensagem} onChange={(e) => setMensagem(e.target.value)}
-                placeholder={modo === "cancelamento" ? "Conte o motivo do cancelamento" : "Ex.: trocar para a sala ao lado, mudar o horário…"} />
-              {modo === "cancelamento" && (
-                <p className="text-xs text-muted-foreground">
-                  {mensagem.trim().length}/180 · Com 24h ou mais de antecedência as horas voltam para o seu banco de horas; com menos de 24h elas ficam consumidas.
-                </p>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">O pedido será analisado pela equipe. A reserva continua valendo até a confirmação.</p>
+            {modo === "cancelamento" && <div className="space-y-1">
+              <Label htmlFor="mensagem-solicitacao">Motivo do cancelamento *</Label>
+              <Textarea id="mensagem-solicitacao" rows={3} maxLength={180} value={mensagem} onChange={(e) => setMensagem(e.target.value)}
+                placeholder="Conte o motivo do cancelamento" />
+              <p className="text-xs text-muted-foreground">
+                {mensagem.trim().length}/180 · Com 24h ou mais de antecedência as horas voltam para o seu banco de horas; com menos de 24h elas ficam consumidas.
+              </p>
+            </div>}
+            {modo === "alteracao" && (
+              <p className="text-xs text-muted-foreground">A mudança vale na hora, na mesma sala, se o novo horário estiver livre, dentro do expediente da unidade e coberto pelo seu saldo.</p>
+            )}
           </div>
         )}
 
         <DialogFooter className="gap-2 sm:space-x-0">
-          {modo && !pendente && permitido ? (
+          {modo && permitido ? (
             <>
               <Button variant="ghost" onClick={() => setModo(null)} disabled={enviando}>Voltar</Button>
               <Button onClick={() => void enviar()} disabled={enviando} variant={modo === "cancelamento" ? "destructive" : "default"}>
-                {enviando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                Enviar pedido de {modo === "cancelamento" ? "cancelamento" : "alteração"}
+                {enviando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                {modo === "cancelamento" ? "Confirmar cancelamento" : "Confirmar alteração"}
               </Button>
             </>
           ) : (

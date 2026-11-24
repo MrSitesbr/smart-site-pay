@@ -139,43 +139,42 @@ export const ACOES_CLIENTE: Acao[] = [
   },
   {
     nome: "cancelar_reserva", escrita: true,
-    descricao: 'cancelar_reserva {"reserva_id":"id","motivo":"2 a 180 caracteres"} — pede o cancelamento (com 24h ou mais de antecedência as horas voltam ao saldo).',
+    descricao: 'cancelar_reserva {"reserva_id":"id","motivo":"2 a 180 caracteres"} — cancela a reserva na hora (com 24h ou mais de antecedência as horas voltam ao saldo).',
     async preparar({ db, clienteId }, p) {
       const motivo = txt(p.motivo, 180);
       if (motivo.length < 2) throw new ErroAcao("Pergunte o motivo do cancelamento (2 a 180 caracteres).");
       const { data: r } = await db.from("reservations").select("id, data, hora_inicio, hora_fim, status, cliente_corp_id").eq("id", txt(p.reserva_id, 80)).maybeSingle();
       if (!r || (r as any).cliente_corp_id !== clienteId) throw new ErroAcao("Não encontrei essa reserva na sua conta. Use minhas_reservas para ver os ids.");
-      return { params: { reserva_id: (r as any).id, motivo }, resumo: `Pedir cancelamento da reserva de ${brData((r as any).data)}, ${String((r as any).hora_inicio).slice(0, 5)}–${String((r as any).hora_fim).slice(0, 5)}. Motivo: "${motivo}".` };
+      return { params: { reserva_id: (r as any).id, motivo }, resumo: `Cancelar a reserva de ${brData((r as any).data)}, ${String((r as any).hora_inicio).slice(0, 5)}–${String((r as any).hora_fim).slice(0, 5)}. Motivo: "${motivo}".` };
     },
     async executar({ db }, p) {
-      const { error } = await db.rpc("request_reservation_change", { p_reservation_id: p.reserva_id, p_tipo: "cancelamento", p_mensagem: p.motivo });
+      const { error } = await db.rpc("cliente_cancelar_reserva", { p_reservation_id: p.reserva_id, p_motivo: p.motivo });
       erroDb(error);
-      return "Pedido de cancelamento enviado para a equipe.";
+      return "Reserva cancelada. O horário foi liberado na agenda.";
     },
   },
   {
     nome: "alterar_reserva", escrita: true,
-    descricao: 'alterar_reserva {"reserva_id":"id","nova_data":"AAAA-MM-DD","novo_inicio":"HH:MM","novo_fim":"HH:MM","mensagem":"opcional"} — pede alteração de uma reserva.',
+    descricao: 'alterar_reserva {"reserva_id":"id","nova_data":"AAAA-MM-DD","novo_inicio":"HH:MM","novo_fim":"HH:MM"} — muda data/horário da reserva na hora (mesma sala; precisa estar livre, no expediente e com saldo).',
     async preparar({ db, clienteId }, p) {
       const { data: r } = await db.from("reservations").select("id, data, hora_inicio, hora_fim, cliente_corp_id").eq("id", txt(p.reserva_id, 80)).maybeSingle();
       if (!r || (r as any).cliente_corp_id !== clienteId) throw new ErroAcao("Não encontrei essa reserva na sua conta. Use minhas_reservas para ver os ids.");
-      const nova = p.nova_data ? dataValida(p.nova_data) : null;
-      const ini = p.novo_inicio ? horaValida(p.novo_inicio) : null;
-      const fim = p.novo_fim ? horaValida(p.novo_fim) : null;
-      const mensagem = txt(p.mensagem, 500);
-      if (!nova && !ini && !mensagem) throw new ErroAcao("Pergunte o novo dia/horário desejado.");
+      if (!p.nova_data && !p.novo_inicio) throw new ErroAcao("Pergunte o novo dia/horário desejado.");
+      const nova = p.nova_data ? dataValida(p.nova_data) : String((r as any).data);
+      const ini = p.novo_inicio ? horaValida(p.novo_inicio) : String((r as any).hora_inicio).slice(0, 5);
+      const fim = p.novo_fim ? horaValida(p.novo_fim) : String((r as any).hora_fim).slice(0, 5);
+      if (ini >= fim) throw new ErroAcao("O horário final deve ser depois do inicial.");
       return {
-        params: { reserva_id: (r as any).id, nova_data: nova, novo_inicio: ini, novo_fim: fim, mensagem },
-        resumo: `Pedir alteração da reserva de ${brData((r as any).data)} ${String((r as any).hora_inicio).slice(0, 5)}–${String((r as any).hora_fim).slice(0, 5)} para ${nova ? brData(nova) : "o mesmo dia"}${ini ? `, ${ini}–${fim || "?"}` : ""}${mensagem ? `. Obs.: "${mensagem}"` : ""}.`,
+        params: { reserva_id: (r as any).id, nova_data: nova, novo_inicio: ini, novo_fim: fim },
+        resumo: `Alterar a reserva de ${brData((r as any).data)} ${String((r as any).hora_inicio).slice(0, 5)}–${String((r as any).hora_fim).slice(0, 5)} para ${brData(nova)}, ${ini}–${fim}.`,
       };
     },
     async executar({ db }, p) {
-      const { error } = await db.rpc("request_reservation_change", {
-        p_reservation_id: p.reserva_id, p_tipo: "alteracao", p_mensagem: p.mensagem || null,
-        p_nova_data: p.nova_data || null, p_novo_inicio: p.novo_inicio || null, p_novo_fim: p.novo_fim || null,
+      const { error } = await db.rpc("cliente_alterar_reserva", {
+        p_reservation_id: p.reserva_id, p_nova_data: p.nova_data, p_novo_inicio: p.novo_inicio, p_novo_fim: p.novo_fim,
       });
       erroDb(error);
-      return "Pedido de alteração enviado para a equipe.";
+      return `Reserva alterada para ${brData(String(p.nova_data))}, das ${p.novo_inicio} às ${p.novo_fim}.`;
     },
   },
 ];
