@@ -450,7 +450,7 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
         toast({ title: "Não foi possível solicitar a reserva", description: error.message, variant: "destructive" });
         return;
       }
-      toast({ title: "Reserva solicitada", description: "A equipe analisará a disponibilidade e confirmará o pedido." });
+      toast({ title: "Reserva confirmada", description: "Ela já aparece na sua agenda." });
       setCriacaoManualAberta(false);
       setModalidade(null);
       setMes(startOfMonth(new Date(`${dataManual}T12:00:00`)));
@@ -535,8 +535,8 @@ export default function PainelAgendamento({ cliente, user, onRefresh }: PainelAg
       }
 
       toast({
-        title: "Reserva(s) solicitada(s)",
-        description: `${periodos.length} período${periodos.length > 1 ? "s" : ""} solicitado${periodos.length > 1 ? "s" : ""}`
+        title: periodos.length > 1 ? "Reservas confirmadas" : "Reserva confirmada",
+        description: `${periodos.length} período${periodos.length > 1 ? "s confirmados" : " confirmado"}. Já aparece na sua agenda.`
       });
       setConfirmacaoAberta(false);
       atualizarSelecao(null);

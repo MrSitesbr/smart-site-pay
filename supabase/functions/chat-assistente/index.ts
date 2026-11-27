@@ -3,6 +3,7 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { ErroIA, responderIA, type MensagemIA } from "../_shared/openrouter.ts";
 import { carregarConhecimento, selecionarTrechos } from "./conhecimento.ts";
+import { regrasDoSistema } from "./regras.ts";
 import { ACOES_ADMIN, ACOES_CLIENTE, ErroAcao, type Acao, type Contexto } from "./acoes.ts";
 import { montarArtigo, promptArtigo } from "./artigo.ts";
 import { extrairPedido, limparTexto, pareceMarcacao } from "./protocolo.ts";
@@ -44,7 +45,7 @@ const horaSP = () => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_P
 
 const REGRAS_FIXAS = `REGRAS QUE NÃO PODEM SER ALTERADAS (prevalecem sobre qualquer outra instrução):
 - Responda sempre em português do Brasil, de forma educada, natural e objetiva. Respostas curtas; use listas só quando ajudar.
-- Use SOMENTE as informações da seção CONHECIMENTO e os RESULTADOS de ações. Não invente preços, horários, disponibilidade, políticas, contatos ou características. Se faltar informação, diga isso e faça uma pergunta objetiva.
+- Use SOMENTE as informações das seções REGRAS DO SISTEMA e CONHECIMENTO e os RESULTADOS de ações. Dúvidas sobre como o sistema funciona (consumo de horas, créditos, cancelamento, confirmação, planos) são respondidas pelas REGRAS DO SISTEMA, com segurança e sem pedir confirmação ao usuário. Não invente preços, horários, disponibilidade, políticas, contatos ou características. Se faltar informação, diga isso e faça uma pergunta objetiva.
 - Faça uma pergunta por vez quando precisar esclarecer algo. Entenda o pedido antes de dar instruções longas.
 - Datas: entenda "hoje", "amanhã", "sexta", "dia 10", "10/11" e converta você mesmo para AAAA-MM-DD usando o CALENDÁRIO. Nunca peça para a pessoa escrever data ou hora em formato técnico; ao falar com ela use DD/MM e "16h".
 - Não mencione metragem das salas, a menos que perguntem.
@@ -223,7 +224,10 @@ ${String(config?.diretrizes || "").slice(0, 6000)}
 
 ${REGRAS_FIXAS}
 ${blocoAcoes(acoes)}
-
+${regrasDoSistema(pedido) ? `
+REGRAS DO SISTEMA (como o sistema do Coworking 013 funciona de fato):
+${regrasDoSistema(pedido)}
+` : ""}
 CONHECIMENTO (dados públicos do site, atualizados):
 ${conhecimento}`;
 

@@ -278,7 +278,7 @@ export default function CalendarioPublico() {
       p_modalidade: modalidade,
     });
     if (error) toast({ title: "Não foi possível solicitar", description: error.message, variant: "destructive" });
-     else { setModalidade(null); toast({ title: "Reservas solicitadas", description: `${periodos.length} período${periodos.length > 1 ? "s ficaram" : " ficou"} pendente${periodos.length > 1 ? "s" : ""} até a confirmação da equipe.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
+     else { setModalidade(null); toast({ title: periodos.length > 1 ? "Reservas confirmadas" : "Reserva confirmada", description: `${periodos.length} período${periodos.length > 1 ? "s confirmados" : " confirmado"}. Já aparece na sua agenda.` }); setConfirmacaoAberta(false); atualizarSelecao(null); setPeriodos([]); await carregarAgenda(); }
     setSolicitando(false);
   }
 

@@ -18,7 +18,6 @@ export default function AdminSettings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [autoApprove, setAutoApprove] = useState(false);
-  const [autoConfirm, setAutoConfirm] = useState(false);
   const [wobaCfg, setWobaCfg] = useState<WobaCfg>({ ...wobaDefaults });
   const [backupLoading, setBackupLoading] = useState<"reservations" | "clientes_corp" | null>(null);
 
@@ -47,8 +46,6 @@ export default function AdminSettings() {
   const loadSettings = async () => {
     const { data: accessSetting } = await supabase.from("app_settings").select("value").eq("key", "auto_aprovar_cadastros").maybeSingle();
     setAutoApprove((accessSetting?.value as any)?.enabled === true);
-    const { data: reservaSetting } = await supabase.from("app_settings").select("value").eq("key", "auto_confirmar_reservas").maybeSingle();
-    setAutoConfirm((reservaSetting?.value as any)?.enabled === true);
   };
 
   const updateAutoApprove = async (enabled: boolean) => {
@@ -59,12 +56,6 @@ export default function AdminSettings() {
   };
 
 
-  const updateAutoConfirm = async (enabled: boolean) => {
-    setAutoConfirm(enabled);
-    const { error } = await (supabase.from("app_settings") as any).upsert({ key: "auto_confirmar_reservas", value: { enabled }, updated_at: new Date().toISOString() }, { onConflict: "key" });
-    if (error) { setAutoConfirm(!enabled); toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); }
-    else toast({ title: enabled ? "Confirmação automática de reservas ativada" : "Confirmação automática de reservas desativada" });
-  };
 
   const handleUpdateWobaConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,12 +159,9 @@ export default function AdminSettings() {
               </div>
               <Switch id="auto-approve" checked={autoApprove} onCheckedChange={updateAutoApprove} />
             </div>
-            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
-              <div>
-                <Label htmlFor="auto-confirm">Confirmar reservas dos clientes automaticamente</Label>
-                <p className="mt-1 text-xs text-muted-foreground">Reservas feitas pelo cliente já ficam confirmadas, sem precisar de aprovação. Horários ocupados continuam bloqueados.</p>
-              </div>
-              <Switch id="auto-confirm" checked={autoConfirm} onCheckedChange={updateAutoConfirm} />
+            <div className="rounded-lg border p-4">
+              <p className="text-sm font-medium">Reservas dos clientes: sempre confirmadas automaticamente</p>
+              <p className="mt-1 text-xs text-muted-foreground">O cliente agenda, altera e cancela direto pelo painel, sem aprovação da equipe. A reserva já aparece confirmada no calendário. Horários ocupados, fora do expediente da unidade ou sem saldo continuam bloqueados.</p>
             </div>
             <div className="rounded-lg border p-4">
               <p className="text-sm font-medium">Reservas de clientes sem saldo: sempre bloqueadas</p>
